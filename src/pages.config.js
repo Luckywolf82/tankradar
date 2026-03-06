@@ -63,6 +63,7 @@ import verificationreportUserreportedenhancements from './pages/VerificationRepo
 import ComponentNamingReview from './pages/ComponentNamingReview';
 import Settings from './pages/Settings';
 import App from './pages/App';
+import MobileImplementationReport from './pages/MobileImplementationReport';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +84,7 @@ export const PAGES = {
     "ComponentNamingReview": ComponentNamingReview,
     "Settings": Settings,
     "App": App,
+    "MobileImplementationReport": MobileImplementationReport,
 }
 
 export const pagesConfig = {
