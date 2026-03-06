@@ -106,17 +106,16 @@ function calculateMatchScore(distClass, chainMatch, nameMatch, cityMatch, scanCh
   // Name points (ADJUSTED: same_chain and contained are support signals only)
   if (nameMatch === 'exact') score += 30;
   if (nameMatch === 'similar') score += 20;
-  if (nameMatch === 'same_chain') score += 8; // Support signal, not decisive
-  if (nameMatch === 'contained') score += 6; // Support signal, not decisive
-  if (nameMatch === 'mismatch') score -= 20;
+  if (nameMatch === 'same_chain') score += 15; // Support signal, but strengthened for close+chain
+  if (nameMatch === 'contained') score += 10; // Support signal, but strengthened for close+chain
+  if (nameMatch === 'mismatch') return 0; // Hard block: mismatch with chain=match is too risky
   
   // City points (support)
   if (cityMatch) score += 10;
   
   // Missing chain penalty
   if (!scanChain || scanChain === '') {
-    if (nameMatch === 'mismatch') return 0;
-    score -= 5;
+    score -= 10; // Harsher penalty for missing chain
   }
   
   return score;
