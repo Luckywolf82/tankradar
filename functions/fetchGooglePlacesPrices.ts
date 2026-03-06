@@ -338,6 +338,7 @@ Deno.serve(async (req) => {
             continue;
           }
 
+          const plausibilityStatus = classifyPricePlausibility(priceNok);
           const sourceUpdatedAt = fuelPrice.updateTime || null;
           const fetchedAtNow = new Date().toISOString();
 
