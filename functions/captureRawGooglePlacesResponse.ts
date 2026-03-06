@@ -3,19 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 /**
  * captureRawGooglePlacesResponse
  * 
- * Captures and logs RAW, UNMODIFIED Google Places API responses.
- * Goal: Prove what units, nanos, currencyCode actually contain.
- * 
- * This is a diagnostic function - no parsing, no transformation, no storage.
- * Just capture what Google sends and report it verbatim.
+ * Gjør ett live Google Places API-kall.
+ * Logg hele rå JSON-responsen for én stasjon.
+ * Vis eksakt disse feltene UTEN parsing:
+ * - displayName
+ * - fuelOptions.fuelPrices[].type
+ * - fuelOptions.fuelPrices[].price.currencyCode
+ * - fuelOptions.fuelPrices[].price.units
+ * - fuelOptions.fuelPrices[].price.nanos
  */
-
-const TEST_LOCATION = {
-  latitude: 59.9139,
-  longitude: 10.7522,
-  name: "Oslo sentrum",
-  radiusMeters: 5000
-};
 
 Deno.serve(async (req) => {
   try {
@@ -31,15 +27,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'GOOGLE_PLACES_API_KEY not set' }, { status: 500 });
     }
 
+    // Gjør ett live API-kall til Oslo sentrum
     const url = "https://places.googleapis.com/v1/places:searchNearby";
+    const location = { latitude: 59.9139, longitude: 10.7522, name: "Oslo sentrum", radiusMeters: 5000 };
     
     const body = {
       includedTypes: ["gas_station"],
-      maxResultCount: 20,
+      maxResultCount: 1,  // Bare 1 stasjon
       locationRestriction: {
         circle: {
-          center: { latitude: TEST_LOCATION.latitude, longitude: TEST_LOCATION.longitude },
-          radius: TEST_LOCATION.radiusMeters
+          center: { latitude: location.latitude, longitude: location.longitude },
+          radius: location.radiusMeters
         }
       }
     };
@@ -47,8 +45,12 @@ Deno.serve(async (req) => {
     const headers = {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "places.id,places.displayName,places.location,places.fuelOptions"
+      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.fuelOptions"
     };
+
+    console.log("[CAPTURE] Sending Google Places API request...");
+    console.log("[CAPTURE] Location:", location.name);
+    console.log("[CAPTURE] Request body:", JSON.stringify(body, null, 2));
 
     const response = await fetch(url, {
       method: "POST",
@@ -57,76 +59,60 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      return Response.json({ 
-        error: `Google API returned ${response.status}`,
-        status: response.status
-      }, { status: response.status });
+      return Response.json({
+        error: `HTTP ${response.status}`,
+        message: `Google Places API returned status ${response.status}`,
+        location: location.name
+      }, { status: 500 });
     }
 
-    const rawData = await response.json();
-
-    // Extract up to 3 gas stations with fuel prices for detailed inspection
-    const examplesWithFuel = [];
+    const rawApiResponse = await response.json();
     
-    if (rawData.places && Array.isArray(rawData.places)) {
-      for (const place of rawData.places) {
-        if (examplesWithFuel.length >= 3) break;
-        
-        if (place.fuelOptions && place.fuelOptions.fuelPrices && place.fuelOptions.fuelPrices.length > 0) {
-          examplesWithFuel.push({
-            placeId: place.id,
-            displayName: place.displayName?.text || "(unnamed)",
-            location: place.location,
-            fuelOptions: {
-              count: place.fuelOptions.fuelPrices.length,
-              fuelPrices: place.fuelOptions.fuelPrices.map(fp => ({
-                type: fp.type,
-                price: {
-                  currencyCode: fp.price?.currencyCode,
-                  units: fp.price?.units,
-                  nanos: fp.price?.nanos
-                },
-                updateTime: fp.updateTime
-              }))
-            }
-          });
-        }
-      }
+    console.log("[CAPTURE] Raw API response received");
+    console.log("[CAPTURE] Response:", JSON.stringify(rawApiResponse, null, 2));
+
+    // Hvis ingen steder returnert
+    if (!rawApiResponse.places || rawApiResponse.places.length === 0) {
+      return Response.json({
+        error: "No gas stations found in response",
+        rawResponse: rawApiResponse,
+        location: location.name
+      }, { status: 404 });
     }
 
-    // Return the RAW response structures
-    return Response.json({
-      diagnostic: "RAW GOOGLE PLACES API RESPONSE - UNMODIFIED",
-      requestLocation: TEST_LOCATION,
-      totalPlacesReturned: rawData.places?.length || 0,
-      placesWithFuelData: examplesWithFuel.length,
-      
-      rawExamples: examplesWithFuel,
-      
-      // Additional analysis section
-      analysis: {
-        note: "Units and nanos are copied EXACTLY as Google returned them. No transformation applied.",
-        sampleInterpretations: examplesWithFuel.map((ex, idx) => ({
-          exampleIndex: idx + 1,
-          displayName: ex.displayName,
-          interpretation: {
-            question: `Are units=${ex.fuelOptions.fuelPrices[0]?.price?.units} in øre or NOK?`,
-            currentAssumption: "Unknown - requires Google documentation",
-            possibleScenarios: [
-              {
-                scenario: "units = whole NOK, nanos = 10^-9 NOK fraction",
-                example: `units:${ex.fuelOptions.fuelPrices[0]?.price?.units} + nanos:${ex.fuelOptions.fuelPrices[0]?.price?.nanos} / 1e9 = ???`
-              },
-              {
-                scenario: "units = øre (1/100 NOK), nanos = sub-øre",
-                example: `units:${ex.fuelOptions.fuelPrices[0]?.price?.units} / 100 = ???`
-              }
-            ]
+    // Ekstrahuer første stasjon fra rå respons (INGEN PARSING ELLER BEREGNING)
+    const firstPlace = rawApiResponse.places[0];
+
+    // Vis EKSAKT disse feltene fra rå JSON
+    const extractedFields = {
+      displayName: firstPlace.displayName?.text || null,
+      fuelOptions: {
+        fuelPrices: (firstPlace.fuelOptions?.fuelPrices || []).map((fp) => ({
+          type: fp.type || null,
+          price: {
+            currencyCode: fp.price?.currencyCode || null,
+            units: fp.price?.units || null,
+            nanos: fp.price?.nanos || null
           }
         }))
       }
+    };
+
+    return Response.json({
+      captureStatus: "SUCCESS",
+      apiCall: {
+        timestamp: new Date().toISOString(),
+        location: location.name,
+        endpoint: url,
+        fieldMask: "places.id,places.displayName,places.formattedAddress,places.location,places.fuelOptions"
+      },
+      rawApiResponse: rawApiResponse,
+      extractedFields: extractedFields,
+      notes: "NO PARSING, NO CALCULATIONS. These are the exact values from the Google Places API response."
     });
+
   } catch (error) {
+    console.error("[CAPTURE] Error:", error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
