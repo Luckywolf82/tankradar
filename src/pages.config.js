@@ -52,6 +52,7 @@ import LogPrice from './pages/LogPrice';
 import Statistics from './pages/Statistics';
 import CoverageReport from './pages/CoverageReport';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
+import BackfillAssessment from './pages/BackfillAssessment';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +62,7 @@ export const PAGES = {
     "Statistics": Statistics,
     "CoverageReport": CoverageReport,
     "DataQualityDiagnostics": DataQualityDiagnostics,
+    "BackfillAssessment": BackfillAssessment,
 }
 
 export const pagesConfig = {
