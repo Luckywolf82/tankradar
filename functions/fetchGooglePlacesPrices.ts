@@ -367,21 +367,22 @@ Deno.serve(async (req) => {
           }
 
           // Immutable observation: create new FuelPrice post for this observation
-          await base44.entities.FuelPrice.create({
-            stationId: station.id,
-            fuelType: fuelType,
-            priceNok: priceNok,
-            priceType: "station_level",
-            sourceName: "GooglePlaces",
-            sourceUrl: null,
-            sourceUpdatedAt: sourceUpdatedAt,
-            fetchedAt: fetchedAtNow,
-            sourceFrequency: "near_realtime",
-            confidenceScore: matchResult.confidence,
-            parserVersion: "gp_v1",
-            rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L | ${plausibilityStatus}`
-          });
-          mapping.pricesCreated++;
+           await base44.entities.FuelPrice.create({
+             stationId: station.id,
+             fuelType: fuelType,
+             priceNok: priceNok,
+             priceType: "station_level",
+             sourceName: "GooglePlaces",
+             sourceUrl: null,
+             sourceUpdatedAt: sourceUpdatedAt,
+             fetchedAt: fetchedAtNow,
+             sourceFrequency: "near_realtime",
+             confidenceScore: matchResult.confidence,
+             parserVersion: "gp_v1",
+             plausibilityStatus: plausibilityStatus,
+             rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L | ${plausibilityStatus}`
+           });
+           mapping.pricesCreated++;
         }
       }
     }
