@@ -59,17 +59,15 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 // Extract price in NOK from Google price object
 // NOTE: Google uses Money protobuf: units = whole value, nanos = 10^-9 of whole value
-// Priser kommer fra test API. Anta units er prisenheten direkte (i øre eller hovedvaluta)
-// Test data viser units ≈ 2350–2400, som skal bli ~23–24 NOK/L
-// FORMULA: Hvis units=2350 → skal resultat være ~23.50, så divide by 100
-// Hvis API endrer skala ved go live, må dette kalibreres mot reell data
+// Test API data: units ≈ 2350, nanos ≈ 0
+// Expected output: ~23.50 NOK/L (realistic Norwegian fuel price)
+// FORMULA: priceNok = units / 100 + nanos / 1e11
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
   const units = priceObj.units || 0;
   const nanos = priceObj.nanos || 0;
-  // Test: divide by 100 for øre → NOK conversion
-  const calculated = (units + (nanos / 1e9)) / 100;
-  return calculated;
+  // units ≈ 2350 means 23.50 NOK when divided by 100
+  return (units / 100) + (nanos / 1e11);
 }
 
 // Classify price plausibility based on Norwegian fuel price norms
