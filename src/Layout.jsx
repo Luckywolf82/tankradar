@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { BarChart2, Plus, Home, Settings } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
-import { TankRadarLogo } from "./components/TankRadarLogo";
+import { TankRadarLogo } from "./components/TankRadarLogo.jsx";
 
 const navLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
