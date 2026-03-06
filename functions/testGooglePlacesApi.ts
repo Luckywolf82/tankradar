@@ -36,7 +36,7 @@ async function testNearbySearch(apiKey, location) {
   const headers = {
     "Content-Type": "application/json",
     "X-Goog-Api-Key": apiKey,
-    "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.fuelOptions,places.updateTime"
+    "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.fuelOptions"
   };
 
   try {
