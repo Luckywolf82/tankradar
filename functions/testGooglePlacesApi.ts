@@ -16,7 +16,7 @@ const TEST_LOCATIONS = {
   }
 };
 
-async function testNearbySearch(apiKey, location) {
+async function testNearbySearch(apiKey, location, pageToken = null) {
   const url = "https://places.googleapis.com/v1/places:searchNearby";
   
   const body = {
@@ -32,6 +32,10 @@ async function testNearbySearch(apiKey, location) {
       }
     }
   };
+  
+  if (pageToken) {
+    body.pageToken = pageToken;
+  }
 
   const headers = {
     "Content-Type": "application/json",
