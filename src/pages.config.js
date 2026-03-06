@@ -59,6 +59,7 @@ import implementationreportUserreportedpolicy from './pages/ImplementationReport
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
+import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +76,7 @@ export const PAGES = {
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "ProductionModelLockdown": ProductionModelLockdown,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
+    "DataConsistencyDiagnosis": DataConsistencyDiagnosis,
 }
 
 export const pagesConfig = {
