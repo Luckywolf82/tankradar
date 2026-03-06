@@ -15,6 +15,13 @@ function emptyPrices() {
   return Object.fromEntries(FUEL_TYPES.map(k => [k, { price: "", enabled: false, aiDetected: false }]));
 }
 
+function classifyPricePlausibility(priceNok) {
+  if (!priceNok) return null;
+  if (priceNok < 10) return "suspect_price_low";
+  if (priceNok > 30) return "suspect_price_high";
+  return "realistic_price";
+}
+
 function latLonToRegion(lat, lon) {
   if (lat > 70) return "Finnmark";
   if (lat > 69) return "Troms";
@@ -150,14 +157,29 @@ export default function LogPrice() {
     e.preventDefault();
     setSubmitting(true);
     const today = stationInfo.date_observed;
+    const now = new Date().toISOString();
+    
     const entries = FUEL_TYPES
       .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
-      .map(k => ({
-        ...stationInfo,
-        fuel_type: k,
-        price: parseFloat(detectedPrices[k].price),
-        date_observed: today,
-      }));
+      .map(k => {
+        const priceNok = parseFloat(detectedPrices[k].price);
+        return {
+          fuelType: k,
+          priceNok: priceNok,
+          priceType: "user_reported",
+          sourceName: "user_reported",
+          sourceUrl: null,
+          sourceUpdatedAt: null,
+          fetchedAt: now,
+          sourceFrequency: "unknown",
+          confidenceScore: 1.0,
+          parserVersion: "user_reported_v1",
+          plausibilityStatus: classifyPricePlausibility(priceNok),
+          locationLabel: stationInfo.city || null,
+          rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`
+        };
+      });
+    
     await base44.entities.FuelPrice.bulkCreate(entries);
     setStep("saved");
     setSubmitting(false);
