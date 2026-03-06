@@ -7,10 +7,11 @@ export default function ObservedMarketStatistics({ allPrices, selectedFuel, incl
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const stats = useMemo(() => {
-    // Filter: realistic prices only
+    // Filter: realistic prices only (no confidenceScore filter - it's metadata only)
     let filtered = allPrices.filter(p =>
       p.fuelType === selectedFuel &&
-      p.plausibilityStatus === "realistic_price"
+      p.plausibilityStatus === "realistic_price" &&
+      p.priceType === "user_reported"
     );
 
     // Breakdown by match status
