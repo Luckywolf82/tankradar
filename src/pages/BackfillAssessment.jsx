@@ -22,7 +22,10 @@ export default function BackfillAssessment() {
       const response = await base44.functions.invoke('diagnosticBackfillAssessment');
       setReport(response.data || response);
     } catch (err) {
-      setError(err.message || 'Failed to load assessment');
+      // Ignore 401 auth errors on public page
+      if (err.status !== 401 && !err.message?.includes('Unauthorized')) {
+        setError(err.message || 'Failed to load assessment');
+      }
     } finally {
       setLoading(false);
     }
