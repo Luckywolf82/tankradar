@@ -32,13 +32,17 @@ export default function PriceChangeIndicator({ observedPrices, selectedFuel }) {
     const diff = todayAvg - yesterdayAvg;
     const pctChange = ((diff / yesterdayAvg) * 100);
 
+    // Mark as weak data if sample is very small (< 5 observations either day)
+    const isWeakData = todayPrices.length < 5 || yesterdayPrices.length < 5;
+
     return {
       today: parseFloat(todayAvg.toFixed(2)),
       yesterday: parseFloat(yesterdayAvg.toFixed(2)),
       diff: parseFloat(diff.toFixed(2)),
       pctChange: parseFloat(pctChange.toFixed(1)),
       todayCount: todayPrices.length,
-      yesterdayCount: yesterdayPrices.length
+      yesterdayCount: yesterdayPrices.length,
+      isWeakData
     };
   }, [observedPrices, selectedFuel]);
 
@@ -64,6 +68,11 @@ export default function PriceChangeIndicator({ observedPrices, selectedFuel }) {
     <Card className={`shadow-sm ${bg}`}>
       <CardHeader>
         <CardTitle className="text-base">Prisendring siste døgn</CardTitle>
+        {change.isWeakData && (
+          <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-2 py-1 rounded border border-amber-200 w-fit">
+            ⚠️ <strong>Begrenset datagrunnlag</strong> – Resultatet baseres på få observasjoner
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">
@@ -75,6 +84,11 @@ export default function PriceChangeIndicator({ observedPrices, selectedFuel }) {
             <p className="text-sm text-slate-600 mt-1">
               I dag: <span className="font-semibold">{change.today}</span> kr ({change.todayCount} obs.) vs i går: <span className="font-semibold">{change.yesterday}</span> kr ({change.yesterdayCount} obs.)
             </p>
+            {change.isWeakData && (
+              <p className="text-xs text-slate-500 mt-2 italic">
+                Prisbevegelse kan være mindre pålitelig når datagrunnlaget er lite.
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
