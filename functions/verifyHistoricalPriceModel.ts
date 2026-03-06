@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
       },
 
       exampleTimeline: {
-        stationCombo: longestTimeline ? longestTimeline[0] : "No data",
+        stationCombo: exampleComboLabel,
         observations: exampleTimeline,
         explanation: "Shows how same stationId + fuelType + sourceName evolves over time. 'deduplicated_fetch' means identical price + sourceUpdatedAt, so recordsSkipped. 'price_change' means new FuelPrice created."
       },
