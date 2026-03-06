@@ -378,14 +378,24 @@ Deno.serve(async (req) => {
       ? Math.round(mapping.matched.reduce((sum, m) => sum + m.matchDistanceMeters, 0) / mapping.matched.length)
       : 0;
 
+    const matchRate = mapping.matched.length + totalUnmatched > 0 
+      ? ((mapping.matched.length / (mapping.matched.length + totalUnmatched)) * 100).toFixed(1) + "%"
+      : "0%";
+
     return Response.json({
+      testValidation: {
+        dataSource: "GooglePlaces Test API + OSM Fixture",
+        osmSource: "fixture_15_stations_4_chains",
+        googleplacesCoverage: "test_coordinates_oslo_trondheim_bergen_stavanger",
+        matchingLogicStatus: "parser_validated_fixture_only",
+        realWorldRepresentativity: "LOW – fixture-based OSM vs test GooglePlaces API. Cannot evaluate real coverage until live sources tested."
+      },
       success: true,
       summary: {
         stationsMatched: mapping.matched.length,
         stationsUnmatched: totalUnmatched,
-        matchRate: mapping.matched.length + totalUnmatched > 0 
-          ? ((mapping.matched.length / (mapping.matched.length + totalUnmatched)) * 100).toFixed(1) + "%"
-          : "0%",
+        matchRate: matchRate,
+        matchRateWarning: `This ${matchRate} is NOT representative of real-world GooglePlaces coverage. Caused by: (1) OSM fixture has only 15 stations + 4 chains, (2) GooglePlaces test API returns ~75 stations from broader index, (3) Overlap between the two is limited. See docs/MATCHING_VALIDATION_STATUS.md`,
         averageMatchDistanceMeters: avgDistance,
         fuelPricesCreated: mapping.pricesCreated,
         fuelPricesSkipped: mapping.pricesSkipped
