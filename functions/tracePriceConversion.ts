@@ -11,13 +11,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * 5. Dashboardet leser (rekonstruert fra logikk)
  */
 
-// Eksakt samme parser som fetchGooglePlacesPrices
+// Eksakt samme parser som fetchGooglePlacesPrices (RIKTIG VERSJON)
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
-  const units = priceObj.units || 0;
-  const nanos = priceObj.nanos || 0;
-  const result = units + (nanos / 1e9);
-  return result;
+  const units = priceObj.units || 0;    // øre (1/100 NOK)
+  const nanos = priceObj.nanos || 0;    // 1e-9 øre (usually 0)
+  const oreValue = units + (nanos / 1e9);
+  return oreValue / 100;                 // convert øre to NOK
 }
 
 // Simulert Google API respons for ett konkret stasjon
