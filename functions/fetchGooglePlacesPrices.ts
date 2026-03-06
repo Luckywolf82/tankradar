@@ -74,15 +74,19 @@ function extractPriceNok(priceObj) {
 
 // Classify price plausibility based on Norwegian fuel price norms
 // RULE: Do NOT modify priceNok, only classify
-// Ranges: <10 = suspect_low, 10-40 = realistic, >40 = suspect_high
+// Norwegian fuel prices realistically range 18–28 NOK/L (as of 2026)
+// Plausibility ranges:
+//   - < 18 NOK/L = suspect_low (below realistic minimum)
+//   - 18–28 NOK/L = realistic_price (normal range)
+//   - > 28 NOK/L = suspect_high (above realistic maximum)
 function classifyPricePlausibility(priceNok) {
   if (priceNok === null || priceNok === undefined) {
     return null;
   }
-  if (priceNok < 10) {
+  if (priceNok < 18) {
     return "suspect_price_low";
   }
-  if (priceNok > 40) {
+  if (priceNok > 28) {
     return "suspect_price_high";
   }
   return "realistic_price";
