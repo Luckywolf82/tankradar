@@ -1,7 +1,8 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "../Layout";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { TabStateProvider } from "../components/mobile/TabStateProvider";
 import PageNotFound from "@/lib/PageNotFound";
 
 // Import all pages
@@ -21,7 +22,8 @@ const pageComponents = {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <TabStateProvider>
+        <BrowserRouter>
         <Routes>
           {Object.entries(pageComponents).map(([name, Component]) => (
             <Route
@@ -36,7 +38,8 @@ export default function App() {
           ))}
           <Route path="*" element={<PageNotFound />} />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </TabStateProvider>
     </ThemeProvider>
   );
 }
