@@ -187,11 +187,14 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      stationsFound: stationRecords.length,
+      totalElementsProcessed: totalElements,
+      stationsWithName: stationRecords.length,
+      missingName: missingName,
+      missingChain: missingChain,
       recordsCreated: recordsCreated,
       recordsSkipped: recordsSkipped,
       usedFixture: usedFixture,
-      exampleStation: stationRecords[0] || null,
+      exampleStations: stationRecords.slice(0, 3) || [],
       fetchLogId: fetchLog.id
     });
   } catch (error) {
