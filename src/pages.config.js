@@ -62,6 +62,7 @@ import UserReportedSystemIntegrationReport from './pages/UserReportedSystemInteg
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import ComponentNamingReview from './pages/ComponentNamingReview';
 import Settings from './pages/Settings';
+import App from './pages/App';
 import __Layout from './Layout.jsx';
 
 
@@ -81,6 +82,7 @@ export const PAGES = {
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "ComponentNamingReview": ComponentNamingReview,
     "Settings": Settings,
+    "App": App,
 }
 
 export const pagesConfig = {
