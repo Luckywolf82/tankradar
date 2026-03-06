@@ -96,14 +96,14 @@ export default function Settings() {
           </div>
           <div>
             <p className="font-semibold text-slate-900">Plattform</p>
-            <p>TankRadar</p>
+            <p>Drivstoffpris.no</p>
           </div>
           <div>
             <p className="font-semibold text-slate-900 mb-2">Hjelp</p>
             <p>
               For spørsmål eller support, kontakt{" "}
-              <a href="mailto:support@tankradar.no" className="text-blue-600 hover:underline">
-                support@tankradar.no
+              <a href="mailto:support@drivstoffpris.no" className="text-blue-600 hover:underline">
+                support@drivstoffpris.no
               </a>
             </p>
           </div>
