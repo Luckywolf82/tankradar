@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -12,9 +11,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerClose,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
 
 /**
  * MobileSelect Component
@@ -33,7 +30,14 @@ export function MobileSelect({
   disabled,
 }) {
   const [open, setOpen] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   if (!isMobile) {
     // Desktop: Use standard Select
