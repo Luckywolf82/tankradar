@@ -6,10 +6,9 @@ import { format, parseISO } from "date-fns";
 import { nb } from "date-fns/locale";
 
 const fuelTypeLabel = {
-  bensin_95: "Bensin 95",
-  bensin_98: "Bensin 98",
+  gasoline_95: "Bensin 95",
+  gasoline_98: "Bensin 98",
   diesel: "Diesel",
-  diesel_premium: "Diesel Premium",
 };
 
 const chainColors = {
@@ -34,21 +33,21 @@ export default function RecentPrices({ prices, loading }) {
             {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         ) : prices.length === 0 ? (
-          <p className="text-slate-400 text-center py-6">Ingen priser registrert ennå. Bli den første!</p>
+          <p className="text-slate-400 text-center py-6">Ingen station-priser registrert ennå.</p>
         ) : (
           <div className="space-y-2">
             {prices.map(p => (
               <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${chainColors[p.station_chain] || chainColors["Annet"]}`}>
-                    {p.station_chain}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${chainColors[p.chain] || chainColors["Annet"]}`}>
+                    {p.chain || "Annet"}
                   </span>
-                  <span className="text-slate-700 text-sm">{p.city}{p.station_name ? ` – ${p.station_name}` : ""}</span>
-                  <span className="text-xs text-slate-400">{fuelTypeLabel[p.fuel_type]}</span>
+                  <span className="text-slate-700 text-sm">{p.city || "–"}{p.stationName ? ` – ${p.stationName}` : ""}</span>
+                  <span className="text-xs text-slate-400">{fuelTypeLabel[p.fuelType]}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-slate-800">{p.price.toFixed(2)} kr</span>
-                  <p className="text-xs text-slate-400">{p.date_observed ? format(parseISO(p.date_observed), "d. MMM", { locale: nb }) : ""}</p>
+                  <span className="font-bold text-slate-800">{p.priceNok.toFixed(2)} kr</span>
+                  <p className="text-xs text-slate-400">{p.fetchedAt ? format(parseISO(p.fetchedAt.split("T")[0]), "d. MMM", { locale: nb }) : ""}</p>
                 </div>
               </div>
             ))}
