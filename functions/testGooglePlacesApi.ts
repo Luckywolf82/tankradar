@@ -78,8 +78,7 @@ async function testNearbySearch(apiKey, location) {
         displayName: places[0].displayName?.text,
         address: places[0].formattedAddress,
         location: places[0].location,
-        fuelOptions: places[0].fuelOptions || null,
-        updateTime: places[0].updateTime || null
+        fuelOptions: places[0].fuelOptions || null
       } : null,
       rawPlacesCount: places.length,
       response: data
