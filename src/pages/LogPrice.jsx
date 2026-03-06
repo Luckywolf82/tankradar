@@ -116,7 +116,7 @@ export default function LogPrice() {
         const stationName = poi?.[0]?.display_name || "";
         const chain = guessChain(stationName) || guessChain(poi?.[0]?.name || "");
 
-        return { city, region, stationName: stationName.split(",")[0], chain };
+        return { city, region, stationName: stationName.split(",")[0], chain, latitude, longitude };
       })()
     ]);
 
