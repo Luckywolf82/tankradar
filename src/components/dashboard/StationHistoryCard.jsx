@@ -108,9 +108,9 @@ export default function StationHistoryCard({ stationId, stationName, chain, fuel
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Source attribution */}
-        <div className="p-2 bg-blue-50 rounded border border-blue-200">
-          <p className="text-xs text-blue-700">
+        {/* Source attribution + low confidence warning */}
+        <div className={`p-2 rounded border ${isLowConfidence ? "bg-amber-50 border-amber-300" : "bg-blue-50 border-blue-200"}`}>
+          <p className={`text-xs ${isLowConfidence ? "text-amber-700" : "text-blue-700"}`}>
             <strong>Kilde:</strong> {latest.sourceName || "Ukjent"}
             {latest.sourceName === "GooglePlaces" && (
               <span className="block text-xs mt-1">
@@ -118,8 +118,13 @@ export default function StationHistoryCard({ stationId, stationName, chain, fuel
               </span>
             )}
           </p>
+          {isLowConfidence && (
+            <p className={`text-xs mt-2 font-semibold ${isLowConfidence ? "text-amber-800 bg-amber-100" : ""}`} style={{padding: "4px 6px", borderRadius: "3px"}}>
+              🔍 REVIEW_NEEDED: {isLowConfidence.reason}
+            </p>
+          )}
           {latest.sourceUpdatedAt && (
-            <p className="text-xs text-blue-600 mt-1">
+            <p className={`text-xs mt-1 ${isLowConfidence ? "text-amber-600" : "text-blue-600"}`}>
               Oppdatert: {format(parseISO(latest.sourceUpdatedAt), "d. MMM HH:mm", { locale: nb })}
             </p>
           )}
