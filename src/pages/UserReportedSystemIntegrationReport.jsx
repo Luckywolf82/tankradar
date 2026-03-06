@@ -28,6 +28,15 @@ export default function UserReportedSystemIntegrationReport() {
       }
     };
     loadData();
+    
+    // Re-fetch data when component becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Categorize user_reported records

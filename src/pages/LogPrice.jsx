@@ -224,9 +224,11 @@ export default function LogPrice() {
         }
         
         // Add candidates if review needed
-        if (matchResult?.status === 'review_needed_station_match' && matchResult?.candidates) {
-          entry.station_match_candidates = matchResult.candidates;
-          entry.station_match_notes = `Review needed: multiple candidates or uncertain match`;
+        if (matchResult?.status === 'review_needed_station_match') {
+          entry.station_match_candidates = matchResult?.candidates || null;
+          entry.station_match_notes = matchResult?.candidates 
+            ? `Review needed: ${matchResult.candidates.length} candidate(s) require manual verification`
+            : `Review needed: matching ambiguous but candidates data missing`;
         }
         
         // Add discovery metadata if no safe match

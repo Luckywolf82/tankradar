@@ -48,35 +48,35 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import BackfillAssessment from './pages/BackfillAssessment';
+import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import CoverageReport from './pages/CoverageReport';
 import Dashboard from './pages/Dashboard';
+import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
+import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import LogPrice from './pages/LogPrice';
+import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Statistics from './pages/Statistics';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
-import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
-import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
-import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
-import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
+import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "BackfillAssessment": BackfillAssessment,
+    "ConfidencePolicyReport": ConfidencePolicyReport,
     "CoverageReport": CoverageReport,
     "Dashboard": Dashboard,
+    "DataConsistencyDiagnosis": DataConsistencyDiagnosis,
     "DataQualityDiagnostics": DataQualityDiagnostics,
+    "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "LogPrice": LogPrice,
+    "ProductionModelLockdown": ProductionModelLockdown,
     "Statistics": Statistics,
     "UserReportedScanOperations": UserReportedScanOperations,
-    "ConfidencePolicyReport": ConfidencePolicyReport,
-    "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
-    "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "ProductionModelLockdown": ProductionModelLockdown,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
-    "DataConsistencyDiagnosis": DataConsistencyDiagnosis,
+    "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
 }
 
 export const pagesConfig = {
