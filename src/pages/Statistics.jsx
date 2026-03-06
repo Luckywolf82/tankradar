@@ -23,8 +23,8 @@ export default function Statistics() {
   const loadData = async () => {
     setLoading(true);
     const [ssb, community] = await Promise.all([
-      base44.entities.SSBData.list("-year,-month", 200),
-      base44.entities.FuelPrice.list("-date_observed", 500),
+      base44.entities.SSBData.list("-created_date", 200),
+      base44.entities.FuelPrice.list("-fetchedAt", 500),
     ]);
     setSsbData(ssb);
     setCommunityData(community);
