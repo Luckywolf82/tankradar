@@ -57,6 +57,7 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
+import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +72,7 @@ export const PAGES = {
     "ConfidencePolicyReport": ConfidencePolicyReport,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
+    "ProductionModelLockdown": ProductionModelLockdown,
 }
 
 export const pagesConfig = {
