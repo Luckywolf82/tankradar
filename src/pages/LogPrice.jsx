@@ -185,12 +185,17 @@ export default function LogPrice() {
       .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
       .map(k => {
         const priceNok = parseFloat(detectedPrices[k].price);
-        // Determine confidence score based on match status
-        let confidenceScore = 0.30; // default for no_safe
+        
+        // Determine confidence score and reason based on match status
+        let confidenceScore = 0.30;
+        let confidenceReason = "no_station_match + gps_signal_only";
+        
         if (matchResult?.status === 'matched_station_id') {
           confidenceScore = 0.85;
+          confidenceReason = "chain_match + name_similarity + distance_close";
         } else if (matchResult?.status === 'review_needed_station_match') {
           confidenceScore = 0.50;
+          confidenceReason = "ambiguous_station + uncertain_distance";
         }
         
         const entry = {
@@ -203,11 +208,14 @@ export default function LogPrice() {
           fetchedAt: now,
           sourceFrequency: "unknown",
           confidenceScore: confidenceScore,
+          confidenceReason: confidenceReason,
           parserVersion: "user_reported_v1",
           plausibilityStatus: classifyPricePlausibility(priceNok),
           locationLabel: stationInfo.city || null,
           rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`,
-          station_match_status: matchResult?.status || 'no_safe_station_match'
+          station_match_status: matchResult?.status || 'no_safe_station_match',
+          gps_latitude: window.__gpsLat || null,
+          gps_longitude: window.__gpsLon || null
         };
         
         // Add stationId if matched
@@ -221,8 +229,10 @@ export default function LogPrice() {
           entry.station_match_notes = `Review needed: multiple candidates or uncertain match`;
         }
         
-        // Add notes if no safe match
+        // Add discovery metadata if no safe match
         if (matchResult?.status === 'no_safe_station_match') {
+          entry.station_name = stationInfo.station_name || null;
+          entry.station_chain = stationInfo.station_chain || null;
           entry.station_match_notes = `No safe match found. GPS [${window.__gpsLat}, ${window.__gpsLon}], name "${stationInfo.station_name}", chain "${stationInfo.station_chain}"`;
         }
         
