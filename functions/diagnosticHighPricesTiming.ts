@@ -9,6 +9,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
  * Spørsmål: Er høye priser fra gamle eller nye observasjoner?
  */
 
+function haveSameAgeAsRealistic(suspects, realistic) {
+  if (suspects.length === 0 || realistic.length === 0) return false;
+  
+  const suspectTime = new Date(suspects[0].fetchedAt).getTime();
+  const realisticTime = new Date(realistic[0].fetchedAt).getTime();
+  
+  // Hvis hentet innen 5 minutter av hverandre
+  return Math.abs(suspectTime - realisticTime) < (5 * 60 * 1000);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -42,6 +52,8 @@ Deno.serve(async (req) => {
     const nyestObsersvasjon = allGooglePlaces.length > 0
       ? new Date(allGooglePlaces[0].fetchedAt)
       : null;
+
+    const sameAge = haveSameAgeAsRealistic(suspectHigh, realistic);
 
     return Response.json({
       diagnosticTiming: {
@@ -97,23 +109,13 @@ Deno.serve(async (req) => {
           ? "✓ Alle suspect_high priser er konsistente (ikke tilfeldige utliggere)"
           : "⚠ Ingen suspect_high priser funnet",
 
-        interpretation: suspectHigh.length > 0 && suspicious HaveSameAgeAsRealistic(suspectHigh, realistic)
+        interpretation: suspectHigh.length > 0 && sameAge
           ? "🚨 Både realistiske og høye priser ble hentet samtidig – dette indikerer at Google API faktisk returnerer høye priser, ikke en parser-feil"
           : suspectHigh.length > realistic.length
           ? "🚨 Flere høye priser enn realistiske – Google API-dekkingen for disse områdene leverer høye priser"
           : "⚠ Blanding av høye og realistiske priser fra samme tidsperiode"
       }
     });
-
-    function suspiciousHaveSameAgeAsRealistic(suspects, realistic) {
-      if (suspects.length === 0 || realistic.length === 0) return false;
-      
-      const suspectTime = new Date(suspects[0].fetchedAt).getTime();
-      const realisticTime = new Date(realistic[0].fetchedAt).getTime();
-      
-      // Hvis hentet innen 5 minutter av hverandre
-      return Math.abs(suspectTime - realisticTime) < (5 * 60 * 1000);
-    }
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
