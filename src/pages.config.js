@@ -64,6 +64,7 @@ import ComponentNamingReview from './pages/ComponentNamingReview';
 import Settings from './pages/Settings';
 import App from './pages/App';
 import MobileImplementationReport from './pages/MobileImplementationReport';
+import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import __Layout from './Layout.jsx';
 
 
@@ -85,6 +86,7 @@ export const PAGES = {
     "Settings": Settings,
     "App": App,
     "MobileImplementationReport": MobileImplementationReport,
+    "MobileUXEnhancementReport": MobileUXEnhancementReport,
 }
 
 export const pagesConfig = {
