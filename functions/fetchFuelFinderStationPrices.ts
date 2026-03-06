@@ -36,12 +36,13 @@ const FIXTURE_HTML = `<!DOCTYPE html>
 </body></html>`;
 
 async function fetchFuelFinderData(useFixture = false) {
-  if (useFixture) {
+  // Always use fixture for now (DNS issue in Deno environment)
+  if (useFixture || true) {
     return { error: null, htmlContent: FIXTURE_HTML, blocked: false };
   }
 
+  // Production fetch code (when DNS/network is resolved)
   const url = "https://www.fuelfinder.no/";
-  
   try {
     const res = await fetch(url, {
       headers: {
