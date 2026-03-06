@@ -176,8 +176,13 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     // Check for test mode (for fixture parsing)
-    const url = new URL(req.url);
-    const testMode = url.searchParams.get('test') === 'true';
+    let testMode = false;
+    try {
+      const url = new URL(req.url);
+      testMode = url.searchParams.get('test') === 'true';
+    } catch {
+      // If URL parsing fails, default to false
+    }
 
     // Fetch FuelFinder data (use fixture if test mode)
     const { error, htmlContent, blocked } = await fetchFuelFinderData(testMode);
