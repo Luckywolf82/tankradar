@@ -42,23 +42,34 @@ export function useTabState(tabName) {
   const context = useContext(TabStateContext);
   const containerRef = useRef(null);
 
+  // Guard: ensure context exists
+  if (!context || !context.getTabState) {
+    return {
+      scrollRef: containerRef,
+      saveScroll: () => {},
+      restoreScroll: () => {}
+    };
+  }
+
   const saveScroll = () => {
-    if (containerRef.current) {
+    if (containerRef.current && context.saveTabState) {
       const scrollPos = containerRef.current.scrollTop || window.scrollY;
       context.saveTabState(tabName, scrollPos, {});
     }
   };
 
   const restoreScroll = () => {
-    const { scrollPos } = context.getTabState(tabName);
-    if (containerRef.current && scrollPos) {
-      setTimeout(() => {
-        if (containerRef.current) {
-          containerRef.current.scrollTop = scrollPos;
-        } else {
-          window.scrollTo(0, scrollPos);
-        }
-      }, 0);
+    if (context.getTabState) {
+      const { scrollPos } = context.getTabState(tabName);
+      if (containerRef.current && scrollPos) {
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = scrollPos;
+          } else {
+            window.scrollTo(0, scrollPos);
+          }
+        }, 0);
+      }
     }
   };
 
