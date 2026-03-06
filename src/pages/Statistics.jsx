@@ -4,17 +4,22 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Database, TrendingUp, AlertCircle } from "lucide-react";
-import SSBChart from "../components/statistics/SSBChart";
-import GooglePlacesObservedStats from "../components/statistics/GooglePlacesObservedStats";
-import VerifiedStationStats from "../components/statistics/VerifiedStationStats";
+import { BarChart3, ArrowLeft } from "lucide-react";
+import PriceDistribution from "../components/dashboard/PriceDistribution";
+import RegionalStats from "../components/dashboard/RegionalStats";
+import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
+
+const fuelTypeLabel = {
+  gasoline_95: "Bensin 95",
+  gasoline_98: "Bensin 98",
+  diesel: "Diesel",
+};
 
 export default function Statistics() {
+  const [prices, setPrices] = useState([]);
   const [ssbData, setSsbData] = useState([]);
-  const [fuelPrices, setFuelPrices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fetchingSSB, setFetchingSSB] = useState(false);
-  const [ssbMsg, setSsbMsg] = useState(null);
+  const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
 
   useEffect(() => {
     loadData();
@@ -22,87 +27,84 @@ export default function Statistics() {
 
   const loadData = async () => {
     setLoading(true);
-    const [ssb, prices] = await Promise.all([
-      base44.entities.SSBData.list("-created_date", 200),
+    const [priceData, ssbDataResp] = await Promise.all([
       base44.entities.FuelPrice.list("-fetchedAt", 1000),
+      base44.entities.SSBData.list("-created_date", 200)
     ]);
-    setSsbData(ssb);
-    setFuelPrices(prices);
+    setPrices(priceData);
+    setSsbData(ssbDataResp);
     setLoading(false);
-  };
-
-  const handleFetchSSB = async () => {
-    setFetchingSSB(true);
-    setSsbMsg(null);
-    const res = await base44.functions.invoke("fetchSSBData", {});
-    if (res.data?.success) {
-      setSsbMsg(`Hentet ${res.data.fetched} datapunkter fra SSB. ${res.data.new_records} nye lagret.`);
-      await loadData();
-    } else {
-      setSsbMsg("Feil ved henting av SSB-data: " + (res.data?.error || "ukjent feil"));
-    }
-    setFetchingSSB(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
-        <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-1 text-slate-500 hover:text-blue-600 mb-6 text-sm">
-          <ArrowLeft size={16} /> Tilbake til oversikt
-        </Link>
-
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Statistikk</h1>
-            <p className="text-slate-500 mt-1">Nasjonal gjennomsnitt, observerte markedspriser og stasjonsobservasjoner</p>
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl("Dashboard")}>
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <ArrowLeft size={18} />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <BarChart3 className="text-blue-600" size={32} />
+                Drivstoffpris Analyse
+              </h1>
+              <p className="text-slate-500 mt-1">Detaljert statistikk og trender</p>
+            </div>
           </div>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleFetchSSB}
-            disabled={fetchingSSB}
-          >
-            <Database size={16} />
-            {fetchingSSB ? "Henter..." : "Oppdater SSB"}
-          </Button>
         </div>
 
-        {ssbMsg && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
-            {ssbMsg}
-          </div>
-        )}
+        {/* Fuel type selector */}
+        <div className="flex gap-2 flex-wrap mb-6">
+          {Object.entries(fuelTypeLabel).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedFuel(key)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedFuel === key
+                  ? "bg-blue-600 text-white shadow"
+                  : "bg-white text-slate-600 border border-slate-200 hover:border-blue-300"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-        <div className="space-y-8">
-          {/* A. National Statistics from GlobalPetrolPrices (via SSB) */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={20} className="text-blue-600" />
-              <h2 className="text-xl font-semibold text-slate-800">A. Nasjonal gjennomsnittspris</h2>
-            </div>
-            <p className="text-sm text-slate-500 mb-4">Offisielle gjennomsnittspriser fra Statistisk Sentralbyrå</p>
-            <SSBChart ssbData={ssbData} loading={loading} />
-          </div>
+        {/* SECTION 1: Historical Trend */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Historisk trend (SSB)</h2>
+          <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
+        </div>
 
-          {/* B. Observed Market Statistics from GooglePlaces */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <AlertCircle size={20} className="text-amber-600" />
-              <h2 className="text-xl font-semibold text-slate-800">B. Observerte markedspriser</h2>
-            </div>
-            <p className="text-sm text-slate-500 mb-4">Prisdata hentet fra Google Places – delvis dekning, gjeldende stasjonspriser</p>
-            <GooglePlacesObservedStats fuelPrices={fuelPrices} loading={loading} />
-          </div>
+        {/* SECTION 2: Price Distribution */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Prisfordeling (live observed)</h2>
+          <PriceDistribution observedPrices={prices} selectedFuel={selectedFuel} />
+        </div>
 
-          {/* C. Verified Station Observations */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp size={20} className="text-green-600" />
-              <h2 className="text-xl font-semibold text-slate-800">C. Verifiserte stasjonsobservasjoner</h2>
-            </div>
-            <p className="text-sm text-slate-500 mb-4">High-confidence stasjonsmatcher fra pålidelige kilder</p>
-            <VerifiedStationStats fuelPrices={fuelPrices} loading={loading} />
-          </div>
+        {/* SECTION 3: Regional Analysis */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Regional analyse</h2>
+          <RegionalStats observedPrices={prices} ssbData={ssbData} selectedFuel={selectedFuel} />
+        </div>
+
+        {/* Data Quality Info */}
+        <div className="mt-12 mb-8">
+          <Card className="shadow-sm bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-base text-blue-900">Om dataene</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-blue-800 space-y-2">
+              <p><strong>SSB-data:</strong> Statistisk Sentralbyrå – offisiell historisk referanse</p>
+              <p><strong>Live observed:</strong> Google Places – nåtidsdata (realistic_price only)</p>
+              <p><strong>Regional:</strong> Basert på observerte priser fra live kilder</p>
+              <p><strong>Sample size:</strong> Vises per lokasjon – lavt grunnlag merkes eksplisitt</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

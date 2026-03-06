@@ -5,18 +5,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Fuel, Plus } from "lucide-react";
-import { format, subDays } from "date-fns";
-import { nb } from "date-fns/locale";
-import NationalAverageSection from "../components/dashboard/NationalAverageSection.jsx";
-import StationPricesSection from "../components/dashboard/StationPricesSection.jsx";
-import DataSourcesSection from "../components/dashboard/DataSourcesSection.jsx";
-import TrendChart from "../components/dashboard/TrendChart.jsx";
-import GooglePlacesHistorySection from "../components/dashboard/GooglePlacesHistorySection.jsx";
 import SmartFillIndicator from "../components/dashboard/SmartFillIndicator";
 import LiveMarketStats from "../components/dashboard/LiveMarketStats";
 import PriceChangeIndicator from "../components/dashboard/PriceChangeIndicator";
-import RegionalStats from "../components/dashboard/RegionalStats";
-import PriceDistribution from "../components/dashboard/PriceDistribution";
 import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
 
 const fuelTypeLabel = {
@@ -46,8 +37,6 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
@@ -58,13 +47,20 @@ export default function Dashboard() {
               <Fuel className="text-blue-600" size={32} />
               Drivstoffpris Norge
             </h1>
-            <p className="text-slate-500 mt-1">Community-basert prisdeling</p>
+            <p className="text-slate-500 mt-1">Rask oversikt og beslutningsgrunnlag</p>
           </div>
-          <Link to={createPageUrl("LogPrice")}>
-            <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
-              <Plus size={18} /> Logg pris
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link to={createPageUrl("LogPrice")}>
+              <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
+                <Plus size={18} /> Logg pris
+              </Button>
+            </Link>
+            <Link to={createPageUrl("Statistics")}>
+              <Button variant="outline" className="gap-2">
+                Detaljert analyse
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Fuel type selector */}
@@ -84,12 +80,12 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* SECTION 1: Smart Fill Indicator */}
+        {/* SECTION 1: Smart Fill Indicator - Rask beslutning */}
         <div className="mb-8">
           <SmartFillIndicator ssbData={ssbData} observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
-        {/* SECTION 2: Live Market Stats */}
+        {/* SECTION 2: Live Market Stats - Rask oversikt */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-4">Live markedspriser nå</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -98,31 +94,26 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SECTION 3: Regional Statistics */}
+        {/* SECTION 3: Mini SSB trend - liten historisk referanse */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Regional statistikk</h2>
-          <RegionalStats observedPrices={prices} ssbData={ssbData} selectedFuel={selectedFuel} />
-        </div>
-
-        {/* SECTION 4: Price Distribution */}
-        <div className="mb-8">
-          <PriceDistribution observedPrices={prices} selectedFuel={selectedFuel} />
-        </div>
-
-        {/* SECTION 5: Historical SSB Trend */}
-        <div className="mb-8">
-          <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
-        </div>
-
-        {/* SECTION 6: GooglePlaces Historical Data Section */}
-        <div className="mb-8">
-          <GooglePlacesHistorySection prices={prices} />
-        </div>
-
-        {/* Data Sources */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Datakilder</h2>
-          <DataSourcesSection />
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>Offisiell referanse (SSB)</span>
+                <Link to={createPageUrl("Statistics")}>
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    Se full analyse →
+                  </Button>
+                </Link>
+              </CardTitle>
+              <p className="text-xs text-slate-500 mt-2">Statistisk Sentralbyrå – historisk månedsgjennomsnitt</p>
+            </CardHeader>
+            <CardContent>
+              <div style={{ maxHeight: "200px", overflow: "hidden" }}>
+                <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
