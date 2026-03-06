@@ -4,7 +4,6 @@ import { createPageUrl } from "@/utils";
 import { BarChart2, Plus, Home, Settings } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
-import { TankRadarLogo } from "./components/TankRadarLogo.jsx";
 
 const navLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
@@ -36,7 +35,7 @@ export default function Layout({ children, currentPageName }) {
       <nav className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-30 pt-safe">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 font-bold">
-            <TankRadarLogo size={32} />
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69aab8c78a62757f8f707126/951c4584e_image.png" alt="TankRadar" className="w-8 h-8" />
             <span className="text-slate-900">TankRadar</span>
           </Link>
           <div className="flex gap-1">
