@@ -86,7 +86,7 @@ export default function Layout({ children, currentPageName }) {
               onClick={() => handleTabClick(page)}
               className={`flex flex-col items-center justify-center py-3 flex-1 text-xs transition-colors ${
                 currentPageName === page
-                  ? "bg-blue-50 text-blue-600"
+                  ? "bg-green-50 text-green-600"
                   : "text-slate-600"
               }`}
             >
