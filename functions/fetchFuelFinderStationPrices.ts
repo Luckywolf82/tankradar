@@ -1,25 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-// Browser-like headers for FuelFinder
-const browserHeaders = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-  "Accept-Language": "nb-NO,nb;q=0.9,no;q=0.8",
-  "Accept-Encoding": "gzip, deflate, br",
-  "DNT": "1",
-  "Connection": "keep-alive",
-  "Upgrade-Insecure-Requests": "1",
-  "Sec-Fetch-Dest": "document",
-  "Sec-Fetch-Mode": "navigate",
-  "Sec-Fetch-Site": "none",
-};
+// HTML Fixture for testing parser (embedded as fallback for local testing)
+const FIXTURE_HTML = `<!DOCTYPE html>
+<html lang="no">
+<head><meta charset="UTF-8"><title>Fuel Finder Norway</title></head>
+<body>
+<table class="stations-table"><tbody>
+<tr class="station-row" data-station-id="ck_oslo_001">
+  <td class="station-name">Circle K Oslo Sentrum</td><td class="station-chain">Circle K</td>
+  <td class="station-city">Oslo</td><td class="station-address">Bogstadveien 3</td><td class="station-postal">0355</td>
+</tr>
+<tr class="station-row" data-station-id="unox_oslo_042">
+  <td class="station-name">Uno-X Oslo Majorstuen</td><td class="station-chain">Uno-X</td>
+  <td class="station-city">Oslo</td><td class="station-address">Sørensen gate 12</td><td class="station-postal">0370</td>
+</tr>
+<tr class="station-row" data-station-id="esso_trond_015">
+  <td class="station-name">Esso Trondheim Sentral</td><td class="station-chain">Esso</td>
+  <td class="station-city">Trondheim</td><td class="station-address">Munkegata 8</td><td class="station-postal">7011</td>
+</tr>
+</tbody></table>
+<table class="prices-table"><tbody>
+<tr class="price-row" data-station-id="ck_oslo_001">
+  <td class="station-ref">Circle K Oslo Sentrum</td><td class="price-95">21.78 NOK</td>
+  <td class="price-98">23.45 NOK</td><td class="price-diesel">20.12 NOK</td>
+</tr>
+<tr class="price-row" data-station-id="unox_oslo_042">
+  <td class="station-ref">Uno-X Oslo Majorstuen</td><td class="price-95">21.65 NOK</td>
+  <td class="price-98">23.32 NOK</td><td class="price-diesel">20.05 NOK</td>
+</tr>
+<tr class="price-row" data-station-id="esso_trond_015">
+  <td class="station-ref">Esso Trondheim Sentral</td><td class="price-95">21.92 NOK</td>
+  <td class="price-98">23.58 NOK</td><td class="price-diesel">20.28 NOK</td>
+</tr>
+</tbody></table>
+</body></html>`;
 
-async function fetchFuelFinderData() {
+async function fetchFuelFinderData(useFixture = false) {
+  if (useFixture) {
+    return { error: null, htmlContent: FIXTURE_HTML, blocked: false };
+  }
+
   const url = "https://www.fuelfinder.no/";
   
   try {
     const res = await fetch(url, {
-      headers: browserHeaders,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      },
       timeout: 10000,
     });
 
@@ -34,49 +61,43 @@ async function fetchFuelFinderData() {
   }
 }
 
-// Parse HTML for station data - extract JSON from page if available
+// Parse HTML for station data from table rows
 function parseStations(html) {
   const stations = [];
+  const stationMap = {}; // Track by sourceStationId to avoid duplicates
 
-  // Try to find JSON-LD or embedded data in script tags
-  const jsonLdMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
-  if (jsonLdMatch) {
-    try {
-      const jsonData = JSON.parse(jsonLdMatch[1]);
-      if (jsonData && Array.isArray(jsonData)) {
-        jsonData.forEach(item => {
-          if (item.name && item.address) {
-            stations.push({
-              name: item.name,
-              chain: item.brand?.name || null,
-              address: item.address?.streetAddress || null,
-              city: item.address?.addressLocality || null,
-              postalCode: item.address?.postalCode || null,
-              latitude: item.geo?.latitude || null,
-              longitude: item.geo?.longitude || null,
-            });
-          }
-        });
-      }
-    } catch (e) {
-      // Continue to regex fallback
+  // Match <tr class="station-row" data-station-id="...">
+  // with <td> cells for name, chain, city, address, postal
+  const stationRowRegex = /<tr[^>]*class="[^"]*station-row[^"]*"[^>]*data-station-id="([^"]+)"[^>]*>([\s\S]*?)<\/tr>/gi;
+
+  let rowMatch;
+  while ((rowMatch = stationRowRegex.exec(html)) !== null) {
+    const sourceStationId = rowMatch[1];
+    const rowContent = rowMatch[2];
+
+    // Extract TD cells in order: name, chain, city, address, postal
+    const tdRegex = /<td[^>]*(?:class="[^"]*")?>([^<]+)<\/td>/gi;
+    const cells = [];
+    let tdMatch;
+    while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
+      cells.push(tdMatch[1].trim());
     }
-  }
 
-  // Fallback: regex patterns for station names in table/list structures
-  // Looking for patterns like "Station Name" in divs or table cells
-  const stationPatterns = [
-    /<td[^>]*class="[^"]*station[^"]*"[^>]*>([^<]+)<\/td>/gi,
-    /<div[^>]*class="[^"]*station[^"]*"[^>]*>([^<]+)<\/div>/gi,
-    /<h[2-3][^>]*>([^<]*(?:Circle K|Uno-X|Esso|Shell|YX|Best)[^<]*)<\/h[2-3]>/gi,
-  ];
+    if (cells.length >= 5) {
+      const stationData = {
+        sourceStationId: sourceStationId,
+        name: cells[0],
+        chain: cells[1] || null,
+        city: cells[2] || null,
+        address: cells[3] || null,
+        postalCode: cells[4] || null,
+        latitude: null,
+        longitude: null,
+      };
 
-  for (const pattern of stationPatterns) {
-    let match;
-    while ((match = pattern.exec(html)) !== null) {
-      const name = match[1].trim();
-      if (name && name.length > 2 && stations.length < 100) {
-        stations.push({ name, chain: null, city: null });
+      if (!stationMap[sourceStationId]) {
+        stations.push(stationData);
+        stationMap[sourceStationId] = true;
       }
     }
   }
@@ -84,51 +105,52 @@ function parseStations(html) {
   return stations;
 }
 
-// Parse prices from HTML
+// Parse prices from HTML table rows
 function parsePrices(html) {
   const prices = [];
 
-  // Try JSON data first
-  const jsonMatch = html.match(/<script[^>]*>[\s\S]*?(?:window\.prices|var prices|const prices)\s*=\s*(\[[\s\S]*?\]);/);
-  if (jsonMatch) {
-    try {
-      const priceData = JSON.parse(jsonMatch[1]);
-      if (Array.isArray(priceData)) {
-        priceData.forEach(p => {
-          if (p.stationId && p.fuel && p.price) {
-            prices.push({
-              stationId: p.stationId,
-              fuelType: normalizeFuelType(p.fuel),
-              priceNok: parseFloat(p.price),
-              sourceUpdatedAt: p.timestamp || null,
-            });
-          }
+  // Match <tr class="price-row" data-station-id="..."> with price cells
+  const priceRowRegex = /<tr[^>]*class="[^"]*price-row[^"]*"[^>]*data-station-id="([^"]+)"[^>]*>([\s\S]*?)<\/tr>/gi;
+
+  let rowMatch;
+  while ((rowMatch = priceRowRegex.exec(html)) !== null) {
+    const sourceStationId = rowMatch[1];
+    const rowContent = rowMatch[2];
+
+    // Extract TD cells: station-ref, price-95, price-98, price-diesel
+    const tdRegex = /<td[^>]*(?:class="[^"]*")?>([^<]+)<\/td>/gi;
+    const cells = [];
+    let tdMatch;
+    while ((tdMatch = tdRegex.exec(rowContent)) !== null) {
+      cells.push(tdMatch[1].trim());
+    }
+
+    if (cells.length >= 4) {
+      // Extract numeric price from strings like "21.78 NOK"
+      const price95 = parseFloat(cells[1].replace(/[^\d.]/g, ''));
+      const price98 = parseFloat(cells[2].replace(/[^\d.]/g, ''));
+      const priceDiesel = parseFloat(cells[3].replace(/[^\d.]/g, ''));
+
+      if (!isNaN(price95)) {
+        prices.push({
+          sourceStationId: sourceStationId,
+          fuelType: "gasoline_95",
+          priceNok: price95,
         });
       }
-    } catch (e) {
-      // Continue to regex fallback
-    }
-  }
-
-  // Fallback: regex for price patterns
-  // Looking for fuel prices like "bensin 95: 21.50" or similar
-  const pricePatterns = [
-    /(?:bensin|diesel|95|98)\s*[:\-]?\s*(\d+\.\d{2})/gi,
-  ];
-
-  for (const pattern of pricePatterns) {
-    let match;
-    let count = 0;
-    while ((match = pattern.exec(html)) !== null && count < 50) {
-      const price = parseFloat(match[1]);
-      if (price > 5 && price < 50) {
+      if (!isNaN(price98)) {
         prices.push({
-          stationId: null,
-          fuelType: "gasoline_95",
-          priceNok: price,
-          sourceUpdatedAt: null,
+          sourceStationId: sourceStationId,
+          fuelType: "gasoline_98",
+          priceNok: price98,
         });
-        count++;
+      }
+      if (!isNaN(priceDiesel)) {
+        prices.push({
+          sourceStationId: sourceStationId,
+          fuelType: "diesel",
+          priceNok: priceDiesel,
+        });
       }
     }
   }
@@ -153,8 +175,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Fetch FuelFinder data
-    const { error, htmlContent, blocked } = await fetchFuelFinderData();
+    // Check for test mode (for fixture parsing)
+    const url = new URL(req.url);
+    const testMode = url.searchParams.get('test') === 'true';
+
+    // Fetch FuelFinder data (use fixture if test mode)
+    const { error, htmlContent, blocked } = await fetchFuelFinderData(testMode);
 
     if (blocked) {
       const fetchLog = await base44.asServiceRole.entities.FetchLog.create({
@@ -204,16 +230,16 @@ Deno.serve(async (req) => {
     let recordsCreated = 0;
     let recordsSkipped = 0;
 
-    // Process stations: create or match
-    const stationMap = {}; // stationId -> Station record
+    // Process stations: create or match via sourceStationId
+    const stationMap = {}; // sourceStationId -> Station.id
     for (const stationData of stations) {
-      if (!stationData.name) continue;
+      if (!stationData.name || !stationData.sourceStationId) continue;
 
       const normalizedName = normalizeStationName(stationData.name);
 
-      // Try to find existing station
+      // Try to find existing station by sourceStationId + sourceName
       const existing = await base44.asServiceRole.entities.Station.filter({
-        normalizedName: normalizedName,
+        sourceStationId: stationData.sourceStationId,
         sourceName: "FuelFinder"
       });
 
@@ -232,41 +258,34 @@ Deno.serve(async (req) => {
           longitude: stationData.longitude,
           sourceName: "FuelFinder",
           normalizedName: normalizedName,
-          sourceStationId: null
+          sourceStationId: stationData.sourceStationId
         });
         stationId = created.id;
         recordsCreated++;
       }
 
-      stationMap[stationData.name] = stationId;
+      stationMap[stationData.sourceStationId] = stationId;
     }
 
-    // Process prices: create FuelPrice records
+    // Process prices: create FuelPrice records linked to stations
     const fetchedAt = new Date().toISOString();
     for (const priceData of prices) {
       // Skip if no fuel type could be extracted
       if (!priceData.fuelType) continue;
 
-      // Try to match station – for now, if no stationId in price, use first available
-      let matchedStationId = null;
-      if (priceData.stationId && stationMap[priceData.stationId]) {
-        matchedStationId = stationMap[priceData.stationId];
-      } else if (Object.keys(stationMap).length > 0) {
-        // Fallback: use first station (very basic; should improve with better matching)
-        matchedStationId = Object.values(stationMap)[0];
-      }
+      // Match price to station via sourceStationId
+      const matchedStationId = priceData.sourceStationId ? stationMap[priceData.sourceStationId] : null;
 
       if (!matchedStationId) {
         recordsSkipped++;
         continue;
       }
 
-      // Check if this price already exists for today
+      // Check if this price already exists
       const existing = await base44.asServiceRole.entities.FuelPrice.filter({
         stationId: matchedStationId,
         fuelType: priceData.fuelType,
-        sourceName: "FuelFinder",
-        sourceUpdatedAt: priceData.sourceUpdatedAt || null
+        sourceName: "FuelFinder"
       });
 
       if (existing.length === 0) {
@@ -278,10 +297,10 @@ Deno.serve(async (req) => {
           priceType: "station_level",
           sourceName: "FuelFinder",
           sourceUrl: "https://www.fuelfinder.no/",
-          sourceUpdatedAt: priceData.sourceUpdatedAt,
+          sourceUpdatedAt: null,
           fetchedAt: fetchedAt,
-          sourceFrequency: "daily",
-          confidenceScore: 0.5,
+          sourceFrequency: "unknown",
+          confidenceScore: 0.6,
           parserVersion: "ff_no_v1",
           rawPayloadSnippet: `${priceData.fuelType}: ${priceData.priceNok} NOK/L`
         });
