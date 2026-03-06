@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Fuel, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -35,9 +35,8 @@ export function MobileHeader({ currentPageName, showBack = false }) {
           </>
         ) : (
           <>
-            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 font-bold text-blue-600">
-              <Fuel size={20} />
-              <span className="text-sm">Drivstoffpris.no</span>
+            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69aab8c78a62757f8f707126/0dd7fb1be_file_000000002b94720ab4a84cc00f949b51.png" alt="TankRadar" className="h-12" />
             </Link>
             <div />
           </>
