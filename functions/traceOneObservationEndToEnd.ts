@@ -14,8 +14,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 // PARSER - LÅST
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
-  const units = priceObj.units || 0;
-  const nanos = priceObj.nanos || 0;
+  const units = Number(priceObj.units) || 0;  // Konverter string til tall
+  const nanos = Number(priceObj.nanos) || 0;  // Konverter string til tall
   return units + (nanos / 1e9);
 }
 
