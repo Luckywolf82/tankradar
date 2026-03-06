@@ -170,6 +170,21 @@ function matchStationToPriceSource(googlePlace, allStations) {
   return bestMatch;
 }
 
+/**
+ * fetchGooglePlacesPrices – GooglePlaces Integration
+ * 
+ * STATUS: parser_validated
+ * DATA SOURCE: GooglePlaces Test API (limited coverage)
+ * OSM SOURCE: Local fixture (15 stations, 4 chains)
+ * 
+ * IMPORTANT: This function matches GooglePlaces results against OSM station catalog.
+ * The current implementation is validated against FIXTURE DATA ONLY.
+ * Real-world match rate cannot be determined until both OSM and GooglePlaces use live data.
+ * 
+ * See: docs/MATCHING_VALIDATION_STATUS.md
+ * See: docs/TEST_MATRIX_MATCHING.md
+ */
+
 Deno.serve(async (req) => {
   const startedAt = new Date().toISOString();
 
