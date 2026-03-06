@@ -79,14 +79,26 @@ export default function StationHistoryCard({ stationId, stationName, chain, fuel
   const trendColor = priceDiff > 0 ? "text-red-600" : priceDiff < 0 ? "text-green-600" : "text-slate-500";
 
   return (
-    <Card className="shadow-sm border-slate-200">
+    <Card className={`shadow-sm ${isLowConfidence ? "border-amber-300 border-2 bg-amber-50" : "border-slate-200"}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-sm font-semibold text-slate-700">
-              {stationName} – {fuelLabel}
-            </CardTitle>
+            <div className="flex items-start gap-2">
+              <CardTitle className="text-sm font-semibold text-slate-700">
+                {stationName} – {fuelLabel}
+              </CardTitle>
+              {isLowConfidence && (
+                <span className="px-2 py-0.5 bg-amber-200 text-amber-800 text-xs font-semibold rounded">
+                  ⚠️ USIKKER MATCH
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500 mt-1">{chain} • {observationCount} observasjon{observationCount !== 1 ? "er" : ""}</p>
+            {isLowConfidence && (
+              <p className="text-xs text-amber-700 mt-2">
+                🔍 Denne koblingen må valideres før bruk i rapporter.
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="font-bold text-lg text-slate-800">{latest.priceNok.toFixed(2)} kr</p>
