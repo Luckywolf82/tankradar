@@ -12,6 +12,12 @@ import StationPricesSection from "../components/dashboard/StationPricesSection.j
 import DataSourcesSection from "../components/dashboard/DataSourcesSection.jsx";
 import TrendChart from "../components/dashboard/TrendChart.jsx";
 import GooglePlacesHistorySection from "../components/dashboard/GooglePlacesHistorySection.jsx";
+import SmartFillIndicator from "../components/dashboard/SmartFillIndicator";
+import LiveMarketStats from "../components/dashboard/LiveMarketStats";
+import PriceChangeIndicator from "../components/dashboard/PriceChangeIndicator";
+import RegionalStats from "../components/dashboard/RegionalStats";
+import PriceDistribution from "../components/dashboard/PriceDistribution";
+import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
 
 const fuelTypeLabel = {
   gasoline_95: "Bensin 95",
@@ -21,31 +27,26 @@ const fuelTypeLabel = {
 
 export default function Dashboard() {
   const [prices, setPrices] = useState([]);
+  const [ssbData, setSsbData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFuel, setSelectedFuel] = useState("bensin_95");
+  const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
 
   useEffect(() => {
-    loadPrices();
+    loadData();
   }, []);
 
-  const loadPrices = async () => {
+  const loadData = async () => {
     setLoading(true);
-    const data = await base44.entities.FuelPrice.list("-fetchedAt", 500);
-    setPrices(data);
+    const [priceData, ssbDataResp] = await Promise.all([
+      base44.entities.FuelPrice.list("-fetchedAt", 1000),
+      base44.entities.SSBData.list("-created_date", 200)
+    ]);
+    setPrices(priceData);
+    setSsbData(ssbDataResp);
     setLoading(false);
   };
 
-  const filtered = prices.filter(p => p.fuelType === selectedFuel && p.priceType === "national_average");
-  const stationFiltered = prices.filter(p => p.priceType === "station_level");
-  const last7days = filtered.filter(p => new Date(p.fetchedAt) >= subDays(new Date(), 7));
-  const last30days = filtered.filter(p => new Date(p.fetchedAt) >= subDays(new Date(), 30));
 
-  const avgLast7 = last7days.length ? (last7days.reduce((s, p) => s + p.priceNok, 0) / last7days.length).toFixed(2) : null;
-  const avgLast30 = last30days.length ? (last30days.reduce((s, p) => s + p.priceNok, 0) / last30days.length).toFixed(2) : null;
-
-  const lowestToday = stationFiltered
-    .filter(p => p.fetchedAt && p.fetchedAt.split("T")[0] === format(new Date(), "yyyy-MM-dd"))
-    .sort((a, b) => a.priceNok - b.priceNok)[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
@@ -83,18 +84,37 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* National Average Section */}
+        {/* SECTION 1: Smart Fill Indicator */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Nasjonalt snitt</h2>
-          <NationalAverageSection prices={prices} />
+          <SmartFillIndicator ssbData={ssbData} observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
-        {/* National Trend Chart */}
+        {/* SECTION 2: Live Market Stats */}
         <div className="mb-8">
-          <TrendChart prices={filtered} fuelLabel={fuelTypeLabel[selectedFuel]} />
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Live markedspriser nå</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LiveMarketStats observedPrices={prices} selectedFuel={selectedFuel} />
+            <PriceChangeIndicator observedPrices={prices} selectedFuel={selectedFuel} />
+          </div>
         </div>
 
-        {/* GooglePlaces Historical Data Section */}
+        {/* SECTION 3: Regional Statistics */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Regional statistikk</h2>
+          <RegionalStats observedPrices={prices} ssbData={ssbData} selectedFuel={selectedFuel} />
+        </div>
+
+        {/* SECTION 4: Price Distribution */}
+        <div className="mb-8">
+          <PriceDistribution observedPrices={prices} selectedFuel={selectedFuel} />
+        </div>
+
+        {/* SECTION 5: Historical SSB Trend */}
+        <div className="mb-8">
+          <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
+        </div>
+
+        {/* SECTION 6: GooglePlaces Historical Data Section */}
         <div className="mb-8">
           <GooglePlacesHistorySection prices={prices} />
         </div>
