@@ -185,6 +185,14 @@ export default function LogPrice() {
       .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
       .map(k => {
         const priceNok = parseFloat(detectedPrices[k].price);
+        // Determine confidence score based on match status
+        let confidenceScore = 0.30; // default for no_safe
+        if (matchResult?.status === 'matched_station_id') {
+          confidenceScore = 0.85;
+        } else if (matchResult?.status === 'review_needed_station_match') {
+          confidenceScore = 0.50;
+        }
+        
         const entry = {
           fuelType: k,
           priceNok: priceNok,
@@ -194,7 +202,7 @@ export default function LogPrice() {
           sourceUpdatedAt: null,
           fetchedAt: now,
           sourceFrequency: "unknown",
-          confidenceScore: 1.0,
+          confidenceScore: confidenceScore,
           parserVersion: "user_reported_v1",
           plausibilityStatus: classifyPricePlausibility(priceNok),
           locationLabel: stationInfo.city || null,
