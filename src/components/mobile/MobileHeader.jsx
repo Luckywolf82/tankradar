@@ -36,7 +36,7 @@ export function MobileHeader({ currentPageName, showBack = false }) {
         ) : (
           <>
             <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
-              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69aab8c78a62757f8f707126/0dd7fb1be_file_000000002b94720ab4a84cc00f949b51.png" alt="TankRadar" className="h-12" />
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69aab8c78a62757f8f707126/0dd7fb1be_file_000000002b94720ab4a84cc00f949b51.png" alt="TankRadar" className="h-16" />
             </Link>
             <div />
           </>
