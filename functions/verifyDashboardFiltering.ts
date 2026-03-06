@@ -15,11 +15,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Hent ALLE GooglePlaces-priser fra database
+    // Hent siste GooglePlaces-priser fra database
     const allGooglePrices = await base44.entities.FuelPrice.filter(
       { sourceName: "GooglePlaces" },
       "-fetchedAt",
-      100
+      20
     );
 
     // Simuler dashboard-filterlogikk: Only display realistic_price
