@@ -13,7 +13,6 @@ const navLinks = [
 ];
 
 export default function Layout({ children, currentPageName }) {
-  const navigate = useNavigate();
   const [lastClickedTab, setLastClickedTab] = useState(null);
   const mainPages = ["Dashboard", "Statistics", "LogPrice"];
   const isMainPage = mainPages.includes(currentPageName);
@@ -21,7 +20,7 @@ export default function Layout({ children, currentPageName }) {
   const handleTabClick = (page) => {
     if (currentPageName === page && lastClickedTab === page) {
       // Double-tap same tab: reset to root route
-      navigate(createPageUrl(page), { replace: true });
+      window.location.href = createPageUrl(page);
       setLastClickedTab(null);
     } else {
       setLastClickedTab(page);
