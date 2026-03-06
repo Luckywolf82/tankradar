@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { BarChart2, Plus, Home, Settings } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
