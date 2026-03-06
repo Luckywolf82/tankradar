@@ -148,9 +148,11 @@ Deno.serve(async (req) => {
 
     // Build example timeline for longest series
     const exampleTimeline = [];
-    if (longestTimeline) {
+    let exampleComboLabel = "No data";
+    if (longestTimeline && longestTimeline[1].length > 0) {
       const [key, timeline] = longestTimeline;
       const [stationId, fuelType, sourceName] = key.split("|");
+      exampleComboLabel = key;
 
       for (let i = 0; i < Math.min(5, timeline.length); i++) {
         const p = timeline[i];
