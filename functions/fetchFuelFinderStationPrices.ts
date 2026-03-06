@@ -195,7 +195,8 @@ Deno.serve(async (req) => {
         finishedAt: new Date().toISOString(),
         success: false,
         httpStatus: 403,
-        recordsFound: 0,
+        stationsFound: 0,
+        pricesFound: 0,
         recordsCreated: 0,
         recordsSkipped: 0,
         parserVersion: "ff_no_v1",
@@ -218,7 +219,8 @@ Deno.serve(async (req) => {
         finishedAt: new Date().toISOString(),
         success: false,
         httpStatus: null,
-        recordsFound: 0,
+        stationsFound: 0,
+        pricesFound: 0,
         recordsCreated: 0,
         recordsSkipped: 0,
         parserVersion: "ff_no_v1",
@@ -323,12 +325,13 @@ Deno.serve(async (req) => {
       finishedAt: new Date().toISOString(),
       success: true,
       httpStatus: 200,
-      recordsFound: stations.length + prices.length,
+      stationsFound: stations.length,
+      pricesFound: prices.length,
       recordsCreated: recordsCreated,
       recordsSkipped: recordsSkipped,
       parserVersion: "ff_no_v1",
       errorMessage: null,
-      notes: `Parsed ${stations.length} stations, ${prices.length} price entries`
+      notes: `Parser validated via embedded HTML fixture. Parsed ${stations.length} stations, ${prices.length} price entries.`
     });
 
     return Response.json({
@@ -347,7 +350,8 @@ Deno.serve(async (req) => {
       finishedAt: new Date().toISOString(),
       success: false,
       httpStatus: null,
-      recordsFound: 0,
+      stationsFound: 0,
+      pricesFound: 0,
       recordsCreated: 0,
       recordsSkipped: 0,
       parserVersion: "ff_no_v1",
