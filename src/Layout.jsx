@@ -36,8 +36,8 @@ export default function Layout({ children, currentPageName }) {
       <nav className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-30 pt-safe">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 font-bold text-blue-600">
-            <Fuel size={22} />
-            <span>Drivstoffpris.no</span>
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69aab8c78a62757f8f707126/c54a50373_file_000000002b94720ab4a84cc00f949b51.png" alt="TankRadar" className="h-6 w-auto" />
+            <span>TankRadar</span>
           </Link>
           <div className="flex gap-1">
             {navLinks.map(({ label, page, icon: Icon }) => (
