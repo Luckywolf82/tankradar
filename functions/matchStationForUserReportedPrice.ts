@@ -177,7 +177,8 @@ Deno.serve(async (req) => {
       .sort((a, b) => b.score - a.score);
 
     // SCORE_MATCHED threshold
-    const SCORE_MATCHED = 55;
+    const SCORE_MATCHED = 65;
+    const SCORE_REVIEW_THRESHOLD = 35;
 
     if (scoredMatches.length === 0) {
       return Response.json({
@@ -190,7 +191,7 @@ Deno.serve(async (req) => {
 
     const topMatch = scoredMatches[0];
 
-    // Single strong match
+    // Single strong match (high confidence)
     if (topMatch.score >= SCORE_MATCHED) {
       return Response.json({
         status: 'matched_station_id',
@@ -207,22 +208,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Multiple candidates or weak single match
+    // Review needed: has some signal but not strong enough for auto-match
+    if (topMatch.score >= SCORE_REVIEW_THRESHOLD) {
+      return Response.json({
+        status: 'review_needed_station_match',
+        stationId: null,
+        candidates: scoredMatches.slice(0, 3).map(m => m.station.id),
+        topScore: topMatch.score,
+        reasons: scoredMatches.slice(0, 3).map(m => ({
+          stationId: m.station.id,
+          stationName: m.station.name,
+          score: m.score,
+          dist: Math.round(m.dist),
+          distClass: m.distClass,
+          chainMatch: m.chainMatch,
+          nameMatch: m.nameMatch,
+          cityMatch: m.cityMatch
+        }))
+      });
+    }
+
+    // No safe match
     return Response.json({
-      status: 'review_needed_station_match',
+      status: 'no_safe_station_match',
       stationId: null,
-      candidates: scoredMatches.slice(0, 3).map(m => m.station.id),
-      topScore: topMatch.score,
-      reasons: scoredMatches.slice(0, 3).map(m => ({
-        stationId: m.station.id,
-        stationName: m.station.name,
-        score: m.score,
-        dist: Math.round(m.dist),
-        distClass: m.distClass,
-        chainMatch: m.chainMatch,
-        nameMatch: m.nameMatch,
-        cityMatch: m.cityMatch
-      }))
+      candidates: [],
+      reason: 'No candidates passed review threshold'
     });
 
   } catch (error) {
