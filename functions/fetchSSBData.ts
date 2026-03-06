@@ -41,14 +41,24 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`SSB API feil: ${response.status}`);
+      const errorBody = await response.text();
+      throw new Error(`SSB API feil ${response.status}: ${errorBody}`);
     }
 
     const data = await response.json();
 
     // Parse JSON-stat2 format
+    if (!data.dimension || !data.value) {
+      throw new Error(`Invalid SSB response format: missing dimension or value`);
+    }
+
     const dimensions = data.dimension;
     const values = data.value;
+    
+    if (!dimensions["Tid"] || !dimensions["Produkt"]) {
+      throw new Error(`Invalid SSB dimensions: missing Tid or Produkt`);
+    }
+
     const tidDim = dimensions["Tid"];
     const produktDim = dimensions["Produkt"];
 
