@@ -1,8 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-// Embedded OSM fixture for testing (nationwide sample)
+// Embedded OSM fixture for testing – extended multi-city coverage
 const OSM_FIXTURE = {
   elements: [
+    // OSLO
     {
       type: "node",
       id: 123456,
@@ -41,11 +42,43 @@ const OSM_FIXTURE = {
         name: "ESSO Nationaltheatret",
         brand: "ESSO",
         amenity: "fuel",
-        addr_street: "Universitetsgaten 8",
+        addr_street: "Universitetsgaten",
+        addr_housenumber: "8",
         addr_postcode: "0162",
         addr_city: "Oslo"
       }
     },
+    {
+      type: "node",
+      id: 123457,
+      lat: 59.8946,
+      lon: 10.8053,
+      tags: {
+        name: "Esso Enebakkveien",
+        brand: "Esso",
+        amenity: "fuel",
+        addr_street: "Enebakkveien",
+        addr_housenumber: "139",
+        addr_postcode: "0680",
+        addr_city: "Oslo"
+      }
+    },
+    {
+      type: "node",
+      id: 123458,
+      lat: 59.9075,
+      lon: 10.7312,
+      tags: {
+        name: "Circle K Uelands gate",
+        brand: "Circle K",
+        amenity: "fuel",
+        addr_street: "Uelands gate",
+        addr_housenumber: "55",
+        addr_postcode: "0175",
+        addr_city: "Oslo"
+      }
+    },
+    // TRONDHEIM
     {
       type: "node",
       id: 456789,
@@ -55,7 +88,8 @@ const OSM_FIXTURE = {
         name: "Shell Trondheim Sentrum",
         brand: "Shell",
         amenity: "fuel",
-        addr_street: "Kongens gate 50",
+        addr_street: "Kongens gate",
+        addr_housenumber: "50",
         addr_postcode: "7014",
         addr_city: "Trondheim"
       }
@@ -74,23 +108,108 @@ const OSM_FIXTURE = {
       }
     },
     {
-      type: "relation",
-      id: 678901,
-      center: { lat: 58.9701, lon: 5.7331 },
+      type: "node",
+      id: 456790,
+      lat: 63.4209,
+      lon: 10.4607,
       tags: {
-        name: "Statoil Stavanger",
-        brand: "Statoil",
+        name: "Circle K Tunga",
+        brand: "Circle K",
+        amenity: "fuel",
+        addr_street: "Tungasletta",
+        addr_housenumber: "16",
+        addr_postcode: "7047",
+        addr_city: "Trondheim"
+      }
+    },
+    // BERGEN
+    {
+      type: "node",
+      id: 678902,
+      lat: 60.3895,
+      lon: 5.3221,
+      tags: {
+        name: "Shell Bergen Sentrum",
+        brand: "Shell",
+        amenity: "fuel",
+        addr_street: "Strandkaien",
+        addr_postcode: "5004",
+        addr_city: "Bergen"
+      }
+    },
+    {
+      type: "node",
+      id: 678903,
+      lat: 60.3912,
+      lon: 5.3156,
+      tags: {
+        name: "Uno-X Bergen",
+        brand: "Uno-X",
+        amenity: "fuel",
+        addr_postcode: "5005",
+        addr_city: "Bergen"
+      }
+    },
+    {
+      type: "node",
+      id: 678904,
+      lat: 60.3856,
+      lon: 5.3289,
+      tags: {
+        name: "Circle K Bergen",
+        brand: "Circle K",
+        amenity: "fuel",
+        addr_postcode: "5006",
+        addr_city: "Bergen"
+      }
+    },
+    // STAVANGER
+    {
+      type: "node",
+      id: 789013,
+      lat: 58.9701,
+      lon: 5.7331,
+      tags: {
+        name: "Shell Stavanger",
+        brand: "Shell",
         amenity: "fuel",
         addr_city: "Stavanger"
       }
     },
     {
       type: "node",
-      id: 789012,
-      lat: 60.3895,
-      lon: 5.3221,
+      id: 789014,
+      lat: 58.9658,
+      lon: 5.7289,
       tags: {
-        amenity: "fuel"
+        name: "Esso Stavanger",
+        brand: "Esso",
+        amenity: "fuel",
+        addr_city: "Stavanger"
+      }
+    },
+    {
+      type: "node",
+      id: 789015,
+      lat: 58.9745,
+      lon: 5.7371,
+      tags: {
+        name: "Circle K Stavanger",
+        brand: "Circle K",
+        amenity: "fuel",
+        addr_city: "Stavanger"
+      }
+    },
+    {
+      type: "node",
+      id: 789016,
+      lat: 58.9680,
+      lon: 5.7425,
+      tags: {
+        name: "Uno-X Stavanger",
+        brand: "Uno-X",
+        amenity: "fuel",
+        addr_city: "Stavanger"
       }
     }
   ]
