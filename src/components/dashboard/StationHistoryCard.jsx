@@ -19,8 +19,17 @@ import { nb } from "date-fns/locale";
  * - Single-observation indicator (no trend)
  */
 
+// Known low-confidence matches that need warning
+const LOW_CONFIDENCE_STATIONS = {
+  "69aae82f8c0186903a326f9f": {
+    reason: "Svak navnematch + moderat distanse (218m) – krever validering",
+    warningLevel: "review_needed"
+  }
+};
+
 export default function StationHistoryCard({ stationId, stationName, chain, fuelType, fuelLabel, observations }) {
   const [sorted, setSorted] = useState([]);
+  const isLowConfidence = LOW_CONFIDENCE_STATIONS[stationId];
 
   useEffect(() => {
     // Sort by fetchedAt descending
