@@ -54,7 +54,7 @@ export default function Statistics() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Statistikk</h1>
-            <p className="text-slate-500 mt-1">Historiske priser fra SSB og community</p>
+            <p className="text-slate-500 mt-1">Nasjonal gjennomsnitt, observerte markedspriser og stasjonsobservasjoner</p>
           </div>
           <Button
             variant="outline"
@@ -63,7 +63,7 @@ export default function Statistics() {
             disabled={fetchingSSB}
           >
             <Database size={16} />
-            {fetchingSSB ? "Henter SSB-data..." : "Oppdater SSB-data"}
+            {fetchingSSB ? "Henter..." : "Oppdater SSB"}
           </Button>
         </div>
 
@@ -74,11 +74,34 @@ export default function Statistics() {
         )}
 
         <div className="space-y-8">
-          <SSBChart ssbData={ssbData} loading={loading} />
+          {/* A. National Statistics from GlobalPetrolPrices (via SSB) */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={20} className="text-blue-600" />
+              <h2 className="text-xl font-semibold text-slate-800">A. Nasjonal gjennomsnittspris</h2>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">Offisielle gjennomsnittspriser fra Statistisk Sentralbyrå</p>
+            <SSBChart ssbData={ssbData} loading={loading} />
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PriceByRegion data={communityData} />
-            <PriceByChain data={communityData} />
+          {/* B. Observed Market Statistics from GooglePlaces */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle size={20} className="text-amber-600" />
+              <h2 className="text-xl font-semibold text-slate-800">B. Observerte markedspriser</h2>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">Prisdata hentet fra Google Places – delvis dekning, gjeldende stasjonspriser</p>
+            <GooglePlacesObservedStats fuelPrices={fuelPrices} loading={loading} />
+          </div>
+
+          {/* C. Verified Station Observations */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={20} className="text-green-600" />
+              <h2 className="text-xl font-semibold text-slate-800">C. Verifiserte stasjonsobservasjoner</h2>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">High-confidence stasjonsmatcher fra pålidelige kilder</p>
+            <VerifiedStationStats fuelPrices={fuelPrices} loading={loading} />
           </div>
         </div>
       </div>
