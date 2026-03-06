@@ -70,6 +70,10 @@ async function testNearbySearch(apiKey, location, pageToken = null) {
       Object.keys(p.fuelOptions).forEach(type => allFuelTypes.add(type));
     });
 
+    // Find sample station WITH fuelOptions for better demo
+    const sampleWithFuel = stationsWithFuelOptions[0];
+    const sampleStation = sampleWithFuel || places[0];
+
     return {
       success: true,
       location: location.name,
@@ -77,12 +81,13 @@ async function testNearbySearch(apiKey, location, pageToken = null) {
       stationsWithFuelOptions: stationsWithFuelOptions.length,
       coverage: places.length > 0 ? ((stationsWithFuelOptions.length / places.length) * 100).toFixed(1) : 0,
       fuelTypes: Array.from(allFuelTypes),
-      sampleStation: places[0] ? {
-        id: places[0].id,
-        displayName: places[0].displayName?.text,
-        address: places[0].formattedAddress,
-        location: places[0].location,
-        fuelOptions: places[0].fuelOptions || null
+      nextPageToken: data.nextPageToken || null,
+      sampleStation: sampleStation ? {
+        id: sampleStation.id,
+        displayName: sampleStation.displayName?.text,
+        address: sampleStation.formattedAddress,
+        location: sampleStation.location,
+        fuelOptions: sampleStation.fuelOptions || null
       } : null,
       rawPlacesCount: places.length,
       response: data
