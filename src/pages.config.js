@@ -50,6 +50,7 @@
 import Dashboard from './pages/Dashboard';
 import LogPrice from './pages/LogPrice';
 import Statistics from './pages/Statistics';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -61,4 +62,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
+    Layout: __Layout,
 };
