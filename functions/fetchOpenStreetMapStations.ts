@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
     try {
       const overpassQuery = `
         [bbox:57.8,4.0,71.0,31.0];
-        node["amenity"="fuel"];
-        out center;
+        (node["amenity"="fuel"];way["amenity"="fuel"];relation["amenity"="fuel"];);
+        out center tags;
       `;
 
       const response = await fetch("https://overpass-api.de/api/interpreter", {
