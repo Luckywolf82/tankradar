@@ -216,19 +216,30 @@ Deno.serve(async (req) => {
     }
 
     const stats = {
-      pricesCreated: 0,
-      pricesSkipped: 0,
-      pricesDeduplicated: 0,
+      // API-nivå tracking
+      totalGooglePlacesResults: 0,
+      stationsWithPriceData: 0,
+      stationsWithoutPriceData: 0,
+      
+      // Matching-nivå tracking
+      observationsMatched: 0,
+      observationsUnmatched: 0,
+      
+      // Klassifisering-nivå tracking
+      highConfidenceObservations: 0,
+      reviewNeededObservations: 0,
+      
+      // Plausibilitet-nivå tracking
       observationsByPlausibility: {
         realistic_price: 0,
         suspect_price_low: 0,
         suspect_price_high: 0
       },
-      observationsByConfidence: {
-        high_confidence: 0,
-        review_needed: 0,
-        unmatched: 0
-      }
+      
+      // Persistence-nivå tracking
+      fuelPricesCreated: 0,
+      fuelPricesDeduplicated: 0,
+      fuelPricesSkipped: 0
     };
 
     // Hent fra alle test-lokasjoner
@@ -241,38 +252,46 @@ Deno.serve(async (req) => {
 
       // Prosesser hver GooglePlace
       for (const googlePlace of googleResult.places) {
+        stats.totalGooglePlacesResults++;
+        
         const fuelOptions = googlePlace.fuelOptions?.fuelPrices || [];
 
-        if (fuelOptions.length === 0) continue;
+        if (fuelOptions.length === 0) {
+          stats.stationsWithoutPriceData++;
+          continue;
+        }
+
+        stats.stationsWithPriceData++;
 
         const matchResult = matchStationToPriceSource(googlePlace, allStations);
 
         if (!matchResult) {
-          stats.observationsByConfidence.unmatched++;
+          stats.observationsUnmatched++;
           continue;
         }
 
+        stats.observationsMatched++;
         const station = matchResult.station;
 
         // Klassifiser som high_confidence eller review_needed
         const isReviewNeeded = matchResult.distanceMeters > 200 || matchResult.confidence < 0.70;
         if (isReviewNeeded) {
-          stats.observationsByConfidence.review_needed++;
+          stats.reviewNeededObservations++;
         } else {
-          stats.observationsByConfidence.high_confidence++;
+          stats.highConfidenceObservations++;
         }
 
         // Opprett FuelPrice for hver drivstofftype
         for (const fuelPrice of fuelOptions) {
           const fuelType = normalizeFuelType(fuelPrice.type);
           if (!fuelType) {
-            stats.pricesSkipped++;
+            stats.fuelPricesSkipped++;
             continue;
           }
 
           const priceNok = extractPriceNok(fuelPrice.price);
           if (!priceNok) {
-            stats.pricesSkipped++;
+            stats.fuelPricesSkipped++;
             continue;
           }
 
@@ -296,7 +315,7 @@ Deno.serve(async (req) => {
           if (lastObservation.length > 0) {
             const last = lastObservation[0];
             if (last.priceNok === priceNok && last.sourceUpdatedAt === sourceUpdatedAt) {
-              stats.pricesDeduplicated++;
+              stats.fuelPricesDeduplicated++;
               continue;
             }
           }
@@ -317,7 +336,7 @@ Deno.serve(async (req) => {
             plausibilityStatus: plausibilityStatus,
             rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L`
           });
-          stats.pricesCreated++;
+          stats.fuelPricesCreated++;
         }
       }
     }
@@ -329,28 +348,45 @@ Deno.serve(async (req) => {
       finishedAt: new Date().toISOString(),
       success: true,
       httpStatus: 200,
-      stationsFound: stats.observationsByConfidence.high_confidence + 
-                     stats.observationsByConfidence.review_needed + 
-                     stats.observationsByConfidence.unmatched,
-      pricesFound: stats.pricesCreated + stats.pricesDeduplicated + stats.pricesSkipped,
-      recordsCreated: stats.pricesCreated,
-      recordsSkipped: stats.pricesSkipped,
+      stationsFound: stats.totalGooglePlacesResults,
+      pricesFound: stats.stationsWithPriceData,
+      recordsCreated: stats.fuelPricesCreated,
+      recordsSkipped: stats.fuelPricesDeduplicated + stats.fuelPricesSkipped,
       parserVersion: "gp_v1",
-      notes: `Automation: realistic=${stats.observationsByPlausibility.realistic_price} high_conf=${stats.observationsByConfidence.high_confidence} review=${stats.observationsByConfidence.review_needed} dedup=${stats.pricesDeduplicated}`
+      notes: `API=${stats.totalGooglePlacesResults} with_prices=${stats.stationsWithPriceData} matched=${stats.observationsMatched} high=${stats.highConfidenceObservations} review=${stats.reviewNeededObservations} created=${stats.fuelPricesCreated} dedup=${stats.fuelPricesDeduplicated}`
     });
 
     return Response.json({
       success: true,
       automation: {
         executedAt: automationStartedAt,
-        duration: new Date().toISOString()
+        completedAt: new Date().toISOString()
       },
-      statistics: {
-        created: stats.pricesCreated,
-        deduplicated: stats.pricesDeduplicated,
-        skipped: stats.pricesSkipped,
-        plausibility: stats.observationsByPlausibility,
-        confidence: stats.observationsByConfidence
+      dataflow: {
+        "1_google_places_api_results": stats.totalGooglePlacesResults,
+        "2_stations_with_price_data": stats.stationsWithPriceData,
+        "2_stations_without_price_data": stats.stationsWithoutPriceData,
+        "3_matched_to_osm": stats.observationsMatched,
+        "3_unmatched_to_osm": stats.observationsUnmatched
+      },
+      classification: {
+        "high_confidence_observations": stats.highConfidenceObservations,
+        "review_needed_observations": stats.reviewNeededObservations
+      },
+      plausibility: {
+        "realistic_price": stats.observationsByPlausibility.realistic_price,
+        "suspect_price_low": stats.observationsByPlausibility.suspect_price_low,
+        "suspect_price_high": stats.observationsByPlausibility.suspect_price_high
+      },
+      persistence: {
+        "new_fuel_price_records_created": stats.fuelPricesCreated,
+        "deduplicated_identical_observations": stats.fuelPricesDeduplicated,
+        "skipped_parse_errors": stats.fuelPricesSkipped
+      },
+      summary: {
+        total_observations_processed: stats.highConfidenceObservations + stats.reviewNeededObservations + stats.observationsUnmatched,
+        usable_observations: stats.highConfidenceObservations + stats.reviewNeededObservations,
+        dashboard_impact: `${stats.highConfidenceObservations} high_confidence (normal) + ${stats.reviewNeededObservations} review_needed (warned)`
       }
     });
   } catch (error) {
