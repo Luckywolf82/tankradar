@@ -9,8 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // SSB table 03014 - Konsumprisindeks for drivstoff
-    // We fetch actual pump prices from SSB table 07020 (Priser på drivstoff)
+    // SSB table 07020 - Priser på drivstoff ved bensinstasjoner
     const ssbUrl = "https://data.ssb.no/api/v0/no/table/07020";
 
     const query = {
@@ -20,13 +19,6 @@ Deno.serve(async (req) => {
           "selection": {
             "filter": "item",
             "values": ["Bensin, 95 oktan", "Autodiesel"]
-          }
-        },
-        {
-          "code": "ContentsCode",
-          "selection": {
-            "filter": "item",
-            "values": ["Pris"]
           }
         },
         {
