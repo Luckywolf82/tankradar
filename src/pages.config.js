@@ -56,6 +56,7 @@ import Statistics from './pages/Statistics';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
+import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import __Layout from './Layout.jsx';
 
 
@@ -69,6 +70,7 @@ export const PAGES = {
     "UserReportedScanOperations": UserReportedScanOperations,
     "ConfidencePolicyReport": ConfidencePolicyReport,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
+    "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
 }
 
 export const pagesConfig = {
