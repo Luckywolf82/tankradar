@@ -58,17 +58,15 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 // Extract price in NOK from Google price object
-// NOTE: Google uses Money protobuf: units = whole units, nanos = 10^-9 of unit
-// Test API data: units ≈ 2196 (øre), so units is already in øre scale (1/100 NOK)
-// Expected output: ~21.96 NOK/L
-// LOCKED FORMULA: priceNok = units / 100 + nanos / 1e11
-// This is FINAL and matches Google Money protobuf spec
+// NOTE: Google uses Money protobuf: units = whole NOK, nanos = 10^-9 of NOK
+// Raw API data verified: units=23, nanos=500000000 → 23.5 NOK
+// FORMULA: priceNok = units + (nanos / 1e9)
+// units is whole NOK, nanos is fractional NOK (10^-9)
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
   const units = priceObj.units || 0;
   const nanos = priceObj.nanos || 0;
-  // units is in øre, divide by 100 to get NOK
-  return (units / 100) + (nanos / 1e11);
+  return units + (nanos / 1e9);
 }
 
 // Classify price plausibility based on Norwegian fuel price norms
