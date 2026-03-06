@@ -1,12 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const handleAccountDeletion = () => {
-    alert("Kontoen slettingsprosessen er under utvikling. Vennligst kontakt support@drivstoffpris.no for å slette kontoen din.");
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDeletion = () => {
+    setShowDeleteConfirm(false);
+    // TODO: Implement actual deletion flow when ready
+    // For now, show support contact information
   };
 
   return (
@@ -44,6 +62,27 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Account Deletion Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett konto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sletting av konto er permanent og kan ikke reverseres. Alle dine data vil bli fjernet fra systemet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDeletion}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Slett konto
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* App Info */}
       <Card>
