@@ -8,6 +8,9 @@ import { BarChart3, ArrowLeft } from "lucide-react";
 import PriceDistribution from "../components/dashboard/PriceDistribution";
 import RegionalStats from "../components/dashboard/RegionalStats";
 import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
+import { PullToRefresh } from "../components/mobile/PullToRefresh";
+import { useTabState } from "../components/mobile/TabStateProvider";
+import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
 const fuelTypeLabel = {
   gasoline_95: "Bensin 95",
@@ -20,9 +23,11 @@ export default function Statistics() {
   const [ssbData, setSsbData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
+  const { scrollRef, restoreScroll } = useTabState("Statistics");
 
   useEffect(() => {
     loadData();
+    restoreScroll();
   }, []);
 
   const loadData = async () => {
@@ -37,8 +42,10 @@ export default function Statistics() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+    <RouteAnimation pageName="Statistics">
+      <PullToRefresh onRefresh={loadData} isLoading={loading}>
+        <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+          <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div className="flex items-center gap-3">
@@ -107,6 +114,8 @@ export default function Statistics() {
           </Card>
         </div>
       </div>
-    </div>
+        </div>
+      </PullToRefresh>
+    </RouteAnimation>
   );
 }
