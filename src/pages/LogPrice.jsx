@@ -69,6 +69,9 @@ export default function LogPrice() {
     setStep("confirm");
     setLocationLoading(true);
 
+    // Store GPS for later matching
+    let gpsCoords = null;
+    
     // Run AI + GPS in parallel
     const [aiResult, gpsResult] = await Promise.allSettled([
       // AI: read all prices from image
@@ -140,7 +143,10 @@ export default function LogPrice() {
 
     // Apply GPS results
     if (gpsResult.status === "fulfilled") {
-      const { city, region, stationName, chain } = gpsResult.value;
+      const { city, region, stationName, chain, latitude, longitude } = gpsResult.value;
+      gpsCoords = { latitude, longitude };
+      window.__gpsLat = latitude;
+      window.__gpsLon = longitude;
       setStationInfo(prev => ({
         ...prev,
         city: city || prev.city,
@@ -159,11 +165,27 @@ export default function LogPrice() {
     const today = stationInfo.date_observed;
     const now = new Date().toISOString();
     
+    // Attempt station matching
+    let matchResult = null;
+    try {
+      const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
+        gps_lat: window.__gpsLat,
+        gps_lon: window.__gpsLon,
+        station_name: stationInfo.station_name,
+        station_chain: stationInfo.station_chain,
+        city: stationInfo.city
+      });
+      matchResult = matchRes.data;
+    } catch (err) {
+      // Matching error, continue without stationId
+      matchResult = { status: 'no_safe_station_match', stationId: null };
+    }
+    
     const entries = FUEL_TYPES
       .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
       .map(k => {
         const priceNok = parseFloat(detectedPrices[k].price);
-        return {
+        const entry = {
           fuelType: k,
           priceNok: priceNok,
           priceType: "user_reported",
@@ -176,8 +198,27 @@ export default function LogPrice() {
           parserVersion: "user_reported_v1",
           plausibilityStatus: classifyPricePlausibility(priceNok),
           locationLabel: stationInfo.city || null,
-          rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`
+          rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`,
+          station_match_status: matchResult?.status || 'no_safe_station_match'
         };
+        
+        // Add stationId if matched
+        if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
+          entry.stationId = matchResult.stationId;
+        }
+        
+        // Add candidates if review needed
+        if (matchResult?.status === 'review_needed_station_match' && matchResult?.candidates) {
+          entry.station_match_candidates = matchResult.candidates;
+          entry.station_match_notes = `Review needed: multiple candidates or uncertain match`;
+        }
+        
+        // Add notes if no safe match
+        if (matchResult?.status === 'no_safe_station_match') {
+          entry.station_match_notes = `No safe match found. GPS [${window.__gpsLat}, ${window.__gpsLon}], name "${stationInfo.station_name}", chain "${stationInfo.station_chain}"`;
+        }
+        
+        return entry;
       });
     
     await base44.entities.FuelPrice.bulkCreate(entries);

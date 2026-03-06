@@ -47,22 +47,22 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import BackfillAssessment from './pages/BackfillAssessment';
+import CoverageReport from './pages/CoverageReport';
 import Dashboard from './pages/Dashboard';
+import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import LogPrice from './pages/LogPrice';
 import Statistics from './pages/Statistics';
-import CoverageReport from './pages/CoverageReport';
-import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
-import BackfillAssessment from './pages/BackfillAssessment';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "BackfillAssessment": BackfillAssessment,
+    "CoverageReport": CoverageReport,
     "Dashboard": Dashboard,
+    "DataQualityDiagnostics": DataQualityDiagnostics,
     "LogPrice": LogPrice,
     "Statistics": Statistics,
-    "CoverageReport": CoverageReport,
-    "DataQualityDiagnostics": DataQualityDiagnostics,
-    "BackfillAssessment": BackfillAssessment,
 }
 
 export const pagesConfig = {
