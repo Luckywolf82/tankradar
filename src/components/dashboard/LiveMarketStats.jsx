@@ -1,6 +1,22 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+/**
+ * LiveMarketStats Component
+ * 
+ * Displays verified, current fuel prices from GooglePlaces API
+ * filtered by fuel type and plausibility check.
+ * 
+ * DATA SOURCE: GooglePlaces only (station_level)
+ * GRANULARITY: Station-level verified prices
+ * UPDATE FREQUENCY: Near-realtime
+ * 
+ * NOTE: User-reported prices are NOT included in this component.
+ * User-reported crowdsourced data is displayed separately in ObservedMarketStatistics.
+ * 
+ * This component shows only realistic, verified prices from active stations
+ * to provide a reliable baseline for market price monitoring.
+ */
 export default function LiveMarketStats({ observedPrices, selectedFuel }) {
   const stats = useMemo(() => {
     // Filter observed prices (realistic only, GooglePlaces only)
