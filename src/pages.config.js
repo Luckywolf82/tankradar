@@ -51,6 +51,7 @@ import Dashboard from './pages/Dashboard';
 import LogPrice from './pages/LogPrice';
 import Statistics from './pages/Statistics';
 import CoverageReport from './pages/CoverageReport';
+import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import __Layout from './Layout.jsx';
 
 
@@ -59,6 +60,7 @@ export const PAGES = {
     "LogPrice": LogPrice,
     "Statistics": Statistics,
     "CoverageReport": CoverageReport,
+    "DataQualityDiagnostics": DataQualityDiagnostics,
 }
 
 export const pagesConfig = {
