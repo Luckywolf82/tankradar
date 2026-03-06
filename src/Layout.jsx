@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Fuel, BarChart2, Plus, Home, Settings } from "lucide-react";
+import { MobileHeader } from "./components/mobile/MobileHeader";
+import { RouteAnimation } from "./components/mobile/RouteAnimation";
 
 const navLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
@@ -10,8 +12,14 @@ const navLinks = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const mainPages = ["Dashboard", "Statistics", "LogPrice"];
+  const isMainPage = mainPages.includes(currentPageName);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Mobile Header */}
+      <MobileHeader currentPageName={currentPageName} showBack={!isMainPage} />
+
       {/* Top nav - Desktop only */}
       <nav className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-30 pt-safe">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -49,8 +57,12 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </nav>
 
-      {/* Page content */}
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      {/* Page content with route animation */}
+      <main className="flex-1 pb-20 md:pb-0">
+        <RouteAnimation pageName={currentPageName}>
+          {children}
+        </RouteAnimation>
+      </main>
 
       {/* Bottom Navigation - Mobile only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe">
