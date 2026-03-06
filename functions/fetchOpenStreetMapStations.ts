@@ -107,11 +107,43 @@ Deno.serve(async (req) => {
       usedFixture = true;
     }
 
-    // Parse stations
+    // Parse stations (nodes, ways, relations with center coordinates)
     const elements = osmResponse.elements || [];
+    
+    // Count missing data
+    let totalElements = 0;
+    let missingName = 0;
+    let missingChain = 0;
+    
     const stationRecords = elements
-      .filter(el => el.type === "node" && el.tags?.name)
-      .map(mapOsmToStation);
+      .filter(el => {
+        totalElements++;
+        const hasName = el.tags?.name;
+        if (!hasName) missingName++;
+        if (!el.tags?.brand) missingChain++;
+        return hasName; // Require name
+      })
+      .map(el => {
+        // For ways/relations, use center coordinates
+        const lat = el.center?.lat || el.lat;
+        const lon = el.center?.lon || el.lon;
+        
+        if (!lat || !lon) return null; // Skip if no coordinates
+        
+        return {
+          name: el.tags.name || null,
+          chain: el.tags.brand || null,
+          address: el.tags.addr_street || null,
+          postalCode: el.tags.addr_postcode || null,
+          city: el.tags.addr_city || null,
+          latitude: lat,
+          longitude: lon,
+          sourceStationId: `osm_${el.type}_${el.id}`,
+          sourceName: "OpenStreetMap",
+          normalizedName: (el.tags.name || "").toLowerCase().trim()
+        };
+      })
+      .filter(s => s !== null);
 
     let recordsCreated = 0;
     let recordsSkipped = 0;
