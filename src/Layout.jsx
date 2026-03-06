@@ -36,9 +36,9 @@ export default function Layout({ children, currentPageName }) {
       {/* Top nav - Desktop only */}
       <nav className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-30 pt-safe">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 font-bold text-blue-600">
-            <Fuel size={22} />
-            <span>Drivstoffpris.no</span>
+          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 font-bold">
+            <TankRadarLogo size={32} />
+            <span className="text-slate-900">TankRadar</span>
           </Link>
           <div className="flex gap-1">
             {navLinks.map(({ label, page, icon: Icon }) => (
