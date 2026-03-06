@@ -49,12 +49,6 @@ export default function Dashboard() {
           <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">
-              Drivstoffpris Norge
-            </h1>
-            <p className="text-slate-500 mt-1">Rask oversikt og beslutningsgrunnlag</p>
-          </div>
           <div className="flex gap-2">
             <Link to={createPageUrl("LogPrice")}>
               <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
