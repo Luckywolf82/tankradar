@@ -3,20 +3,19 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingDown, TrendingUp, Fuel, Users, Plus, BarChart2 } from "lucide-react";
+import { Fuel, Plus } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { nb } from "date-fns/locale";
-import DayOfWeekChart from "../components/dashboard/DayOfWeekChart.jsx";
-import RecentPrices from "../components/dashboard/RecentPrices.jsx";
+import NationalAverageSection from "../components/dashboard/NationalAverageSection.jsx";
+import StationPricesSection from "../components/dashboard/StationPricesSection.jsx";
+import DataSourcesSection from "../components/dashboard/DataSourcesSection.jsx";
 import TrendChart from "../components/dashboard/TrendChart.jsx";
 
 const fuelTypeLabel = {
-  bensin_95: "Bensin 95",
-  bensin_98: "Bensin 98",
+  gasoline_95: "Bensin 95",
+  gasoline_98: "Bensin 98",
   diesel: "Diesel",
-  diesel_premium: "Diesel Premium",
 };
 
 export default function Dashboard() {
@@ -30,21 +29,22 @@ export default function Dashboard() {
 
   const loadPrices = async () => {
     setLoading(true);
-    const data = await base44.entities.FuelPrice.list("-date_observed", 500);
+    const data = await base44.entities.FuelPrice.list("-fetchedAt", 500);
     setPrices(data);
     setLoading(false);
   };
 
-  const filtered = prices.filter(p => p.fuel_type === selectedFuel);
-  const last7days = filtered.filter(p => new Date(p.date_observed) >= subDays(new Date(), 7));
-  const last30days = filtered.filter(p => new Date(p.date_observed) >= subDays(new Date(), 30));
+  const filtered = prices.filter(p => p.fuelType === selectedFuel && p.priceType === "national_average");
+  const stationFiltered = prices.filter(p => p.priceType === "station_level");
+  const last7days = filtered.filter(p => new Date(p.fetchedAt) >= subDays(new Date(), 7));
+  const last30days = filtered.filter(p => new Date(p.fetchedAt) >= subDays(new Date(), 30));
 
-  const avgLast7 = last7days.length ? (last7days.reduce((s, p) => s + p.price, 0) / last7days.length).toFixed(2) : null;
-  const avgLast30 = last30days.length ? (last30days.reduce((s, p) => s + p.price, 0) / last30days.length).toFixed(2) : null;
+  const avgLast7 = last7days.length ? (last7days.reduce((s, p) => s + p.priceNok, 0) / last7days.length).toFixed(2) : null;
+  const avgLast30 = last30days.length ? (last30days.reduce((s, p) => s + p.priceNok, 0) / last30days.length).toFixed(2) : null;
 
-  const lowestToday = filtered
-    .filter(p => p.date_observed === format(new Date(), "yyyy-MM-dd"))
-    .sort((a, b) => a.price - b.price)[0];
+  const lowestToday = stationFiltered
+    .filter(p => p.fetchedAt && p.fetchedAt.split("T")[0] === format(new Date(), "yyyy-MM-dd"))
+    .sort((a, b) => a.priceNok - b.priceNok)[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
@@ -82,53 +82,31 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-slate-500 font-medium">Snitt siste 7 dager</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-slate-800">
-                {avgLast7 ? `${avgLast7} kr` : "–"}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">{last7days.length} registreringer</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-slate-500 font-medium">Snitt siste 30 dager</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-slate-800">
-                {avgLast30 ? `${avgLast30} kr` : "–"}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">{last30days.length} registreringer</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-slate-500 font-medium">Lavest i dag</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">
-                {lowestToday ? `${lowestToday.price.toFixed(2)} kr` : "–"}
-              </div>
-              <p className="text-xs text-slate-400 mt-1">{lowestToday ? `${lowestToday.station_chain}, ${lowestToday.city}` : "Ingen data ennå"}</p>
-            </CardContent>
-          </Card>
+        {/* National Average Section */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Nasjonalt snitt</h2>
+          <NationalAverageSection prices={prices} />
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* National Trend Chart */}
+        <div className="mb-8">
           <TrendChart prices={filtered} fuelLabel={fuelTypeLabel[selectedFuel]} />
-          <DayOfWeekChart prices={filtered} />
         </div>
 
-        {/* Recent prices */}
-        <RecentPrices prices={filtered.slice(0, 20)} loading={loading} />
+        {/* Station Prices Section */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Stasjoner</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <StationPricesSection title="Billigste i Oslo" region="Oslo" prices={stationFiltered} />
+            <StationPricesSection title="Billigste i Trondheim" region="Trøndelag" prices={stationFiltered} />
+          </div>
+        </div>
+
+        {/* Data Sources */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Datakilder</h2>
+          <DataSourcesSection />
+        </div>
       </div>
     </div>
   );
