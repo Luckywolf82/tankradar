@@ -19,12 +19,13 @@ export default function BackfillAssessment() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await base44.functions.invoke('diagnosticBackfillAssessment');
-      setReport(data);
+      const response = await base44.functions.invoke('diagnosticBackfillAssessment');
+      setReport(response.data || response);
     } catch (err) {
       setError(err.message || 'Failed to load assessment');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (loading) {
