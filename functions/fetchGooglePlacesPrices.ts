@@ -8,6 +8,28 @@ const TEST_LOCATIONS = {
   stavanger: { latitude: 58.9701, longitude: 5.7331, name: "Stavanger sentrum", radiusMeters: 5000 }
 };
 
+// Normalize chain names for matching
+function normalizeChain(name) {
+  if (!name) return null;
+  const normalized = name.toLowerCase().trim();
+  
+  const chainMap = {
+    "esso norway": "esso",
+    "essono": "esso",
+    "essopluss": "esso",
+    "circlekiosk": "circle k",
+    "circlekiosks": "circle k",
+    "circlek": "circle k",
+    "unoxpress": "uno-x",
+    "unox": "uno-x",
+    "statoilservice": "statoil",
+    "statoilspesial": "statoil"
+  };
+  
+  const mapped = chainMap[normalized] || normalized;
+  return mapped.charAt(0).toUpperCase() + mapped.slice(1);
+}
+
 // Normalize Google fuel types to standard types
 function normalizeFuelType(googleType) {
   const mapping = {
@@ -16,6 +38,18 @@ function normalizeFuelType(googleType) {
     "DIESEL": "diesel"
   };
   return mapping[googleType] || null;
+}
+
+// Calculate distance in meters using Haversine formula
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000; // Earth radius in meters
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 // Extract price in NOK from Google price object
@@ -65,7 +99,7 @@ async function fetchGooglePlacesData(apiKey, location) {
   }
 }
 
-// Conservative matching: name + chain + geographic proximity
+// Conservative matching: name + normalized chain + geographic proximity
 function matchStationToPriceSource(googlePlace, allStations) {
   const googleName = googlePlace.displayName?.text || "";
   const googleLat = googlePlace.location?.latitude;
@@ -73,39 +107,51 @@ function matchStationToPriceSource(googlePlace, allStations) {
 
   if (!googleLat || !googleLon) return null;
 
-  // Pass 1: Exact name match + chain inference
   let bestMatch = null;
   let bestDistance = Infinity;
+  let bestConfidence = 0;
+
+  // Infer chain from Google name
+  let inferredChain = null;
+  if (googleName.includes("Circle K")) inferredChain = "Circle K";
+  else if (googleName.includes("Uno-X") || googleName.includes("UnoX")) inferredChain = "Uno-X";
+  else if (googleName.includes("ESSO") || googleName.includes("Esso")) inferredChain = "ESSO";
+  else if (googleName.includes("Shell")) inferredChain = "Shell";
+  else if (googleName.includes("Statoil")) inferredChain = "Statoil";
+  else if (googleName.includes("St1")) inferredChain = "St1";
+
+  if (!inferredChain) return null; // No chain match = no match
+
+  const normalizedGoogleChain = normalizeChain(inferredChain);
 
   for (const station of allStations) {
     if (!station.latitude || !station.longitude) continue;
 
-    // Calculate distance (simple Euclidean approximation)
-    const dlat = Math.abs(station.latitude - googleLat);
-    const dlon = Math.abs(station.longitude - googleLon);
-    const distance = Math.sqrt(dlat * dlat + dlon * dlon);
+    // Calculate distance in meters using Haversine
+    const distanceMeters = haversineDistance(googleLat, googleLon, station.latitude, station.longitude);
 
-    // Try to infer chain from Google name
-    let inferredChain = null;
-    if (googleName.includes("Circle K")) inferredChain = "Circle K";
-    else if (googleName.includes("Uno-X")) inferredChain = "Uno-X";
-    else if (googleName.includes("ESSO") || googleName.includes("Esso")) inferredChain = "ESSO";
-    else if (googleName.includes("Shell")) inferredChain = "Shell";
-    else if (googleName.includes("Statoil")) inferredChain = "Statoil";
+    // Normalize station chain for comparison
+    const normalizedStationChain = normalizeChain(station.chain);
 
-    // Matching logic:
-    // 1. If chain matches AND name matches AND distance < 200m → high confidence
-    // 2. If chain matches AND distance < 100m → moderate confidence
-    // 3. Otherwise → no match (don't guess)
-    
-    const nameMatches = station.name && googleName.toLowerCase().includes(station.name.toLowerCase().trim());
-    const chainMatches = inferredChain && station.chain && inferredChain.toLowerCase() === station.chain.toLowerCase();
-    
-    if (chainMatches && (nameMatches || distance < 100) && distance < 200) {
-      if (distance < bestDistance) {
-        bestMatch = { station, distance, confidence: 0.80 };
-        bestDistance = distance;
-      }
+    // Chain must match (after normalization)
+    if (normalizedGoogleChain !== normalizedStationChain) continue;
+
+    // Assign confidence based on distance and name match
+    let confidence = 0;
+    if (distanceMeters < 50 && googleName.toLowerCase().includes(station.name?.toLowerCase() || "")) {
+      confidence = 0.90; // High: chain + address + close + name match
+    } else if (distanceMeters < 100) {
+      confidence = 0.80; // Moderate: chain + close distance
+    } else if (distanceMeters < 200) {
+      confidence = 0.60; // Weak: chain + moderate distance
+    } else {
+      continue; // Distance too large
+    }
+
+    if (distanceMeters < bestDistance) {
+      bestMatch = { station, distanceMeters, confidence };
+      bestDistance = distanceMeters;
+      bestConfidence = confidence;
     }
   }
 
@@ -140,7 +186,13 @@ Deno.serve(async (req) => {
 
     const mapping = {
       matched: [],
-      unmatched: [],
+      unmatched: {
+        no_price_data: [],
+        chain_not_in_osm: [],
+        missing_osm_station: [],
+        distance_too_large: [],
+        other: []
+      },
       pricesCreated: 0,
       pricesSkipped: 0
     };
@@ -162,24 +214,40 @@ Deno.serve(async (req) => {
         const googleName = googlePlace.displayName?.text || "(unnamed)";
         const fuelOptions = googlePlace.fuelOptions?.fuelPrices || [];
 
+        // Check for missing fuel price data
         if (fuelOptions.length === 0) {
-          mapping.unmatched.push({
+          mapping.unmatched.no_price_data.push({
             googlePlace: googleName,
-            location: location.name,
-            reason: "No fuel prices in fuelOptions"
+            location: location.name
           });
           continue;
         }
 
-        // Try to match
+        // Try to match against OSM
         const matchResult = matchStationToPriceSource(googlePlace, allStations);
 
         if (!matchResult) {
-          mapping.unmatched.push({
+          // Determine reason for no match
+          let inferredChain = null;
+          if (googleName.includes("Circle K")) inferredChain = "Circle K";
+          else if (googleName.includes("Uno-X") || googleName.includes("UnoX")) inferredChain = "Uno-X";
+          else if (googleName.includes("ESSO") || googleName.includes("Esso")) inferredChain = "ESSO";
+          else if (googleName.includes("Shell")) inferredChain = "Shell";
+          else if (googleName.includes("Statoil")) inferredChain = "Statoil";
+          else if (googleName.includes("St1")) inferredChain = "St1";
+
+          let reason = "missing_osm_station"; // default
+          if (!inferredChain) {
+            reason = "chain_not_in_osm";
+          } else {
+            reason = "distance_too_large";
+          }
+
+          mapping.unmatched[reason].push({
             googlePlace: googleName,
             location: location.name,
             address: googlePlace.formattedAddress,
-            reason: "Could not match to OSM station (no chain inference or distance > 200m)"
+            inferredChain: inferredChain
           });
           continue;
         }
@@ -189,7 +257,7 @@ Deno.serve(async (req) => {
           googlePlace: googleName,
           station: station.name,
           stationId: station.id,
-          distance: matchResult.distance.toFixed(4),
+          matchDistanceMeters: Math.round(matchResult.distanceMeters),
           confidence: matchResult.confidence
         });
 
@@ -225,7 +293,7 @@ Deno.serve(async (req) => {
             });
             mapping.pricesCreated++;
           } else {
-            // Create new price
+            // Create new price with confidence score from match quality
             await base44.entities.FuelPrice.create({
               stationId: station.id,
               fuelType: fuelType,
@@ -261,16 +329,36 @@ Deno.serve(async (req) => {
       notes: `Matched ${mapping.matched.length} stations, ${mapping.unmatched.length} unmatched. Confidence: conservative (chain + distance required).`
     });
 
+    // Calculate statistics
+    const totalUnmatched = Object.values(mapping.unmatched).reduce((sum, arr) => sum + arr.length, 0);
+    const avgDistance = mapping.matched.length > 0 
+      ? Math.round(mapping.matched.reduce((sum, m) => sum + m.matchDistanceMeters, 0) / mapping.matched.length)
+      : 0;
+
     return Response.json({
       success: true,
       summary: {
         stationsMatched: mapping.matched.length,
-        stationsUnmatched: mapping.unmatched.length,
+        stationsUnmatched: totalUnmatched,
+        matchRate: mapping.matched.length + totalUnmatched > 0 
+          ? ((mapping.matched.length / (mapping.matched.length + totalUnmatched)) * 100).toFixed(1) + "%"
+          : "0%",
+        averageMatchDistanceMeters: avgDistance,
         fuelPricesCreated: mapping.pricesCreated,
         fuelPricesSkipped: mapping.pricesSkipped
       },
+      unmatchedBreakdown: {
+        no_price_data: mapping.unmatched.no_price_data.length,
+        chain_not_in_osm: mapping.unmatched.chain_not_in_osm.length,
+        missing_osm_station: mapping.unmatched.missing_osm_station.length,
+        distance_too_large: mapping.unmatched.distance_too_large.length
+      },
       matched: mapping.matched.slice(0, 3),
-      unmatched: mapping.unmatched.slice(0, 5)
+      unmatchedSamples: {
+        no_price_data: mapping.unmatched.no_price_data.slice(0, 2),
+        chain_not_in_osm: mapping.unmatched.chain_not_in_osm.slice(0, 2),
+        distance_too_large: mapping.unmatched.distance_too_large.slice(0, 2)
+      }
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
