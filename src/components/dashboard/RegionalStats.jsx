@@ -23,8 +23,9 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
 
     const ssbReference = latestSSB?.price || null;
 
-    // Group by location
-    const byLocation = {};
+    // Group by locationLabel (city/place name from FuelPrice.locationLabel)
+    // This is NOT geographic grouping - it's based on the explicit location label in each observation
+    const byCity = {};
     observedPrices
       .filter(p =>
         p.fuelType === selectedFuel &&
@@ -33,14 +34,14 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
         p.locationLabel
       )
       .forEach(p => {
-        if (!byLocation[p.locationLabel]) {
-          byLocation[p.locationLabel] = [];
+        if (!byCity[p.locationLabel]) {
+          byCity[p.locationLabel] = [];
         }
-        byLocation[p.locationLabel].push(p.priceNok);
+        byCity[p.locationLabel].push(p.priceNok);
       });
 
-    const results = Object.entries(byLocation)
-      .map(([location, prices]) => {
+    const results = Object.entries(byCity)
+      .map(([cityName, prices]) => {
         const sorted = prices.sort((a, b) => a - b);
         const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
         const median = sorted.length % 2 === 0
@@ -52,13 +53,17 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
           deviation = parseFloat((avg - ssbReference).toFixed(2));
         }
 
+        // Mark as weak foundation if sample is very small
+        const isWeakSample = prices.length < 5;
+
         return {
-          location: location.length > 25 ? location.substring(0, 25) + "..." : location,
-          fullLocation: location,
+          city: cityName.length > 30 ? cityName.substring(0, 30) + "..." : cityName,
+          fullCity: cityName,
           avg: parseFloat(avg.toFixed(2)),
           median: parseFloat(median.toFixed(2)),
           count: prices.length,
-          deviation
+          deviation,
+          isWeakSample
         };
       })
       .sort((a, b) => b.count - a.count)
@@ -83,40 +88,40 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle className="text-base">Regional statistikk</CardTitle>
-        <p className="text-xs text-slate-400">Topp 6 lokasjoner etter antall observasjoner</p>
+        <CardTitle className="text-base">Statistikk per by</CardTitle>
+        <p className="text-xs text-slate-400">Topp 6 byer etter antall observasjoner (basert på locationLabel fra observerte priser)</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {stats.results.map((region, idx) => (
-            <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+          {stats.results.map((city, idx) => (
+            <div key={idx} className={`rounded-lg p-3 border ${city.isWeakSample ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200"}`}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-800 text-sm">{region.location}</p>
+                  <p className="font-semibold text-slate-800 text-sm">{city.city}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <div>
                       <p className="text-xs text-slate-500">Gjennomsnitt</p>
-                      <p className="text-lg font-bold text-slate-800">{region.avg} kr</p>
+                      <p className="text-lg font-bold text-slate-800">{city.avg} kr</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500">Median</p>
-                      <p className="text-lg font-bold text-slate-600">{region.median} kr</p>
+                      <p className="text-lg font-bold text-slate-600">{city.median} kr</p>
                     </div>
                   </div>
-                  {region.count < 5 && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded w-fit">
+                  {city.isWeakSample && (
+                    <div className="flex items-center gap-1 mt-2 text-xs text-amber-700 bg-white px-2 py-1 rounded w-fit border border-amber-200">
                       <AlertCircle size={14} />
-                      <span>Lavt dataogrunnlag ({region.count} obs.)</span>
+                      <span><strong>Svakt grunnlag</strong> – Kun {city.count} obs.</span>
                     </div>
                   )}
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-slate-500 uppercase">Obs.</p>
-                  <p className="text-xl font-bold text-slate-800">{region.count}</p>
-                  {region.deviation !== null && (
+                  <p className="text-xs text-slate-500 uppercase">Observasjoner</p>
+                  <p className="text-xl font-bold text-slate-800">{city.count}</p>
+                  {city.deviation !== null && (
                     <div className="mt-2 text-xs font-semibold">
-                      <p className={region.deviation < 0 ? "text-green-600" : region.deviation > 0 ? "text-amber-600" : "text-slate-600"}>
-                        {region.deviation > 0 ? "+" : ""}{region.deviation} kr
+                      <p className={city.deviation < 0 ? "text-green-600" : city.deviation > 0 ? "text-amber-600" : "text-slate-600"}>
+                        {city.deviation > 0 ? "+" : ""}{city.deviation} kr
                       </p>
                       <p className="text-slate-500">vs nasjonalt</p>
                     </div>
