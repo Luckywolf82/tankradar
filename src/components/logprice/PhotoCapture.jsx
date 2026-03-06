@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload } from "lucide-react";
+import { Camera, PenLine } from "lucide-react";
 
-export default function PhotoCapture({ onPhoto }) {
+export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
 
   const handleFile = (e) => {
@@ -33,6 +33,13 @@ export default function PhotoCapture({ onPhoto }) {
         className="hidden"
         onChange={handleFile}
       />
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-sm text-slate-400 hover:text-blue-600 flex items-center gap-1 mt-2"
+      >
+        <PenLine size={14} /> Skriv inn pris manuelt
+      </button>
     </div>
   );
 }
