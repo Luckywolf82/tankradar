@@ -12,7 +12,8 @@ const OSM_FIXTURE = {
         name: "Circle K Ferner",
         brand: "Circle K",
         amenity: "fuel",
-        addr_street: "Tordenskjoldsgate 15",
+        addr_street: "Tordenskjoldsgate",
+        addr_housenumber: "15",
         addr_postcode: "0160",
         addr_city: "Oslo"
       }
@@ -25,7 +26,8 @@ const OSM_FIXTURE = {
         name: "Uno-X Oslo Sentralstasjon",
         brand: "Uno-X",
         amenity: "fuel",
-        addr_street: "Jernbanetorget 1",
+        addr_street: "Jernbanetorget",
+        addr_housenumber: "1",
         addr_postcode: "0159",
         addr_city: "Oslo"
       }
@@ -111,13 +113,8 @@ function mapOsmToStation(osmNode) {
   };
 }
 
-// Infer region from coordinates
-function inferRegionFromCoords(lat, lon) {
-  // Simplified heuristic for Oslo, Trondheim, etc.
-  if (lat > 59.8 && lat < 60.0 && lon > 10.6 && lon < 10.9) return "Oslo og Akershus";
-  if (lat > 63.4 && lat < 63.5 && lon > 10.3 && lon < 10.5) return "Trøndelag";
-  return null;
-}
+// Region inference disabled: awaiting proper reverse-geocoding method
+// Currently region is set to null and must be filled via reverse-geocoding, OSM admin_level, or manual verification
 
 Deno.serve(async (req) => {
   const startedAt = new Date().toISOString();
@@ -175,25 +172,34 @@ Deno.serve(async (req) => {
         return hasName; // Require name
       })
       .map(el => {
-        // For ways/relations, use center coordinates
-        const lat = el.center?.lat || el.lat;
-        const lon = el.center?.lon || el.lon;
-        
-        if (!lat || !lon) return null; // Skip if no coordinates
-        
-        return {
-          name: el.tags.name || null,
-          chain: el.tags.brand || null,
-          address: el.tags.addr_street || null,
-          postalCode: el.tags.addr_postcode || null,
-          city: el.tags.addr_city || null,
-          latitude: lat,
-          longitude: lon,
-          sourceStationId: `osm_${el.type}_${el.id}`,
-          sourceName: "OpenStreetMap",
-          normalizedName: (el.tags.name || "").toLowerCase().trim()
-        };
-      })
+         // For ways/relations, use center coordinates
+         const lat = el.center?.lat || el.lat;
+         const lon = el.center?.lon || el.lon;
+
+         if (!lat || !lon) return null; // Skip if no coordinates
+
+         // Build address: addr:street + addr:housenumber, fallback to street only
+         let address = null;
+         if (el.tags.addr_street) {
+           address = el.tags.addr_housenumber 
+             ? `${el.tags.addr_street} ${el.tags.addr_housenumber}`
+             : el.tags.addr_street;
+         }
+
+         return {
+           name: el.tags.name || null,
+           chain: el.tags.brand || el.tags.operator || null,
+           address: address,
+           postalCode: el.tags.addr_postcode || null,
+           city: el.tags.addr_city || null,
+           latitude: lat,
+           longitude: lon,
+           sourceStationId: `osm_${el.type}_${el.id}`,
+           sourceName: "OpenStreetMap",
+           normalizedName: (el.tags.name || "").toLowerCase().trim(),
+           region: null
+         };
+       })
       .filter(s => s !== null);
 
     let recordsCreated = 0;
@@ -206,16 +212,11 @@ Deno.serve(async (req) => {
       });
 
       if (existing.length === 0) {
-        // Infer region if not provided
-        if (!station.region) {
-          station.region = inferRegionFromCoords(station.latitude, station.longitude);
-        }
-
-        await base44.entities.Station.create(station);
-        recordsCreated++;
-      } else {
-        recordsSkipped++;
-      }
+         await base44.entities.Station.create(station);
+         recordsCreated++;
+       } else {
+         recordsSkipped++;
+       }
     }
 
     // Log fetch
