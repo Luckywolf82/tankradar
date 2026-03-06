@@ -68,6 +68,22 @@ function extractPriceNok(priceObj) {
   return units + (nanos / 1e9);
 }
 
+// Classify price plausibility based on Norwegian fuel price norms
+// RULE: Do NOT modify priceNok, only classify
+// Ranges: <10 = suspect_low, 10-40 = realistic, >40 = suspect_high
+function classifyPricePlausibility(priceNok) {
+  if (priceNok === null || priceNok === undefined) {
+    return null;
+  }
+  if (priceNok < 10) {
+    return "suspect_price_low";
+  }
+  if (priceNok > 40) {
+    return "suspect_price_high";
+  }
+  return "realistic_price";
+}
+
 // Fetch GooglePlaces data from API
 async function fetchGooglePlacesData(apiKey, location) {
   const url = "https://places.googleapis.com/v1/places:searchNearby";
