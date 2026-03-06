@@ -1,35 +1,38 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-// Embedded OSM fixture for testing
+// Embedded OSM fixture for testing (nationwide sample)
 const OSM_FIXTURE = {
   elements: [
     {
       type: "node",
-      id: 1,
+      id: 123456,
       lat: 59.9139,
       lon: 10.7522,
       tags: {
         name: "Circle K Ferner",
         brand: "Circle K",
-        amenity: "fuel"
+        amenity: "fuel",
+        addr_street: "Tordenskjoldsgate 15",
+        addr_postcode: "0160",
+        addr_city: "Oslo"
       }
     },
     {
-      type: "node",
-      id: 2,
-      lat: 59.9084,
-      lon: 10.7282,
+      type: "way",
+      id: 234567,
+      center: { lat: 59.9084, lon: 10.7282 },
       tags: {
         name: "Uno-X Oslo Sentralstasjon",
         brand: "Uno-X",
         amenity: "fuel",
         addr_street: "Jernbanetorget 1",
+        addr_postcode: "0159",
         addr_city: "Oslo"
       }
     },
     {
       type: "node",
-      id: 3,
+      id: 345678,
       lat: 59.9126,
       lon: 10.7461,
       tags: {
@@ -37,7 +40,55 @@ const OSM_FIXTURE = {
         brand: "ESSO",
         amenity: "fuel",
         addr_street: "Universitetsgaten 8",
+        addr_postcode: "0162",
         addr_city: "Oslo"
+      }
+    },
+    {
+      type: "node",
+      id: 456789,
+      lat: 63.4270,
+      lon: 10.3889,
+      tags: {
+        name: "Shell Trondheim Sentrum",
+        brand: "Shell",
+        amenity: "fuel",
+        addr_street: "Kongens gate 50",
+        addr_postcode: "7014",
+        addr_city: "Trondheim"
+      }
+    },
+    {
+      type: "node",
+      id: 567890,
+      lat: 63.4156,
+      lon: 10.4032,
+      tags: {
+        name: "Circle K Trondheim Øya",
+        brand: "Circle K",
+        amenity: "fuel",
+        addr_postcode: "7020",
+        addr_city: "Trondheim"
+      }
+    },
+    {
+      type: "relation",
+      id: 678901,
+      center: { lat: 58.9701, lon: 5.7331 },
+      tags: {
+        name: "Statoil Stavanger",
+        brand: "Statoil",
+        amenity: "fuel",
+        addr_city: "Stavanger"
+      }
+    },
+    {
+      type: "node",
+      id: 789012,
+      lat: 60.3895,
+      lon: 5.3221,
+      tags: {
+        amenity: "fuel"
       }
     }
   ]
