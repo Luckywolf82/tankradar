@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
           confidence: matchResult.confidence
         });
 
-        // Create FuelPrice for each fuel type
+        // Create FuelPrice for each fuel type (immutable observations, not overwrites)
         for (const fuelPrice of fuelOptions) {
           const fuelType = normalizeFuelType(fuelPrice.type);
           
@@ -319,40 +319,49 @@ Deno.serve(async (req) => {
             continue;
           }
 
-          // Check if price already exists (avoid duplicates)
-          const existing = await base44.entities.FuelPrice.filter({
-            stationId: station.id,
-            fuelType: fuelType,
-            sourceName: "GooglePlaces"
-          });
+          const sourceUpdatedAt = fuelPrice.updateTime || null;
+          const fetchedAtNow = new Date().toISOString();
 
-          if (existing.length > 0) {
-            // Update existing price
-            await base44.entities.FuelPrice.update(existing[0].id, {
-              priceNok: priceNok,
-              fetchedAt: new Date().toISOString(),
-              sourceUpdatedAt: fuelPrice.updateTime || null,
-              confidenceScore: matchResult.confidence
-            });
-            mapping.pricesCreated++;
-          } else {
-            // Create new price with confidence score from match quality
-            await base44.entities.FuelPrice.create({
+          // Check for exact duplicate: same price, same sourceUpdatedAt
+          // This avoids storing identical observations from repeated fetches
+          const lastObservation = await base44.entities.FuelPrice.filter(
+            {
               stationId: station.id,
               fuelType: fuelType,
-              priceNok: priceNok,
-              priceType: "station_level",
-              sourceName: "GooglePlaces",
-              sourceUrl: null,
-              sourceUpdatedAt: fuelPrice.updateTime || null,
-              fetchedAt: new Date().toISOString(),
-              sourceFrequency: "near_realtime",
-              confidenceScore: matchResult.confidence,
-              parserVersion: "gp_v1",
-              rawPayloadSnippet: `${fuelPrice.type} ${priceNok} NOK`
-            });
-            mapping.pricesCreated++;
+              sourceName: "GooglePlaces"
+            },
+            "-created_date",
+            1
+          );
+
+          if (lastObservation.length > 0) {
+            const last = lastObservation[0];
+            // Deduplication: skip if identical price + sourceUpdatedAt
+            if (
+              last.priceNok === priceNok &&
+              last.sourceUpdatedAt === sourceUpdatedAt
+            ) {
+              mapping.pricesSkipped++;
+              continue;
+            }
           }
+
+          // Immutable observation: create new FuelPrice post for this observation
+          await base44.entities.FuelPrice.create({
+            stationId: station.id,
+            fuelType: fuelType,
+            priceNok: priceNok,
+            priceType: "station_level",
+            sourceName: "GooglePlaces",
+            sourceUrl: null,
+            sourceUpdatedAt: sourceUpdatedAt,
+            fetchedAt: fetchedAtNow,
+            sourceFrequency: "near_realtime",
+            confidenceScore: matchResult.confidence,
+            parserVersion: "gp_v1",
+            rawPayloadSnippet: `${fuelPrice.type} ${priceNok} NOK`
+          });
+          mapping.pricesCreated++;
         }
       }
     }
