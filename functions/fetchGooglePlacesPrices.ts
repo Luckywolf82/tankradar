@@ -62,10 +62,11 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 // Raw API data verified: units=23, nanos=500000000 → 23.5 NOK
 // FORMULA: priceNok = units + (nanos / 1e9)
 // units is whole NOK, nanos is fractional NOK (10^-9)
+// CRITICAL: Google API returns units as string, must convert to number
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
-  const units = priceObj.units || 0;
-  const nanos = priceObj.nanos || 0;
+  const units = Number(priceObj.units) || 0;  // Konverter string til tall
+  const nanos = Number(priceObj.nanos) || 0;  // Konverter string til tall
   return units + (nanos / 1e9);
 }
 
