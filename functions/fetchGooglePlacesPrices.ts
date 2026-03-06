@@ -58,14 +58,14 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 // Extract price in NOK from Google price object
-// NOTE: Google returns price.units as integer øre (1/100 NOK)
-// e.g., units=2196 means 2196 øre = 21.96 NOK
+// NOTE: Google uses Money protobuf: units = whole NOK, nanos = 10^-9 NOK
+// LOCKED FORMULA: priceNok = units + (nanos / 1e9)
+// e.g., units=23, nanos=500000000 → 23 + 0.5 = 23.50 NOK/L
 function extractPriceNok(priceObj) {
   if (!priceObj || priceObj.currencyCode !== "NOK") return null;
-  const units = priceObj.units || 0;    // øre (1/100 NOK)
-  const nanos = priceObj.nanos || 0;    // 1e-9 øre (usually 0)
-  const oreValue = units + (nanos / 1e9);
-  return oreValue / 100;                 // convert øre to NOK
+  const units = priceObj.units || 0;
+  const nanos = priceObj.nanos || 0;
+  return units + (nanos / 1e9);
 }
 
 // Fetch GooglePlaces data from API
