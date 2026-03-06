@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "../components/logprice/PhotoCapture.jsx";
 import ConfirmPrice from "../components/logprice/ConfirmPrice.jsx";
+import { OptimisticSuccess } from "../components/logprice/OptimisticSuccess";
+import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
 const FUEL_TYPES = ["bensin_95", "bensin_98", "diesel", "diesel_premium"];
 
@@ -54,6 +56,8 @@ export default function LogPrice() {
   const [imageUrl, setImageUrl] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [detectedPrices, setDetectedPrices] = useState(emptyPrices());
   const [stationInfo, setStationInfo] = useState({
     station_chain: "",
@@ -162,88 +166,96 @@ export default function LogPrice() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError(null);
+    setShowSuccess(true); // Show optimistic success immediately
+    
     const today = stationInfo.date_observed;
     const now = new Date().toISOString();
     
-    // Attempt station matching
-    let matchResult = null;
     try {
-      const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
-        gps_lat: window.__gpsLat,
-        gps_lon: window.__gpsLon,
-        station_name: stationInfo.station_name,
-        station_chain: stationInfo.station_chain,
-        city: stationInfo.city
-      });
-      matchResult = matchRes.data;
-    } catch (err) {
-      // Matching error, continue without stationId
-      matchResult = { status: 'no_safe_station_match', stationId: null };
+      // Attempt station matching
+      let matchResult = null;
+      try {
+        const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
+          gps_lat: window.__gpsLat,
+          gps_lon: window.__gpsLon,
+          station_name: stationInfo.station_name,
+          station_chain: stationInfo.station_chain,
+          city: stationInfo.city
+        });
+        matchResult = matchRes.data;
+      } catch (err) {
+        // Matching error, continue without stationId
+        matchResult = { status: 'no_safe_station_match', stationId: null };
+      }
+      
+      const entries = FUEL_TYPES
+        .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
+        .map(k => {
+          const priceNok = parseFloat(detectedPrices[k].price);
+          
+          // Determine confidence score and reason based on match status
+          let confidenceScore = 0.30;
+          let confidenceReason = "no_station_match + gps_signal_only";
+          
+          if (matchResult?.status === 'matched_station_id') {
+            confidenceScore = 0.85;
+            confidenceReason = "chain_match + name_similarity + distance_close";
+          } else if (matchResult?.status === 'review_needed_station_match') {
+            confidenceScore = 0.50;
+            confidenceReason = "ambiguous_station + uncertain_distance";
+          }
+          
+          const entry = {
+            fuelType: k,
+            priceNok: priceNok,
+            priceType: "user_reported",
+            sourceName: "user_reported",
+            sourceUrl: null,
+            sourceUpdatedAt: null,
+            fetchedAt: now,
+            sourceFrequency: "unknown",
+            confidenceScore: confidenceScore,
+            confidenceReason: confidenceReason,
+            parserVersion: "user_reported_v1",
+            plausibilityStatus: classifyPricePlausibility(priceNok),
+            locationLabel: stationInfo.city || null,
+            rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`,
+            station_match_status: matchResult?.status || 'no_safe_station_match',
+            gps_latitude: window.__gpsLat || null,
+            gps_longitude: window.__gpsLon || null
+          };
+          
+          // Add stationId if matched
+          if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
+            entry.stationId = matchResult.stationId;
+          }
+          
+          // Add candidates if review needed
+          if (matchResult?.status === 'review_needed_station_match') {
+            entry.station_match_candidates = matchResult?.candidates || null;
+            entry.station_match_notes = matchResult?.candidates 
+              ? `Review needed: ${matchResult.candidates.length} candidate(s) require manual verification`
+              : `Review needed: matching ambiguous but candidates data missing`;
+          }
+          
+          // Add discovery metadata if no safe match
+          if (matchResult?.status === 'no_safe_station_match') {
+            entry.station_name = stationInfo.station_name || null;
+            entry.station_chain = stationInfo.station_chain || null;
+            entry.station_match_notes = `No safe match found. GPS [${window.__gpsLat}, ${window.__gpsLon}], name "${stationInfo.station_name}", chain "${stationInfo.station_chain}"`;
+          }
+          
+          return entry;
+        });
+      
+      await base44.entities.FuelPrice.bulkCreate(entries);
+      setSubmitting(false);
+    } catch (error) {
+      // API failed: show error, keep optimistic UI visible
+      setSubmitError(error.message || "Kunne ikke lagre prisene. Prøv igjen.");
+      setSubmitting(false);
     }
-    
-    const entries = FUEL_TYPES
-      .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
-      .map(k => {
-        const priceNok = parseFloat(detectedPrices[k].price);
-        
-        // Determine confidence score and reason based on match status
-        let confidenceScore = 0.30;
-        let confidenceReason = "no_station_match + gps_signal_only";
-        
-        if (matchResult?.status === 'matched_station_id') {
-          confidenceScore = 0.85;
-          confidenceReason = "chain_match + name_similarity + distance_close";
-        } else if (matchResult?.status === 'review_needed_station_match') {
-          confidenceScore = 0.50;
-          confidenceReason = "ambiguous_station + uncertain_distance";
-        }
-        
-        const entry = {
-          fuelType: k,
-          priceNok: priceNok,
-          priceType: "user_reported",
-          sourceName: "user_reported",
-          sourceUrl: null,
-          sourceUpdatedAt: null,
-          fetchedAt: now,
-          sourceFrequency: "unknown",
-          confidenceScore: confidenceScore,
-          confidenceReason: confidenceReason,
-          parserVersion: "user_reported_v1",
-          plausibilityStatus: classifyPricePlausibility(priceNok),
-          locationLabel: stationInfo.city || null,
-          rawPayloadSnippet: `User reported: ${k} = ${priceNok} NOK/L`,
-          station_match_status: matchResult?.status || 'no_safe_station_match',
-          gps_latitude: window.__gpsLat || null,
-          gps_longitude: window.__gpsLon || null
-        };
-        
-        // Add stationId if matched
-        if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
-          entry.stationId = matchResult.stationId;
-        }
-        
-        // Add candidates if review needed
-        if (matchResult?.status === 'review_needed_station_match') {
-          entry.station_match_candidates = matchResult?.candidates || null;
-          entry.station_match_notes = matchResult?.candidates 
-            ? `Review needed: ${matchResult.candidates.length} candidate(s) require manual verification`
-            : `Review needed: matching ambiguous but candidates data missing`;
-        }
-        
-        // Add discovery metadata if no safe match
-        if (matchResult?.status === 'no_safe_station_match') {
-          entry.station_name = stationInfo.station_name || null;
-          entry.station_chain = stationInfo.station_chain || null;
-          entry.station_match_notes = `No safe match found. GPS [${window.__gpsLat}, ${window.__gpsLon}], name "${stationInfo.station_name}", chain "${stationInfo.station_chain}"`;
-        }
-        
-        return entry;
-      });
-    
-    await base44.entities.FuelPrice.bulkCreate(entries);
-    setStep("saved");
-    setSubmitting(false);
   };
 
   const reset = () => {
@@ -251,31 +263,14 @@ export default function LogPrice() {
     setImageUrl(null);
     setDetectedPrices(emptyPrices());
     setStationInfo(s => ({ ...s, station_chain: "", station_name: "" }));
+    setShowSuccess(false);
+    setSubmitError(null);
   };
 
-  if (step === "saved") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center shadow-lg">
-          <CardContent className="pt-10 pb-8">
-            <CheckCircle className="mx-auto text-green-500 mb-4" size={56} />
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Takk for bidraget!</h2>
-            <p className="text-slate-500 mb-6">Prisene er lagret og hjelper andre norske bilister.</p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={reset}>Logg en til</Button>
-              <Link to={createPageUrl("Dashboard")}>
-                <Button className="bg-blue-600 hover:bg-blue-700">Se statistikk</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
+    <RouteAnimation pageName="LogPrice">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+        <div className="max-w-xl mx-auto">
         <Link to={createPageUrl("Dashboard")} className="inline-flex items-center gap-1 text-slate-500 hover:text-blue-600 mb-6 text-sm">
           <ArrowLeft size={16} /> Tilbake til oversikt
         </Link>
@@ -300,7 +295,17 @@ export default function LogPrice() {
             locationLoading={locationLoading}
           />
         )}
+        
+        {/* Optimistic Success Feedback */}
+        <OptimisticSuccess 
+          show={showSuccess} 
+          isLoading={submitting}
+          error={submitError}
+          onReset={reset}
+          onDismiss={() => setShowSuccess(false)}
+        />
       </div>
     </div>
+    </RouteAnimation>
   );
 }
