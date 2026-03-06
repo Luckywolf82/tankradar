@@ -6,12 +6,13 @@ import { nb } from "date-fns/locale";
 
 export default function TrendChart({ prices, fuelLabel }) {
   // Group by date and calculate daily average
-  const last90 = prices.filter(p => p.date_observed && new Date(p.date_observed) >= subDays(new Date(), 90));
+  const last90 = prices.filter(p => p.fetchedAt && new Date(p.fetchedAt) >= subDays(new Date(), 90));
 
   const byDate = {};
   last90.forEach(p => {
-    if (!byDate[p.date_observed]) byDate[p.date_observed] = [];
-    byDate[p.date_observed].push(p.price);
+    const dateStr = p.fetchedAt.split("T")[0];
+    if (!byDate[dateStr]) byDate[dateStr] = [];
+    byDate[dateStr].push(p.priceNok);
   });
 
   const chartData = Object.entries(byDate)
