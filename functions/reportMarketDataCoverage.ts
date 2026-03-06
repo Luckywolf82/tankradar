@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Fetch all FuelPrice records
-    const allPrices = await base44.entities.FuelPrice.list('-fetchedAt', 10000);
+    // Fetch FuelPrice records (limited to avoid CPU timeout on Deno)
+    const allPrices = await base44.entities.FuelPrice.list('-fetchedAt', 1000);
 
     if (!allPrices || allPrices.length === 0) {
       return Response.json({
@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
       matchRatio: {
         matched_percent: (byMatchConfidence.matched / total * 100).toFixed(1),
         unmatched_percent: (byMatchConfidence.unmatched / total * 100).toFixed(1)
-      }
+      },
+      note: "Rapport baseres på siste 1000 poster for å unngå CPU-tidgrense. Full analyse krever paginering."
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
