@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { TrendingDown, TrendingUp, Fuel, Users, Plus, BarChart2 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { nb } from "date-fns/locale";
-import DayOfWeekChart from "../components/dashboard/DayOfWeekChart";
-import RecentPrices from "../components/dashboard/RecentPrices";
-import TrendChart from "../components/dashboard/TrendChart";
+import DayOfWeekChart from "../components/dashboard/DayOfWeekChart.jsx";
+import RecentPrices from "../components/dashboard/RecentPrices.jsx";
+import TrendChart from "../components/dashboard/TrendChart.jsx";
 
 const fuelTypeLabel = {
   bensin_95: "Bensin 95",

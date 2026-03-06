@@ -5,9 +5,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RefreshCw, Database } from "lucide-react";
-import SSBChart from "../components/statistics/SSBChart";
-import PriceByRegion from "../components/statistics/PriceByRegion";
-import PriceByChain from "../components/statistics/PriceByChain";
+import SSBChart from "../components/statistics/SSBChart.jsx";
+import PriceByRegion from "../components/statistics/PriceByRegion.jsx";
+import PriceByChain from "../components/statistics/PriceByChain.jsx";
 
 export default function Statistics() {
   const [ssbData, setSsbData] = useState([]);
