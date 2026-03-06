@@ -37,10 +37,12 @@ Deno.serve(async (req) => {
     }
 
     // Group by (stationId + fuelType + sourceName)
+    // Filter to only prices with complete stationId + fuelType
+    const validPrices = allPrices.filter(p => p.stationId && p.fuelType);
     const timelineGroups = {};
 
-    for (const price of allPrices) {
-      const key = `${price.stationId || "unknown"}|${price.fuelType}|${price.sourceName}`;
+    for (const price of validPrices) {
+      const key = `${price.stationId}|${price.fuelType}|${price.sourceName}`;
       
       if (!timelineGroups[key]) {
         timelineGroups[key] = [];
