@@ -14,8 +14,36 @@ const FUEL_TYPES = [
   { value: "diesel_premium", label: "Diesel Premium" },
 ];
 
-export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loading, locationLoading }) {
-  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+// Render one price row per detected fuel type
+function PriceRow({ fuelType, price, aiDetected, onChange }) {
+  return (
+    <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-3 border border-slate-200">
+      <div className="flex-1">
+        <p className="text-xs font-medium text-slate-500 mb-1">
+          {FUEL_TYPES.find(f => f.value === fuelType)?.label}
+        </p>
+        <Input
+          type="number"
+          step="0.01"
+          min="10"
+          max="30"
+          value={price}
+          onChange={e => onChange(e.target.value)}
+          className="font-bold text-lg h-10"
+          required={price !== ""}
+        />
+      </div>
+      {aiDetected && (
+        <CheckCircle size={16} className="text-green-500 flex-shrink-0 mt-4" />
+      )}
+    </div>
+  );
+}
+
+export default function ConfirmPrice({ detectedPrices, setDetectedPrices, stationInfo, setStationInfo, imageUrl, onSubmit, loading, locationLoading }) {
+  const setStation = (field, value) => setStationInfo(prev => ({ ...prev, [field]: value }));
+
+  const activePrices = Object.entries(detectedPrices).filter(([, v]) => v.enabled);
 
   return (
     <Card className="shadow-lg">
@@ -24,7 +52,7 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
           <Fuel className="text-blue-600" size={24} />
           Bekreft og send inn
         </CardTitle>
-        <p className="text-slate-500 text-sm">Sjekk at informasjonen stemmer før du deler.</p>
+        <p className="text-slate-500 text-sm">Sjekk at prisene stemmer, fjern de du ikke vil logge.</p>
       </CardHeader>
       <CardContent>
         {imageUrl && (
@@ -34,36 +62,60 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
         )}
 
         <form onSubmit={onSubmit} className="space-y-4">
-          {/* Price */}
-          <div className="space-y-1">
-            <Label>Pris per liter (kr) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              min="10"
-              max="30"
-              placeholder="f.eks. 18.49"
-              value={form.price}
-              onChange={e => set("price", e.target.value)}
-              required
-              className="text-2xl font-bold h-12"
-            />
-            {form.ai_detected && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
-                <CheckCircle size={12} /> AI leste denne prisen automatisk
-              </p>
-            )}
-          </div>
-
-          {/* Fuel type */}
-          <div className="space-y-1">
-            <Label>Drivstofftype *</Label>
-            <Select value={form.fuel_type} onValueChange={v => set("fuel_type", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FUEL_TYPES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          {/* All detected prices */}
+          <div>
+            <Label className="mb-2 block">
+              Priser fra bildet
+              {Object.values(detectedPrices).some(v => v.aiDetected) && (
+                <span className="ml-2 text-xs text-green-600 font-normal flex-inline items-center gap-1">
+                  <CheckCircle size={11} className="inline" /> AI-lest
+                </span>
+              )}
+            </Label>
+            <div className="space-y-2">
+              {FUEL_TYPES.map(({ value, label }) => {
+                const entry = detectedPrices[value];
+                return (
+                  <div key={value} className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      id={`chk-${value}`}
+                      checked={entry.enabled}
+                      onChange={e => setDetectedPrices(prev => ({
+                        ...prev,
+                        [value]: { ...prev[value], enabled: e.target.checked }
+                      }))}
+                      className="mt-3"
+                    />
+                    <label htmlFor={`chk-${value}`} className="flex-1">
+                      <div className={`flex items-center gap-2 bg-slate-50 rounded-lg p-2 border ${entry.enabled ? "border-blue-200" : "border-slate-200 opacity-50"}`}>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-slate-500">{label}</p>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="10"
+                            max="30"
+                            value={entry.price}
+                            onClick={e => e.stopPropagation()}
+                            onChange={e => setDetectedPrices(prev => ({
+                              ...prev,
+                              [value]: { ...prev[value], price: e.target.value, enabled: true }
+                            }))}
+                            placeholder="–"
+                            className="font-bold text-base h-9 mt-1"
+                            disabled={!entry.enabled}
+                          />
+                        </div>
+                        {entry.aiDetected && entry.price && (
+                          <CheckCircle size={15} className="text-green-500 flex-shrink-0 mt-4" />
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Station info */}
@@ -72,7 +124,7 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
               <MapPin size={13} className="text-blue-500" /> Stasjon
               {locationLoading && <Loader2 size={13} className="animate-spin ml-1 text-slate-400" />}
             </Label>
-            <Select value={form.station_chain} onValueChange={v => set("station_chain", v)}>
+            <Select value={stationInfo.station_chain} onValueChange={v => setStation("station_chain", v)}>
               <SelectTrigger><SelectValue placeholder="Velg kjede" /></SelectTrigger>
               <SelectContent>
                 {CHAINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -85,8 +137,8 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
               <Label>By *</Label>
               <Input
                 placeholder="f.eks. Oslo"
-                value={form.city}
-                onChange={e => set("city", e.target.value)}
+                value={stationInfo.city}
+                onChange={e => setStation("city", e.target.value)}
                 required
               />
             </div>
@@ -94,8 +146,8 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
               <Label>Dato</Label>
               <Input
                 type="date"
-                value={form.date_observed}
-                onChange={e => set("date_observed", e.target.value)}
+                value={stationInfo.date_observed}
+                onChange={e => setStation("date_observed", e.target.value)}
                 required
               />
             </div>
@@ -104,9 +156,11 @@ export default function ConfirmPrice({ form, setForm, imageUrl, onSubmit, loadin
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base"
-            disabled={loading}
+            disabled={loading || activePrices.length === 0}
           >
-            {loading ? <><Loader2 size={18} className="animate-spin mr-2" />Lagrer...</> : "✓ Del pris med community"}
+            {loading
+              ? <><Loader2 size={18} className="animate-spin mr-2" />Lagrer...</>
+              : `✓ Del ${activePrices.length} pris${activePrices.length !== 1 ? "er" : ""} med community`}
           </Button>
         </form>
       </CardContent>
