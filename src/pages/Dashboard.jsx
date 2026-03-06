@@ -50,8 +50,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-              <Fuel className="text-blue-600" size={32} />
+            <h1 className="text-3xl font-bold text-slate-800">
               Drivstoffpris Norge
             </h1>
             <p className="text-slate-500 mt-1">Rask oversikt og beslutningsgrunnlag</p>
