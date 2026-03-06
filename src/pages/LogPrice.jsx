@@ -181,7 +181,10 @@ export default function LogPrice() {
         {step === "photo" && (
           <Card className="shadow-lg">
             <CardContent className="p-6">
-              <PhotoCapture onPhoto={handlePhoto} />
+              <PhotoCapture
+                onPhoto={handlePhoto}
+                onSkip={() => setStep("confirm")}
+              />
             </CardContent>
           </Card>
         )}
