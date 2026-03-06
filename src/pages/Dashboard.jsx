@@ -11,6 +11,7 @@ import NationalAverageSection from "../components/dashboard/NationalAverageSecti
 import StationPricesSection from "../components/dashboard/StationPricesSection.jsx";
 import DataSourcesSection from "../components/dashboard/DataSourcesSection.jsx";
 import TrendChart from "../components/dashboard/TrendChart.jsx";
+import GooglePlacesHistorySection from "../components/dashboard/GooglePlacesHistorySection.jsx";
 
 const fuelTypeLabel = {
   gasoline_95: "Bensin 95",
@@ -93,13 +94,9 @@ export default function Dashboard() {
           <TrendChart prices={filtered} fuelLabel={fuelTypeLabel[selectedFuel]} />
         </div>
 
-        {/* Station Prices Section */}
+        {/* GooglePlaces Historical Data Section */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Stasjoner</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <StationPricesSection title="Billigste i Oslo" region="Oslo" prices={stationFiltered} />
-            <StationPricesSection title="Billigste i Trondheim" region="Trøndelag" prices={stationFiltered} />
-          </div>
+          <GooglePlacesHistorySection prices={prices} />
         </div>
 
         {/* Data Sources */}
