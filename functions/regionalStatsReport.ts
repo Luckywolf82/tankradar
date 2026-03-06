@@ -41,6 +41,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fuel type display names
+    const fuelTypeNames = {
+      'diesel': 'Diesel',
+      'europdiesel': 'Eurodiesel',
+      'gasoline_95': 'Bensin 95',
+      'gasoline_98': 'Bensin 98'
+    };
+
     // Calculate statistics per location
     const regionalStats = {};
 
@@ -53,6 +61,7 @@ Deno.serve(async (req) => {
       for (const [fuelType, fuelData] of Object.entries(data.by_fuel_type)) {
         const prices = fuelData.prices.sort((a, b) => a - b);
         const sorted = [...prices];
+        const sampleSize = prices.length;
 
         const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
         const median = prices.length % 2 === 0
@@ -63,13 +72,19 @@ Deno.serve(async (req) => {
         const max = Math.max(...prices);
         const gap = max - min;
 
+        // Determine data quality level
+        const hasLowSample = sampleSize < 3;
+        const hasModerateSample = sampleSize >= 3 && sampleSize < 5;
+
         stats.fuel_types[fuelType] = {
-          observations: prices.length,
+          display_name: fuelTypeNames[fuelType] || fuelType,
+          observations: sampleSize,
           average: Number(avg.toFixed(2)),
           median: Number(median.toFixed(2)),
           min: Number(min.toFixed(2)),
           max: Number(max.toFixed(2)),
           price_gap: Number(gap.toFixed(2)),
+          price_gap_confidence: hasLowSample ? 'insufficient_sample' : (hasModerateSample ? 'limited_sample' : 'reliable'),
           sources: fuelData.sources.map(s => ({
             source: s.source,
             priceType: s.priceType,
