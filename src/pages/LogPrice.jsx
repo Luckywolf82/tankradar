@@ -1,33 +1,48 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Fuel, CheckCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import PhotoCapture from "../components/logprice/PhotoCapture.jsx";
+import ConfirmPrice from "../components/logprice/ConfirmPrice.jsx";
 
-const CHAINS = ["Circle K", "Uno-X", "Esso", "Shell", "YX", "Best", "Annet"];
-const FUEL_TYPES = [
-  { value: "bensin_95", label: "Bensin 95" },
-  { value: "bensin_98", label: "Bensin 98" },
-  { value: "diesel", label: "Diesel" },
-  { value: "diesel_premium", label: "Diesel Premium" },
-];
-const REGIONS = [
-  "Oslo og Akershus", "Innlandet", "Viken", "Vestfold og Telemark",
-  "Agder", "Rogaland", "Vestland", "Møre og Romsdal",
-  "Trøndelag", "Nordland", "Troms", "Finnmark"
-];
+// Map latitude to a Norwegian region
+function latLonToRegion(lat, lon) {
+  if (lat > 70) return "Finnmark";
+  if (lat > 69) return "Troms";
+  if (lat > 65) return "Nordland";
+  if (lat > 63) return "Trøndelag";
+  if (lat > 62) return "Møre og Romsdal";
+  if (lat > 60.5) return "Vestland";
+  if (lon < 6.5 && lat > 58.5) return "Rogaland";
+  if (lat > 58.5) return "Agder";
+  if (lat > 59.3 && lon > 10) return "Oslo og Akershus";
+  if (lat > 59.3) return "Viken";
+  if (lat > 58.8) return "Vestfold og Telemark";
+  return "Innlandet";
+}
+
+// Guess station chain from nearby place name
+function guessChain(name) {
+  if (!name) return "";
+  const n = name.toLowerCase();
+  if (n.includes("circle k") || n.includes("statoil")) return "Circle K";
+  if (n.includes("uno-x") || n.includes("unox")) return "Uno-X";
+  if (n.includes("esso")) return "Esso";
+  if (n.includes("shell")) return "Shell";
+  if (n.includes("yx")) return "YX";
+  if (n.includes("best")) return "Best";
+  return "Annet";
+}
 
 export default function LogPrice() {
-  const navigate = useNavigate();
-  const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("photo"); // photo | confirm | saved
+  const [imageUrl, setImageUrl] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     price: "",
     fuel_type: "bensin_95",
@@ -37,22 +52,104 @@ export default function LogPrice() {
     region: "",
     date_observed: format(new Date(), "yyyy-MM-dd"),
     notes: "",
+    ai_detected: false,
   });
 
-  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+  const handlePhoto = async (file) => {
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
+    setStep("confirm");
+
+    // 1. Upload image and ask AI to read price
+    setLocationLoading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // AI reads price from image
+      const aiResult = await base44.integrations.Core.InvokeLLM({
+        prompt: `Look at this image of a fuel price sign at a Norwegian gas station. Extract the prices shown. Return only a JSON object with fields: 'bensin_95' (number or null), 'bensin_98' (number or null), 'diesel' (number or null), 'diesel_premium' (number or null). Only include prices clearly visible. Norwegian prices are typically between 15 and 25 kr per liter.`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            bensin_95: { type: "number" },
+            bensin_98: { type: "number" },
+            diesel: { type: "number" },
+            diesel_premium: { type: "number" },
+          }
+        }
+      });
+
+      // Pick the first detected price
+      const fuelMap = { bensin_95: "bensin_95", bensin_98: "bensin_98", diesel: "diesel", diesel_premium: "diesel_premium" };
+      let detectedPrice = null;
+      let detectedType = "bensin_95";
+      for (const [key] of Object.entries(fuelMap)) {
+        if (aiResult[key]) {
+          detectedPrice = aiResult[key];
+          detectedType = key;
+          break;
+        }
+      }
+
+      if (detectedPrice) {
+        setForm(f => ({ ...f, price: detectedPrice.toFixed(2), fuel_type: detectedType, ai_detected: true }));
+      }
+    } catch (e) {
+      console.error("AI price extraction failed", e);
+    }
+
+    // 2. Get GPS location and reverse geocode
+    try {
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+      );
+      const { latitude, longitude } = pos.coords;
+      const region = latLonToRegion(latitude, longitude);
+
+      // Reverse geocode with Nominatim
+      const geo = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=14`,
+        { headers: { "Accept-Language": "no" } }
+      ).then(r => r.json());
+
+      const city = geo?.address?.city || geo?.address?.town || geo?.address?.village || geo?.address?.suburb || "";
+
+      // Search for nearby gas station
+      const poiRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=bensinstasjon&lat=${latitude}&lon=${longitude}&format=json&limit=3&radius=200`,
+        { headers: { "Accept-Language": "no" } }
+      ).then(r => r.json());
+
+      const nearbyStation = poiRes?.[0]?.display_name || "";
+      const chain = guessChain(nearbyStation);
+
+      setForm(f => ({
+        ...f,
+        city,
+        region,
+        station_chain: chain || f.station_chain,
+        station_name: nearbyStation ? nearbyStation.split(",")[0] : f.station_name,
+      }));
+    } catch (e) {
+      console.error("GPS/geocode failed", e);
+    }
+
+    setLocationLoading(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     await base44.entities.FuelPrice.create({
       ...form,
       price: parseFloat(form.price),
     });
-    setSaved(true);
-    setLoading(false);
+    setStep("saved");
+    setSubmitting(false);
   };
 
-  if (saved) {
+  if (step === "saved") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full text-center shadow-lg">
@@ -61,7 +158,7 @@ export default function LogPrice() {
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Takk for bidraget!</h2>
             <p className="text-slate-500 mb-6">Prisen din er lagret og hjelper andre norske bilister.</p>
             <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => { setSaved(false); setForm(f => ({ ...f, price: "" })); }}>
+              <Button variant="outline" onClick={() => { setStep("photo"); setImageUrl(null); setForm(f => ({ ...f, price: "", ai_detected: false })); }}>
                 Logg en til
               </Button>
               <Link to={createPageUrl("Dashboard")}>
@@ -81,112 +178,24 @@ export default function LogPrice() {
           <ArrowLeft size={16} /> Tilbake til oversikt
         </Link>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Fuel className="text-blue-600" size={24} />
-              Registrer drivstoffpris
-            </CardTitle>
-            <p className="text-slate-500 text-sm">Del prisen du har sett – hjelp andre bilister!</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Pris per liter (kr) *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="10"
-                    max="30"
-                    placeholder="f.eks. 18.49"
-                    value={form.price}
-                    onChange={e => set("price", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Drivstofftype *</Label>
-                  <Select value={form.fuel_type} onValueChange={v => set("fuel_type", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {FUEL_TYPES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        {step === "photo" && (
+          <Card className="shadow-lg">
+            <CardContent className="p-6">
+              <PhotoCapture onPhoto={handlePhoto} />
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Kjede *</Label>
-                  <Select value={form.station_chain} onValueChange={v => set("station_chain", v)}>
-                    <SelectTrigger><SelectValue placeholder="Velg kjede" /></SelectTrigger>
-                    <SelectContent>
-                      {CHAINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Stasjonsnavn (valgfritt)</Label>
-                  <Input
-                    placeholder="f.eks. Circle K Majorstua"
-                    value={form.station_name}
-                    onChange={e => set("station_name", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>By *</Label>
-                  <Input
-                    placeholder="f.eks. Oslo"
-                    value={form.city}
-                    onChange={e => set("city", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Region</Label>
-                  <Select value={form.region} onValueChange={v => set("region", v)}>
-                    <SelectTrigger><SelectValue placeholder="Velg region" /></SelectTrigger>
-                    <SelectContent>
-                      {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Dato observert *</Label>
-                <Input
-                  type="date"
-                  value={form.date_observed}
-                  onChange={e => set("date_observed", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Notater (valgfritt)</Label>
-                <Textarea
-                  placeholder="f.eks. kampanjepris, medlemspris..."
-                  value={form.notes}
-                  onChange={e => set("notes", e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
-                disabled={loading}
-              >
-                {loading ? "Lagrer..." : "Del pris med community"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        {step === "confirm" && (
+          <ConfirmPrice
+            form={form}
+            setForm={setForm}
+            imageUrl={imageUrl}
+            onSubmit={handleSubmit}
+            loading={submitting}
+            locationLoading={locationLoading}
+          />
+        )}
       </div>
     </div>
   );
