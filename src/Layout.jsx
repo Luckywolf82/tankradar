@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Fuel, BarChart2, Plus, Home, Settings } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
@@ -12,8 +12,20 @@ const navLinks = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const navigate = useNavigate();
+  const [lastClickedTab, setLastClickedTab] = useState(null);
   const mainPages = ["Dashboard", "Statistics", "LogPrice"];
   const isMainPage = mainPages.includes(currentPageName);
+
+  const handleTabClick = (page) => {
+    if (currentPageName === page && lastClickedTab === page) {
+      // Double-tap same tab: reset to root route
+      navigate(createPageUrl(page), { replace: true });
+      setLastClickedTab(null);
+    } else {
+      setLastClickedTab(page);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -68,9 +80,9 @@ export default function Layout({ children, currentPageName }) {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe">
         <div className="flex justify-around">
           {navLinks.map(({ label, page, icon: Icon }) => (
-            <Link
+            <button
               key={page}
-              to={createPageUrl(page)}
+              onClick={() => handleTabClick(page)}
               className={`flex flex-col items-center justify-center py-3 flex-1 text-xs transition-colors ${
                 currentPageName === page
                   ? "bg-blue-50 text-blue-600"
@@ -79,10 +91,10 @@ export default function Layout({ children, currentPageName }) {
             >
               <Icon size={20} />
               <span className="mt-0.5">{label}</span>
-            </Link>
+            </button>
           ))}
-          <Link
-            to={createPageUrl("Settings")}
+          <button
+            onClick={() => handleTabClick("Settings")}
             className={`flex flex-col items-center justify-center py-3 flex-1 text-xs transition-colors ${
               currentPageName === "Settings"
                 ? "bg-blue-50 text-blue-600"
@@ -91,7 +103,7 @@ export default function Layout({ children, currentPageName }) {
           >
             <Settings size={20} />
             <span className="mt-0.5">Innstillinger</span>
-          </Link>
+          </button>
         </div>
       </nav>
     </div>

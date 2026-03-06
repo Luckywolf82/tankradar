@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Fuel, ArrowLeft } from "lucide-react";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
  * Desktop: hidden (uses existing top nav)
  */
 export function MobileHeader({ currentPageName, showBack = false }) {
+  const navigate = useNavigate();
   const mainPages = ["Dashboard", "Statistics", "LogPrice"];
   const isMainPage = mainPages.includes(currentPageName);
 
@@ -21,11 +23,14 @@ export function MobileHeader({ currentPageName, showBack = false }) {
       <div className="px-4 h-14 flex items-center justify-between">
         {showBack && !isMainPage ? (
           <>
-            <Link to={createPageUrl("Dashboard")}>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <ArrowLeft size={20} />
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft size={20} />
+            </Button>
             <div />
           </>
         ) : (
