@@ -5,9 +5,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Database, TrendingUp, AlertCircle } from "lucide-react";
-import SSBChart from "../components/statistics/SSBChart.jsx";
-import GooglePlacesObservedStats from "../components/statistics/GooglePlacesObservedStats.jsx";
-import VerifiedStationStats from "../components/statistics/VerifiedStationStats.jsx";
+import SSBChart from "../components/statistics/SSBChart";
+import GooglePlacesObservedStats from "../components/statistics/GooglePlacesObservedStats";
+import VerifiedStationStats from "../components/statistics/VerifiedStationStats";
 
 export default function Statistics() {
   const [ssbData, setSsbData] = useState([]);
