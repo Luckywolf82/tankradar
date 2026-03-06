@@ -61,6 +61,7 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import ComponentNamingReview from './pages/ComponentNamingReview';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +80,7 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "ComponentNamingReview": ComponentNamingReview,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
