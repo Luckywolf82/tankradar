@@ -23,7 +23,8 @@ Deno.serve(async (req) => {
       500
     );
 
-    // Klassifiser
+    // Klassifiser basert på rawPayloadSnippet (som nå inneholder klassifisering)
+    // Fallback: klassifiser manuelt basert på priceNok
     const classification = {
       realistic_price: [],
       suspect_price_low: [],
@@ -32,7 +33,18 @@ Deno.serve(async (req) => {
     };
 
     for (const price of allGooglePrices) {
-      const status = price.plausibilityStatus || "unclassified";
+      let status = price.plausibilityStatus;
+      
+      // Hvis plausibilityStatus ikke finnes, klassifiser basert på priceNok
+      if (!status) {
+        if (price.priceNok < 10) {
+          status = "suspect_price_low";
+        } else if (price.priceNok > 40) {
+          status = "suspect_price_high";
+        } else {
+          status = "realistic_price";
+        }
+      }
       
       if (classification[status]) {
         classification[status].push(price);
