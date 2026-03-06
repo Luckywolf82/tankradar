@@ -47,7 +47,9 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import App from './pages/App';
 import BackfillAssessment from './pages/BackfillAssessment';
+import ComponentNamingReview from './pages/ComponentNamingReview';
 import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import CoverageReport from './pages/CoverageReport';
 import Dashboard from './pages/Dashboard';
@@ -55,21 +57,21 @@ import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import LogPrice from './pages/LogPrice';
+import MobileImplementationReport from './pages/MobileImplementationReport';
+import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Statistics from './pages/Statistics';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import ComponentNamingReview from './pages/ComponentNamingReview';
 import Settings from './pages/Settings';
-import App from './pages/App';
-import MobileImplementationReport from './pages/MobileImplementationReport';
-import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "App": App,
     "BackfillAssessment": BackfillAssessment,
+    "ComponentNamingReview": ComponentNamingReview,
     "ConfidencePolicyReport": ConfidencePolicyReport,
     "CoverageReport": CoverageReport,
     "Dashboard": Dashboard,
@@ -77,16 +79,14 @@ export const PAGES = {
     "DataQualityDiagnostics": DataQualityDiagnostics,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "LogPrice": LogPrice,
+    "MobileImplementationReport": MobileImplementationReport,
+    "MobileUXEnhancementReport": MobileUXEnhancementReport,
     "ProductionModelLockdown": ProductionModelLockdown,
     "Statistics": Statistics,
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "ComponentNamingReview": ComponentNamingReview,
     "Settings": Settings,
-    "App": App,
-    "MobileImplementationReport": MobileImplementationReport,
-    "MobileUXEnhancementReport": MobileUXEnhancementReport,
 }
 
 export const pagesConfig = {

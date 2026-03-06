@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Fuel, BarChart2, Plus, Home, Settings } from "lucide-react";
+import { BarChart2, Plus, Home, Settings } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
+import { TankRadarLogo } from "./components/TankRadarLogo";
 
 const navLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
