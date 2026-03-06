@@ -4,14 +4,14 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw, Database } from "lucide-react";
+import { ArrowLeft, Database, TrendingUp, AlertCircle } from "lucide-react";
 import SSBChart from "../components/statistics/SSBChart.jsx";
-import PriceByRegion from "../components/statistics/PriceByRegion.jsx";
-import PriceByChain from "../components/statistics/PriceByChain.jsx";
+import GooglePlacesObservedStats from "../components/statistics/GooglePlacesObservedStats.jsx";
+import VerifiedStationStats from "../components/statistics/VerifiedStationStats.jsx";
 
 export default function Statistics() {
   const [ssbData, setSsbData] = useState([]);
-  const [communityData, setCommunityData] = useState([]);
+  const [fuelPrices, setFuelPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchingSSB, setFetchingSSB] = useState(false);
   const [ssbMsg, setSsbMsg] = useState(null);
@@ -22,12 +22,12 @@ export default function Statistics() {
 
   const loadData = async () => {
     setLoading(true);
-    const [ssb, community] = await Promise.all([
+    const [ssb, prices] = await Promise.all([
       base44.entities.SSBData.list("-created_date", 200),
-      base44.entities.FuelPrice.list("-fetchedAt", 500),
+      base44.entities.FuelPrice.list("-fetchedAt", 1000),
     ]);
     setSsbData(ssb);
-    setCommunityData(community);
+    setFuelPrices(prices);
     setLoading(false);
   };
 
