@@ -9,10 +9,13 @@ export default function StationCandidateReview() {
   const [candidates, setCandidates] = useState([]);
   const [groups, setGroups] = useState([]);
   const [ungrouped, setUngrouped] = useState([]);
+  const [stationReviews, setStationReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const [expandedStationReviewId, setExpandedStationReviewId] = useState(null);
   const [selectedNames, setSelectedNames] = useState({});
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0, duplicate: 0 });
+  const [stationStats, setStationStats] = useState({ chain_unconfirmed: 0, generic_names: 0, pending_total: 0 });
   const [splitGroupIds, setSplitGroupIds] = useState(new Set());
   const [autoProcessing, setAutoProcessing] = useState(false);
   const [splitClusters, setSplitClusters] = useState({});
