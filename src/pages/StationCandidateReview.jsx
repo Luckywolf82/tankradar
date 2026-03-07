@@ -485,7 +485,7 @@ export default function StationCandidateReview() {
                     <div className="font-semibold">
                       {group.candidates.length} kandidater {group.groupType === 'duplicate' ? '(mulig duplikat)' : '(samme sted)'}
                     </div>
-                    <div className="text-sm text-gray-600">{group.reason.join(', ')}</div>
+                    <div className="text-sm text-gray-600">{group.reason?.join(', ') || 'Gruppert'}</div>
                   </div>
                   {expandedGroupId === group.groupId ? <ChevronUp /> : <ChevronDown />}
                 </button>
