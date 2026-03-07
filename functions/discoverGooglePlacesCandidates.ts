@@ -179,8 +179,10 @@ Deno.serve(async (req) => {
       gpResultsCount: gpData.results.length,
       candidatesCreated: createdCandidates.length,
       dedupedCount: deduped.length,
+      skippedCount: skipped.length,
       candidates: createdCandidates,
       deduped,
+      skipped,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
