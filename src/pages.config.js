@@ -74,6 +74,7 @@ import UserReportedSystemIntegrationReport from './pages/UserReportedSystemInteg
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import StationCandidateReview from './pages/StationCandidateReview';
 import DiscoverStations from './pages/DiscoverStations';
+import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
 import __Layout from './Layout.jsx';
 
 
@@ -105,6 +106,7 @@ export const PAGES = {
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "StationCandidateReview": StationCandidateReview,
     "DiscoverStations": DiscoverStations,
+    "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
 }
 
 export const pagesConfig = {
