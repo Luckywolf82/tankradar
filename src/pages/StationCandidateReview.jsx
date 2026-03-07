@@ -192,18 +192,34 @@ export default function StationCandidateReview() {
       <ReviewConsistencyCheck />
 
       {/* Auto-approve exact duplicates */}
-      <div className="mb-6">
-        <Button
-          onClick={handleAutoApproveExactDuplicates}
-          disabled={autoProcessing}
-          className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
-        >
-          <Zap className="w-4 h-4" />
-          {autoProcessing ? 'Behandler...' : 'Auto-godkjenn eksakte duplikater'}
-        </Button>
-        <p className="text-xs text-gray-600 mt-2">
-          Godkjenner automatisk første kandidat og markerer resten som duplikater når navn, adresse og koordinater er eksakt like.
-        </p>
+      <div className="mb-6 space-y-3">
+        <div>
+          <Button
+            onClick={handleAutoApproveExactDuplicates}
+            disabled={autoProcessing}
+            className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Behandler...' : 'Auto-godkjenn eksakte duplikater'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Godkjenner automatisk første kandidat og markerer resten som duplikater når navn, adresse og koordinater er eksakt like.
+          </p>
+        </div>
+        
+        <div>
+          <Button
+            onClick={() => base44.functions.invoke('identifyStationReviewProblems').then(() => loadCandidates())}
+            disabled={autoProcessing}
+            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Skanninger...' : 'Scan Station-data for problemer'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Identifiserer mangel på kjede, generiske navn og andre problemer i Station-tabellen.
+          </p>
+        </div>
       </div>
 
       {/* Stats: GooglePlaces Candidates */}
