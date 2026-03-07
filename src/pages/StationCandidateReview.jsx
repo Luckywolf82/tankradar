@@ -14,6 +14,7 @@ export default function StationCandidateReview() {
   const [selectedNames, setSelectedNames] = useState({});
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0, duplicate: 0 });
   const [splitGroupIds, setSplitGroupIds] = useState(new Set());
+  const [autoProcessing, setAutoProcessing] = useState(false);
 
   useEffect(() => {
     loadCandidates();
