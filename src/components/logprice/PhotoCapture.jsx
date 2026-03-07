@@ -45,12 +45,12 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   };
 
   const tryOpenSettings = () => {
-    // Forsøk å åpne app-innstillinger via Median-bridge eller standard URL
-    if (typeof window.median !== "undefined" && window.median?.app?.openSettings) {
+    setTriedOpenSettings(true);
+    if (diag.hasOpenSettingsBridge) {
       window.median.app.openSettings();
+      setBridgeMessage(null);
     } else {
-      // Ikke mulig å åpne innstillinger direkte fra WebView — vis veiledning
-      setShowPermissionHelp(true);
+      setBridgeMessage("Appinnstillinger kan ikke åpnes direkte fra denne appen.");
     }
   };
 
