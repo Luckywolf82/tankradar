@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, PenLine, Settings, ExternalLink } from "lucide-react";
 
