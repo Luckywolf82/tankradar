@@ -93,6 +93,19 @@ export default function StationCandidateReview() {
     }
   };
 
+  const handleSplitGroup = async (groupId) => {
+    // Toggle split mode - when split, show candidates individually
+    setSplitGroupIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  };
+
   if (loading) {
     return <div className="p-6">Laster...</div>;
   }
