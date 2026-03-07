@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, X, MapPin, AlertCircle } from 'lucide-react';
+import { Check, X, MapPin, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function StationCandidateReview() {
   const [candidates, setCandidates] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [ungrouped, setUngrouped] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const [selectedNames, setSelectedNames] = useState({});
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0, duplicate: 0 });
 
   useEffect(() => {
