@@ -74,19 +74,19 @@ export default function Layout({ children, currentPageName }) {
               <span>Innstillinger</span>
             </Link>
             {/* Login/logout */}
-            {!user ? (
-              <button
-                onClick={() => base44.auth.redirectToLogin(window.location.pathname)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                Logg inn
-              </button>
-            ) : (
+            {user ? (
               <button
                 onClick={() => base44.auth.logout()}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 Logg ut
+              </button>
+            ) : (
+              <button
+                onClick={() => base44.auth.redirectToLogin(window.location.pathname)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Logg inn
               </button>
             )}
           </div>
