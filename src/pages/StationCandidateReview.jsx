@@ -265,7 +265,7 @@ export default function StationCandidateReview() {
                     {/* Split group button */}
                     <div className="mt-4 pt-4 border-t">
                       <Button
-                        onClick={() => handleSplitGroup(group.groupId)}
+                        onClick={() => handleSplitGroup(group.groupId, group.candidates)}
                         size="sm"
                         variant="outline"
                         className="text-orange-600 hover:text-orange-700 flex items-center gap-2"
@@ -274,7 +274,7 @@ export default function StationCandidateReview() {
                         Splitt gruppe
                       </Button>
                       <div className="text-xs text-gray-600 mt-2">
-                        Hvis disse er ulike stasjoner, splitt gruppen for å håndtere dem separat.
+                        Splitter automatisk kandidater med ulik navn/adresse.
                       </div>
                     </div>
                   </CardContent>
