@@ -98,28 +98,31 @@ Deno.serve(async (req) => {
           continue;
         }
       
-        // Quick proximity check: only scan grid cells nearby
-        let isProximityDuplicate = false;
-        for (let dlat = -1; dlat <= 1; dlat++) {
-          for (let dlon = -1; dlon <= 1; dlon++) {
-            const checkKey = `${Math.round(latitude) + dlat}_${Math.round(longitude) + dlon}`;
-            const candidates = stationsByProximity[checkKey] || [];
-            
-            for (const existing of candidates) {
-              const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
-              if (distance < dedupRadius) {
-                isProximityDuplicate = true;
-                break;
+        // Skip dedup check for dryRun (too slow with geospatial matching)
+        // On actual import, check proximity
+        if (!dryRun) {
+          let isProximityDuplicate = false;
+          for (let dlat = -1; dlat <= 1; dlat++) {
+            for (let dlon = -1; dlon <= 1; dlon++) {
+              const checkKey = `${Math.round(latitude) + dlat}_${Math.round(longitude) + dlon}`;
+              const candidates = stationsByProximity[checkKey] || [];
+              
+              for (const existing of candidates) {
+                const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
+                if (distance < dedupRadius) {
+                  isProximityDuplicate = true;
+                  break;
+                }
               }
+              if (isProximityDuplicate) break;
             }
             if (isProximityDuplicate) break;
           }
-          if (isProximityDuplicate) break;
-        }
-        
-        if (isProximityDuplicate) {
-          results.skipped++;
-          continue;
+          
+          if (isProximityDuplicate) {
+            results.skipped++;
+            continue;
+          }
         }
         
         // Prepare station record
