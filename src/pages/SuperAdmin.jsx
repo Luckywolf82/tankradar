@@ -33,6 +33,7 @@ const activeSections = [
     color: "text-amber-600",
     bg: "bg-amber-50",
     pages: [
+      { label: "Seed Trondheim Stations", page: "SeedTrondheimStations", desc: "Importer kjent liste av Trondheim-stasjoner", icon: Zap },
       { label: "Station Import (OSM)", page: "StationImport", desc: "Importer stasjonerkatalog fra OpenStreetMap" },
       { label: "Discover from Google Places", page: "DiscoverStations", desc: "Søk og importer kandidater fra Google Places" },
       { label: "Review Station Candidates", page: "StationCandidateReview", desc: "Godkjenn nye stasjonskandidater" },
