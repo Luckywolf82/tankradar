@@ -96,17 +96,27 @@ export default function StationCandidateReview() {
     }
   };
 
-  const handleSplitGroup = async (groupId) => {
-    // Toggle split mode - when split, show candidates individually
-    setSplitGroupIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupId)) {
-        newSet.delete(groupId);
-      } else {
+  const handleSplitGroup = async (groupId, groupCandidates) => {
+    try {
+      // Call backend to split by likeness
+      const result = await base44.functions.invoke('splitGroupByLikeness', {
+        groupId,
+        groupCandidates,
+      });
+
+      setSplitClusters(prev => ({
+        ...prev,
+        [groupId]: result.data.clusters,
+      }));
+
+      setSplitGroupIds(prev => {
+        const newSet = new Set(prev);
         newSet.add(groupId);
-      }
-      return newSet;
-    });
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Failed to split group:', error);
+    }
   };
 
   const handleAutoApproveExactDuplicates = async () => {
