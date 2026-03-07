@@ -189,6 +189,11 @@ export default function StationCandidateReview() {
       <h1 className="text-3xl font-bold mb-6">Station Mastering Hub</h1>
       <p className="text-gray-600 mb-6">Google Places-kandidater + Station-data review</p>
 
+      {/* Metrics & Export */}
+      <div className="mb-8">
+        <MasteringMetrics />
+      </div>
+
       {/* Consistency Check */}
       <ReviewConsistencyCheck />
 
