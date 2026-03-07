@@ -305,7 +305,7 @@ export default function StationCandidateReview() {
           </div>
           
           <div className="text-sm text-gray-700 mb-3">
-            <strong>Kjeder brukt:</strong> {autoChainResult.summary.knownChainsUsed.join(', ')}
+            <strong>Kjeder brukt:</strong> {autoChainResult.summary.knownChainsUsed?.join(', ') || 'N/A'}
           </div>
 
           {autoChainResult.details.confirmed.length > 0 && (
