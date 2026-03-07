@@ -39,10 +39,11 @@ export default function StationCandidateReview() {
     }
   };
 
-  const handleApprove = async (candidate, overrideName = null) => {
+  const handleApprove = async (candidate, overrideName = null, groupMembers = []) => {
     try {
       const finalName = overrideName || candidate.proposedName;
       
+      // Approve selected candidate
       await base44.entities.StationCandidate.update(candidate.id, { status: 'approved' });
       
       // Create Station from candidate
@@ -57,6 +58,16 @@ export default function StationCandidateReview() {
         sourceName: 'GooglePlaces',
         sourceStationId: candidate.sourceStationId,
       });
+
+      // Mark rest of group members as duplicate
+      for (const member of groupMembers) {
+        if (member.id !== candidate.id) {
+          await base44.entities.StationCandidate.update(member.id, { 
+            status: 'duplicate',
+            notes: `Duplicate of approved station: ${candidate.id}`
+          });
+        }
+      }
 
       loadCandidates();
     } catch (error) {
