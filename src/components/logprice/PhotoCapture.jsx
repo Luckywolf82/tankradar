@@ -2,22 +2,43 @@ import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, PenLine, ExternalLink, Copy, CheckCircle } from "lucide-react";
 
-// Detekterer om appen kjører i Base44 APK / Median.co WebView
-function isMedianWebView() {
-  return typeof window.median !== "undefined";
+const BLANK_DIAG = {
+  clickTriggered: false,
+  isWebView: false,
+  hasMedian: false,
+  medianWindowOpenExists: false,
+  triedMedianOpen: false,
+  triedWindowOpen: false,
+  triedAnchorClick: false,
+  triedLocationHref: false,
+  lastError: null,
+  lastMethod: null,
+};
+
+function buildDiag() {
+  const hasMedian = typeof window.median !== "undefined";
+  const medianWindowOpenExists = hasMedian && typeof window.median?.window?.open === "function";
+  return {
+    ...BLANK_DIAG,
+    clickTriggered: true,
+    isWebView: hasMedian,
+    hasMedian,
+    medianWindowOpenExists,
+  };
 }
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
   const [showDialog, setShowDialog] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [diag, setDiag] = useState(null);
 
   const browserUrl = window.location.origin + window.location.pathname;
 
   const handleCameraClick = () => {
-    if (isMedianWebView()) {
-      // APK/WebView detektert — kameravalg fungerer ikke korrekt her
-      console.info("[PhotoCapture] Median WebView detected — showing browser redirect dialog");
+    const hasMedian = typeof window.median !== "undefined";
+    if (hasMedian) {
+      setDiag(null);
       setShowDialog(true);
     } else {
       fileRef.current.click();
@@ -29,34 +50,43 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
     if (file) onPhoto(file);
   };
 
-  const openExternal = (url) => {
-    console.log("[PhotoCapture] browser handoff — median:", window.median);
-    console.log("[PhotoCapture] browser handoff — userAgent:", navigator.userAgent);
+  const runOpenExternal = (url) => {
+    const d = buildDiag();
+    setDiag({ ...d });
 
-    // Metode 1: Median bridge
-    if (typeof window.median !== "undefined" && typeof window.median?.window?.open === "function") {
+    // Metode 1: median.window.open
+    if (d.medianWindowOpenExists) {
+      d.triedMedianOpen = true;
+      d.lastMethod = "median.window.open";
+      setDiag({ ...d });
       try {
-        console.log("[PhotoCapture] browser handoff — method: median.window.open");
         window.median.window.open(url, "external");
-        return true;
+        return;
       } catch (err) {
-        console.log("[PhotoCapture] browser handoff — median.window.open failed:", err);
+        d.lastError = "median.window.open threw: " + err.message;
+        setDiag({ ...d });
       }
     }
 
     // Metode 2: window.open _blank
+    d.triedWindowOpen = true;
+    d.lastMethod = "window.open(_blank)";
+    setDiag({ ...d });
     try {
-      console.log("[PhotoCapture] browser handoff — method: window.open _blank");
       const w = window.open(url, "_blank");
-      if (w) return true;
-      console.log("[PhotoCapture] browser handoff — window.open returned null");
+      if (w) return;
+      d.lastError = "window.open returned null";
+      setDiag({ ...d });
     } catch (err) {
-      console.log("[PhotoCapture] browser handoff — window.open failed:", err);
+      d.lastError = "window.open threw: " + err.message;
+      setDiag({ ...d });
     }
 
     // Metode 3: anchor click
+    d.triedAnchorClick = true;
+    d.lastMethod = "anchor.click(_blank)";
+    setDiag({ ...d });
     try {
-      console.log("[PhotoCapture] browser handoff — method: anchor.click");
       const a = document.createElement("a");
       a.href = url;
       a.target = "_blank";
@@ -65,32 +95,31 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      return true;
+      return;
     } catch (err) {
-      console.log("[PhotoCapture] browser handoff — anchor.click failed:", err);
+      d.lastError = "anchor.click threw: " + err.message;
+      setDiag({ ...d });
     }
 
     // Metode 4: window.location.href
-    console.log("[PhotoCapture] browser handoff — method: window.location.href");
-    window.location.href = url;
-    return true;
-  };
-
-  const openInBrowser = () => {
-    openExternal(browserUrl);
-    setShowDialog(false);
+    d.triedLocationHref = true;
+    d.lastMethod = "window.location.href";
+    setDiag({ ...d });
+    try {
+      window.location.href = url;
+    } catch (err) {
+      d.lastError = "location.href threw: " + err.message;
+      setDiag({ ...d });
+    }
   };
 
   const copyUrl = () => {
     navigator.clipboard.writeText(browserUrl)
       .then(() => {
-        console.info("[PhotoCapture] clipboard copy succeeded");
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);
       })
-      .catch((err) => {
-        console.error("[PhotoCapture] clipboard copy failed", err);
-      });
+      .catch(() => {});
   };
 
   return (
@@ -126,47 +155,58 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
         <PenLine size={14} /> Skriv inn pris manuelt
       </button>
 
-      {/* Modal — vises kun i APK/WebView */}
+      {/* Modal */}
       {showDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowDialog(false)}
-          />
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDialog(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 flex flex-col gap-3 overflow-y-auto max-h-[90vh]">
 
-          {/* Dialog */}
-          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 mx-auto">
-              <Camera className="text-blue-600" size={28} />
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mx-auto">
+              <Camera className="text-blue-600" size={24} />
             </div>
 
             <div className="text-center">
-              <h3 className="text-lg font-bold text-slate-800 mb-1">
-                Åpne i nettleser
-              </h3>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">Åpne i nettleser</h3>
               <p className="text-sm text-slate-500">
                 Kameraskann fungerer best i Chrome eller Safari.
-                Vil du åpne TankRadar i nettleseren din?
               </p>
             </div>
 
             <Button
               className="bg-blue-600 hover:bg-blue-700 gap-2 w-full"
-              onClick={openInBrowser}
+              onClick={() => runOpenExternal(browserUrl)}
             >
               <ExternalLink size={16} /> Åpne i nettleser
             </Button>
 
-            {/* Kopi-lenke som sekundær fallback */}
+            {/* Debug-boks — vises etter knappetrykk */}
+            {diag && (
+              <div className="bg-slate-900 rounded-lg p-3 text-xs font-mono space-y-0.5">
+                <p className="text-slate-400 mb-1 font-bold">DIAGNOSTIKK</p>
+                {Object.entries(diag).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-2">
+                    <span className="text-slate-400">{k}</span>
+                    <span className={
+                      v === true ? "text-green-400" :
+                      v === false ? "text-red-400" :
+                      v === null ? "text-slate-500" :
+                      "text-yellow-300"
+                    }>
+                      {v === null ? "null" : String(v)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <button
               type="button"
               onClick={copyUrl}
               className="flex items-center justify-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
             >
               {copied
-                ? <><CheckCircle size={14} className="text-green-600" /><span className="text-green-700">Lenke kopiert – lim inn i Chrome eller Safari</span></>
-                : <><Copy size={14} /> Kopier lenke i stedet</>
+                ? <><CheckCircle size={14} className="text-green-600" /><span className="text-green-700">Lenke kopiert</span></>
+                : <><Copy size={14} /> Kopier lenke</>
               }
             </button>
 
