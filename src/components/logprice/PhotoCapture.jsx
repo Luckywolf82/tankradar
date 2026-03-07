@@ -1,12 +1,10 @@
 import React, { useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, PenLine, Settings, ExternalLink } from "lucide-react";
+import { Camera, PenLine, Settings } from "lucide-react";
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
-  const [bridgeMessage, setBridgeMessage] = useState(null);
-  const [triedOpenSettings, setTriedOpenSettings] = useState(false);
 
   const diag = useMemo(() => ({
     hasMedian: typeof window.median !== "undefined",
@@ -24,34 +22,17 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   };
 
   const handleCameraClick = () => {
-    // Lytter på om input forblir tom etter klikk — indikerer sperret tilgang
     const input = fileRef.current;
     input.value = "";
     input.click();
 
-    // Hvis ingen fil er valgt etter 500ms, vis tilgangsveiledning
     const timer = setTimeout(() => {
       if (!input.files || input.files.length === 0) {
         setShowPermissionHelp(true);
       }
     }, 500);
 
-    // Rydd opp timer hvis fil faktisk velges
-    const cleanup = () => {
-      clearTimeout(timer);
-      input.removeEventListener("change", cleanup);
-    };
-    input.addEventListener("change", cleanup, { once: true });
-  };
-
-  const tryOpenSettings = () => {
-    setTriedOpenSettings(true);
-    if (diag.hasOpenSettingsBridge) {
-      window.median.app.openSettings();
-      setBridgeMessage(null);
-    } else {
-      setBridgeMessage("Appinnstillinger kan ikke åpnes direkte fra denne appen.");
-    }
+    input.addEventListener("change", () => clearTimeout(timer), { once: true });
   };
 
   return (
@@ -84,9 +65,9 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
           <div className="flex items-start gap-2">
             <Settings size={18} className="text-amber-600 mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-amber-800">Kameratilgang kan mangle</p>
+              <p className="text-sm font-semibold text-amber-800">Kameratilgang mangler</p>
               <p className="text-xs text-amber-700 mt-0.5">
-                Appen har ikke tilgang til kameraet ditt. Du må aktivere dette i systeminnstillingene.
+                Du må aktivere kameratilgang manuelt i telefonens innstillinger.
               </p>
             </div>
           </div>
@@ -100,25 +81,12 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
             <p>5. Kom tilbake til appen og prøv igjen</p>
           </div>
 
-          <Button
-            variant="outline"
-            className="gap-2 text-sm border-amber-300 text-amber-700 hover:bg-amber-50 w-full"
-            onClick={tryOpenSettings}
-          >
-            <ExternalLink size={14} /> Prøv å åpne innstillinger
-          </Button>
-
-          {bridgeMessage && (
-            <p className="text-xs text-red-600 text-center">{bridgeMessage}</p>
-          )}
-
           {/* Diagnostikkboks */}
           <div className="bg-slate-100 rounded-lg p-3 text-xs font-mono text-slate-600 space-y-1 border border-slate-200">
             <p className="font-semibold text-slate-700 font-sans mb-1">Diagnostikk</p>
             <p>hasMedian: <span className={diag.hasMedian ? "text-green-700" : "text-red-600"}>{String(diag.hasMedian)}</span></p>
             <p>hasMedianApp: <span className={diag.hasMedianApp ? "text-green-700" : "text-red-600"}>{String(diag.hasMedianApp)}</span></p>
             <p>hasOpenSettingsBridge: <span className={diag.hasOpenSettingsBridge ? "text-green-700" : "text-red-600"}>{String(diag.hasOpenSettingsBridge)}</span></p>
-            <p>triedOpenSettings: <span className={triedOpenSettings ? "text-blue-700" : "text-slate-400"}>{String(triedOpenSettings)}</span></p>
             <p className="break-all">userAgent: {diag.userAgent}</p>
           </div>
 
