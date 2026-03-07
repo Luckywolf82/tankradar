@@ -114,7 +114,7 @@ export default function ExternalBrowserTest() {
       <div className="w-full max-w-sm">
         <h1 className="text-white text-xl font-bold mb-1">Browser Handoff Test</h1>
         <p className="text-slate-400 text-sm mb-6">
-          Test-URL: <span className="text-yellow-300 font-mono">{TEST_URL}</span>
+          Velg URL å teste under
         </p>
 
         <div className="flex flex-col gap-3">
