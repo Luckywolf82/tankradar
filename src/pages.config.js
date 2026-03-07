@@ -49,6 +49,7 @@
  */
 import App from './pages/App';
 import BackfillAssessment from './pages/BackfillAssessment';
+import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
 import ComponentNamingReview from './pages/ComponentNamingReview';
 import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import CoverageReport from './pages/CoverageReport';
@@ -57,6 +58,7 @@ import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import DiscoverStations from './pages/DiscoverStations';
 import ExternalBrowserTest from './pages/ExternalBrowserTest';
+import GroupReviewFixReport from './pages/GroupReviewFixReport';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import ImportSystemReport from './pages/ImportSystemReport';
 import LogPrice from './pages/LogPrice';
@@ -66,7 +68,6 @@ import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
 import Settings from './pages/Settings';
-import StationCandidateReview from './pages/StationCandidateReview';
 import StationImport from './pages/StationImport';
 import Statistics from './pages/Statistics';
 import SuperAdmin from './pages/SuperAdmin';
@@ -74,14 +75,14 @@ import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
-import GroupReviewFixReport from './pages/GroupReviewFixReport';
+import StationCandidateReview from './pages/StationCandidateReview';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "App": App,
     "BackfillAssessment": BackfillAssessment,
+    "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
     "ComponentNamingReview": ComponentNamingReview,
     "ConfidencePolicyReport": ConfidencePolicyReport,
     "CoverageReport": CoverageReport,
@@ -90,6 +91,7 @@ export const PAGES = {
     "DataQualityDiagnostics": DataQualityDiagnostics,
     "DiscoverStations": DiscoverStations,
     "ExternalBrowserTest": ExternalBrowserTest,
+    "GroupReviewFixReport": GroupReviewFixReport,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "ImportSystemReport": ImportSystemReport,
     "LogPrice": LogPrice,
@@ -99,7 +101,6 @@ export const PAGES = {
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
     "Settings": Settings,
-    "StationCandidateReview": StationCandidateReview,
     "StationImport": StationImport,
     "Statistics": Statistics,
     "SuperAdmin": SuperAdmin,
@@ -107,8 +108,7 @@ export const PAGES = {
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
-    "GroupReviewFixReport": GroupReviewFixReport,
+    "StationCandidateReview": StationCandidateReview,
 }
 
 export const pagesConfig = {
