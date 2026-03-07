@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, PenLine, ExternalLink } from "lucide-react";
+import { Camera, PenLine, ExternalLink, Copy } from "lucide-react";
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
