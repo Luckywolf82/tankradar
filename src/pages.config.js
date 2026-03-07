@@ -67,7 +67,9 @@ import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
+import SeedTrondheimStations from './pages/SeedTrondheimStations';
 import Settings from './pages/Settings';
+import StationCandidateReview from './pages/StationCandidateReview';
 import StationImport from './pages/StationImport';
 import Statistics from './pages/Statistics';
 import SuperAdmin from './pages/SuperAdmin';
@@ -75,8 +77,7 @@ import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import StationCandidateReview from './pages/StationCandidateReview';
-import SeedTrondheimStations from './pages/SeedTrondheimStations';
+import ValidateStationData from './pages/ValidateStationData';
 import __Layout from './Layout.jsx';
 
 
@@ -101,7 +102,9 @@ export const PAGES = {
     "ProductionModelLockdown": ProductionModelLockdown,
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
+    "SeedTrondheimStations": SeedTrondheimStations,
     "Settings": Settings,
+    "StationCandidateReview": StationCandidateReview,
     "StationImport": StationImport,
     "Statistics": Statistics,
     "SuperAdmin": SuperAdmin,
@@ -109,8 +112,7 @@ export const PAGES = {
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "StationCandidateReview": StationCandidateReview,
-    "SeedTrondheimStations": SeedTrondheimStations,
+    "ValidateStationData": ValidateStationData,
 }
 
 export const pagesConfig = {
