@@ -16,7 +16,7 @@ export default function ReviewConsistencyCheck() {
       // Get all candidates
       const allCandidates = await base44.entities.StationCandidate.list();
       
-      // Get grouping
+      // Get grouping (only groups PENDING candidates)
       const groupRes = await base44.functions.invoke('groupStationCandidates');
       const { groups = [], ungrouped = [] } = groupRes.data;
 
@@ -26,9 +26,13 @@ export default function ReviewConsistencyCheck() {
         byStatus[c.status] = (byStatus[c.status] || 0) + 1;
       });
 
-      // Group stats
+      // Group stats — only for pending candidates
       const totalInGroups = groups.reduce((sum, g) => sum + g.candidates.length, 0);
-      const isConsistent = (totalInGroups + ungrouped.length) === allCandidates.length;
+      const pendingCount = byStatus.pending;
+      const pendingGrouped = totalInGroups + ungrouped.length;
+      
+      // Consistency: all PENDING candidates should be either in groups or ungrouped
+      const isConsistent = pendingGrouped === pendingCount;
 
       setReport({
         total: allCandidates.length,
@@ -42,7 +46,8 @@ export default function ReviewConsistencyCheck() {
         ungrouped: ungrouped.length,
         consistency: {
           isConsistent,
-          formula: `${totalInGroups} (in groups) + ${ungrouped.length} (ungrouped) = ${totalInGroups + ungrouped.length} (should be ${allCandidates.length})`,
+          formula: `${totalInGroups} (grouped) + ${ungrouped.length} (ungrouped) = ${pendingGrouped} pending (should be ${pendingCount} pending in database)`,
+          note: `Approved/rejected/duplicate (${byStatus.approved + byStatus.rejected + byStatus.duplicate}) er utenfor gruppering — det er forventet.`,
         },
       });
     } catch (error) {
