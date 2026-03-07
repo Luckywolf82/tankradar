@@ -118,11 +118,59 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           </div>
         )}
 
-        {errorType === "location_error" && (
+        {errorType === "permission_denied" && (
           <div className="space-y-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-red-800 mb-1">Posisjonen kunne ikke hentes</p>
-              <p className="text-xs text-red-700">Sjekk at appen har tilgang til posisjonen din.</p>
+              <p className="text-sm font-semibold text-red-800 mb-1">Posisjonstilgang nektet</p>
+              <p className="text-xs text-red-700">Appen trenger tilgang til posisjonen din. Sjekk nettleserinnsillinger eller tillat tilgang når spurt.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={loadNearbyStations}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Prøv igjen
+              </Button>
+              <Button
+                onClick={onSkip}
+                variant="outline"
+                className="flex-1"
+              >
+                Skriv inn manuelt
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {errorType === "timeout_or_unavailable" && (
+          <div className="space-y-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-orange-800 mb-1">Posisjonen kunne ikke fastslås</p>
+              <p className="text-xs text-orange-700">GPS-signal svakt eller tidavbrutt. Prøv på nytt, eller skriv inn stedet manuelt.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={loadNearbyStations}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Prøv igjen
+              </Button>
+              <Button
+                onClick={onSkip}
+                variant="outline"
+                className="flex-1"
+              >
+                Skriv inn manuelt
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {errorType === "location_error_unknown" && (
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-red-800 mb-1">Posisjonfeil</p>
+              <p className="text-xs text-red-700">En uventet feil oppstod. Prøv igjen eller skriv inn stedet manuelt.</p>
             </div>
             <div className="flex gap-2">
               <Button
