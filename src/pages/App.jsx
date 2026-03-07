@@ -35,6 +35,7 @@ import UserReportedSystemIntegrationReport from "./UserReportedSystemIntegration
 import StationImport from "./StationImport";
 import DiscoverStations from "./DiscoverStations";
 import StationCandidateReview from "./StationCandidateReview";
+import CandidateDiscoveryStatus from "./CandidateDiscoveryStatus";
 
 const publicPages = [
   { name: "Dashboard", path: "/", Component: Dashboard },
