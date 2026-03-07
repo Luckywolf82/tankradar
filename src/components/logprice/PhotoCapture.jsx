@@ -30,9 +30,32 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   };
 
   const openInBrowser = () => {
-    console.info("[PhotoCapture] opening external browser via median.window.open");
-    window.median.window.open(browserUrl, "external");
-    setShowDialog(false);
+    const hasMedian = typeof window.median !== "undefined" && typeof window.median?.window?.open === "function";
+    console.info("[PhotoCapture] browser handoff — isWebView:", true, "hasMedian:", hasMedian);
+
+    // Metode 1: Median bridge (Base44 APK / Median.co native)
+    if (hasMedian) {
+      try {
+        console.info("[PhotoCapture] browser handoff — triedMedianOpen: true");
+        window.median.window.open(browserUrl, "external");
+        setShowDialog(false);
+        return;
+      } catch (err) {
+        console.error("[PhotoCapture] browser handoff — median.window.open failed:", err);
+      }
+    }
+
+    // Metode 2: window.open _blank (NFC-appens primærmetode + vanlig nettleser)
+    console.info("[PhotoCapture] browser handoff — triedWindowOpen: true");
+    const w = window.open(browserUrl, "_blank");
+    if (w) {
+      setShowDialog(false);
+      return;
+    }
+
+    // Metode 3: Kopi-fallback — ingenting fungerte
+    console.error("[PhotoCapture] browser handoff — all open methods failed, showing copy fallback");
+    copyUrl();
   };
 
   const copyUrl = () => {
