@@ -100,7 +100,7 @@ export default function NearbyPrices({ selectedFuel }) {
     // - exclude no_safe_station_match
     // - exclude suspect prices
     const eligible = prices.filter((p) => {
-      if (p.plausibilityStatus === "suspect_price_low" || p.plausibilityStatus === "suspect_price_high") return false;
+      if (p.plausibilityStatus !== "realistic_price") return false;
       if (p.station_match_status === "no_safe_station_match") return false;
       if (!p.stationId) return false;
       if (p.priceType === "national_average" || p.priceType === "regional_average") return false;
