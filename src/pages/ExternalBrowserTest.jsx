@@ -25,7 +25,7 @@ export default function ExternalBrowserTest() {
   const [diag, setDiag] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  const runTest = () => {
+  const runTest = (url) => {
     const hasMedian = typeof window.median !== "undefined";
     const medianWindowOpenExists = hasMedian && typeof window.median?.window?.open === "function";
 
@@ -37,6 +37,7 @@ export default function ExternalBrowserTest() {
       medianWindowOpenExists,
       currentHref: window.location.href,
       currentOrigin: window.location.origin,
+      testedUrl: url,
       userAgent: navigator.userAgent,
     };
     setDiag({ ...d });
