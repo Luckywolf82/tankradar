@@ -95,10 +95,21 @@ async function fetchOSMStations() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    
+    // Get user role from JWT (avoid nested auth calls)
+    let user;
+    try {
+      user = await base44.auth.me();
+    } catch (authError) {
+      console.error('[importOSMStations] Auth check failed:', authError.message);
+      return Response.json(
+        { error: 'Unauthorized: Please log in first' },
+        { status: 401 }
+      );
+    }
 
     // Only admin can import
-    if (user?.role !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return Response.json(
         { error: 'Forbidden: Admin access required' },
         { status: 403 }
