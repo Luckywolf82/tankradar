@@ -55,6 +55,7 @@ import CoverageReport from './pages/CoverageReport';
 import Dashboard from './pages/Dashboard';
 import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
+import ExternalBrowserTest from './pages/ExternalBrowserTest';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import LogPrice from './pages/LogPrice';
 import MobileImplementationReport from './pages/MobileImplementationReport';
@@ -69,7 +70,6 @@ import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import ExternalBrowserTest from './pages/ExternalBrowserTest';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +82,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DataConsistencyDiagnosis": DataConsistencyDiagnosis,
     "DataQualityDiagnostics": DataQualityDiagnostics,
+    "ExternalBrowserTest": ExternalBrowserTest,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "LogPrice": LogPrice,
     "MobileImplementationReport": MobileImplementationReport,
@@ -96,7 +97,6 @@ export const PAGES = {
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "ExternalBrowserTest": ExternalBrowserTest,
 }
 
 export const pagesConfig = {

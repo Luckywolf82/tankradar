@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import PhotoCapture from "../components/logprice/PhotoCapture.jsx";
 import ConfirmPrice from "../components/logprice/ConfirmPrice.jsx";
+import StationPicker from "../components/logprice/StationPicker.jsx";
 import { OptimisticSuccess } from "../components/logprice/OptimisticSuccess";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
@@ -52,7 +53,7 @@ function guessChain(name) {
 }
 
 export default function LogPrice() {
-  const [step, setStep] = useState("photo");
+  const [step, setStep] = useState("station");
   const [imageUrl, setImageUrl] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +61,7 @@ export default function LogPrice() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [detectedPrices, setDetectedPrices] = useState(emptyPrices());
   const [stationInfo, setStationInfo] = useState({
+    station_id: null,
     station_chain: "",
     station_name: "",
     city: "",
