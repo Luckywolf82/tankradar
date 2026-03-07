@@ -17,7 +17,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 export default function StationPicker({ onSelectStation, onSkip }) {
   const [loading, setLoading] = useState(true);
-  const [errorType, setErrorType] = useState(null); // 'location_error' or 'no_stations_found'
+  const [errorType, setErrorType] = useState(null); // 'permission_denied', 'timeout_or_unavailable', 'no_stations_found'
   const [stations, setStations] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
 
@@ -26,15 +26,22 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       setLoading(true);
       setErrorType(null);
 
-      // Get user location
-      const pos = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
-      );
+      // Get user location with detailed error handling
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          (error) => reject(error),
+          { timeout: 8000 }
+        );
+      });
+
       const { latitude, longitude } = pos.coords;
       setUserLocation({ latitude, longitude });
+      console.log(`[StationPicker] Location obtained: lat=${latitude.toFixed(4)}, lon=${longitude.toFixed(4)}`);
 
-      // Fetch all stations (no filter — we'll sort by distance locally)
+      // Fetch all stations
       const allStations = await base44.entities.Station.list();
+      console.log(`[StationPicker] Total stations in database: ${allStations.length}`);
 
       // Calculate distance and filter to nearby (10km radius)
       const nearbyWithDistance = allStations
@@ -46,13 +53,31 @@ export default function StationPicker({ onSelectStation, onSkip }) {
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 10);
 
+      console.log(`[StationPicker] Stations within 10km radius: ${nearbyWithDistance.length}`);
       setStations(nearbyWithDistance);
+
       if (nearbyWithDistance.length === 0) {
+        console.log(`[StationPicker] No stations found within radius - showing no_stations_found state`);
         setErrorType("no_stations_found");
       }
     } catch (err) {
-      setErrorType("location_error");
-      console.error(err);
+      // Classify geolocation error
+      let classifiedError = "location_error_unknown";
+      
+      if (err.code === 1) {
+        classifiedError = "permission_denied";
+        console.error(`[StationPicker] Geolocation error: PERMISSION_DENIED - User denied location access`);
+      } else if (err.code === 2) {
+        classifiedError = "timeout_or_unavailable";
+        console.error(`[StationPicker] Geolocation error: POSITION_UNAVAILABLE - GPS signal or network issue`);
+      } else if (err.code === 3) {
+        classifiedError = "timeout_or_unavailable";
+        console.error(`[StationPicker] Geolocation error: TIMEOUT - Took longer than 8 seconds`);
+      } else {
+        console.error(`[StationPicker] Geolocation error: UNKNOWN - ${err.message}`, err);
+      }
+
+      setErrorType(classifiedError);
     } finally {
       setLoading(false);
     }
