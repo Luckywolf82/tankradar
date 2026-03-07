@@ -108,6 +108,19 @@ export default function StationCandidateReview() {
     });
   };
 
+  const handleAutoApproveExactDuplicates = async () => {
+    setAutoProcessing(true);
+    try {
+      const result = await base44.functions.invoke('autoApproveExactDuplicates');
+      console.log('Auto-approval result:', result.data);
+      loadCandidates();
+    } catch (error) {
+      console.error('Auto-approval failed:', error);
+    } finally {
+      setAutoProcessing(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Laster...</div>;
   }
