@@ -34,6 +34,8 @@ export default function ExternalBrowserTest() {
       isWebView: hasMedian,
       hasMedian,
       medianWindowOpenExists,
+      currentHref: window.location.href,
+      currentOrigin: window.location.origin,
       userAgent: navigator.userAgent,
     };
     setDiag({ ...d });
