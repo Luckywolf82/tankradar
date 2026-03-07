@@ -40,27 +40,17 @@ export default function SystemStatus() {
   useEffect(() => {
     async function load() {
       try {
-        const [stations, userReported, googlePrices, allPrices] = await Promise.all([
-          base44.entities.Station.list("-created_date", 1),
-          base44.entities.FuelPrice.filter({ priceType: "user_reported" }, "-created_date", 1),
-          base44.entities.FuelPrice.filter({ sourceName: "GooglePlaces" }, "-created_date", 1),
-          base44.entities.FuelPrice.list("-created_date", 1),
-        ]);
-
-        // Detailed counts via filter
-        const [matched, reviewNeeded, noSafeMatch, realistic, suspect] = await Promise.all([
-          base44.entities.FuelPrice.filter({ station_match_status: "matched_station_id" }, "-created_date", 1),
-          base44.entities.FuelPrice.filter({ station_match_status: "review_needed_station_match" }, "-created_date", 1),
-          base44.entities.FuelPrice.filter({ station_match_status: "no_safe_station_match" }, "-created_date", 1),
-          base44.entities.FuelPrice.filter({ plausibilityStatus: "realistic_price" }, "-created_date", 1),
-          base44.entities.FuelPrice.filter({ plausibilityStatus: "suspect_price_low" }, "-created_date", 1),
-        ]);
-
-        // These return arrays — we need actual counts
-        // Re-fetch with high limit to count
         const [
-          stationsAll, userReportedAll, googleAll, allPricesAll,
-          matchedAll, reviewAll, noSafeAll, realisticAll, suspectLowAll
+          stationsAll,
+          userReportedAll,
+          googleAll,
+          allPricesAll,
+          matchedAll,
+          reviewAll,
+          noSafeAll,
+          realisticAll,
+          suspectLowAll,
+          suspectHighAll,
         ] = await Promise.all([
           base44.entities.Station.list("-created_date", 5000),
           base44.entities.FuelPrice.filter({ priceType: "user_reported" }, "-created_date", 5000),
@@ -71,9 +61,8 @@ export default function SystemStatus() {
           base44.entities.FuelPrice.filter({ station_match_status: "no_safe_station_match" }, "-created_date", 5000),
           base44.entities.FuelPrice.filter({ plausibilityStatus: "realistic_price" }, "-created_date", 5000),
           base44.entities.FuelPrice.filter({ plausibilityStatus: "suspect_price_low" }, "-created_date", 5000),
+          base44.entities.FuelPrice.filter({ plausibilityStatus: "suspect_price_high" }, "-created_date", 5000),
         ]);
-
-        const suspectHighAll = await base44.entities.FuelPrice.filter({ plausibilityStatus: "suspect_price_high" }, "-created_date", 5000);
 
         setStats({
           stations: stationsAll.length,
@@ -122,9 +111,9 @@ export default function SystemStatus() {
       <SectionCard title="Data" icon={Database} color="text-blue-600" bg="bg-blue-50">
         <StatRow label="Stasjoner totalt" value={stats.stations} />
         <StatRow label="Brukerrapporterte priser" value={stats.userReported} sub="priceType: user_reported" />
-        <StatRow label="Matched (station_match_status)" value={stats.matched} sub="matched_station_id" />
-        <StatRow label="Review needed" value={stats.reviewNeeded} sub="review_needed_station_match" />
-        <StatRow label="No safe match" value={stats.noSafeMatch} sub="no_safe_station_match" />
+        <StatRow label="Matched" value={stats.matched} sub="station_match_status: matched_station_id" />
+        <StatRow label="Review needed" value={stats.reviewNeeded} sub="station_match_status: review_needed_station_match" />
+        <StatRow label="No safe match" value={stats.noSafeMatch} sub="station_match_status: no_safe_station_match" />
       </SectionCard>
 
       <SectionCard title="Matching" icon={GitMerge} color="text-amber-600" bg="bg-amber-50">
@@ -135,8 +124,8 @@ export default function SystemStatus() {
         <StatRow label="GooglePlaces priser" value={stats.googlePrices} sub="sourceName: GooglePlaces" />
         <StatRow label="Totalt antall prisposter" value={stats.totalPrices} />
         <StatRow label="Realistiske priser" value={stats.realistic} sub="plausibilityStatus: realistic_price" />
-        <StatRow label="Filtrert – lav pris" value={stats.suspectLow} sub="suspect_price_low" />
-        <StatRow label="Filtrert – høy pris" value={stats.suspectHigh} sub="suspect_price_high" />
+        <StatRow label="Filtrert – lav pris" value={stats.suspectLow} sub="plausibilityStatus: suspect_price_low" />
+        <StatRow label="Filtrert – høy pris" value={stats.suspectHigh} sub="plausibilityStatus: suspect_price_high" />
       </SectionCard>
     </div>
   );
