@@ -84,18 +84,34 @@ Deno.serve(async (req) => {
       return Response.json({ candidates: [], deduped: [] });
     }
 
-    // Get existing stations in region
+    // Get existing stations and candidates in region
     const existingStations = await base44.entities.Station.list();
+    const existingCandidates = await base44.entities.StationCandidate.list();
 
     const candidates = [];
     const deduped = [];
+    const skipped = [];
 
     for (const place of gpData.results) {
       const placeId = place.place_id;
       const placeName = place.name;
       const placeLocation = place.geometry.location;
 
-      // Check for duplicates in existing stations
+      // First: Check if exact same candidate already exists
+      const existingCandidate = existingCandidates.find(c => 
+        c.sourceStationId === placeId && c.sourceName === 'GooglePlaces'
+      );
+      if (existingCandidate) {
+        skipped.push({
+          placeId,
+          placeName,
+          reason: 'already_in_candidates',
+          existingCandidateId: existingCandidate.id,
+        });
+        continue;
+      }
+
+      // Second: Check for duplicates in existing stations
       let matchCandidates = [];
       let bestMatchConfidence = 0;
       let bestMatchDistance = Infinity;
@@ -127,7 +143,7 @@ Deno.serve(async (req) => {
       }
 
       if (bestMatchConfidence > 0.7) {
-        // Likely duplicate
+        // Likely duplicate of existing station
         deduped.push({
           placeId,
           placeName,
