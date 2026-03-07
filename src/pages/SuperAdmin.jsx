@@ -15,18 +15,16 @@ import {
 
 const activeSections = [
   {
-    title: "System Overview",
+    title: "System",
     icon: ShieldCheck,
     color: "text-green-700",
     bg: "bg-green-50",
     pages: [
       { label: "Systemstatus", page: "SystemStatus", desc: "Nøkkeltall for data, matching og systemhelse" },
-      { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
-      { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
     ],
   },
   {
-    title: "Matching & User Reported",
+    title: "Drift",
     icon: Search,
     color: "text-amber-600",
     bg: "bg-amber-50",
@@ -36,29 +34,45 @@ const activeSections = [
       { label: "User Reported System Integration", page: "UserReportedSystemIntegrationReport", desc: "Systemintegrasjonsrapport" },
     ],
   },
+  {
+    title: "Datakvalitet",
+    icon: Database,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    pages: [
+      { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
+      { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
+    ],
+  },
+  {
+    title: "Systemmodell",
+    icon: BarChart2,
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    pages: [
+      { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
+      { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
+    ],
+  },
 ];
 
 const archiveSections = [
   {
-    title: "Arkiv / Dokumentasjon",
+    title: "Arkiv",
     icon: FileText,
-    color: "text-slate-600",
-    bg: "bg-slate-50",
+    color: "text-slate-500",
+    bg: "bg-slate-100",
     pages: [
-      { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
-      { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
       { label: "Verification Report", page: "VerificationReport_UserReportedEnhancements", desc: "Verifikasjonsrapport user reported" },
       { label: "Implementation Report", page: "ImplementationReport_UserReportedPolicy", desc: "Implementasjonsrapport" },
       { label: "Mobile UX Enhancement Report", page: "MobileUXEnhancementReport", desc: "Forbedringer i mobil-UX" },
       { label: "Mobile Implementation Report", page: "MobileImplementationReport", desc: "Implementasjonsrapport for mobil" },
       { label: "Component Naming Review", page: "ComponentNamingReview", desc: "Gjennomgang av komponentnavn" },
+      { label: "Data Consistency Diagnosis", page: "DataConsistencyDiagnosis", desc: "Konsistenssjekk på tvers av entiteter" },
+      { label: "Backfill Assessment", page: "BackfillAssessment", desc: "Vurdering av historisk backfill" },
     ],
   },
 ];
-
-// Skjult fra hovedvisning (tilgjengelig via URL, krever admin)
-// - DataConsistencyDiagnosis (/dataconsistencydiagnosis)
-// - BackfillAssessment (/backfillassessment)
 
 function AdminSection({ title, icon: Icon, color, bg, pages }) {
   return (
