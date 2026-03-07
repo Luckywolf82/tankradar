@@ -113,6 +113,36 @@ export default function StationCandidateReview() {
     }
   };
 
+  const handleStationReviewApprove = async (review) => {
+    try {
+      await base44.entities.StationReview.update(review.id, { status: 'approved' });
+      loadCandidates();
+    } catch (error) {
+      console.error('Failed to approve station review:', error);
+    }
+  };
+
+  const handleStationReviewReject = async (review) => {
+    try {
+      await base44.entities.StationReview.update(review.id, { status: 'rejected' });
+      loadCandidates();
+    } catch (error) {
+      console.error('Failed to reject station review:', error);
+    }
+  };
+
+  const handleStationReviewDuplicate = async (review, duplicateOf = null) => {
+    try {
+      await base44.entities.StationReview.update(review.id, { 
+        status: 'duplicate',
+        duplicate_of_station_id: duplicateOf,
+      });
+      loadCandidates();
+    } catch (error) {
+      console.error('Failed to mark station as duplicate:', error);
+    }
+  };
+
   const handleSplitGroup = async (groupId, groupCandidates) => {
     try {
       // Call backend to split by likeness
