@@ -132,6 +132,21 @@ export default function StationCandidateReview() {
       {/* Consistency Check */}
       <ReviewConsistencyCheck />
 
+      {/* Auto-approve exact duplicates */}
+      <div className="mb-6">
+        <Button
+          onClick={handleAutoApproveExactDuplicates}
+          disabled={autoProcessing}
+          className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+        >
+          <Zap className="w-4 h-4" />
+          {autoProcessing ? 'Behandler...' : 'Auto-godkjenn eksakte duplikater'}
+        </Button>
+        <p className="text-xs text-gray-600 mt-2">
+          Godkjenner automatisk første kandidat og markerer resten som duplikater når navn, adresse og koordinater er eksakt like.
+        </p>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <Card>
