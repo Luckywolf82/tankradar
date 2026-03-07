@@ -195,6 +195,20 @@ export default function StationCandidateReview() {
     }
   };
 
+  const handleAutoFillLocation = async () => {
+    setAutoProcessing(true);
+    try {
+      const result = await base44.functions.invoke('autoFillLocationFromName');
+      setAutoChainResult(result.data);
+      console.log('Auto location fill result:', result.data);
+      loadCandidates();
+    } catch (error) {
+      console.error('Auto location fill failed:', error);
+    } finally {
+      setAutoProcessing(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Laster...</div>;
   }
