@@ -108,6 +108,20 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
             <ExternalLink size={14} /> Prøv å åpne innstillinger
           </Button>
 
+          {bridgeMessage && (
+            <p className="text-xs text-red-600 text-center">{bridgeMessage}</p>
+          )}
+
+          {/* Diagnostikkboks */}
+          <div className="bg-slate-100 rounded-lg p-3 text-xs font-mono text-slate-600 space-y-1 border border-slate-200">
+            <p className="font-semibold text-slate-700 font-sans mb-1">Diagnostikk</p>
+            <p>hasMedian: <span className={diag.hasMedian ? "text-green-700" : "text-red-600"}>{String(diag.hasMedian)}</span></p>
+            <p>hasMedianApp: <span className={diag.hasMedianApp ? "text-green-700" : "text-red-600"}>{String(diag.hasMedianApp)}</span></p>
+            <p>hasOpenSettingsBridge: <span className={diag.hasOpenSettingsBridge ? "text-green-700" : "text-red-600"}>{String(diag.hasOpenSettingsBridge)}</span></p>
+            <p>triedOpenSettings: <span className={triedOpenSettings ? "text-blue-700" : "text-slate-400"}>{String(triedOpenSettings)}</span></p>
+            <p className="break-all">userAgent: {diag.userAgent}</p>
+          </div>
+
           <button
             type="button"
             className="text-xs text-slate-400 hover:text-slate-600 text-center"
