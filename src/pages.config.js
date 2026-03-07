@@ -75,6 +75,7 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
+import GroupReviewFixReport from './pages/GroupReviewFixReport';
 import __Layout from './Layout.jsx';
 
 
@@ -107,6 +108,7 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
+    "GroupReviewFixReport": GroupReviewFixReport,
 }
 
 export const pagesConfig = {
