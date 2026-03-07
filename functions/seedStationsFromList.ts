@@ -60,23 +60,30 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'sourceList must be a non-empty array' }, { status: 400 });
     }
     
+    // Fetch all existing stations once
+    const existingStations = await base44.asServiceRole.entities.Station.list();
+    
+    // Build geospatial index for faster lookup
+    const stationsByProximity = {};
+    for (const station of existingStations) {
+      const key = `${Math.round(station.latitude)}_${Math.round(station.longitude)}`;
+      if (!stationsByProximity[key]) stationsByProximity[key] = [];
+      stationsByProximity[key].push(station);
+    }
+    
     const results = {
       totalRead: sourceList.length,
       inserted: 0,
-      skipped: [],
-      conflicts: [],
+      skipped: 0,
+      conflicts: 0,
       dryRun,
       timestamp: new Date().toISOString(),
-      batches: [],
     };
     
     // Process in batches to avoid CPU timeout
     for (let batchStart = 0; batchStart < sourceList.length; batchStart += batchSize) {
       const batchEnd = Math.min(batchStart + batchSize, sourceList.length);
       const batch = sourceList.slice(batchStart, batchEnd);
-      
-      // Fetch existing stations for this batch
-      const existingStations = await base44.asServiceRole.entities.Station.list();
       
       const batchResults = {
         batchIndex: Math.floor(batchStart / batchSize),
