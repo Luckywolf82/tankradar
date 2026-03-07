@@ -76,8 +76,9 @@ import SuperAdmin from './pages/SuperAdmin';
 import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
-import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import ValidateStationData from './pages/ValidateStationData';
+import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
+import SeedImport from './pages/SeedImport';
 import __Layout from './Layout.jsx';
 
 
@@ -111,8 +112,9 @@ export const PAGES = {
     "SystemStatus": SystemStatus,
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
-    "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "ValidateStationData": ValidateStationData,
+    "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
+    "SeedImport": SeedImport,
 }
 
 export const pagesConfig = {
