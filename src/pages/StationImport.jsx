@@ -148,21 +148,54 @@ export default function StationImport() {
 
         <Card className="bg-slate-100 border-slate-200">
           <CardHeader>
-            <CardTitle className="text-sm">About This Import</CardTitle>
+            <CardTitle className="text-sm">🔬 What This Validates</CardTitle>
           </CardHeader>
-          <CardContent className="text-xs text-slate-700 space-y-2">
-            <p>
-              <strong>Data Source:</strong> fixture_test_data based on realistic OpenStreetMap coordinates
-            </p>
-            <p>
-              <strong>Current Scope:</strong> Trondheim / Trøndelag region
-            </p>
-            <p>
-              <strong>Deduplication:</strong> Uses normalized station name + geographic distance (200m threshold)
-            </p>
-            <p>
-              <strong>Next Steps:</strong> Live Overpass API integration after validation
-            </p>
+          <CardContent className="text-xs text-slate-700 space-y-3">
+            <div>
+              <p className="font-semibold text-slate-900">Import Pipeline (VALIDATED)</p>
+              <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                <li>Deduplication logic (name + geographic distance)</li>
+                <li>Station record creation in database</li>
+                <li>Admin-only access control</li>
+                <li>Error handling and logging</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900">NOT Validated (Live Sources)</p>
+              <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                <li>Actual Overpass API connectivity</li>
+                <li>Real OSM station coverage</li>
+                <li>Live deduplication against production data</li>
+                <li>Regional dekning completeness</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-sm text-red-900">⚙️ Roadmap: Fixture → Production</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xs text-slate-700 space-y-3">
+            <div>
+              <p className="font-semibold text-slate-900 mb-1">Current Blocker: Live Overpass API</p>
+              <p className="text-slate-600 mb-2">
+                Overpass API returns XML by default. Base44 Deno runtime may have restrictions on:
+              </p>
+              <ul className="list-disc ml-4 space-y-0.5 text-slate-600">
+                <li>Long-running external HTTP requests (timeouts)</li>
+                <li>Rate limiting or IP blocking from Overpass</li>
+                <li>TLS/SSL certificate validation</li>
+              </ul>
+            </div>
+            <div className="border-t border-red-200 pt-3 mt-3">
+              <p className="font-semibold text-slate-900 mb-1">Recommended Production Path</p>
+              <ol className="list-decimal ml-4 space-y-1 text-slate-600">
+                <li><strong>Option A (Preferred):</strong> Use pre-cached OSM data dump (weekly refresh via scheduled task)</li>
+                <li><strong>Option B:</strong> Third-party OSM geocoding service (e.g., Nominatim) with better uptime SLA</li>
+                <li><strong>Option C:</strong> Manual OSM bulk import + scheduled automation (separate from live price fetching)</li>
+              </ol>
+            </div>
           </CardContent>
         </Card>
       </div>
