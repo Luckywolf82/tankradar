@@ -1,0 +1,141 @@
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, MapPin, Navigation } from "lucide-react";
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export default function StationPicker({ onSelectStation, onSkip }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stations, setStations] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+
+  useEffect(() => {
+    const loadNearbyStations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get user location
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+        );
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ latitude, longitude });
+
+        // Fetch all stations (no filter — we'll sort by distance locally)
+        const allStations = await base44.entities.Station.list();
+
+        // Calculate distance and filter to nearby (10km radius)
+        const nearbyWithDistance = allStations
+          .map(s => ({
+            ...s,
+            distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
+          }))
+          .filter(s => s.distance <= 10)
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, 10);
+
+        setStations(nearbyWithDistance);
+        if (nearbyWithDistance.length === 0) {
+          setError("Ingen stasjoner funnet i nærheten. Prøv igjen eller skriv inn manuelt.");
+        }
+      } catch (err) {
+        setError("Kunne ikke hente posisjonen din. Prøv igjen eller skriv inn manuelt.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNearbyStations();
+  }, []);
+
+  const handleSelectStation = (station) => {
+    // Store GPS for later matching
+    window.__gpsLat = userLocation.latitude;
+    window.__gpsLon = userLocation.longitude;
+
+    onSelectStation({
+      station_id: station.id,
+      station_name: station.name || "",
+      station_chain: station.chain || "",
+      city: station.city || "",
+      region: station.region || "",
+    });
+  };
+
+  return (
+    <Card className="shadow-lg">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <MapPin className="text-blue-600" size={24} />
+          Velg stasjon
+        </CardTitle>
+        <p className="text-slate-500 text-sm">Velg stasjon før du tar prisbilde.</p>
+      </CardHeader>
+      <CardContent>
+        {loading && (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <Loader2 className="animate-spin text-blue-600" size={32} />
+            <p className="text-sm text-slate-500">Finner stasjoner i nærheten...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-amber-800">{error}</p>
+          </div>
+        )}
+
+        {!loading && stations.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {stations.map(station => (
+              <button
+                key={station.id}
+                onClick={() => handleSelectStation(station)}
+                className="w-full text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg p-3 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 truncate">{station.name}</p>
+                    {station.chain && (
+                      <p className="text-xs text-slate-500">{station.chain}</p>
+                    )}
+                    {station.city && (
+                      <p className="text-xs text-slate-500">{station.city}</p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-semibold text-blue-600">
+                      {station.distance.toFixed(1)} km
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <Button
+          onClick={onSkip}
+          variant="outline"
+          className="w-full"
+        >
+          Skriv inn pris manuelt
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
