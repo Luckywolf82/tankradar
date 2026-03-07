@@ -93,7 +93,7 @@ export default function Settings() {
         <CardContent className="space-y-3 text-sm text-slate-600">
           <div>
             <p className="font-semibold text-slate-900">Versjon</p>
-            <p>1.0.0</p>
+            <p className="font-mono text-sm">{APP_VERSION_LABEL}</p>
           </div>
           <div>
             <p className="font-semibold text-slate-900">Plattform</p>

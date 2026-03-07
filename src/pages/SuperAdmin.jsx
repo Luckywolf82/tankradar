@@ -15,6 +15,15 @@ import {
 
 const sections = [
   {
+    title: "System Overview",
+    icon: ShieldCheck,
+    color: "text-green-700",
+    bg: "bg-green-50",
+    pages: [
+      { label: "Systemstatus", page: "SystemStatus", desc: "Nøkkeltall for data, matching og systemhelse" },
+    ],
+  },
+  {
     title: "Data",
     icon: Database,
     color: "text-blue-600",
