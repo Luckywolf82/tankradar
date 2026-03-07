@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
       const batch = sourceList.slice(batchStart, batchEnd);
       
       // Process each source record in batch
+      const toInsert = [];
       for (const sourceRecord of batch) {
         const { name, address, city, latitude, longitude, sourceName, sourceStationId } = sourceRecord;
         
@@ -139,12 +140,19 @@ Deno.serve(async (req) => {
           }
         }
         
-        // Insert or track for insertion
-        if (!dryRun) {
+        toInsert.push(stationData);
+      }
+      
+      // Insert sequentially with small delay to avoid rate limiting
+      if (!dryRun) {
+        for (const stationData of toInsert) {
           await base44.asServiceRole.entities.Station.create(stationData);
+          results.inserted++;
+          // Small delay to respect rate limits
+          await new Promise(resolve => setTimeout(resolve, 10));
         }
-        
-        results.inserted++;
+      } else {
+        results.inserted += toInsert.length;
       }
     }
     
