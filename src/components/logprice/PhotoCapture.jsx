@@ -37,7 +37,7 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   const [copied, setCopied] = useState(false);
   const [diag, setDiag] = useState(null);
 
-  const browserUrl = window.location.origin + window.location.pathname;
+  const browserUrl = window.location.href;
 
   const handleCameraClick = () => {
     const hasMedian = typeof window.median !== "undefined";
