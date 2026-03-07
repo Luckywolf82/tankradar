@@ -72,6 +72,7 @@ export default function ValidateStationData() {
           }}
           className="bg-green-600 hover:bg-green-700"
         >
+          <Download size={16} className="mr-2" />
           Eksporter CSV
         </Button>
       </div>
