@@ -109,6 +109,35 @@ function AdminSection({ title, icon: Icon, color, bg, pages }) {
 
 export default function SuperAdmin() {
   const [showArchive, setShowArchive] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        if (!currentUser || currentUser.role !== "admin") {
+          navigate(createPageUrl("Dashboard"));
+          return;
+        }
+        setUser(currentUser);
+      } catch {
+        navigate(createPageUrl("Dashboard"));
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  if (loading) {
+    return <div className="p-6 text-center">Laster...</div>;
+  }
+
+  if (!user || user.role !== "admin") {
+    return null;
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
