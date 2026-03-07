@@ -80,6 +80,21 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
         >
           <ExternalLink size={14} /> Åpne kameraskann i nettleser
         </button>
+
+        {fallbackState === "copied" && (
+          <div className="mt-2 text-center">
+            <p className="text-xs text-green-700 font-medium">Lenke kopiert!</p>
+            <p className="text-xs text-amber-600 mt-0.5">Lim inn i Chrome eller Safari og åpne siden der.</p>
+          </div>
+        )}
+
+        {fallbackState === "failed" && (
+          <div className="mt-2 text-center">
+            <p className="text-xs text-red-600 font-medium">Kunne ikke åpne nettleser automatisk.</p>
+            <p className="text-xs text-amber-600 mt-0.5 break-all select-all">{browserUrl}</p>
+            <p className="text-xs text-amber-600 mt-0.5">Kopier lenken og åpne i Chrome eller Safari.</p>
+          </div>
+        )}
       </div>
 
       <button
