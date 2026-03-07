@@ -79,7 +79,6 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import ValidateStationData from './pages/ValidateStationData';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import MasteringHubReport from './pages/MasteringHubReport';
 import __Layout from './Layout.jsx';
 
 
@@ -116,7 +115,6 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "ValidateStationData": ValidateStationData,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "MasteringHubReport": MasteringHubReport,
 }
 
 export const pagesConfig = {
