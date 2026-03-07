@@ -38,17 +38,21 @@ export default function StationCandidateReview() {
     }
   };
 
-  const handleApprove = async (candidate) => {
+  const handleApprove = async (candidate, overrideName = null) => {
     try {
+      const finalName = overrideName || candidate.proposedName;
+      
       await base44.entities.StationCandidate.update(candidate.id, { status: 'approved' });
       
       // Create Station from candidate
       await base44.entities.Station.create({
-        name: candidate.proposedName,
+        name: finalName,
         chain: candidate.proposedChain,
         latitude: candidate.latitude,
         longitude: candidate.longitude,
         address: candidate.address,
+        city: candidate.region,
+        region: candidate.region,
         sourceName: 'GooglePlaces',
         sourceStationId: candidate.sourceStationId,
       });
