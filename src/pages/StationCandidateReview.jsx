@@ -181,6 +181,20 @@ export default function StationCandidateReview() {
     }
   };
 
+  const handleAutoConfirmChainFromName = async () => {
+    setAutoProcessing(true);
+    try {
+      const result = await base44.functions.invoke('autoConfirmChainFromName');
+      setAutoChainResult(result.data);
+      console.log('Auto chain confirmation result:', result.data);
+      loadCandidates();
+    } catch (error) {
+      console.error('Auto chain confirmation failed:', error);
+    } finally {
+      setAutoProcessing(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Laster...</div>;
   }
