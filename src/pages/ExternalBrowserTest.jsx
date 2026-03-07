@@ -116,12 +116,23 @@ export default function ExternalBrowserTest() {
           Test-URL: <span className="text-yellow-300 font-mono">{TEST_URL}</span>
         </p>
 
-        <Button
-          className="bg-blue-600 hover:bg-blue-700 gap-2 w-full text-base py-6"
-          onClick={runTest}
-        >
-          <ExternalLink size={18} /> Test ekstern åpning
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 gap-2 w-full text-base py-5"
+            onClick={() => runTest(TEST_URL_EXTERNAL)}
+          >
+            <ExternalLink size={18} /> Test: google.com (ekstern)
+          </Button>
+          <Button
+            className="bg-green-700 hover:bg-green-800 gap-2 w-full text-base py-5"
+            onClick={() => runTest(TEST_URL_APP)}
+          >
+            <ExternalLink size={18} /> Test: tankradar.base44.app (app-URL)
+          </Button>
+        </div>
+        <p className="text-slate-500 text-xs text-center">
+          Hvis app-URL åpnes internt (ikke system-browser), er det her problemet ligger.
+        </p>
 
         {diag && (
           <div className="mt-6 bg-slate-800 rounded-xl p-4 space-y-1">
