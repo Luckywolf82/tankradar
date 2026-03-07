@@ -23,6 +23,11 @@ export default function StationCandidateReview() {
       const all = await base44.entities.StationCandidate.list();
       setCandidates(all);
       
+      // Load groupings
+      const groupRes = await base44.functions.invoke('groupStationCandidates');
+      setGroups(groupRes.data.groups || []);
+      setUngrouped(groupRes.data.ungrouped || []);
+      
       const newStats = { pending: 0, approved: 0, rejected: 0, duplicate: 0 };
       all.forEach(c => newStats[c.status]++);
       setStats(newStats);
