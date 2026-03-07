@@ -48,7 +48,7 @@ export default function ExternalBrowserTest() {
       d.lastMethod = "median.window.open";
       setDiag({ ...d });
       try {
-        window.median.window.open(TEST_URL, "external");
+        window.median.window.open(url, "external");
         return;
       } catch (err) {
         d.lastError = "median.window.open threw: " + err.message;
@@ -61,7 +61,7 @@ export default function ExternalBrowserTest() {
     d.lastMethod = "window.open(_blank)";
     setDiag({ ...d });
     try {
-      const w = window.open(TEST_URL, "_blank");
+      const w = window.open(url, "_blank");
       if (w) return;
       d.lastError = "window.open returned null";
       setDiag({ ...d });
@@ -76,7 +76,7 @@ export default function ExternalBrowserTest() {
     setDiag({ ...d });
     try {
       const a = document.createElement("a");
-      a.href = TEST_URL;
+      a.href = url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.style.display = "none";
@@ -94,7 +94,7 @@ export default function ExternalBrowserTest() {
     d.lastMethod = "window.location.href";
     setDiag({ ...d });
     try {
-      window.location.href = TEST_URL;
+      window.location.href = url;
     } catch (err) {
       d.lastError = "location.href threw: " + err.message;
       setDiag({ ...d });
