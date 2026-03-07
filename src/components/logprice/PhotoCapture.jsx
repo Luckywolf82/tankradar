@@ -55,7 +55,7 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   };
 
   const runOpenExternal = (url) => {
-    const d = buildDiag();
+    const d = buildDiag(url);
     setDiag({ ...d });
 
     // Metode 1: median.window.open
