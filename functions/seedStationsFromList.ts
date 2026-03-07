@@ -161,7 +161,8 @@ Deno.serve(async (req) => {
     
     // Log to FetchLog
     if (!dryRun) {
-      const sourceName = seedBatch ? 'seed_osm_norway_v1' : 'seed_import';
+      const { seedBatch: seedBatchId } = sourceList[0] || {};
+      const sourceName = seedBatchId ? 'seed_osm_norway_v1' : 'seed_import';
       await base44.asServiceRole.entities.FetchLog.create({
         sourceName,
         startedAt: results.timestamp,
@@ -169,10 +170,10 @@ Deno.serve(async (req) => {
         success: true,
         stationsFound: results.totalRead,
         recordsCreated: results.inserted,
-        recordsSkipped: results.skipped.length,
-        notes: seedBatch 
-          ? `National OSM seed import (batch: ${seedBatch}). Imported ${results.inserted} stations in ${results.batches.length} batches. ${results.conflicts.length} conflicts flagged for review.`
-          : `Imported ${results.inserted} stations from seed list in ${results.batches.length} batches. ${results.conflicts.length} conflicts flagged for review.`,
+        recordsSkipped: results.skipped,
+        notes: seedBatchId 
+          ? `National OSM seed import (batch: ${seedBatchId}). Imported ${results.inserted}/${results.totalRead} stations. ${results.conflicts} conflicts flagged.`
+          : `Imported ${results.inserted}/${results.totalRead} stations. ${results.conflicts} conflicts flagged.`,
       });
     }
     
