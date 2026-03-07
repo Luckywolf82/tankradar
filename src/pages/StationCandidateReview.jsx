@@ -185,7 +185,8 @@ export default function StationCandidateReview() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 pb-24">
-      <h1 className="text-3xl font-bold mb-6">Station-kandidater fra Google Places</h1>
+      <h1 className="text-3xl font-bold mb-6">Station Mastering Hub</h1>
+      <p className="text-gray-600 mb-6">Google Places-kandidater + Station-data review</p>
 
       {/* Consistency Check */}
       <ReviewConsistencyCheck />
