@@ -52,10 +52,13 @@ export default function StationImport() {
             <CardTitle>Import Stations from OpenStreetMap</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Current:</strong> Fixture data for Trondheim area (5 stations)<br />
-                <strong>Note:</strong> This uses realistic OSM data. Live Overpass API integration will be added after validation.
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+              <p className="text-sm font-semibold text-amber-900 mb-2">⚠️ FIXTURE_TEST_DATA — NOT PRODUCTION READY</p>
+              <p className="text-sm text-amber-800">
+                <strong>Current Status:</strong> Validates import pipeline only<br />
+                <strong>Data Source:</strong> Hardcoded fixture (realistic coordinates, but not live OSM)<br />
+                <strong>Coverage:</strong> Does NOT represent actual station dekning<br />
+                <strong>Next Step:</strong> Live Overpass API or alternative import source needed for production
               </p>
             </div>
 
