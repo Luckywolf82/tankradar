@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Copy, CheckCircle } from "lucide-react";
 
-const TEST_URL = "https://www.google.com";
+const TEST_URL_EXTERNAL = "https://www.google.com";
+const TEST_URL_APP = "https://tankradar.base44.app/LogPrice";
 
 const BLANK_DIAG = {
   clickTriggered: false,
