@@ -13,9 +13,11 @@ const BLANK_DIAG = {
   triedLocationHref: false,
   lastError: null,
   lastMethod: null,
+  scanFallbackUrl: null,
+  userAgent: null,
 };
 
-function buildDiag() {
+function buildDiag(url) {
   const hasMedian = typeof window.median !== "undefined";
   const medianWindowOpenExists = hasMedian && typeof window.median?.window?.open === "function";
   return {
@@ -24,6 +26,8 @@ function buildDiag() {
     isWebView: hasMedian,
     hasMedian,
     medianWindowOpenExists,
+    scanFallbackUrl: url,
+    userAgent: navigator.userAgent,
   };
 }
 
