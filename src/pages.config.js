@@ -57,6 +57,7 @@ import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import ExternalBrowserTest from './pages/ExternalBrowserTest';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
+import ImportSystemReport from './pages/ImportSystemReport';
 import LogPrice from './pages/LogPrice';
 import MobileImplementationReport from './pages/MobileImplementationReport';
 import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
@@ -64,14 +65,14 @@ import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
 import Settings from './pages/Settings';
+import StationImport from './pages/StationImport';
 import Statistics from './pages/Statistics';
 import SuperAdmin from './pages/SuperAdmin';
 import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import StationImport from './pages/StationImport';
-import ImportSystemReport from './pages/ImportSystemReport';
+import StationCandidateReview from './pages/StationCandidateReview';
 import __Layout from './Layout.jsx';
 
 
@@ -86,6 +87,7 @@ export const PAGES = {
     "DataQualityDiagnostics": DataQualityDiagnostics,
     "ExternalBrowserTest": ExternalBrowserTest,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
+    "ImportSystemReport": ImportSystemReport,
     "LogPrice": LogPrice,
     "MobileImplementationReport": MobileImplementationReport,
     "MobileUXEnhancementReport": MobileUXEnhancementReport,
@@ -93,14 +95,14 @@ export const PAGES = {
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
     "Settings": Settings,
+    "StationImport": StationImport,
     "Statistics": Statistics,
     "SuperAdmin": SuperAdmin,
     "SystemStatus": SystemStatus,
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "StationImport": StationImport,
-    "ImportSystemReport": ImportSystemReport,
+    "StationCandidateReview": StationCandidateReview,
 }
 
 export const pagesConfig = {
