@@ -2,66 +2,48 @@ import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, PenLine, ExternalLink, Copy, CheckCircle } from "lucide-react";
 
+// Detekterer om appen kjører i Base44 APK / Median.co WebView
+function isMedianWebView() {
+  return typeof window.median !== "undefined";
+}
+
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
+  const [showDialog, setShowDialog] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showFallbackUrl, setShowFallbackUrl] = useState(false);
+
+  const browserUrl = window.location.origin + window.location.pathname;
+
+  const handleCameraClick = () => {
+    if (isMedianWebView()) {
+      // APK/WebView detektert — kameravalg fungerer ikke korrekt her
+      console.info("[PhotoCapture] Median WebView detected — showing browser redirect dialog");
+      setShowDialog(true);
+    } else {
+      fileRef.current.click();
+    }
+  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (file) onPhoto(file);
   };
 
-  const browserUrl = window.location.origin + window.location.pathname;
-
   const openInBrowser = () => {
-    // Metode 1: Median.co JavaScript Bridge — native ekstern åpning i Base44 APK
-    // Dette er den korrekte metoden for Base44/Median-wrapperen
-    if (typeof window.median !== "undefined" && window.median?.window?.open) {
-      console.info("[PhotoCapture] external browser fallback — using median.window.open (native bridge)");
-      window.median.window.open(browserUrl, "external");
-      return;
-    }
-
-    // Metode 2: window.open med _blank (fungerer i nettleser, blokkeres ofte i WebView)
-    console.info("[PhotoCapture] external browser fallback — median bridge not available, trying window.open(_blank)");
-    const w = window.open(browserUrl, "_blank");
-    if (w) {
-      console.info("[PhotoCapture] external browser fallback — window.open succeeded");
-      return;
-    }
-
-    // Metode 3: anchor element click
-    console.warn("[PhotoCapture] external browser fallback — window.open returned null, trying anchor click");
-    try {
-      const a = document.createElement("a");
-      a.href = browserUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      console.info("[PhotoCapture] external browser fallback — anchor click dispatched");
-    } catch (err) {
-      console.error("[PhotoCapture] external browser fallback — anchor click failed", err);
-    }
-
-    // Vis kopi-UI siden vi ikke kan verifisere om nettleser faktisk åpnet
-    setShowFallbackUrl(true);
+    console.info("[PhotoCapture] opening external browser via median.window.open");
+    window.median.window.open(browserUrl, "external");
+    setShowDialog(false);
   };
 
   const copyUrl = () => {
     navigator.clipboard.writeText(browserUrl)
       .then(() => {
-        console.info("[PhotoCapture] external browser fallback — clipboard copy succeeded");
+        console.info("[PhotoCapture] clipboard copy succeeded");
         setCopied(true);
         setTimeout(() => setCopied(false), 3000);
       })
       .catch((err) => {
-        console.error("[PhotoCapture] external browser fallback — clipboard copy failed", err);
-        // Vis URL synlig så brukeren kan kopiere manuelt
-        setShowFallbackUrl(true);
+        console.error("[PhotoCapture] clipboard copy failed", err);
       });
   };
 
@@ -77,7 +59,7 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
 
       <Button
         className="bg-blue-600 hover:bg-blue-700 gap-2 w-full max-w-xs"
-        onClick={() => fileRef.current.click()}
+        onClick={handleCameraClick}
       >
         <Camera size={18} /> Ta bilde / velg fra galleri
       </Button>
@@ -90,40 +72,6 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
         onChange={handleFile}
       />
 
-      {/* Fallback for APK/WebView */}
-      <div className="w-full max-w-xs border border-amber-200 bg-amber-50 rounded-lg p-3 mt-1 space-y-2">
-        <p className="text-xs text-amber-700 text-center">
-          Fungerer ikke kameraet i appen? Åpne siden i nettleseren din i stedet.
-        </p>
-
-        <button
-          type="button"
-          onClick={openInBrowser}
-          className="w-full flex items-center justify-center gap-1.5 text-sm text-amber-800 font-medium hover:text-amber-900 py-1"
-        >
-          <ExternalLink size={14} /> Åpne i nettleser
-        </button>
-
-        {/* Kopi-knapp vises alltid som backup */}
-        <button
-          type="button"
-          onClick={copyUrl}
-          className="w-full flex items-center justify-center gap-1.5 text-xs text-amber-600 hover:text-amber-800 py-0.5"
-        >
-          {copied
-            ? <><CheckCircle size={13} className="text-green-600" /> <span className="text-green-700 font-medium">Lenke kopiert – lim inn i Chrome eller Safari</span></>
-            : <><Copy size={13} /> Kopier lenke</>
-          }
-        </button>
-
-        {/* Vis URL synlig ved behov */}
-        {showFallbackUrl && !copied && (
-          <p className="text-xs text-amber-600 break-all select-all text-center pt-1 border-t border-amber-200">
-            {browserUrl}
-          </p>
-        )}
-      </div>
-
       <button
         type="button"
         onClick={onSkip}
@@ -131,6 +79,61 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
       >
         <PenLine size={14} /> Skriv inn pris manuelt
       </button>
+
+      {/* Modal — vises kun i APK/WebView */}
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDialog(false)}
+          />
+
+          {/* Dialog */}
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 mx-auto">
+              <Camera className="text-blue-600" size={28} />
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-800 mb-1">
+                Åpne i nettleser
+              </h3>
+              <p className="text-sm text-slate-500">
+                Kameraskann fungerer best i Chrome eller Safari.
+                Vil du åpne TankRadar i nettleseren din?
+              </p>
+            </div>
+
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 gap-2 w-full"
+              onClick={openInBrowser}
+            >
+              <ExternalLink size={16} /> Åpne i nettleser
+            </Button>
+
+            {/* Kopi-lenke som sekundær fallback */}
+            <button
+              type="button"
+              onClick={copyUrl}
+              className="flex items-center justify-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+            >
+              {copied
+                ? <><CheckCircle size={14} className="text-green-600" /><span className="text-green-700">Lenke kopiert – lim inn i Chrome eller Safari</span></>
+                : <><Copy size={14} /> Kopier lenke i stedet</>
+              }
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowDialog(false)}
+              className="text-xs text-slate-400 hover:text-slate-600 text-center"
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
