@@ -69,18 +69,22 @@ export default function LogPrice() {
     date_observed: format(new Date(), "yyyy-MM-dd"),
   });
 
+  const handleSelectStation = (selectedStation) => {
+    setStationInfo(prev => ({
+      ...prev,
+      ...selectedStation,
+    }));
+    setStep("photo");
+  };
+
   const handlePhoto = async (file) => {
     const url = URL.createObjectURL(file);
     setImageUrl(url);
     setStep("confirm");
     setLocationLoading(true);
 
-    // Store GPS for later matching
-    let gpsCoords = null;
-    
-    // Run AI + GPS in parallel
-    const [aiResult, gpsResult] = await Promise.allSettled([
-      // AI: read all prices from image
+    // AI: read all prices from image
+    const aiResult = await Promise.allSettled([
       (async () => {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         return base44.integrations.Core.InvokeLLM({
@@ -96,39 +100,12 @@ export default function LogPrice() {
             }
           }
         });
-      })(),
-
-      // GPS: get location
-      (async () => {
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
-        );
-        const { latitude, longitude } = pos.coords;
-        const region = latLonToRegion(latitude, longitude);
-
-        const geo = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=16`,
-          { headers: { "Accept-Language": "no" } }
-        ).then(r => r.json());
-
-        const city = geo?.address?.city || geo?.address?.town || geo?.address?.village || geo?.address?.suburb || "";
-
-        // Find nearby fuel stations using overpass-style Nominatim search
-        const poi = await fetch(
-          `https://nominatim.openstreetmap.org/search?amenity=fuel&format=json&limit=1&bounded=1&viewbox=${longitude - 0.005},${latitude + 0.005},${longitude + 0.005},${latitude - 0.005}`,
-          { headers: { "Accept-Language": "no" } }
-        ).then(r => r.json());
-
-        const stationName = poi?.[0]?.display_name || "";
-        const chain = guessChain(stationName) || guessChain(poi?.[0]?.name || "");
-
-        return { city, region, stationName: stationName.split(",")[0], chain, latitude, longitude };
       })()
     ]);
 
     // Apply AI results
-    if (aiResult.status === "fulfilled") {
-      const ai = aiResult.value;
+    if (aiResult[0].status === "fulfilled") {
+      const ai = aiResult[0].value;
       setDetectedPrices(prev => {
         const next = { ...prev };
         for (const key of FUEL_TYPES) {
@@ -145,21 +122,6 @@ export default function LogPrice() {
     } else {
       // Enable bensin_95 for manual entry if AI failed
       setDetectedPrices(prev => ({ ...prev, bensin_95: { price: "", enabled: true, aiDetected: false } }));
-    }
-
-    // Apply GPS results
-    if (gpsResult.status === "fulfilled") {
-      const { city, region, stationName, chain, latitude, longitude } = gpsResult.value;
-      gpsCoords = { latitude, longitude };
-      window.__gpsLat = latitude;
-      window.__gpsLon = longitude;
-      setStationInfo(prev => ({
-        ...prev,
-        city: city || prev.city,
-        region: region || prev.region,
-        station_chain: chain || prev.station_chain,
-        station_name: stationName || prev.station_name,
-      }));
     }
 
     setLocationLoading(false);
