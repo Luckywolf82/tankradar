@@ -48,6 +48,7 @@ const activeSections = [
     color: "text-blue-600",
     bg: "bg-blue-50",
     pages: [
+      { label: "Validate Station Data", page: "ValidateStationData", desc: "Sjekk dubletter og datakvalitet i Station-tabell" },
       { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
       { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
     ],
