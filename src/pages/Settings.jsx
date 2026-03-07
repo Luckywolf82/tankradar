@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { APP_VERSION_LABEL } from "../components/version";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
