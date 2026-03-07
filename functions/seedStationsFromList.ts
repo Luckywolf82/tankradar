@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
       const stationData = {
         name,
         address: address || null,
-        city,
+        city: city || null,
         latitude,
         longitude,
         sourceName,
