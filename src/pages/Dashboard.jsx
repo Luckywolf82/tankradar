@@ -97,6 +97,11 @@ export default function Dashboard() {
           <NearbyPrices selectedFuel={selectedFuel} />
         </div>
 
+        {/* SECTION: Siste rapporterte priser */}
+        <div className="mb-8">
+          <RecentPricesFeed />
+        </div>
+
         {/* SECTION 2: Live Market Stats - Rask oversikt */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-4">Live markedspriser nå</h2>
