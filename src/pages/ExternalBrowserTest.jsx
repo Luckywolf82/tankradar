@@ -16,6 +16,7 @@ const BLANK_DIAG = {
   triedLocationHref: false,
   lastError: null,
   lastMethod: null,
+  testedUrl: null,
   currentHref: null,
   currentOrigin: null,
   userAgent: null,
