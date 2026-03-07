@@ -4,7 +4,7 @@ import { Camera, PenLine, ExternalLink, Copy } from "lucide-react";
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
-  const [showFallbackInfo, setShowFallbackInfo] = useState(false);
+  const [fallbackState, setFallbackState] = useState("idle"); // idle | copied | failed
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -13,8 +13,35 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
 
   const openInBrowser = () => {
     const url = window.location.origin + window.location.pathname;
-    window.open(url, "_blank");
+
+    // Strategi 1: anchor-element med target="_blank" — mest kompatibelt
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Sjekk om window.open også returnerer noe (WebView blokkerer = null)
+      const w = window.open(url, "_blank");
+      if (!w) {
+        // Strategi 2: kopier URL til clipboard som siste utvei
+        navigator.clipboard.writeText(url).then(() => {
+          setFallbackState("copied");
+        }).catch(() => {
+          console.error("[PhotoCapture] external browser fallback failed — clipboard also unavailable");
+          setFallbackState("failed");
+        });
+      }
+    } catch (err) {
+      console.error("[PhotoCapture] external browser fallback failed", err);
+      setFallbackState("failed");
+    }
   };
+
+  const browserUrl = window.location.origin + window.location.pathname;
 
   return (
     <div className="flex flex-col items-center gap-4 py-8">
