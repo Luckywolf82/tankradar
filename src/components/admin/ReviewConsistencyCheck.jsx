@@ -99,9 +99,12 @@ export default function ReviewConsistencyCheck() {
         <div className={`p-2 rounded mt-2 font-mono text-xs ${isConsistent ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
           {report.consistency.formula}
         </div>
+        <div className="mt-2 text-xs text-gray-600">
+          {report.consistency.note}
+        </div>
         {!isConsistent && (
           <div className="mt-2 p-2 bg-yellow-100 text-yellow-900 rounded text-xs">
-            ⚠️ Avvik oppdaget! Dette kan bety at groupStationCandidates-funksjonen ikke er synkronisert med databasen.
+            ⚠️ Avvik oppdaget i pending-gruppering! groupStationCandidates-funksjonen er ikke synkronisert.
           </div>
         )}
       </CardContent>
