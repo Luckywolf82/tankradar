@@ -90,7 +90,7 @@ function AdminSection({ title, icon: Icon, color, bg, pages }) {
 }
 
 export default function SuperAdmin() {
-  const [showArchive, setShowArchive] = React.useState(false);
+  const [showArchive, setShowArchive] = useState(false);
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
