@@ -85,114 +85,78 @@ Deno.serve(async (req) => {
       const batchEnd = Math.min(batchStart + batchSize, sourceList.length);
       const batch = sourceList.slice(batchStart, batchEnd);
       
-      const batchResults = {
-        batchIndex: Math.floor(batchStart / batchSize),
-        batchStart,
-        batchEnd,
-        inserted: 0,
-        skipped: 0,
-        conflicts: 0,
-      };
-    
-    // Process each source record in batch
-    for (const sourceRecord of batch) {
-      const { name, address, city, latitude, longitude, sourceName, sourceStationId, seedBatch } = sourceRecord;
-      
-      // Validate required fields (city and address are optional)
-      if (!name || latitude === undefined || longitude === undefined || !sourceName || !sourceStationId) {
-        results.skipped.push({
-          source: name,
-          reason: 'missing_required_fields',
-          details: { name, latitude, longitude, sourceName, sourceStationId },
-        });
-        continue;
-      }
-    
-      // Check for proximity match
-      let proximityMatch = null;
-      let minDistance = dedupRadius;
-      
-      for (const existing of existingStations) {
-        const distance = haversineDistance(
-          latitude, longitude,
-          existing.latitude, existing.longitude
-        );
+      // Process each source record in batch
+      for (const sourceRecord of batch) {
+        const { name, address, city, latitude, longitude, sourceName, sourceStationId } = sourceRecord;
         
-        if (distance < minDistance) {
-          proximityMatch = existing;
-          minDistance = distance;
+        // Validate required fields (city and address are optional)
+        if (!name || latitude === undefined || longitude === undefined || !sourceName || !sourceStationId) {
+          results.skipped++;
+          continue;
         }
-      }
       
-      if (proximityMatch && minDistance < dedupRadius) {
-        results.skipped.push({
-          source: name,
-          reason: 'proximity_match_exists',
-          existingId: proximityMatch.id,
-          existingName: proximityMatch.name,
-          distance: Math.round(minDistance),
-        });
-        continue;
-      }
-      
-      // Check for name+chain conflict (>85% similarity + same chain + <150m)
-      let conflictMatch = null;
-      for (const existing of existingStations) {
-        const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
-        const nameSim = stringSimilarity(name, existing.name);
+        // Check for proximity match using geospatial index
+        const key = `${Math.round(latitude)}_${Math.round(longitude)}`;
+        const candidates = stationsByProximity[key] || [];
         
-        if (nameSim > 0.85 && distance < 150) {
-          conflictMatch = existing;
-          break;
+        let proximityMatch = null;
+        let minDistance = dedupRadius;
+        
+        for (const existing of candidates) {
+          const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
+          if (distance < minDistance) {
+            proximityMatch = existing;
+            minDistance = distance;
+          }
         }
-      }
-      
-      if (conflictMatch) {
-        results.conflicts.push({
-          sourceRecord: { name, address, city, latitude, longitude, sourceStationId, seedBatch },
-          existingRecord: {
-            id: conflictMatch.id,
-            name: conflictMatch.name,
-            address: conflictMatch.address,
-            city: conflictMatch.city,
-          },
-          suggestedAction: 'review_for_merge',
-        });
-        continue;
-      }
-      
-      // Prepare station record
-      const stationData = {
-        name,
-        address: address || null,
-        city: city || null,
-        latitude,
-        longitude,
-        sourceName,
-        sourceStationId,
-        normalizedName: name.toLowerCase().trim(),
-      };
-      
-      // Apply chain normalization
-      if (chainNormalization) {
-        const detectedChain = normalizeChain(name, address || '');
-        if (detectedChain) {
-          stationData.chain = detectedChain;
+        
+        if (proximityMatch) {
+          results.skipped++;
+          continue;
         }
+        
+        // Check for name similarity conflict
+        let conflictMatch = null;
+        for (const existing of candidates) {
+          const nameSim = stringSimilarity(name, existing.name);
+          if (nameSim > 0.85) {
+            conflictMatch = existing;
+            break;
+          }
+        }
+        
+        if (conflictMatch) {
+          results.conflicts++;
+          continue;
+        }
+        
+        // Prepare station record
+        const stationData = {
+          name,
+          address: address || null,
+          city: city || null,
+          latitude,
+          longitude,
+          sourceName,
+          sourceStationId,
+          normalizedName: name.toLowerCase().trim(),
+        };
+        
+        // Apply chain normalization
+        if (chainNormalization) {
+          const detectedChain = normalizeChain(name, address || '');
+          if (detectedChain) {
+            stationData.chain = detectedChain;
+          }
+        }
+        
+        // Insert or track for insertion
+        if (!dryRun) {
+          await base44.asServiceRole.entities.Station.create(stationData);
+        }
+        
+        results.inserted++;
       }
-      
-      // Insert or track for insertion
-      if (!dryRun) {
-        await base44.asServiceRole.entities.Station.create(stationData);
-      }
-      
-      results.inserted++;
-      batchResults.inserted++;
-      batchResults.skipped += results.skipped.length > batchResults.skipped ? 1 : 0;
-      batchResults.conflicts += results.conflicts.length > batchResults.conflicts ? 1 : 0;
-      }
-      
-      results.batches.push(batchResults);
     }
     
     // Log to FetchLog
