@@ -223,10 +223,10 @@ export default function LogPrice() {
   };
 
   const reset = () => {
-    setStep("photo");
+    setStep("station");
     setImageUrl(null);
     setDetectedPrices(emptyPrices());
-    setStationInfo(s => ({ ...s, station_chain: "", station_name: "" }));
+    setStationInfo(s => ({ ...s, station_id: null, station_chain: "", station_name: "", city: "", region: "" }));
     setShowSuccess(false);
     setSubmitError(null);
   };
