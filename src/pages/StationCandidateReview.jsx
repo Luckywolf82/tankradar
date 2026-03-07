@@ -206,33 +206,63 @@ export default function StationCandidateReview() {
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-yellow-600">{stats.pending}</div>
-            <div className="text-sm text-gray-600">Venter på gjennomgang</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-green-600">{stats.approved}</div>
-            <div className="text-sm text-gray-600">Godkjent</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-red-600">{stats.rejected}</div>
-            <div className="text-sm text-gray-600">Avvist</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-gray-600">{stats.duplicate}</div>
-            <div className="text-sm text-gray-600">Duplikat</div>
-          </CardContent>
-        </Card>
+      {/* Stats: GooglePlaces Candidates */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Google Places Kandidater</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-3xl font-bold text-yellow-600">{stats.pending}</div>
+              <div className="text-sm text-gray-600">Venter</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-3xl font-bold text-green-600">{stats.approved}</div>
+              <div className="text-sm text-gray-600">Godkjent</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-3xl font-bold text-red-600">{stats.rejected}</div>
+              <div className="text-sm text-gray-600">Avvist</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-3xl font-bold text-gray-600">{stats.duplicate}</div>
+              <div className="text-sm text-gray-600">Duplikat</div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {/* Stats: Station Reviews */}
+      {stationStats.pending_total > 0 && (
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Station-data Review</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <Card className="border-l-4 border-l-purple-400">
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-purple-600">{stationStats.pending_total}</div>
+                <div className="text-sm text-gray-600">Venter</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-orange-600">{stationStats.chain_unconfirmed}</div>
+                <div className="text-sm text-gray-600">Kjede mangler</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-blue-600">{stationStats.generic_names}</div>
+                <div className="text-sm text-gray-600">Generisk navn</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Grouped candidates */}
       {groups.length > 0 && (
