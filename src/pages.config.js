@@ -60,11 +60,14 @@ import LogPrice from './pages/LogPrice';
 import MobileImplementationReport from './pages/MobileImplementationReport';
 import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
+import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import Settings from './pages/Settings';
+import Profile from './pages/Profile';
+import ReviewQueue from './pages/ReviewQueue';
+import SuperAdmin from './pages/SuperAdmin';
 import __Layout from './Layout.jsx';
 
 
@@ -82,11 +85,14 @@ export const PAGES = {
     "MobileImplementationReport": MobileImplementationReport,
     "MobileUXEnhancementReport": MobileUXEnhancementReport,
     "ProductionModelLockdown": ProductionModelLockdown,
+    "Settings": Settings,
     "Statistics": Statistics,
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "Settings": Settings,
+    "Profile": Profile,
+    "ReviewQueue": ReviewQueue,
+    "SuperAdmin": SuperAdmin,
 }
 
 export const pagesConfig = {

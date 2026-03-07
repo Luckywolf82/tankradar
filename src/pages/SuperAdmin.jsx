@@ -1,0 +1,122 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Database,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  FileText,
+  BarChart2,
+  Wrench,
+  AlertTriangle,
+} from "lucide-react";
+
+const sections = [
+  {
+    title: "Data",
+    icon: Database,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    pages: [
+      { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
+      { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
+      { label: "Data Consistency Diagnosis", page: "DataConsistencyDiagnosis", desc: "Konsistenssjekk på tvers av entiteter" },
+      { label: "Backfill Assessment", page: "BackfillAssessment", desc: "Vurdering av historisk backfill" },
+    ],
+  },
+  {
+    title: "Matching & User Reported",
+    icon: Search,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    pages: [
+      { label: "Review Queue", page: "ReviewQueue", desc: "Manuell stasjonsmatching for brukerrapporter" },
+      { label: "User Reported Scan Operations", page: "UserReportedScanOperations", desc: "Scan/OCR-operasjoner og historikk" },
+      { label: "User Reported System Integration", page: "UserReportedSystemIntegrationReport", desc: "Systemintegrasjonsrapport" },
+    ],
+  },
+  {
+    title: "System & Produksjon",
+    icon: ShieldCheck,
+    color: "text-green-600",
+    bg: "bg-green-50",
+    pages: [
+      { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
+      { label: "Verification Report", page: "VerificationReport_UserReportedEnhancements", desc: "Verifikasjonsrapport user reported" },
+      { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
+      { label: "Implementation Report", page: "ImplementationReport_UserReportedPolicy", desc: "Implementasjonsrapport" },
+    ],
+  },
+  {
+    title: "Mobil & UX",
+    icon: Smartphone,
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    pages: [
+      { label: "Mobile UX Enhancement Report", page: "MobileUXEnhancementReport", desc: "Forbedringer i mobil-UX" },
+      { label: "Mobile Implementation Report", page: "MobileImplementationReport", desc: "Implementasjonsrapport for mobil" },
+    ],
+  },
+  {
+    title: "Rapporter & Revisjoner",
+    icon: FileText,
+    color: "text-slate-600",
+    bg: "bg-slate-50",
+    pages: [
+      { label: "Component Naming Review", page: "ComponentNamingReview", desc: "Gjennomgang av komponentnavn" },
+    ],
+  },
+];
+
+function AdminSection({ title, icon: Icon, color, bg, pages }) {
+  return (
+    <Card className="mb-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <div className={`p-1.5 rounded-lg ${bg}`}>
+            <Icon size={16} className={color} />
+          </div>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {pages.map(({ label, page, desc }) => (
+            <Link
+              key={page}
+              to={createPageUrl(page)}
+              className="flex flex-col p-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+            >
+              <span className="font-medium text-slate-800 text-sm">{label}</span>
+              <span className="text-xs text-slate-500 mt-0.5">{desc}</span>
+            </Link>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function SuperAdmin() {
+  return (
+    <div className="max-w-3xl mx-auto p-4 md:p-6">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Wrench size={20} className="text-slate-600" />
+          <h1 className="text-3xl font-bold text-slate-900">SuperAdmin</h1>
+        </div>
+        <p className="text-slate-600">Admin-panel for diagnostikk, rapporter og systemkontroll</p>
+        <div className="mt-3 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <AlertTriangle size={13} />
+          <span>Kun tilgjengelig for administratorer</span>
+        </div>
+      </div>
+
+      {sections.map(section => (
+        <AdminSection key={section.title} {...section} />
+      ))}
+    </div>
+  );
+}
