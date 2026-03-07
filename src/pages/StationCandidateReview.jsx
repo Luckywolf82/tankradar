@@ -118,6 +118,29 @@ export default function StationCandidateReview() {
       {/* Consistency Check */}
       <ReviewConsistencyCheck />
 
+      {/* Auto-approve button */}
+      <div className="mb-6">
+        <button
+          onClick={async () => {
+            setLoading(true);
+            try {
+              const res = await base44.functions.invoke('autoApproveExactDuplicates');
+              if (res.data.success) {
+                alert(`✓ Auto-approved:\n- ${res.data.candidatesApproved} kandidater godkjent\n- ${res.data.candidatesMarkedDuplicate} markert som duplikat\n- ${res.data.groupsProcessed} grupper behandlet`);
+                loadData();
+              }
+            } catch (error) {
+              alert(`Feil: ${error.message}`);
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+        >
+          Auto-godkjenn eksakte duplikater
+        </button>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <Card>
