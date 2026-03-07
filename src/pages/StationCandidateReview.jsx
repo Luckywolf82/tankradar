@@ -241,7 +241,69 @@ export default function StationCandidateReview() {
             Identifiserer mangel på kjede, generiske navn og andre problemer i Station-tabellen.
           </p>
         </div>
+
+        <div>
+          <Button
+            onClick={handleAutoConfirmChainFromName}
+            disabled={autoProcessing}
+            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Behandler...' : 'Auto-bekreft kjede fra navn'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Bekrefter kjede automatisk for station_review med chain_unconfirmed der navn matcher kjent kjede.
+          </p>
+        </div>
       </div>
+
+      {/* Auto-chain results */}
+      {autoChainResult && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h3 className="font-semibold text-green-900 mb-3">Auto-bekreftelse av kjede - resultat</h3>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{autoChainResult.summary.chainConfirmed}</div>
+              <div className="text-sm text-green-700">Bekreftet</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-yellow-600">{autoChainResult.summary.stillPending}</div>
+              <div className="text-sm text-yellow-700">Fortsatt venter</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-red-600">{autoChainResult.summary.errors}</div>
+              <div className="text-sm text-red-700">Feil</div>
+            </div>
+          </div>
+          
+          <div className="text-sm text-gray-700 mb-3">
+            <strong>Kjeder brukt:</strong> {autoChainResult.summary.knownChainsUsed.join(', ')}
+          </div>
+
+          {autoChainResult.details.confirmed.length > 0 && (
+            <div className="mb-3">
+              <div className="text-sm font-semibold text-green-900 mb-2">Bekreftet:</div>
+              <div className="space-y-1 text-sm">
+                {autoChainResult.details.confirmed.slice(0, 5).map(item => (
+                  <div key={item.id} className="text-green-700">
+                    ✓ {item.stationName} → {item.detectedChain}
+                  </div>
+                ))}
+                {autoChainResult.details.confirmed.length > 5 && (
+                  <div className="text-gray-600">... og {autoChainResult.details.confirmed.length - 5} til</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => setAutoChainResult(null)}
+            className="text-sm text-gray-600 hover:text-gray-900 underline"
+          >
+            Lukk resultat
+          </button>
+        </div>
+      )}
 
       {/* Stats: GooglePlaces Candidates */}
       <div className="mb-8">
