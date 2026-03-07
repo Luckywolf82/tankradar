@@ -180,6 +180,12 @@ Deno.serve(async (req) => {
       }
       
       results.inserted++;
+      batchResults.inserted++;
+      batchResults.skipped += results.skipped.length > batchResults.skipped ? 1 : 0;
+      batchResults.conflicts += results.conflicts.length > batchResults.conflicts ? 1 : 0;
+      }
+      
+      results.batches.push(batchResults);
     }
     
     // Log to FetchLog
@@ -192,7 +198,7 @@ Deno.serve(async (req) => {
         stationsFound: results.totalRead,
         recordsCreated: results.inserted,
         recordsSkipped: results.skipped.length,
-        notes: `Imported ${results.inserted} stations from seed list. ${results.conflicts.length} conflicts flagged for review.`,
+        notes: `Imported ${results.inserted} stations from seed list in ${results.batches.length} batches. ${results.conflicts.length} conflicts flagged for review.`,
       });
     }
     
