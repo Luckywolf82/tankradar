@@ -116,30 +116,50 @@ export default function MasteringMetrics() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-blue-600">{metrics.totalStations}</div>
-              <div className="text-xs text-gray-600 mt-1">Total Stasjoner</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-purple-600">{metrics.stationsWithChain}</div>
-              <div className="text-xs text-gray-600 mt-1">Med kjede</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-orange-600">{metrics.totalCandidates}</div>
-              <div className="text-xs text-gray-600 mt-1">Kandidater totalt</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-pink-600">{metrics.totalReviews}</div>
-              <div className="text-xs text-gray-600 mt-1">Reviews totalt</div>
-            </CardContent>
-          </Card>
+           <Card>
+             <CardContent className="pt-4">
+               <div className="text-2xl font-bold text-blue-600">{metrics.totalStations}</div>
+               <div className="text-xs text-gray-600 mt-1">Total Stasjoner</div>
+             </CardContent>
+           </Card>
+           <Card>
+             <CardContent className="pt-4">
+               <div className="text-2xl font-bold text-purple-600">{metrics.stationsWithChain}</div>
+               <div className="text-xs text-gray-600 mt-1">Med kjede</div>
+               <div className="text-xs text-red-600 mt-1">Mangler: {metrics.stationsMissingChain}</div>
+             </CardContent>
+           </Card>
+           <Card>
+             <CardContent className="pt-4">
+               <div className="text-2xl font-bold text-orange-600">{metrics.totalCandidates}</div>
+               <div className="text-xs text-gray-600 mt-1">Kandidater totalt</div>
+             </CardContent>
+           </Card>
+           <Card>
+             <CardContent className="pt-4">
+               <div className="text-2xl font-bold text-pink-600">{metrics.totalReviews}</div>
+               <div className="text-xs text-gray-600 mt-1">Reviews totalt</div>
+             </CardContent>
+           </Card>
+         </div>
+
+        {/* Missing Fields Summary */}
+        <div className="mt-4 bg-red-50 border border-red-200 rounded p-3">
+          <h4 className="text-xs font-semibold text-red-900 mb-2">Manglende feltdata</h4>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-sm">
+              <span className="font-semibold text-red-700">{metrics.stationsMissingChain}</span>
+              <span className="text-xs text-red-600"> mangler kjede</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-semibold text-red-700">{metrics.stationsMissingCity}</span>
+              <span className="text-xs text-red-600"> mangler by</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-semibold text-red-700">{metrics.stationsMissingAddress}</span>
+              <span className="text-xs text-red-600"> mangler adresse</span>
+            </div>
+          </div>
         </div>
       </div>
 
