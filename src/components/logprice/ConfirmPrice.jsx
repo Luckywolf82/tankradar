@@ -118,40 +118,42 @@ export default function ConfirmPrice({ detectedPrices, setDetectedPrices, statio
             </div>
           </div>
 
-          {/* Station info */}
-          <div className="space-y-1">
-            <Label className="flex items-center gap-1">
-              <MapPin size={13} className="text-blue-500" /> Stasjon
-              {locationLoading && <Loader2 size={13} className="animate-spin ml-1 text-slate-400" />}
-            </Label>
-            <Select value={stationInfo.station_chain} onValueChange={v => setStation("station_chain", v)}>
-              <SelectTrigger><SelectValue placeholder="Velg kjede" /></SelectTrigger>
-              <SelectContent>
-                {CHAINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Station info — display station that was pre-selected */}
+           {stationInfo.station_id && (
+             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+               <p className="text-xs font-medium text-blue-600 mb-1">Stasjon</p>
+               <p className="font-semibold text-slate-900">{stationInfo.station_name}</p>
+               {stationInfo.station_chain && (
+                 <p className="text-xs text-slate-600">{stationInfo.station_chain}</p>
+               )}
+               {stationInfo.city && (
+                 <p className="text-xs text-slate-600">{stationInfo.city}</p>
+               )}
+             </div>
+           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>By *</Label>
-              <Input
-                placeholder="f.eks. Oslo"
-                value={stationInfo.city}
-                onChange={e => setStation("city", e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Dato</Label>
-              <Input
-                type="date"
-                value={stationInfo.date_observed}
-                onChange={e => setStation("date_observed", e.target.value)}
-                required
-              />
-            </div>
-          </div>
+           {/* If no station selected, show minimal fields */}
+           {!stationInfo.station_id && (
+             <div className="space-y-1">
+               <Label>By *</Label>
+               <Input
+                 placeholder="f.eks. Oslo"
+                 value={stationInfo.city}
+                 onChange={e => setStation("city", e.target.value)}
+                 required
+               />
+             </div>
+           )}
+
+           <div className="space-y-1">
+             <Label>Dato</Label>
+             <Input
+               type="date"
+               value={stationInfo.date_observed}
+               onChange={e => setStation("date_observed", e.target.value)}
+               required
+             />
+           </div>
 
           <Button
             type="submit"
