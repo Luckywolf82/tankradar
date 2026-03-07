@@ -90,6 +90,8 @@ function AdminSection({ title, icon: Icon, color, bg, pages }) {
 }
 
 export default function SuperAdmin() {
+  const [showArchive, setShowArchive] = React.useState(false);
+
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-6">
       <div className="mb-6">
@@ -104,9 +106,29 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      {sections.map(section => (
+      {/* Aktive driftssider */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Aktive driftssider</p>
+      {activeSections.map(section => (
         <AdminSection key={section.title} {...section} />
       ))}
+
+      {/* Arkiv toggle */}
+      <button
+        onClick={() => setShowArchive(v => !v)}
+        className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-4 mt-2"
+      >
+        <FileText size={15} />
+        {showArchive ? "Skjul arkiv" : "Vis arkiv / historiske rapporter"}
+      </button>
+
+      {showArchive && (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Arkiv / Dokumentasjon</p>
+          {archiveSections.map(section => (
+            <AdminSection key={section.title} {...section} />
+          ))}
+        </>
+      )}
     </div>
   );
 }
