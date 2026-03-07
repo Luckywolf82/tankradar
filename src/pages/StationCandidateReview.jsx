@@ -269,6 +269,20 @@ export default function StationCandidateReview() {
             Bekrefter kjede automatisk for station_review med chain_unconfirmed der navn matcher kjent kjede.
           </p>
         </div>
+
+        <div>
+          <Button
+            onClick={handleAutoFillLocation}
+            disabled={autoProcessing}
+            className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Behandler...' : 'Auto-fyll stedsinfo fra navn'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Fyller inn by og områdenavn automatisk fra stasjonsnavn der det er entydig.
+          </p>
+        </div>
       </div>
 
       {/* Auto-chain results */}
