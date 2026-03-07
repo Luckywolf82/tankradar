@@ -20,6 +20,7 @@ export default function StationCandidateReview() {
   const [splitGroupIds, setSplitGroupIds] = useState(new Set());
   const [autoProcessing, setAutoProcessing] = useState(false);
   const [splitClusters, setSplitClusters] = useState({});
+  const [autoChainResult, setAutoChainResult] = useState(null);
 
   useEffect(() => {
     loadCandidates();
