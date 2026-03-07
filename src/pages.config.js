@@ -68,6 +68,7 @@ import verificationreportUserreportedenhancements from './pages/VerificationRepo
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
 import SuperAdmin from './pages/SuperAdmin';
+import SystemStatus from './pages/SystemStatus';
 import __Layout from './Layout.jsx';
 
 
@@ -93,6 +94,7 @@ export const PAGES = {
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
     "SuperAdmin": SuperAdmin,
+    "SystemStatus": SystemStatus,
 }
 
 export const pagesConfig = {
