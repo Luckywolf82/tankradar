@@ -89,44 +89,33 @@ Deno.serve(async (req) => {
       for (const sourceRecord of batch) {
         const { name, address, city, latitude, longitude, sourceName, sourceStationId } = sourceRecord;
         
-        // Validate required fields (city and address are optional)
+        // Validate required fields
         if (!name || latitude === undefined || longitude === undefined || !sourceName || !sourceStationId) {
           results.skipped++;
           continue;
         }
       
-        // Check for proximity match using geospatial index
-        const key = `${Math.round(latitude)}_${Math.round(longitude)}`;
-        const candidates = stationsByProximity[key] || [];
-        
-        let proximityMatch = null;
-        let minDistance = dedupRadius;
-        
-        for (const existing of candidates) {
-          const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
-          if (distance < minDistance) {
-            proximityMatch = existing;
-            minDistance = distance;
+        // Quick proximity check: only scan grid cells nearby
+        let isProximityDuplicate = false;
+        for (let dlat = -1; dlat <= 1; dlat++) {
+          for (let dlon = -1; dlon <= 1; dlon++) {
+            const checkKey = `${Math.round(latitude) + dlat}_${Math.round(longitude) + dlon}`;
+            const candidates = stationsByProximity[checkKey] || [];
+            
+            for (const existing of candidates) {
+              const distance = haversineDistance(latitude, longitude, existing.latitude, existing.longitude);
+              if (distance < dedupRadius) {
+                isProximityDuplicate = true;
+                break;
+              }
+            }
+            if (isProximityDuplicate) break;
           }
+          if (isProximityDuplicate) break;
         }
         
-        if (proximityMatch) {
+        if (isProximityDuplicate) {
           results.skipped++;
-          continue;
-        }
-        
-        // Check for name similarity conflict
-        let conflictMatch = null;
-        for (const existing of candidates) {
-          const nameSim = stringSimilarity(name, existing.name);
-          if (nameSim > 0.85) {
-            conflictMatch = existing;
-            break;
-          }
-        }
-        
-        if (conflictMatch) {
-          results.conflicts++;
           continue;
         }
         
