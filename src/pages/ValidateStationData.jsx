@@ -38,7 +38,7 @@ export default function ValidateStationData() {
         <p className="text-slate-600">Sjekk for dubletter, overlappinger og datakvalitet etter seed-import</p>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex gap-3">
         <Button
           onClick={handleValidate}
           disabled={loading}
@@ -52,6 +52,27 @@ export default function ValidateStationData() {
           ) : (
             "Kjør Validering"
           )}
+        </Button>
+        <Button
+          onClick={async () => {
+            try {
+              const response = await base44.functions.invoke('exportStationDataCsv');
+              const blob = new Blob([response.data], { type: 'text/csv; charset=utf-8' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Station_Data_${new Date().toISOString().split('T')[0]}.csv`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              a.remove();
+            } catch (err) {
+              alert('Feil ved eksport: ' + err.message);
+            }
+          }}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          Eksporter CSV
         </Button>
       </div>
 
