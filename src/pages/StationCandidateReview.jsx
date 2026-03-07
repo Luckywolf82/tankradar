@@ -264,6 +264,85 @@ export default function StationCandidateReview() {
         </div>
       )}
 
+      {/* Station Reviews Section */}
+      {stationReviews.filter(r => r.status === 'pending').length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4 text-purple-900">Station-Data Review ({stationReviews.filter(r => r.status === 'pending').length})</h2>
+          <div className="space-y-3">
+            {stationReviews.filter(r => r.status === 'pending').map(review => (
+              <Card key={review.id} className="border-l-4 border-l-purple-400">
+                <button
+                  onClick={() => setExpandedStationReviewId(expandedStationReviewId === review.id ? null : review.id)}
+                  className="w-full p-4 flex justify-between items-center hover:bg-gray-50"
+                >
+                  <div className="text-left">
+                    <div className="font-semibold">
+                      {review.station_name}
+                      {review.station_chain && <span className="text-sm text-gray-600 ml-2">({review.station_chain})</span>}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {review.review_type.replace(/_/g, ' ')} • {review.station_latitude?.toFixed(4)}, {review.station_longitude?.toFixed(4)}
+                    </div>
+                  </div>
+                  {expandedStationReviewId === review.id ? <ChevronUp /> : <ChevronDown />}
+                </button>
+
+                {expandedStationReviewId === review.id && (
+                  <CardContent className="bg-purple-50 border-t space-y-4 p-4">
+                    <div className="bg-white p-3 rounded border">
+                      <div className="text-sm font-semibold mb-2">Problem:</div>
+                      <p className="text-sm text-gray-700">{review.issue_description}</p>
+                      
+                      {review.suggested_action && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-sm font-semibold mb-1">Anbefaling:</div>
+                          <p className="text-sm text-gray-700">{review.suggested_action}</p>
+                        </div>
+                      )}
+                      
+                      {review.notes && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-sm font-semibold mb-1">Reviewer-notater:</div>
+                          <p className="text-sm text-gray-700">{review.notes}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        onClick={() => handleStationReviewApprove(review)}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Godkjenn
+                      </Button>
+                      <Button
+                        onClick={() => handleStationReviewDuplicate(review)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <MapPin className="w-4 h-4 mr-1" />
+                        Duplikat
+                      </Button>
+                      <Button
+                        onClick={() => handleStationReviewReject(review)}
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Avvis
+                      </Button>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Grouped candidates */}
       {groups.length > 0 && (
         <div className="mb-10">
