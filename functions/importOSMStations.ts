@@ -35,7 +35,7 @@ async function fetchOSMStations() {
     out center;
   `;
 
-  const url = 'https://overpass-api.de/api/interpreter';
+  const url = 'https://overpass-api.de/api/interpreter?output=json';
   
   console.log('[importOSMStations] Querying Overpass API for fuel stations in Trondheim...');
   
