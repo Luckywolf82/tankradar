@@ -239,6 +239,13 @@ export default function LogPrice() {
           <ArrowLeft size={16} /> Tilbake til oversikt
         </Link>
 
+        {step === "station" && (
+          <StationPicker 
+            onSelectStation={handleSelectStation}
+            onSkip={() => setStep("photo")}
+          />
+        )}
+
         {step === "photo" && (
           <Card className="shadow-lg">
             <CardContent className="p-6">
