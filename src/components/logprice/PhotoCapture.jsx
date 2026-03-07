@@ -1,17 +1,10 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, PenLine, Settings } from "lucide-react";
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
-
-  const diag = useMemo(() => ({
-    hasMedian: typeof window.median !== "undefined",
-    hasMedianApp: typeof window.median?.app !== "undefined",
-    hasOpenSettingsBridge: typeof window.median?.app?.openSettings === "function",
-    userAgent: navigator.userAgent,
-  }), []);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -26,6 +19,7 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
     input.value = "";
     input.click();
 
+    // Vis hjelpetekst kun hvis file chooser ikke åpner (ingen fil etter 500ms)
     const timer = setTimeout(() => {
       if (!input.files || input.files.length === 0) {
         setShowPermissionHelp(true);
@@ -65,13 +59,12 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
           <div className="flex items-start gap-2">
             <Settings size={18} className="text-amber-600 mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-amber-800">Kameratilgang mangler</p>
+              <p className="text-sm font-semibold text-amber-800">Kamera åpnet ikke</p>
               <p className="text-xs text-amber-700 mt-0.5">
-                Du må aktivere kameratilgang manuelt i telefonens innstillinger.
+                Appen mangler kanskje kameratilgang. Sjekk at TankRadar har tillatelse til å bruke kameraet.
               </p>
             </div>
           </div>
-
           <div className="bg-white rounded-lg border border-amber-100 p-3 text-xs text-slate-600 space-y-1.5">
             <p className="font-semibold text-slate-700">Slik aktiverer du kameratilgang:</p>
             <p>1. Åpne <strong>Innstillinger</strong> på telefonen</p>
@@ -80,16 +73,6 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
             <p>4. Slå på <strong>Kamera</strong></p>
             <p>5. Kom tilbake til appen og prøv igjen</p>
           </div>
-
-          {/* Diagnostikkboks */}
-          <div className="bg-slate-100 rounded-lg p-3 text-xs font-mono text-slate-600 space-y-1 border border-slate-200">
-            <p className="font-semibold text-slate-700 font-sans mb-1">Diagnostikk</p>
-            <p>hasMedian: <span className={diag.hasMedian ? "text-green-700" : "text-red-600"}>{String(diag.hasMedian)}</span></p>
-            <p>hasMedianApp: <span className={diag.hasMedianApp ? "text-green-700" : "text-red-600"}>{String(diag.hasMedianApp)}</span></p>
-            <p>hasOpenSettingsBridge: <span className={diag.hasOpenSettingsBridge ? "text-green-700" : "text-red-600"}>{String(diag.hasOpenSettingsBridge)}</span></p>
-            <p className="break-all">userAgent: {diag.userAgent}</p>
-          </div>
-
           <button
             type="button"
             className="text-xs text-slate-400 hover:text-slate-600 text-center"
