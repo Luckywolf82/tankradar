@@ -5,6 +5,15 @@ import { Camera, PenLine, Settings, ExternalLink } from "lucide-react";
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
+  const [bridgeMessage, setBridgeMessage] = useState(null);
+  const [triedOpenSettings, setTriedOpenSettings] = useState(false);
+
+  const diag = useMemo(() => ({
+    hasMedian: typeof window.median !== "undefined",
+    hasMedianApp: typeof window.median?.app !== "undefined",
+    hasOpenSettingsBridge: typeof window.median?.app?.openSettings === "function",
+    userAgent: navigator.userAgent,
+  }), []);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
