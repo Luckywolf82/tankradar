@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     }
     
     const body = await req.json();
-    const { sourceList, dedupRadius = 150, chainNormalization = true, dryRun = false, batchSize = 250 } = body;
+    const { sourceList, dedupRadius = 150, chainNormalization = true, dryRun = false, batchSize = 250, seedBatch } = body;
     
     if (!Array.isArray(sourceList) || sourceList.length === 0) {
       return Response.json({ error: 'sourceList must be a non-empty array' }, { status: 400 });
