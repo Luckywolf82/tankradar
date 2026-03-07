@@ -15,16 +15,23 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   const browserUrl = window.location.origin + window.location.pathname;
 
   const openInBrowser = () => {
-    // Metode 1: window.open med _blank
-    console.info("[PhotoCapture] external browser fallback — trying window.open(_blank)");
-    const w = window.open(browserUrl, "_blank");
+    // Metode 1: Median.co JavaScript Bridge — native ekstern åpning i Base44 APK
+    // Dette er den korrekte metoden for Base44/Median-wrapperen
+    if (typeof window.median !== "undefined" && window.median?.window?.open) {
+      console.info("[PhotoCapture] external browser fallback — using median.window.open (native bridge)");
+      window.median.window.open(browserUrl, "external");
+      return;
+    }
 
+    // Metode 2: window.open med _blank (fungerer i nettleser, blokkeres ofte i WebView)
+    console.info("[PhotoCapture] external browser fallback — median bridge not available, trying window.open(_blank)");
+    const w = window.open(browserUrl, "_blank");
     if (w) {
       console.info("[PhotoCapture] external browser fallback — window.open succeeded");
       return;
     }
 
-    // Metode 2: anchor element click
+    // Metode 3: anchor element click
     console.warn("[PhotoCapture] external browser fallback — window.open returned null, trying anchor click");
     try {
       const a = document.createElement("a");
@@ -40,8 +47,7 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
       console.error("[PhotoCapture] external browser fallback — anchor click failed", err);
     }
 
-    // Uansett resultat fra metodene over: vis alltid kopi-UI i WebView
-    // siden vi ikke kan verifisere om nettleser faktisk åpnet
+    // Vis kopi-UI siden vi ikke kan verifisere om nettleser faktisk åpnet
     setShowFallbackUrl(true);
   };
 
