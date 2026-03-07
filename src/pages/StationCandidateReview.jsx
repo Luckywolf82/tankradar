@@ -38,6 +38,20 @@ export default function StationCandidateReview() {
       const newStats = { pending: 0, approved: 0, rejected: 0, duplicate: 0 };
       all.forEach(c => newStats[c.status]++);
       setStats(newStats);
+
+      // Load Station reviews
+      const reviews = await base44.entities.StationReview.list();
+      setStationReviews(reviews);
+      
+      const stationStatsNew = { chain_unconfirmed: 0, generic_names: 0, pending_total: 0 };
+      reviews.forEach(r => {
+        if (r.status === 'pending') {
+          stationStatsNew.pending_total++;
+          if (r.review_type === 'chain_unconfirmed') stationStatsNew.chain_unconfirmed++;
+          if (r.review_type === 'generic_name_review') stationStatsNew.generic_names++;
+        }
+      });
+      setStationStats(stationStatsNew);
     } catch (error) {
       console.error('Failed to load candidates:', error);
     } finally {
