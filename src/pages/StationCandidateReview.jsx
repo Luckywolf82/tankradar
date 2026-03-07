@@ -280,54 +280,70 @@ export default function StationCandidateReview() {
                   </CardContent>
                 )}
 
-                {/* Split view - show candidates individually */}
-                {expandedGroupId === group.groupId && splitGroupIds.has(group.groupId) && (
+                {/* Split view - show clusters */}
+                {expandedGroupId === group.groupId && splitGroupIds.has(group.groupId) && splitClusters[group.groupId] && (
                   <CardContent className="bg-orange-50 border-t space-y-4 p-4">
                     <div className="bg-orange-100 p-3 rounded border border-orange-300 text-sm text-orange-900">
-                      <strong>Gruppe splittet:</strong> Kandidatene behandles nå separat. Velg handling for hver.
+                      <strong>Gruppe splittet i {splitClusters[group.groupId].length} grupper</strong>
                     </div>
                     
-                    <div className="space-y-3">
-                      {group.candidates.map(candidate => (
-                        <div key={candidate.id} className="bg-white p-3 rounded border">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <div className="font-semibold">{candidate.proposedName}</div>
-                              <div className="text-sm text-gray-600">{candidate.address}</div>
-                              <div className="text-xs text-gray-500">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
+                    {splitClusters[group.groupId].map((cluster, clusterIdx) => (
+                      <div key={cluster.newGroupId} className="bg-white p-4 rounded border-l-4 border-l-orange-400">
+                        <div className="font-semibold text-sm mb-3">Gruppe {clusterIdx + 1} ({cluster.count} kandidater)</div>
+                        <div className="space-y-3">
+                          {cluster.candidates.map(candidate => (
+                            <div key={candidate.id} className="bg-gray-50 p-3 rounded">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <div className="font-semibold text-sm">{candidate.proposedName}</div>
+                                  <div className="text-xs text-gray-600">{candidate.address}</div>
+                                  <div className="text-xs text-gray-500">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                <Button
+                                  onClick={() => handleApprove(candidate, candidate.proposedName, [])}
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  Godkjenn
+                                </Button>
+                                <Button
+                                  onClick={() => handleDuplicate(candidate)}
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  Duplikat
+                                </Button>
+                                <Button
+                                  onClick={() => handleReject(candidate)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600"
+                                >
+                                  Avvis
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex gap-2 flex-wrap">
-                            <Button
-                              onClick={() => handleApprove(candidate, candidate.proposedName, [])}
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              Godkjenn (enkelt)
-                            </Button>
-                            <Button
-                              onClick={() => handleDuplicate(candidate)}
-                              size="sm"
-                              variant="outline"
-                            >
-                              Duplikat
-                            </Button>
-                            <Button
-                              onClick={() => handleReject(candidate)}
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600"
-                            >
-                              Avvis
-                            </Button>
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
 
                     <div className="pt-2">
                       <Button
-                        onClick={() => handleSplitGroup(group.groupId)}
+                        onClick={() => {
+                          setSplitGroupIds(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(group.groupId);
+                            return newSet;
+                          });
+                          setSplitClusters(prev => {
+                            const newClusters = { ...prev };
+                            delete newClusters[group.groupId];
+                            return newClusters;
+                          });
+                        }}
                         size="sm"
                         variant="ghost"
                         className="text-gray-600"
