@@ -71,6 +71,7 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
 import StationImport from './pages/StationImport';
+import ImportSystemReport from './pages/ImportSystemReport';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +100,7 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
     "StationImport": StationImport,
+    "ImportSystemReport": ImportSystemReport,
 }
 
 export const pagesConfig = {
