@@ -98,6 +98,26 @@ export default function MasteringMetrics() {
     }
   };
 
+  const handleExportJSON = async () => {
+    setExporting(true);
+    try {
+      const { data } = await base44.functions.invoke('exportMasteringDataJSON');
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mastering-hub-export_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-4 text-gray-600">Laster metrikker...</div>;
   }
