@@ -55,6 +55,7 @@ import CoverageReport from './pages/CoverageReport';
 import Dashboard from './pages/Dashboard';
 import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
+import DiscoverStations from './pages/DiscoverStations';
 import ExternalBrowserTest from './pages/ExternalBrowserTest';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import ImportSystemReport from './pages/ImportSystemReport';
@@ -65,6 +66,7 @@ import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
 import Settings from './pages/Settings';
+import StationCandidateReview from './pages/StationCandidateReview';
 import StationImport from './pages/StationImport';
 import Statistics from './pages/Statistics';
 import SuperAdmin from './pages/SuperAdmin';
@@ -72,8 +74,6 @@ import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import StationCandidateReview from './pages/StationCandidateReview';
-import DiscoverStations from './pages/DiscoverStations';
 import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
 import __Layout from './Layout.jsx';
 
@@ -87,6 +87,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DataConsistencyDiagnosis": DataConsistencyDiagnosis,
     "DataQualityDiagnostics": DataQualityDiagnostics,
+    "DiscoverStations": DiscoverStations,
     "ExternalBrowserTest": ExternalBrowserTest,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "ImportSystemReport": ImportSystemReport,
@@ -97,6 +98,7 @@ export const PAGES = {
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
     "Settings": Settings,
+    "StationCandidateReview": StationCandidateReview,
     "StationImport": StationImport,
     "Statistics": Statistics,
     "SuperAdmin": SuperAdmin,
@@ -104,8 +106,6 @@ export const PAGES = {
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "StationCandidateReview": StationCandidateReview,
-    "DiscoverStations": DiscoverStations,
     "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
 }
 
