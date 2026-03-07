@@ -32,7 +32,9 @@ const activeSections = [
     color: "text-amber-600",
     bg: "bg-amber-50",
     pages: [
-      { label: "Station Import", page: "StationImport", desc: "Importer stasjonerkatalog fra OpenStreetMap" },
+      { label: "Station Import (OSM)", page: "StationImport", desc: "Importer stasjonerkatalog fra OpenStreetMap" },
+      { label: "Discover from Google Places", page: "DiscoverStations", desc: "Søk og importer kandidater fra Google Places" },
+      { label: "Review Station Candidates", page: "StationCandidateReview", desc: "Godkjenn nye stasjonskandidater" },
       { label: "Review Queue", page: "ReviewQueue", desc: "Manuell stasjonsmatching for brukerrapporter" },
       { label: "User Reported Scan Operations", page: "UserReportedScanOperations", desc: "Scan/OCR-operasjoner og historikk" },
       { label: "User Reported System Integration", page: "UserReportedSystemIntegrationReport", desc: "Systemintegrasjonsrapport" },
