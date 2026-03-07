@@ -95,9 +95,9 @@ export default function DiscoverStations() {
 
               <div className="pt-3 border-t text-sm">
                 <strong>Neste steg:</strong> Gå til{' '}
-                <a href="#" className="text-blue-600 hover:underline">
+                <Link to={createPageUrl('StationCandidateReview')} className="text-blue-600 hover:underline">
                   Station-kandidater
-                </a>{' '}
+                </Link>{' '}
                 for å gjennomgå og godkjenne nye stasjoner.
               </div>
             </div>
