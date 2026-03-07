@@ -162,7 +162,7 @@ export default function StationCandidateReview() {
                   {expandedGroupId === group.groupId ? <ChevronUp /> : <ChevronDown />}
                 </button>
 
-                {expandedGroupId === group.groupId && (
+                {expandedGroupId === group.groupId && !splitGroupIds.has(group.groupId) && (
                   <CardContent className="bg-gray-50 border-t space-y-4 p-4">
                     {/* Name selection for same location */}
                     {group.groupType === 'same_location' && (
