@@ -115,6 +115,9 @@ export default function StationCandidateReview() {
     <div className="max-w-5xl mx-auto p-6 pb-24">
       <h1 className="text-3xl font-bold mb-6">Station-kandidater fra Google Places</h1>
 
+      {/* Consistency Check */}
+      <ReviewConsistencyCheck />
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <Card>
