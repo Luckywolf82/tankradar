@@ -16,7 +16,10 @@ export default function ReviewQueue() {
         setItems(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(err => {
+        console.error("[ReviewQueue] fetch review_needed", err.message);
+        setLoading(false);
+      });
   }, []);
 
   const handleMatch = async (item, stationId) => {
