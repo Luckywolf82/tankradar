@@ -23,20 +23,28 @@ export default function ReviewQueue() {
   }, []);
 
   const handleMatch = async (item, stationId) => {
-    await base44.entities.FuelPrice.update(item.id, {
-      stationId,
-      station_match_status: "matched_station_id",
-      station_match_notes: "Manuelt godkjent av kurator",
-    });
-    setItems(prev => prev.filter(i => i.id !== item.id));
+    try {
+      await base44.entities.FuelPrice.update(item.id, {
+        stationId,
+        station_match_status: "matched_station_id",
+        station_match_notes: "Manuelt godkjent av kurator",
+      });
+      setItems(prev => prev.filter(i => i.id !== item.id));
+    } catch (err) {
+      console.error("[ReviewQueue] handleMatch", err.message);
+    }
   };
 
   const handleReject = async (item) => {
-    await base44.entities.FuelPrice.update(item.id, {
-      station_match_status: "no_safe_station_match",
-      station_match_notes: "Avvist av kurator",
-    });
-    setItems(prev => prev.filter(i => i.id !== item.id));
+    try {
+      await base44.entities.FuelPrice.update(item.id, {
+        station_match_status: "no_safe_station_match",
+        station_match_notes: "Avvist av kurator",
+      });
+      setItems(prev => prev.filter(i => i.id !== item.id));
+    } catch (err) {
+      console.error("[ReviewQueue] handleReject", err.message);
+    }
   };
 
   if (loading) {
