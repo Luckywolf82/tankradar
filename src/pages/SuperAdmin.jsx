@@ -10,6 +10,7 @@ import {
   BarChart2,
   Wrench,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import DataSourceStatus from "../components/admin/DataSourceStatus";
