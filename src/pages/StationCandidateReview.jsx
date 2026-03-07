@@ -217,6 +217,80 @@ export default function StationCandidateReview() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Split group button */}
+                    <div className="mt-4 pt-4 border-t">
+                      <Button
+                        onClick={() => handleSplitGroup(group.groupId)}
+                        size="sm"
+                        variant="outline"
+                        className="text-orange-600 hover:text-orange-700 flex items-center gap-2"
+                      >
+                        <Unlink className="w-4 h-4" />
+                        Splitt gruppe
+                      </Button>
+                      <div className="text-xs text-gray-600 mt-2">
+                        Hvis disse er ulike stasjoner, splitt gruppen for å håndtere dem separat.
+                      </div>
+                    </div>
+                  </CardContent>
+                )}
+
+                {/* Split view - show candidates individually */}
+                {expandedGroupId === group.groupId && splitGroupIds.has(group.groupId) && (
+                  <CardContent className="bg-orange-50 border-t space-y-4 p-4">
+                    <div className="bg-orange-100 p-3 rounded border border-orange-300 text-sm text-orange-900">
+                      <strong>Gruppe splittet:</strong> Kandidatene behandles nå separat. Velg handling for hver.
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {group.candidates.map(candidate => (
+                        <div key={candidate.id} className="bg-white p-3 rounded border">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <div className="font-semibold">{candidate.proposedName}</div>
+                              <div className="text-sm text-gray-600">{candidate.address}</div>
+                              <div className="text-xs text-gray-500">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            <Button
+                              onClick={() => handleApprove(candidate, candidate.proposedName, [])}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Godkjenn (enkelt)
+                            </Button>
+                            <Button
+                              onClick={() => handleDuplicate(candidate)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              Duplikat
+                            </Button>
+                            <Button
+                              onClick={() => handleReject(candidate)}
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600"
+                            >
+                              Avvis
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-2">
+                      <Button
+                        onClick={() => handleSplitGroup(group.groupId)}
+                        size="sm"
+                        variant="ghost"
+                        className="text-gray-600"
+                      >
+                        Angre splitting
+                      </Button>
+                    </div>
                   </CardContent>
                 )}
               </Card>
