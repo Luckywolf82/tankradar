@@ -76,12 +76,12 @@ Deno.serve(async (req) => {
     for (const sourceRecord of sourceList) {
       const { name, address, city, latitude, longitude, sourceName, sourceStationId, seedBatch } = sourceRecord;
       
-      // Validate required fields
-      if (!name || !city || latitude === undefined || longitude === undefined || !sourceName || !sourceStationId) {
+      // Validate required fields (city and address are optional)
+      if (!name || latitude === undefined || longitude === undefined || !sourceName || !sourceStationId) {
         results.skipped.push({
           source: name,
           reason: 'missing_required_fields',
-          details: { name, city, latitude, longitude, sourceName, sourceStationId },
+          details: { name, latitude, longitude, sourceName, sourceStationId },
         });
         continue;
       }
