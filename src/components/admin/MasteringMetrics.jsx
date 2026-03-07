@@ -265,30 +265,38 @@ export default function MasteringMetrics() {
       )}
 
       {/* Export Buttons */}
-      <div className="border-t pt-6">
-        <h4 className="font-semibold text-slate-900 mb-3">Eksporter data</h4>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            onClick={handleExportStations}
-            disabled={exporting}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Stasjoner CSV
-          </Button>
-          <Button
-            onClick={handleExportReviews}
-            disabled={exporting}
-            className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Reviews CSV
-          </Button>
-        </div>
-        <p className="text-xs text-gray-600 mt-2">
-          Eksporterer alle relevante felter for videre analyse.
-        </p>
-      </div>
+       <div className="border-t pt-6">
+         <h4 className="font-semibold text-slate-900 mb-3">Eksporter data</h4>
+         <div className="flex flex-col sm:flex-row gap-2">
+           <Button
+             onClick={handleExportStations}
+             disabled={exporting}
+             className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+           >
+             <Download className="w-4 h-4" />
+             Stasjoner CSV
+           </Button>
+           <Button
+             onClick={handleExportReviews}
+             disabled={exporting}
+             className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+           >
+             <Download className="w-4 h-4" />
+             Reviews CSV
+           </Button>
+           <Button
+             onClick={handleExportJSON}
+             disabled={exporting}
+             className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+           >
+             <Download className="w-4 h-4" />
+             Alle data JSON
+           </Button>
+         </div>
+         <p className="text-xs text-gray-600 mt-2">
+           Eksporterer alle relevante felter for videre analyse.
+         </p>
+       </div>
     </div>
   );
 }
