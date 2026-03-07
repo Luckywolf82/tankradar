@@ -99,6 +99,19 @@ Deno.serve(async (req) => {
         // Check distance
         const dist = calculateDistance(c1.latitude, c1.longitude, c2.latitude, c2.longitude);
 
+        // Rule 0: Exact duplicate — identical name, address AND coordinates
+        if (
+          dist < 0.001 &&
+          stringSimilarity(c1.proposedName, c2.proposedName) === 1 &&
+          stringSimilarity(c1.address, c2.address) === 1
+        ) {
+          group.candidates.push(c2);
+          group.groupType = 'duplicate';
+          group.reason.push('exact_duplicate_name_address_coords');
+          processed.add(c2.id);
+          continue;
+        }
+
         // Rule 1: Very close (< 50m) = almost certainly same location
         if (dist < 0.05) {
           group.candidates.push(c2);
