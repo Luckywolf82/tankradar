@@ -91,6 +91,11 @@ export default function Dashboard() {
           <SmartFillIndicator ssbData={ssbData} observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
+        {/* SECTION: Billigste nær deg */}
+        <div className="mb-8">
+          <NearbyPrices selectedFuel={selectedFuel} />
+        </div>
+
         {/* SECTION 2: Live Market Stats - Rask oversikt */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-4">Live markedspriser nå</h2>
