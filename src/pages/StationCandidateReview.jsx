@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, MapPin, AlertCircle, ChevronDown, ChevronUp, Unlink, Zap } from 'lucide-react';
 import ReviewConsistencyCheck from '../components/admin/ReviewConsistencyCheck';
+import MasteringMetrics from '../components/admin/MasteringMetrics';
 
 export default function StationCandidateReview() {
   const [candidates, setCandidates] = useState([]);
