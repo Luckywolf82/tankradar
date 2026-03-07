@@ -54,14 +54,11 @@ Deno.serve(async (req) => {
     }
     
     const body = await req.json();
-    const { sourceList, dedupRadius = 150, chainNormalization = true, dryRun = false } = body;
+    const { sourceList, dedupRadius = 150, chainNormalization = true, dryRun = false, batchSize = 250 } = body;
     
     if (!Array.isArray(sourceList) || sourceList.length === 0) {
       return Response.json({ error: 'sourceList must be a non-empty array' }, { status: 400 });
     }
-    
-    // Fetch existing stations
-    const existingStations = await base44.asServiceRole.entities.Station.list();
     
     const results = {
       totalRead: sourceList.length,
@@ -70,10 +67,28 @@ Deno.serve(async (req) => {
       conflicts: [],
       dryRun,
       timestamp: new Date().toISOString(),
+      batches: [],
     };
     
-    // Process each source record
-    for (const sourceRecord of sourceList) {
+    // Process in batches to avoid CPU timeout
+    for (let batchStart = 0; batchStart < sourceList.length; batchStart += batchSize) {
+      const batchEnd = Math.min(batchStart + batchSize, sourceList.length);
+      const batch = sourceList.slice(batchStart, batchEnd);
+      
+      // Fetch existing stations for this batch
+      const existingStations = await base44.asServiceRole.entities.Station.list();
+      
+      const batchResults = {
+        batchIndex: Math.floor(batchStart / batchSize),
+        batchStart,
+        batchEnd,
+        inserted: 0,
+        skipped: 0,
+        conflicts: 0,
+      };
+    
+    // Process each source record in batch
+    for (const sourceRecord of batch) {
       const { name, address, city, latitude, longitude, sourceName, sourceStationId, seedBatch } = sourceRecord;
       
       // Validate required fields (city and address are optional)
