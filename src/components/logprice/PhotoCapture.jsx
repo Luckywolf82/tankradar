@@ -29,33 +29,56 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
     if (file) onPhoto(file);
   };
 
-  const openInBrowser = () => {
-    const hasMedian = typeof window.median !== "undefined" && typeof window.median?.window?.open === "function";
-    console.info("[PhotoCapture] browser handoff — isWebView:", true, "hasMedian:", hasMedian);
+  const openExternal = (url) => {
+    console.log("[PhotoCapture] browser handoff — median:", window.median);
+    console.log("[PhotoCapture] browser handoff — userAgent:", navigator.userAgent);
 
-    // Metode 1: Median bridge (Base44 APK / Median.co native)
-    if (hasMedian) {
+    // Metode 1: Median bridge
+    if (typeof window.median !== "undefined" && typeof window.median?.window?.open === "function") {
       try {
-        console.info("[PhotoCapture] browser handoff — triedMedianOpen: true");
-        window.median.window.open(browserUrl, "external");
-        setShowDialog(false);
-        return;
+        console.log("[PhotoCapture] browser handoff — method: median.window.open");
+        window.median.window.open(url, "external");
+        return true;
       } catch (err) {
-        console.error("[PhotoCapture] browser handoff — median.window.open failed:", err);
+        console.log("[PhotoCapture] browser handoff — median.window.open failed:", err);
       }
     }
 
-    // Metode 2: window.open _blank (NFC-appens primærmetode + vanlig nettleser)
-    console.info("[PhotoCapture] browser handoff — triedWindowOpen: true");
-    const w = window.open(browserUrl, "_blank");
-    if (w) {
-      setShowDialog(false);
-      return;
+    // Metode 2: window.open _blank
+    try {
+      console.log("[PhotoCapture] browser handoff — method: window.open _blank");
+      const w = window.open(url, "_blank");
+      if (w) return true;
+      console.log("[PhotoCapture] browser handoff — window.open returned null");
+    } catch (err) {
+      console.log("[PhotoCapture] browser handoff — window.open failed:", err);
     }
 
-    // Metode 3: Kopi-fallback — ingenting fungerte
-    console.error("[PhotoCapture] browser handoff — all open methods failed, showing copy fallback");
-    copyUrl();
+    // Metode 3: anchor click
+    try {
+      console.log("[PhotoCapture] browser handoff — method: anchor.click");
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return true;
+    } catch (err) {
+      console.log("[PhotoCapture] browser handoff — anchor.click failed:", err);
+    }
+
+    // Metode 4: window.location.href
+    console.log("[PhotoCapture] browser handoff — method: window.location.href");
+    window.location.href = url;
+    return true;
+  };
+
+  const openInBrowser = () => {
+    openExternal(browserUrl);
+    setShowDialog(false);
   };
 
   const copyUrl = () => {
