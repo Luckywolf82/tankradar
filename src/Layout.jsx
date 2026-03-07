@@ -5,6 +5,7 @@ import { BarChart2, Plus, Home, Settings, User, ClipboardList, ShieldCheck } fro
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
 import { useCurrentUser } from "./components/auth/useCurrentUser";
+import { base44 } from "@/api/base44Client";
 
 const baseNavLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
