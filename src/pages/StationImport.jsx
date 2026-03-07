@@ -18,11 +18,21 @@ export default function StationImport() {
       const response = await base44.functions.invoke('importOSMStations', {});
       if (response.data.success) {
         setResult(response.data);
+      } else if (response.status === 403) {
+        setError('Admin access required. Please contact an administrator.');
+      } else if (response.status === 401) {
+        setError('You must be logged in to perform this action.');
       } else {
         setError(response.data.error || 'Import failed');
       }
     } catch (err) {
-      setError(err.message);
+      if (err.response?.status === 403) {
+        setError('Admin access required. Please contact an administrator.');
+      } else if (err.response?.status === 401) {
+        setError('You must be logged in to perform this action.');
+      } else {
+        setError(err.message || 'Request failed. Check your connection.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
