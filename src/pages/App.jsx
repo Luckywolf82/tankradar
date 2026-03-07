@@ -55,6 +55,7 @@ const curatorPages = [
 const adminPages = [
    { name: "SuperAdmin", Component: SuperAdmin, role: "admin" },
    { name: "SystemStatus", Component: SystemStatus, role: "admin" },
+   { name: "CandidateDiscoveryStatus", Component: CandidateDiscoveryStatus, role: "admin" },
    { name: "StationImport", Component: StationImport, role: "admin" },
    { name: "DiscoverStations", Component: DiscoverStations, role: "admin" },
    { name: "StationCandidateReview", Component: StationCandidateReview, role: "admin" },
