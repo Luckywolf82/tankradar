@@ -47,6 +47,9 @@ export default function MasteringMetrics() {
         reviewStats,
         sourceBreakdown,
         stationsWithChain: stations.filter(s => s.chain && s.chain !== 'unknown' && s.chain !== null).length,
+        stationsMissingChain: stations.filter(s => !s.chain || s.chain === 'unknown' || s.chain === null).length,
+        stationsMissingCity: stations.filter(s => !s.city).length,
+        stationsMissingAddress: stations.filter(s => !s.address).length,
       });
     } catch (error) {
       console.error('Failed to load metrics:', error);
