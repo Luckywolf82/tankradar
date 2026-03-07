@@ -60,15 +60,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'sourceList must be a non-empty array' }, { status: 400 });
     }
     
-    // Fetch all existing stations once
-    const existingStations = await base44.asServiceRole.entities.Station.list();
-    
-    // Build geospatial index for faster lookup
-    const stationsByProximity = {};
-    for (const station of existingStations) {
-      const key = `${Math.round(station.latitude)}_${Math.round(station.longitude)}`;
-      if (!stationsByProximity[key]) stationsByProximity[key] = [];
-      stationsByProximity[key].push(station);
+    // Fetch existing stations only if doing actual import (not dryRun)
+    let stationsByProximity = {};
+    if (!dryRun) {
+      const existingStations = await base44.asServiceRole.entities.Station.list();
+      
+      // Build geospatial index for faster lookup
+      for (const station of existingStations) {
+        const key = `${Math.round(station.latitude)}_${Math.round(station.longitude)}`;
+        if (!stationsByProximity[key]) stationsByProximity[key] = [];
+        stationsByProximity[key].push(station);
+      }
     }
     
     const results = {
