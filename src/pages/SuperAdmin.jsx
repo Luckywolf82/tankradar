@@ -122,8 +122,14 @@ export default function SuperAdmin() {
         </div>
       </div>
 
+      {/* Operativ oversikt */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Operativ oversikt</p>
+      <DataSourceStatus />
+      <ReviewQueueSummary />
+      <StationDiscoveryQueue />
+
       {/* Aktive driftssider */}
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Aktive driftssider</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 mt-2">Driftssider</p>
       {activeSections.map(section => (
         <AdminSection key={section.title} {...section} />
       ))}
