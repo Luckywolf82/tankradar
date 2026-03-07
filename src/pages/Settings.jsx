@@ -87,6 +87,22 @@ export default function Settings() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dev Tools */}
+      <Card className="mb-6 border-slate-300">
+        <CardHeader>
+          <CardTitle className="text-slate-600 text-base flex items-center gap-2">
+            <FlaskConical size={16} /> Diagnostikk
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Link to={createPageUrl("ExternalBrowserTest")}>
+            <Button variant="outline" className="w-full">
+              Browser Handoff Test
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+
       {/* App Info */}
       <Card>
         <CardHeader>
