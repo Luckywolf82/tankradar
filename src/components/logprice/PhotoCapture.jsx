@@ -40,13 +40,8 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
   const browserUrl = window.location.href;
 
   const handleCameraClick = () => {
-    const hasMedian = typeof window.median !== "undefined";
-    if (hasMedian) {
-      setDiag(null);
-      setShowDialog(true);
-    } else {
-      fileRef.current.click();
-    }
+    // Alltid prøv file-input direkte — fungerer i Android WebView med onShowFileChooser
+    fileRef.current.click();
   };
 
   const handleFile = (e) => {
