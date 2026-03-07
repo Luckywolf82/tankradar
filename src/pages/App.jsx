@@ -16,6 +16,7 @@ import Settings from "./Settings";
 import Profile from "./Profile";
 import ReviewQueue from "./ReviewQueue";
 import SuperAdmin from "./SuperAdmin";
+import SystemStatus from "./SystemStatus";
 
 // Admin / diagnostic pages (all require admin role)
 import ComponentNamingReview from "./ComponentNamingReview";
