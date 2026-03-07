@@ -13,7 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const sections = [
+const activeSections = [
   {
     title: "System Overview",
     icon: ShieldCheck,
@@ -21,18 +21,8 @@ const sections = [
     bg: "bg-green-50",
     pages: [
       { label: "Systemstatus", page: "SystemStatus", desc: "Nøkkeltall for data, matching og systemhelse" },
-    ],
-  },
-  {
-    title: "Data",
-    icon: Database,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    pages: [
       { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
       { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
-      { label: "Data Consistency Diagnosis", page: "DataConsistencyDiagnosis", desc: "Konsistenssjekk på tvers av entiteter" },
-      { label: "Backfill Assessment", page: "BackfillAssessment", desc: "Vurdering av historisk backfill" },
     ],
   },
   {
@@ -46,38 +36,29 @@ const sections = [
       { label: "User Reported System Integration", page: "UserReportedSystemIntegrationReport", desc: "Systemintegrasjonsrapport" },
     ],
   },
+];
+
+const archiveSections = [
   {
-    title: "System & Produksjon",
-    icon: ShieldCheck,
-    color: "text-green-600",
-    bg: "bg-green-50",
-    pages: [
-      { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
-      { label: "Verification Report", page: "VerificationReport_UserReportedEnhancements", desc: "Verifikasjonsrapport user reported" },
-      { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
-      { label: "Implementation Report", page: "ImplementationReport_UserReportedPolicy", desc: "Implementasjonsrapport" },
-    ],
-  },
-  {
-    title: "Mobil & UX",
-    icon: Smartphone,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-    pages: [
-      { label: "Mobile UX Enhancement Report", page: "MobileUXEnhancementReport", desc: "Forbedringer i mobil-UX" },
-      { label: "Mobile Implementation Report", page: "MobileImplementationReport", desc: "Implementasjonsrapport for mobil" },
-    ],
-  },
-  {
-    title: "Rapporter & Revisjoner",
+    title: "Arkiv / Dokumentasjon",
     icon: FileText,
     color: "text-slate-600",
     bg: "bg-slate-50",
     pages: [
+      { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
+      { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
+      { label: "Verification Report", page: "VerificationReport_UserReportedEnhancements", desc: "Verifikasjonsrapport user reported" },
+      { label: "Implementation Report", page: "ImplementationReport_UserReportedPolicy", desc: "Implementasjonsrapport" },
+      { label: "Mobile UX Enhancement Report", page: "MobileUXEnhancementReport", desc: "Forbedringer i mobil-UX" },
+      { label: "Mobile Implementation Report", page: "MobileImplementationReport", desc: "Implementasjonsrapport for mobil" },
       { label: "Component Naming Review", page: "ComponentNamingReview", desc: "Gjennomgang av komponentnavn" },
     ],
   },
 ];
+
+// Skjult fra hovedvisning (tilgjengelig via URL, krever admin)
+// - DataConsistencyDiagnosis (/dataconsistencydiagnosis)
+// - BackfillAssessment (/backfillassessment)
 
 function AdminSection({ title, icon: Icon, color, bg, pages }) {
   return (

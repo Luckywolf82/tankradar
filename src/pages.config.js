@@ -60,15 +60,15 @@ import LogPrice from './pages/LogPrice';
 import MobileImplementationReport from './pages/MobileImplementationReport';
 import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
+import Profile from './pages/Profile';
+import ReviewQueue from './pages/ReviewQueue';
 import Settings from './pages/Settings';
 import Statistics from './pages/Statistics';
+import SuperAdmin from './pages/SuperAdmin';
+import SystemStatus from './pages/SystemStatus';
 import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import Profile from './pages/Profile';
-import ReviewQueue from './pages/ReviewQueue';
-import SuperAdmin from './pages/SuperAdmin';
-import SystemStatus from './pages/SystemStatus';
 import __Layout from './Layout.jsx';
 
 
@@ -86,15 +86,15 @@ export const PAGES = {
     "MobileImplementationReport": MobileImplementationReport,
     "MobileUXEnhancementReport": MobileUXEnhancementReport,
     "ProductionModelLockdown": ProductionModelLockdown,
+    "Profile": Profile,
+    "ReviewQueue": ReviewQueue,
     "Settings": Settings,
     "Statistics": Statistics,
+    "SuperAdmin": SuperAdmin,
+    "SystemStatus": SystemStatus,
     "UserReportedScanOperations": UserReportedScanOperations,
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "Profile": Profile,
-    "ReviewQueue": ReviewQueue,
-    "SuperAdmin": SuperAdmin,
-    "SystemStatus": SystemStatus,
 }
 
 export const pagesConfig = {
