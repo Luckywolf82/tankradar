@@ -17,48 +17,48 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 export default function StationPicker({ onSelectStation, onSkip }) {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // 'location_error' or 'no_stations_found'
   const [stations, setStations] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
 
-  useEffect(() => {
-    const loadNearbyStations = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadNearbyStations = async () => {
+    try {
+      setLoading(true);
+      setErrorType(null);
 
-        // Get user location
-        const pos = await new Promise((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
-        );
-        const { latitude, longitude } = pos.coords;
-        setUserLocation({ latitude, longitude });
+      // Get user location
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+      );
+      const { latitude, longitude } = pos.coords;
+      setUserLocation({ latitude, longitude });
 
-        // Fetch all stations (no filter — we'll sort by distance locally)
-        const allStations = await base44.entities.Station.list();
+      // Fetch all stations (no filter — we'll sort by distance locally)
+      const allStations = await base44.entities.Station.list();
 
-        // Calculate distance and filter to nearby (10km radius)
-        const nearbyWithDistance = allStations
-          .map(s => ({
-            ...s,
-            distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
-          }))
-          .filter(s => s.distance <= 10)
-          .sort((a, b) => a.distance - b.distance)
-          .slice(0, 10);
+      // Calculate distance and filter to nearby (10km radius)
+      const nearbyWithDistance = allStations
+        .map(s => ({
+          ...s,
+          distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
+        }))
+        .filter(s => s.distance <= 10)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 10);
 
-        setStations(nearbyWithDistance);
-        if (nearbyWithDistance.length === 0) {
-          setError("Ingen stasjoner funnet i nærheten. Prøv igjen eller skriv inn manuelt.");
-        }
-      } catch (err) {
-        setError("Kunne ikke hente posisjonen din. Prøv igjen eller skriv inn manuelt.");
-        console.error(err);
-      } finally {
-        setLoading(false);
+      setStations(nearbyWithDistance);
+      if (nearbyWithDistance.length === 0) {
+        setErrorType("no_stations_found");
       }
-    };
+    } catch (err) {
+      setErrorType("location_error");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadNearbyStations();
   }, []);
 
@@ -93,13 +93,55 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           </div>
         )}
 
-        {error && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-amber-800">{error}</p>
+        {errorType === "location_error" && (
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-red-800 mb-1">Posisjonen kunne ikke hentes</p>
+              <p className="text-xs text-red-700">Sjekk at appen har tilgang til posisjonen din.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={loadNearbyStations}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Prøv igjen
+              </Button>
+              <Button
+                onClick={onSkip}
+                variant="outline"
+                className="flex-1"
+              >
+                Skriv inn manuelt
+              </Button>
+            </div>
           </div>
         )}
 
-        {!loading && stations.length > 0 && (
+        {errorType === "no_stations_found" && (
+          <div className="space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-amber-800 mb-1">Ingen stasjoner funnet</p>
+              <p className="text-xs text-amber-700">Vi fant ingen stasjoner innen 10 km. Prøv igjen eller skriv inn manuelt.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={loadNearbyStations}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Prøv igjen
+              </Button>
+              <Button
+                onClick={onSkip}
+                variant="outline"
+                className="flex-1"
+              >
+                Skriv inn manuelt
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!loading && !errorType && stations.length > 0 && (
           <div className="space-y-2 mb-4">
             {stations.map(station => (
               <button
@@ -128,13 +170,15 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           </div>
         )}
 
-        <Button
-          onClick={onSkip}
-          variant="outline"
-          className="w-full"
-        >
-          Skriv inn pris manuelt
-        </Button>
+        {!loading && !errorType && stations.length === 0 && (
+          <Button
+            onClick={onSkip}
+            variant="outline"
+            className="w-full"
+          >
+            Skriv inn pris manuelt
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
