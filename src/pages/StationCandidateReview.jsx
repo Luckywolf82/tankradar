@@ -199,7 +199,7 @@ export default function StationCandidateReview() {
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => handleApprove(candidate, selectedNames[group.groupId] ? group.candidates.find(c => c.id === selectedNames[group.groupId])?.proposedName : null)}
+                              onClick={() => handleApprove(candidate, selectedNames[group.groupId] ? group.candidates.find(c => c.id === selectedNames[group.groupId])?.proposedName : null, group.candidates)}
                               size="sm"
                               className="bg-green-600 hover:bg-green-700"
                             >
