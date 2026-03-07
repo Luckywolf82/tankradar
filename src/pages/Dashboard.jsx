@@ -9,6 +9,7 @@ import SmartFillIndicator from "../components/dashboard/SmartFillIndicator";
 import LiveMarketStats from "../components/dashboard/LiveMarketStats";
 import PriceChangeIndicator from "../components/dashboard/PriceChangeIndicator";
 import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
+import NearbyPrices from "../components/dashboard/NearbyPrices";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
