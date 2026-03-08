@@ -50,6 +50,7 @@ const activeSections = [
     bg: "bg-blue-50",
     pages: [
       { label: "Validate Station Data", page: "ValidateStationData", desc: "Sjekk dubletter og datakvalitet i Station-tabell" },
+      { label: "Generiske navn — gruppering", page: "GenericNameGroupsReport", desc: "Grupper stasjoner med generiske navn etter prefix og geografisk nærhet" },
       { label: "Coverage Report", page: "CoverageReport", desc: "Datadekning per kilde og region" },
       { label: "Data Quality Diagnostics", page: "DataQualityDiagnostics", desc: "Kvalitetsstatus på prisdata" },
     ],
