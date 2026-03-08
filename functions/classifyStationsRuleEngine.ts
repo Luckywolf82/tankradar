@@ -1,5 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// ─── FEATURE FLAGS ────────────────────────────────────────────────────────────
+const ENABLE_DUPLICATE_DETECTION = false;
+const ENABLE_NEARBY_CHAIN_MATCH = false;
+
 // ─── SHARED RULE ENGINE CONFIG ────────────────────────────────────────────────
 
 const FOREIGN_PATTERNS = [
@@ -187,6 +191,7 @@ const SKIP_NEARBY = new Set(['possible_foreign', 'marine_service', 'special_type
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const totalStart = Date.now();
   try {
     const base44 = createClientFromRequest(req);
     const isScheduled = req.headers.get('x-automation-source') === 'scheduled';
@@ -197,7 +202,11 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // ── Hent alle stasjoner ──
+    // ── RUN LIMIT ──
+    const RUN_LIMIT = 200;
+
+    // ── Fetch stations ──
+    let t = Date.now();
     let allStations = [];
     let page = 0;
     while (true) {
@@ -207,8 +216,10 @@ Deno.serve(async (req) => {
       if (batch.length < 500) break;
       page++;
     }
+    console.log(`[timing] fetch stations: ${Date.now() - t}ms (n=${allStations.length})`);
 
-    // ── Hent kun pending reviews ──
+    // ── Fetch pending reviews ──
+    t = Date.now();
     let allPendingReviews = [];
     page = 0;
     while (true) {
@@ -218,8 +229,8 @@ Deno.serve(async (req) => {
       if (batch.length < 500) break;
       page++;
     }
-
     const pendingBefore = allPendingReviews.length;
+    console.log(`[timing] fetch pending reviews: ${Date.now() - t}ms (n=${pendingBefore})`);
 
     // Map: stationId → pending reviews
     const pendingByStation = {};
@@ -228,54 +239,61 @@ Deno.serve(async (req) => {
       pendingByStation[r.stationId].push(r);
     }
 
-    // ── O(n) duplicate detection via spatial grid ──
-    // Grid cell ≈ 1km — check same + adjacent cells
-    const spatialGrid = {};  // gridKey → [station]
-    for (const s of allStations) {
-      if (!s.latitude || !s.longitude) continue;
-      const key = gridKey(s.latitude, s.longitude);
-      if (!spatialGrid[key]) spatialGrid[key] = [];
-      spatialGrid[key].push(s);
-    }
+    // Limit stations to process
+    const stationsToProcess = allStations.slice(0, RUN_LIMIT);
+    console.log(`[timing] processing ${stationsToProcess.length} of ${allStations.length} stations (RUN_LIMIT=${RUN_LIMIT})`);
 
+    // ── Duplicate detection (spatial grid) ──
+    t = Date.now();
     const duplicateFlaggedIds = new Set();
     const duplicatePairs = [];
 
-    for (const s of allStations) {
-      if (!s.latitude || !s.longitude) continue;
-      const baseLat = Math.floor(s.latitude * 90);
-      const baseLon = Math.floor(s.longitude * 55);
-      // Check own cell + 8 neighbors
-      for (let dlat = -1; dlat <= 1; dlat++) {
-        for (let dlon = -1; dlon <= 1; dlon++) {
-          const neighbors = spatialGrid[`${baseLat + dlat}_${baseLon + dlon}`] || [];
-          for (const other of neighbors) {
-            if (other.id <= s.id) continue; // avoid double-counting
-            const dist = haversineMeters(s.latitude, s.longitude, other.latitude, other.longitude);
-            if (dist < 50 && norm(s.name) === norm(other.name)) {
-              duplicateFlaggedIds.add(other.id);
-              duplicatePairs.push({ a: { id: s.id, name: s.name }, b: { id: other.id, name: other.name }, distanceMeters: Math.round(dist) });
+    if (ENABLE_DUPLICATE_DETECTION) {
+      const spatialGrid = {};
+      for (const s of stationsToProcess) {
+        if (!s.latitude || !s.longitude) continue;
+        const key = gridKey(s.latitude, s.longitude);
+        if (!spatialGrid[key]) spatialGrid[key] = [];
+        spatialGrid[key].push(s);
+      }
+      for (const s of stationsToProcess) {
+        if (!s.latitude || !s.longitude) continue;
+        const baseLat = Math.floor(s.latitude * 90);
+        const baseLon = Math.floor(s.longitude * 55);
+        for (let dlat = -1; dlat <= 1; dlat++) {
+          for (let dlon = -1; dlon <= 1; dlon++) {
+            const neighbors = spatialGrid[`${baseLat + dlat}_${baseLon + dlon}`] || [];
+            for (const other of neighbors) {
+              if (other.id <= s.id) continue;
+              const dist = haversineMeters(s.latitude, s.longitude, other.latitude, other.longitude);
+              if (dist < 50 && norm(s.name) === norm(other.name)) {
+                duplicateFlaggedIds.add(other.id);
+                duplicatePairs.push({ a: { id: s.id, name: s.name }, b: { id: other.id, name: other.name }, distanceMeters: Math.round(dist) });
+              }
             }
           }
         }
       }
     }
+    console.log(`[timing] duplicate detection (enabled=${ENABLE_DUPLICATE_DETECTION}): ${Date.now() - t}ms (pairs=${duplicatePairs.length})`);
 
-    // ── O(n) nearby same-chain via chain bucket ──
-    // chain → [station with lat/lon]
+    // ── Chain bucket / nearby prep ──
+    t = Date.now();
     const chainBuckets = {};
-    for (const s of allStations) {
-      if (!s.chain || !s.latitude || !s.longitude) continue;
-      if (!chainBuckets[s.chain]) chainBuckets[s.chain] = [];
-      chainBuckets[s.chain].push(s);
+    if (ENABLE_NEARBY_CHAIN_MATCH) {
+      for (const s of allStations) {
+        if (!s.chain || !s.latitude || !s.longitude) continue;
+        if (!chainBuckets[s.chain]) chainBuckets[s.chain] = [];
+        chainBuckets[s.chain].push(s);
+      }
     }
+    console.log(`[timing] chain bucket / nearby prep (enabled=${ENABLE_NEARBY_CHAIN_MATCH}): ${Date.now() - t}ms`);
 
     const NEARBY_DISTANCE_M = 80;
     const NEARBY_SIMILARITY = 0.88;
 
-    // For each station: check if any same-chain station is within threshold
-    // Returns candidate name if found, null otherwise
     const findNearbyChainMatch = (station, classificationChain) => {
+      if (!ENABLE_NEARBY_CHAIN_MATCH) return null;
       const chain = classificationChain || station.chain;
       if (!chain || !station.latitude || !station.longitude) return null;
       const bucket = chainBuckets[chain] || [];
@@ -289,7 +307,8 @@ Deno.serve(async (req) => {
       return null;
     };
 
-    // ── Classify + build review changes ──
+    // ── Classification loop ──
+    t = Date.now();
     const classCounts = {
       secure_chain: 0, local_chain: 0, special_type: 0,
       marine_service: 0, retail_operator: 0, generic_name: 0,
@@ -307,24 +326,30 @@ Deno.serve(async (req) => {
     const reviewResolutions = [];
     const reviewCreations = [];
 
-    for (const station of allStations) {
+    for (const station of stationsToProcess) {
       const result = classifyStation(station.name);
       classCounts[result.classification] = (classCounts[result.classification] || 0) + 1;
 
       if (result.classification === 'possible_foreign') details.possible_foreign.push({ id: station.id, name: station.name });
       if (result.classification === 'generic_name') details.generic_name.push({ id: station.id, name: station.name });
 
-      // Station field updates
+      // Station field updates — only push if there are actual changes
       const stationUpdate = {};
-      if (result.chain) stationUpdate.chain = result.chain;
-      if (result.operator && !station.operator) stationUpdate.operator = result.operator;
-      if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType)
+      if (result.chain && station.chain !== result.chain) stationUpdate.chain = result.chain;
+      if (result.operator && station.operator !== result.operator) stationUpdate.operator = result.operator;
+      if (
+        result.stationType &&
+        result.stationType !== 'unknown' &&
+        result.stationType !== null &&
+        station.stationType !== result.stationType
+      ) {
         stationUpdate.stationType = result.stationType;
+      }
       if (Object.keys(stationUpdate).length > 0) stationUpdates.push({ id: station.id, update: stationUpdate });
 
       const existingPending = pendingByStation[station.id] || [];
 
-      // 1. Nearby same-chain auto-resolve
+      // 1. Nearby same-chain auto-resolve (guarded by flag)
       if (!SKIP_NEARBY.has(result.classification)) {
         const nearby = findNearbyChainMatch(station, result.chain);
         if (nearby) {
@@ -444,8 +469,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 7. Duplicate candidates (status=duplicate_candidate, not pending — doesn't inflate queue)
-      if (duplicateFlaggedIds.has(station.id)) {
+      // 7. Duplicate candidates (status=duplicate_candidate, not pending)
+      if (ENABLE_DUPLICATE_DETECTION && duplicateFlaggedIds.has(station.id)) {
         const existingDup = existingPending.find(r => r.review_type === 'duplicate_candidate');
         if (!existingDup) {
           reviewCreations.push({
@@ -461,8 +486,10 @@ Deno.serve(async (req) => {
         }
       }
     }
+    console.log(`[timing] classification loop: ${Date.now() - t}ms (updates=${stationUpdates.length} resolutions=${reviewResolutions.length} creations=${reviewCreations.length})`);
 
-    // ── Write station updates in batches (no per-record sleep) ──
+    // ── Station updates ──
+    t = Date.now();
     const BATCH = 40;
     let stationsUpdated = 0;
     for (let i = 0; i < stationUpdates.length; i += BATCH) {
@@ -472,33 +499,42 @@ Deno.serve(async (req) => {
       if (i + BATCH < stationUpdates.length) await new Promise(r => setTimeout(r, 60));
     }
     lifecycle.stationsUpdated = stationsUpdated;
+    console.log(`[timing] station updates: ${Date.now() - t}ms (wrote=${stationsUpdated})`);
 
-    // ── Write review resolutions in batches ──
+    // ── Review resolutions ──
+    t = Date.now();
     for (let i = 0; i < reviewResolutions.length; i += BATCH) {
       await Promise.all(reviewResolutions.slice(i, i + BATCH).map(({ id, update }) =>
         base44.asServiceRole.entities.StationReview.update(id, update).catch(() => {})
       ));
       if (i + BATCH < reviewResolutions.length) await new Promise(r => setTimeout(r, 60));
     }
+    console.log(`[timing] review resolutions: ${Date.now() - t}ms (n=${reviewResolutions.length})`);
 
-    // ── Bulk create new reviews ──
+    // ── Review creations ──
+    t = Date.now();
     const CREATE_BATCH = 50;
     for (let i = 0; i < reviewCreations.length; i += CREATE_BATCH) {
       await base44.asServiceRole.entities.StationReview.bulkCreate(reviewCreations.slice(i, i + CREATE_BATCH)).catch(e => console.error('bulkCreate failed:', e.message));
       if (i + CREATE_BATCH < reviewCreations.length) await new Promise(r => setTimeout(r, 80));
     }
+    console.log(`[timing] review creations: ${Date.now() - t}ms (n=${reviewCreations.length})`);
 
     const totalAutoResolved = lifecycle.chainReviewsAutoResolved + lifecycle.specialTypeResolved + lifecycle.nearbyAutoResolved;
     const totalNewPending = lifecycle.foreignCreated + lifecycle.genericCreated + lifecycle.chainUnconfirmedCreated;
     const netChange = totalNewPending - totalAutoResolved;
+    const totalMs = Date.now() - totalStart;
 
-    console.log(`[classifyRuleEngine] n=${allStations.length} | updated=${stationsUpdated} | autoResolved=${totalAutoResolved} | newPending=${totalNewPending} | net=${netChange > 0 ? '+' : ''}${netChange}`);
+    console.log(`[timing] TOTAL: ${totalMs}ms | n=${allStations.length} processed=${stationsToProcess.length} | autoResolved=${totalAutoResolved} newPending=${totalNewPending} net=${netChange > 0 ? '+' : ''}${netChange}`);
 
     return Response.json({
       success: true,
       summary: {
         totalStations: allStations.length,
+        processedStations: stationsToProcess.length,
+        runLimit: RUN_LIMIT,
         stationUpdates: stationsUpdated,
+        totalRuntimeMs: totalMs,
         lifecycle: {
           pendingBefore,
           autoResolved: {
@@ -529,6 +565,10 @@ Deno.serve(async (req) => {
           chain_unconfirmed: classCounts.unclassified,
           possible_duplicate: duplicatePairs.length,
         },
+        featureFlags: {
+          ENABLE_DUPLICATE_DETECTION,
+          ENABLE_NEARBY_CHAIN_MATCH,
+        },
       },
       details: {
         possible_foreign: details.possible_foreign,
@@ -538,6 +578,7 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
+    console.log(`[timing] TOTAL (error): ${Date.now() - totalStart}ms`);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
