@@ -171,7 +171,9 @@ export default function ChainUnconfirmedManualReviewUI() {
         </div>
       )}
 
-      {candidate && !appliedDecision && (
+      {candidate && !appliedDecision && (() => {
+        const externalLinks = buildExternalLinks(candidate);
+        return (
         <Card className="border-l-4 border-l-purple-400">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -218,6 +220,61 @@ export default function ChainUnconfirmedManualReviewUI() {
                 )}
               </div>
             </div>
+
+            {(externalLinks.googleListing || externalLinks.googleMapsSearch || externalLinks.website || externalLinks.streetView) && (
+              <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                <div className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-1">
+                  <ExternalLink className="w-4 h-4" />
+                  External Links
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {externalLinks.googleListing && (
+                    <a
+                      href={externalLinks.googleListing}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-white border border-blue-200 rounded text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      Google Listing
+                    </a>
+                  )}
+                  {externalLinks.googleMapsSearch && (
+                    <a
+                      href={externalLinks.googleMapsSearch}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-white border border-blue-200 rounded text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      Maps Search
+                    </a>
+                  )}
+                  {externalLinks.website && (
+                    <a
+                      href={externalLinks.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-white border border-blue-200 rounded text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <Globe className="w-3 h-3" />
+                      Website
+                    </a>
+                  )}
+                  {externalLinks.streetView && (
+                    <a
+                      href={externalLinks.streetView}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-white border border-blue-200 rounded text-xs font-medium text-blue-700 hover:bg-blue-50 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      Street View
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="bg-blue-50 p-3 rounded border border-blue-200">
               <div className="text-sm font-semibold text-blue-900 mb-2">Recommended: {candidate.recommendedManualAction.replace(/_/g, ' ')}</div>
