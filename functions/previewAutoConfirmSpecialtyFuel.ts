@@ -45,10 +45,15 @@ const CONFLICT_SIGNALS = [
 const SERVICE_SIGNALS = [
   { pattern: /\bverksted\b/i, label: 'verksted' },
   { pattern: /\bværksted\b/i, label: 'verksted' },
+  { pattern: /\blandbruksverksted\b/i, label: 'landbruksverksted' },
   { pattern: /\bbil\b/i, label: 'bil' },
   { pattern: /\bmotor\b/i, label: 'motor' },
   { pattern: /\btraktor\b/i, label: 'traktor' },
   { pattern: /\bservice\b/i, label: 'service' },
+  { pattern: /\bvarmeservice\b/i, label: 'varmeservice' },
+  { pattern: /\bsanitær\b/i, label: 'sanitær' },
+  { pattern: /\bsanitar\b/i, label: 'sanitær' },
+  { pattern: /\bbobilsenter\b/i, label: 'bobilsenter' },
 ];
 
 const detectSignals = (name, signalList) => {
