@@ -392,6 +392,48 @@ export default function StationCandidateReview() {
             Kjører én batch på 80 stk manuelt. Automatisk scheduled kjøring hvert 5. minutt tar resten — ingen manuell oppfølging nødvendig.
           </p>
         </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
+              setAutoProcessing(true);
+              console.log('[Pipeline UI] Starting full review pipeline...');
+              try {
+                const result = await base44.functions.invoke('runStationReviewPipeline');
+                const data = result.data;
+                console.log('[Pipeline UI] Full result:', data);
+                for (const step of data?.results || []) {
+                  console.log(`[Pipeline UI] Step ${step.step} ${step.functionName}`, {
+                    success: step.success,
+                    durationMs: step.durationMs,
+                    payload: step.payload,
+                    response: step.response,
+                    error: step.error,
+                  });
+                }
+                console.log('[Pipeline UI] Final summary:', {
+                  totalDurationMs: data?.totalDurationMs,
+                  stepsRun: data?.stepsRun,
+                  stepsSucceeded: data?.stepsSucceeded,
+                  stepsFailed: data?.stepsFailed,
+                });
+                loadCandidates();
+              } catch (e) {
+                console.error('[Pipeline UI] Full pipeline failed:', e);
+              } finally {
+                setAutoProcessing(false);
+              }
+            }}
+            disabled={autoProcessing}
+            className="bg-sky-700 hover:bg-sky-800 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Kjører pipeline...' : 'Kjør full review pipeline'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Kjører alle 8 automatiske review-funksjoner sekvensielt i riktig rekkefølge. Detaljerte resultater logges til nettleserkonsollen.
+          </p>
+        </div>
       </div>
 
       {/* Rule engine results */}
