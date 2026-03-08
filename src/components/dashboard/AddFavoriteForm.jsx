@@ -44,23 +44,28 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
   const loadStations = async () => {
     setLoading(true);
     try {
-      // Try to get user location
+      // Try to get user location with timeout
       let location = null;
       try {
         location = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Geolocation timeout')), 5000);
           navigator.geolocation.getCurrentPosition(
             (position) => {
+              clearTimeout(timeout);
               resolve({
                 lat: position.coords.latitude,
                 lon: position.coords.longitude,
               });
             },
-            () => reject(new Error('Geolocation denied'))
+            (error) => {
+              clearTimeout(timeout);
+              reject(error);
+            }
           );
         });
         setUserLocation(location);
       } catch (locErr) {
-        console.log('[AddFavoriteForm] Geolocation not available');
+        console.log('[AddFavoriteForm] Geolocation not available:', locErr.message);
       }
 
       const stationList = await base44.entities.Station.list('-updated_date', 500);
