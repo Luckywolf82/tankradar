@@ -340,7 +340,7 @@ export default function ChainUnconfirmedManualReviewUI() {
         );
       })()}
 
-      {loading && (
+      {loading && !candidate && (
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-center gap-2 text-gray-600">
