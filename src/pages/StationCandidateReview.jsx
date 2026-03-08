@@ -396,6 +396,38 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Reclassify UI] Previewing review reclassification (dry run)...');
+              try {
+                const result = await base44.functions.invoke('previewStationReviewReclassification', { dryRun: true });
+                const data = result.data;
+                console.log('[Reclassify UI] Full result:', data);
+                console.log('[Reclassify UI] Summary:', data?.summary);
+                for (const p of data?.proposals || []) {
+                  console.log(`[Reclassify UI] ${p.currentReviewType} → ${p.targetReviewType} | ${p.stationName}`, {
+                    analysisBucket: p.analysisBucket,
+                    safeToReclassify: p.safeToReclassify,
+                    blocked: p.blockedByMissingReviewType,
+                    reasonTags: p.reasonTags,
+                    explanation: p.explanation,
+                  });
+                }
+              } catch (e) {
+                console.error('[Reclassify UI] Preview failed:', e);
+              }
+            }}
+            className="bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Preview review reclassification
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Dry run — ingen data endres. Viser hvilke pending reviews som trygt kan reklassifiseres. Resultater logges til konsollen.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Analyze UI] Fetching pending review analysis...');
               try {
                 const result = await base44.functions.invoke('analyzePendingStationReviews');
