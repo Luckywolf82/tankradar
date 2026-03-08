@@ -297,6 +297,9 @@ export default function StationCandidateReview() {
       {/* Consistency Check */}
       <ReviewConsistencyCheck />
 
+      {/* Manual Chain-Unconfirmed Review Workflow */}
+      <ChainUnconfirmedManualReviewUI />
+
       {/* Auto-approve exact duplicates */}
       <div className="mb-6 space-y-3">
         <div>
