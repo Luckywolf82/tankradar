@@ -100,6 +100,16 @@ const mapSemanticToReviewType = (semanticBucket, station) => {
     };
   }
 
+  // Check for retail operator + already set → retail_fuel_operator_review (safe resolution)
+  // This takes priority over local_fuel_site to avoid false positives like "Esspartner Drivstoff"
+  if (station.operator && station.stationType === 'retail_fuel') {
+    return {
+      targetReviewType: 'retail_fuel_operator_review',
+      safeToReclassify: true,
+      explanation: `Already retail_fuel with operator "${station.operator}" - safe to reclassify away from chain_unconfirmed`,
+    };
+  }
+
   // Local fuel site → local_fuel_site_review
   if (semanticBucket === 'likely_local_fuel_site') {
     return {
@@ -118,16 +128,8 @@ const mapSemanticToReviewType = (semanticBucket, station) => {
     };
   }
 
-  // Retail operator with operator already set → retail_fuel_operator_review (safe resolution)
+  // Retail operator signals (without operator already set)
   if (semanticBucket === 'likely_retail_fuel_operator') {
-    if (station.operator && station.stationType === 'retail_fuel') {
-      return {
-        targetReviewType: 'retail_fuel_operator_review',
-        safeToReclassify: true,
-        explanation: `Already retail_fuel with operator "${station.operator}" - safe to reclassify away from chain_unconfirmed`,
-      };
-    }
-    // If no operator or wrong type, cannot safely reclassify
     return {
       targetReviewType: null,
       safeToReclassify: false,
