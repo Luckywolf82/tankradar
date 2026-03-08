@@ -311,6 +311,54 @@ export default function StationCandidateReview() {
         </div>
       </div>
 
+      {/* Rule engine results */}
+      {ruleEngineResult && (
+        <div className="mb-6 p-4 bg-violet-50 border border-violet-200 rounded-lg">
+          <h3 className="font-semibold text-violet-900 mb-3">Regelmotor — klassifiseringsresultat</h3>
+          <div className="grid grid-cols-3 gap-3 mb-4 text-center">
+            {[
+              { label: 'Sikre kjeder', key: 'secure_chain', color: 'text-green-600' },
+              { label: 'Lokale kjeder', key: 'local_chain', color: 'text-blue-600' },
+              { label: 'Spesialtyper', key: 'special_type', color: 'text-amber-600' },
+              { label: 'Retail/operatør', key: 'retail_operator', color: 'text-orange-600' },
+              { label: 'Generisk navn', key: 'generic_name', color: 'text-red-600' },
+              { label: 'Mulig utland', key: 'possible_foreign', color: 'text-red-800' },
+              { label: 'Uklassifisert', key: 'chain_unconfirmed', color: 'text-gray-500' },
+            ].map(({ label, key, color }) => (
+              <div key={key} className="bg-white rounded p-2 border">
+                <div className={`text-2xl font-bold ${color}`}>{ruleEngineResult.summary?.perClassification?.[key] ?? 0}</div>
+                <div className="text-xs text-gray-600">{label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="text-sm text-gray-700 mb-2">
+            <strong>Stasjoner oppdatert:</strong> {ruleEngineResult.summary?.stationUpdates ?? 0} av {ruleEngineResult.summary?.totalStations ?? 0}
+          </div>
+          <div className="text-sm text-gray-700 mb-3">
+            <strong>Reviews oppdatert med reviewReason:</strong> {ruleEngineResult.summary?.reviewsUpdated ?? 0}
+          </div>
+          {ruleEngineResult.details?.possible_foreign?.length > 0 && (
+            <div className="mb-3 bg-red-50 border border-red-200 rounded p-3">
+              <div className="text-sm font-semibold text-red-800 mb-1">Mulige utenlandske poster:</div>
+              {ruleEngineResult.details.possible_foreign.map(s => (
+                <div key={s.id} className="text-sm text-red-700">⚑ {s.name}</div>
+              ))}
+            </div>
+          )}
+          {ruleEngineResult.details?.generic_name?.length > 0 && (
+            <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded p-3">
+              <div className="text-sm font-semibold text-yellow-800 mb-1">Generiske navn flagget til review:</div>
+              {ruleEngineResult.details.generic_name.map(s => (
+                <div key={s.id} className="text-sm text-yellow-700">⚠ {s.name}</div>
+              ))}
+            </div>
+          )}
+          <button onClick={() => setRuleEngineResult(null)} className="text-sm text-gray-600 hover:text-gray-900 underline">
+            Lukk resultat
+          </button>
+        </div>
+      )}
+
       {/* Auto-chain results */}
       {autoChainResult && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
