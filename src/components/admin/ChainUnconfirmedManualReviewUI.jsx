@@ -337,7 +337,8 @@ export default function ChainUnconfirmedManualReviewUI() {
             </Button>
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
 
       {loading && (
         <Card>
