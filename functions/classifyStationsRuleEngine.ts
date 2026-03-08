@@ -297,7 +297,7 @@ const classifyStation = (stationName) => {
     if (matchesAny(stationName, patterns))
       return { classification: 'retail_fuel_operator', chain: null, operator, stationType: 'retail_fuel', reviewReason: 'retail_operator_detected' };
 
-  // 9. Generic name
+  // 10. Generic name
   if (GENERIC_LOCAL_PATTERNS.some(p => p.test(n)))
     return { classification: 'generic_name', chain: null, operator: null, stationType: 'unknown', reviewReason: 'generic_name' };
 
