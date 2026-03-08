@@ -284,6 +284,31 @@ export default function StationCandidateReview() {
             Fyller inn by og områdenavn automatisk fra stasjonsnavn der det er entydig.
           </p>
         </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
+              setAutoProcessing(true);
+              try {
+                const result = await base44.functions.invoke('classifyStationsRuleEngine');
+                setRuleEngineResult(result.data);
+                loadCandidates();
+              } catch (e) {
+                console.error('Rule engine failed:', e);
+              } finally {
+                setAutoProcessing(false);
+              }
+            }}
+            disabled={autoProcessing}
+            className="bg-violet-600 hover:bg-violet-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Klassifiserer...' : 'Kjør regelmotor (full klassifisering)'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Klassifiserer alle stasjoner i: sikre kjeder, lokale kjeder, spesialtyper, retail-operatører, generiske navn og mulige utenlandske poster.
+          </p>
+        </div>
       </div>
 
       {/* Auto-chain results */}
