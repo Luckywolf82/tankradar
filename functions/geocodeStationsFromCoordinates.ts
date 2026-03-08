@@ -45,31 +45,47 @@ const extractField = (components, type) => {
 
 Deno.serve(async (req) => {
   try {
+    // Støtter både admin-bruker (fra frontend) og scheduled automation (uten bruker)
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const isScheduled = req.headers.get('x-automation-source') === 'scheduled';
 
-    if (user?.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    if (!isScheduled) {
+      const user = await base44.auth.me();
+      if (user?.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
     }
 
     const body = await req.json().catch(() => ({}));
-    // requestsPerSecond: Google Geocoding API tillater 50 req/s, vi bruker 10 for å være sikre
-    const requestsPerSecond = body.requestsPerSecond || 10;
-    const delayMs = Math.ceil(1000 / requestsPerSecond);
+    // Batchstørrelse: 80 stk × ~120ms = ~10 sek — godt innenfor gateway timeout
+    const batchSize = body.batchSize || 80;
+    const delayMs = 120; // ~8 req/s, safe for Google Geocoding API
 
-    // Hent alle stasjoner som mangler adressedata men har koordinater
-    const allStations = await base44.asServiceRole.entities.Station.list('-created_date', 5000);
+    // Hent alle stasjoner som mangler adressedata men har koordinater (paginert)
+    let allStations = [];
+    let page = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.Station.list('-created_date', 500, page * 500);
+      if (!batch || batch.length === 0) break;
+      allStations = allStations.concat(batch);
+      if (batch.length < 500) break;
+      page++;
+    }
+
     const toGeocode = allStations.filter(s =>
       s.latitude && s.longitude &&
       (!s.address || !s.city || !s.postalCode)
     );
 
+    // Ta kun én batch per kjøring
+    const batch = toGeocode.slice(0, batchSize);
+    const remaining = toGeocode.length - batch.length;
+
     const results = { updated: [], failed: [] };
 
-    console.log(`[geocode] Starter geocoding av ${toGeocode.length} stasjoner (${delayMs}ms delay mellom kall)`);
+    console.log(`[geocode] Batch: ${batch.length} stk — gjenstår etter denne: ${remaining}`);
 
-    for (let i = 0; i < toGeocode.length; i++) {
-      const station = toGeocode[i];
+    for (const station of batch) {
       try {
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${station.latitude},${station.longitude}&language=no&key=${GOOGLE_API_KEY}`;
         const res = await fetch(url);
@@ -83,7 +99,6 @@ Deno.serve(async (req) => {
 
         const best = data.results[0];
         const components = best.address_components;
-
         const updates = {};
 
         if (!station.address) {
@@ -91,7 +106,6 @@ Deno.serve(async (req) => {
           const route = extractField(components, 'route');
           if (route) updates.address = streetNumber ? `${route} ${streetNumber}` : route;
         }
-
         if (!station.city) {
           const city =
             extractField(components, 'locality') ||
@@ -99,12 +113,10 @@ Deno.serve(async (req) => {
             extractField(components, 'administrative_area_level_2');
           if (city) updates.city = city;
         }
-
         if (!station.postalCode) {
           const postal = extractField(components, 'postal_code');
           if (postal) updates.postalCode = postal;
         }
-
         if (!station.region) {
           const region = normalizeRegion(components);
           if (region) updates.region = region;
@@ -115,10 +127,6 @@ Deno.serve(async (req) => {
           results.updated.push({ id: station.id, name: station.name, updates });
         }
 
-        if ((i + 1) % 100 === 0) {
-          console.log(`[geocode] Fremgang: ${i + 1}/${toGeocode.length} — oppdatert: ${results.updated.length}, feilet: ${results.failed.length}`);
-        }
-
         await new Promise(r => setTimeout(r, delayMs));
       } catch (err) {
         results.failed.push({ id: station.id, name: station.name, reason: err.message });
@@ -126,16 +134,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`[geocode] Ferdig! Oppdatert: ${results.updated.length}, feilet: ${results.failed.length}`);
+    console.log(`[geocode] Ferdig batch: oppdatert=${results.updated.length}, feilet=${results.failed.length}, gjenstår=${remaining}`);
 
     return Response.json({
       success: true,
       summary: {
         totalNeedingGeocode: toGeocode.length,
-        batchProcessed: toGeocode.length,
+        batchProcessed: batch.length,
         updated: results.updated.length,
         failed: results.failed.length,
-        skippedForNextRun: 0,
+        remaining,
+        done: remaining === 0,
       },
       details: {
         updated: results.updated.slice(0, 20),
