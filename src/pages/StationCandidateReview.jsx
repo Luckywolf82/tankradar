@@ -385,6 +385,44 @@ export default function StationCandidateReview() {
         </div>
       )}
 
+      {/* Geocode results */}
+      {geocodeResult && (
+        <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+          <h3 className="font-semibold text-teal-900 mb-3">Geocoding fra koordinater — resultat</h3>
+          <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4 text-center">
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-teal-600">{geocodeResult.summary?.updated ?? 0}</div>
+              <div className="text-xs text-gray-600">Oppdatert</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-red-500">{geocodeResult.summary?.failed ?? 0}</div>
+              <div className="text-xs text-gray-600">Feilet</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-gray-500">{geocodeResult.summary?.skippedForNextRun ?? 0}</div>
+              <div className="text-xs text-gray-600">Gjenstår (kjør igjen)</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-gray-700">{geocodeResult.summary?.totalNeedingGeocode ?? 0}</div>
+              <div className="text-xs text-gray-600">Totalt trenger geocoding</div>
+            </div>
+          </div>
+          {geocodeResult.details?.updated?.length > 0 && (
+            <div className="bg-white rounded p-3 border text-sm mb-2">
+              <div className="font-semibold text-teal-800 mb-1">Eksempler oppdatert:</div>
+              {geocodeResult.details.updated.slice(0, 5).map(s => (
+                <div key={s.id} className="text-gray-700">
+                  {s.name} → {Object.entries(s.updates).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                </div>
+              ))}
+            </div>
+          )}
+          <button onClick={() => setGeocodeResult(null)} className="text-sm text-gray-600 hover:text-gray-900 underline">
+            Lukk resultat
+          </button>
+        </div>
+      )}
+
       {/* Auto-chain results */}
       {autoChainResult && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
