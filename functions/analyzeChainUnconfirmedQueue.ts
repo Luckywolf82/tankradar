@@ -4,13 +4,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 const norm = (s) => (s || '').toLowerCase().replace(/[^\w\s]/g, '').trim();
 const normMatch = (s) => (s || '').toLowerCase().trim();
 
-// Chain keyword patterns
+// Chain keyword patterns (strict matching only)
 const CHAIN_PATTERNS = [
   {
     name: 'circle_k',
     bucket: 'likely_circle_k',
-    keywords: ['circle', 'circlekk', 'k'],
-    minConfidence: 0.7,
+    keywords: ['circle k', 'circlek'],
+    minConfidence: 0.85,
   },
   {
     name: 'shell',
@@ -33,8 +33,8 @@ const CHAIN_PATTERNS = [
   {
     name: 'uno-x',
     bucket: 'likely_unox',
-    keywords: ['unox', 'uno-x', 'uno x'],
-    minConfidence: 0.8,
+    keywords: ['unox', 'uno-x'],
+    minConfidence: 0.85,
   },
   {
     name: 'yx',
@@ -45,8 +45,8 @@ const CHAIN_PATTERNS = [
   {
     name: 'best',
     bucket: 'likely_best',
-    keywords: ['best'],
-    minConfidence: 0.7,
+    keywords: ['best station', 'best as', 'best drivstoff'],
+    minConfidence: 0.8,
   },
 ];
 
