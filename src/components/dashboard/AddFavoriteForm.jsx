@@ -8,11 +8,20 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     stationId: '',
     fuelType: 'diesel',
   });
   const [error, setError] = useState('');
+
+  const filteredStations = stations.filter((station) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      station.name.toLowerCase().includes(query) ||
+      (station.chain && station.chain.toLowerCase().includes(query))
+    );
+  });
 
   useEffect(() => {
     loadStations();
@@ -136,30 +145,48 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Station selector */}
+          {/* Search and station selector */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-700">Stasjon</label>
+            <label className="text-xs font-medium text-slate-700">Søk og velg stasjon</label>
             {loading ? (
               <div className="flex justify-center py-6">
                 <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               </div>
             ) : (
-              <select
-                value={formData.stationId}
-                onChange={(e) => setFormData({ ...formData, stationId: e.target.value })}
-                className="w-full text-sm border border-slate-300 rounded px-3 py-2 bg-white"
-              >
-                <option value="">-- Velg stasjon --</option>
-                {stations.map((station) => (
-                  <option key={station.id} value={station.id}>
-                    {station.name}
-                    {station.chain ? ` (${station.chain})` : ''}
-                    {station.distance && station.distance !== Infinity
-                      ? ` - ${Math.round(station.distance)} km`
-                      : ''}
-                  </option>
-                ))}
-              </select>
+              <>
+                <input
+                  type="text"
+                  placeholder="Søk etter stasjonsnavn eller kjede..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full text-sm border border-slate-300 rounded px-3 py-2"
+                />
+                <select
+                  value={formData.stationId}
+                  onChange={(e) => setFormData({ ...formData, stationId: e.target.value })}
+                  className="w-full text-sm border border-slate-300 rounded px-3 py-2 bg-white"
+                >
+                  <option value="">-- Velg stasjon --</option>
+                  {filteredStations.length > 0 ? (
+                    filteredStations.map((station) => (
+                      <option key={station.id} value={station.id}>
+                        {station.name}
+                        {station.chain ? ` (${station.chain})` : ''}
+                        {station.distance && station.distance !== Infinity
+                          ? ` - ${Math.round(station.distance)} km`
+                          : ''}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Ingen stasjoner funnet</option>
+                  )}
+                </select>
+                {filteredStations.length > 0 && (
+                  <p className="text-xs text-slate-500">
+                    Viser {filteredStations.length} stasjoner ({stations.length} totalt)
+                  </p>
+                )}
+              </>
             )}
           </div>
 
