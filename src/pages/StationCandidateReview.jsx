@@ -542,6 +542,32 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Preview Auto-Confirm Specialty Fuel UI] Previewing auto-confirm candidates...');
+              try {
+                const result = await base44.functions.invoke('previewAutoConfirmSpecialtyFuel');
+                const data = result.data;
+                console.log('[Preview Auto-Confirm Specialty Fuel UI] Full result:', data);
+                console.log('[Preview Auto-Confirm Specialty Fuel UI] Summary:', data?.summary);
+                if (data?.examplesSafeToAutoConfirm?.length > 0) {
+                  console.log('Safe to auto-confirm examples:', data.examplesSafeToAutoConfirm.map(a => `${a.stationName} → ${a.suggestedStationType}`).join(' | '));
+                }
+              } catch (e) {
+                console.error('[Preview Auto-Confirm Specialty Fuel UI] Preview failed:', e);
+              }
+            }}
+            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Preview auto-confirm specialty_fuel (safe subset)
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Dry run only. Identifies specialty_fuel_review items with strong, unambiguous fuel signals that can be auto-confirmed. Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Analyze Specialty Fuel Queue UI] Analyzing specialty_fuel_review queue...');
               try {
                 const result = await base44.functions.invoke('analyzeSpecialtyFuelReviewQueue');
