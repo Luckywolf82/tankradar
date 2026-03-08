@@ -542,6 +542,32 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Apply Auto-Confirm Specialty Fuel UI] Applying auto-confirm specialty_fuel...');
+              try {
+                const result = await base44.functions.invoke('applyAutoConfirmSpecialtyFuel');
+                const data = result.data;
+                console.log('[Apply Auto-Confirm Specialty Fuel UI] Full result:', data);
+                console.log('[Apply Auto-Confirm Specialty Fuel UI] Summary:', data?.summary);
+                if (data?.summary?.appliedExamples?.length > 0) {
+                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} → ${a.newStationType}`).join(' | '));
+                }
+              } catch (e) {
+                console.error('[Apply Auto-Confirm Specialty Fuel UI] Apply failed:', e);
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Apply auto-confirm specialty_fuel
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Auto-resolves safe specialty_fuel_review candidates and sets correct stationType (lpg, cng, truck_diesel, biogas, etc). Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Preview Auto-Confirm Specialty Fuel UI] Previewing auto-confirm candidates...');
               try {
                 const result = await base44.functions.invoke('previewAutoConfirmSpecialtyFuel');
