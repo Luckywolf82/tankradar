@@ -305,6 +305,9 @@ Deno.serve(async (req) => {
       if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType) {
         update.stationType = result.stationType;
       }
+      if (result.areaLabel && !station.areaLabel) {
+        update.areaLabel = result.areaLabel;
+      }
 
       if (Object.keys(update).length > 0) {
         stationUpdates.push({ id: station.id, update });
