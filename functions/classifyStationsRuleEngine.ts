@@ -2,28 +2,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ─── RULE ENGINE KONFIGURASJON ────────────────────────────────────────────────
 
-// A. Sikre nasjonale kjeder → sett chain direkte
+// A. Sikre nasjonale kjeder → auto_confirmed_chain
 const SECURE_CHAINS = [
-  { chain: 'Circle K',   patterns: ['circle k', 'circlek'] },
-  { chain: 'Uno-X',      patterns: ['uno-x', 'unox', 'uno x'] },
-  { chain: 'Esso',       patterns: ['esso'] },
-  { chain: 'St1',        patterns: ['st1', 'st 1'] },
-  { chain: 'YX',         patterns: ['yx '] },
-  { chain: 'Best',       patterns: ['best '] },
-  { chain: 'Shell',      patterns: ['shell'] },
-  { chain: 'Equinor',    patterns: ['equinor'] },
-  { chain: 'Statoil',    patterns: ['statoil'] },
-  { chain: 'Gasum',      patterns: ['gasum'] },
-  { chain: 'Automat1',   patterns: ['automat1', 'automat 1'] },
+  { chain: 'Circle K',          patterns: ['circle k', 'circlek'] },
+  { chain: 'Uno-X',             patterns: ['uno-x', 'unox', 'uno x'] },
+  { chain: 'Esso',              patterns: ['esso'] },
+  { chain: 'St1',               patterns: ['st1', 'st 1'] },
+  { chain: 'YX',                patterns: ['yx '] },
+  { chain: 'Best',              patterns: ['best '] },
+  { chain: 'Shell',             patterns: ['shell'] },
+  { chain: 'Equinor',           patterns: ['equinor'] },
+  { chain: 'Statoil',           patterns: ['statoil'] },
+  { chain: 'Automat1',          patterns: ['automat1', 'automat 1'] },
+  { chain: 'MH24',              patterns: ['mh24'] },
+  { chain: 'Max Bensin',        patterns: ['max bensin'] },
+  { chain: 'Smart',             patterns: ['smart kongsvinger', 'smart '] },
 ];
 
-// B. Regionale/lokale kjeder → sett chain
+// B. Regionale/lokale kjeder → auto_confirmed_chain (local tier)
 const LOCAL_CHAINS = [
   { chain: 'Driv',              patterns: ['driv '] },
   { chain: 'Minol',             patterns: ['minol'] },
   { chain: 'Jæren Olje',        patterns: ['jæren olje', 'jæren oil', 'jaeren olje', 'jaeren oil'] },
   { chain: 'Agder Olje',        patterns: ['agder olje', 'agder oil'] },
-  { chain: 'Knapphus',          patterns: ['knapphus'] },
+  { chain: 'Knapphus Energi',   patterns: ['knapphus'] },
   { chain: 'Haltbakk Express',  patterns: ['haltbakk'] },
   { chain: 'Bunker Oil',        patterns: ['bunker oil', 'bunkeroil'] },
   { chain: 'Oljeleverandøren',  patterns: ['oljeleverand', 'oljeverand'] },
@@ -31,38 +33,65 @@ const LOCAL_CHAINS = [
   { chain: 'Brandval Bensin',   patterns: ['brandval'] },
   { chain: 'Elstad Oljesenter', patterns: ['elstad'] },
   { chain: 'Trønder Oil',       patterns: ['trønder oil', 'tronder oil'] },
+  { chain: 'Gasum',             patterns: ['gasum'] },
+  { chain: 'Haugaland Olje',    patterns: ['haugaland olje', 'haugaland oil'] },
+  { chain: 'Randøy Olje',       patterns: ['randøy olje', 'randoy olje'] },
+  { chain: 'Finnøy Olje',       patterns: ['finnøy olje', 'finnoy olje'] },
+  { chain: 'Buskerud Olje',     patterns: ['buskerud olje', 'buskerud oil'] },
 ];
 
-// C. Spesialtyper → stationType (ikke chain)
+// C. Spesialtyper (LPG/CNG/Hynion) → specialty_fuel_site
+// MERK: Gasum er også kjede (lokal), men LPG/CNG-spesifikke sites klassifiseres her
 const SPECIAL_TYPES = [
-  { stationType: 'lpg',          patterns: ['lpg'] },
-  { stationType: 'cng',          patterns: ['cng'] },
+  { stationType: 'lpg',          patterns: [/^lpg\b/i, /\blpg\b/i] },
+  { stationType: 'cng',          patterns: [/^cng\b/i, /\bcng\b/i] },
+  { stationType: 'cng',          patterns: ['hynion'] }, // hydrogen/CNG
   { stationType: 'truck_diesel', patterns: ['truck diesel', 'truckdiesel', 'truck-diesel'] },
-  { stationType: 'marine_fuel',  patterns: ['marina', 'brygge', 'småbåthavn', 'småbåt', 'marin'] },
   { stationType: 'biogas',       patterns: ['biogass', 'biogas'] },
 ];
 
-// D. Retail/operator → operator + stationType=retail_fuel
+// D. Retail/operator → retail_fuel_operator
 const RETAIL_OPERATORS = [
   { operator: 'Coop',         patterns: ['coop'] },
   { operator: 'Spar',         patterns: ['spar'] },
   { operator: 'Joker',        patterns: ['joker'] },
   { operator: 'Nærbutikken',  patterns: ['nærbutikken', 'nærbutik'] },
-  { operator: 'K-market',     patterns: ['k-market', 'k market'] },
+  { operator: 'Matkroken',    patterns: ['matkroken'] },
   { operator: "Handlar'n",    patterns: ['handlar'] },
 ];
 
-// E. Generiske navn → flagges til review
-const GENERIC_NAME_PATTERNS = [
-  /^tank$/i, /^tanken$/i, /^bensin$/i, /^bensinstasjon$/i,
-  /^independent$/i, /^max$/i, /^smia$/i, /^fitjar$/i,
-  /^drivstoff$/i, /^service$/i, /^stasjonen$/i, /^pumpe$/i,
+// E. Marine/service fuel → marine_or_service_fuel_site
+const MARINE_SERVICE_PATTERNS = [
+  'marina', 'brygge', 'småbåthavn', 'småbåt', 'marin ',
+  'gjestehamn', 'gjesthavn', 'camping', 'servicesenter', 'service senter',
+  'båtforening', 'fiskehavn', 'havnekontor',
 ];
 
-// F. Mulige utenlandske poster (ikke-norske tegnsett, svenske/danske/finske kjeder)
+// F. Generiske lokale navn → generic_local_station_name (beholdes i review)
+const GENERIC_LOCAL_PATTERNS = [
+  /^tank\b/i,       // "Tank" eller "Tank Sted" → kan ha areaLabel fra rest av navn
+  /^tanken\b/i,     // "Tanken" eller "Tanken Hjartdal"
+  /^bensin$/i, /^bensinstasjon$/i,
+  /^independent$/i,
+  /^smia$/i, /^fitjar$/i,
+  /^drivstoff$/i, /^stasjonen$/i, /^pumpe$/i,
+];
+
+// G. Mulige utenlandske poster → possible_foreign_station
 const FOREIGN_PATTERNS = [
-  /\bpreem\b/i, /\bst1 se\b/i, /\bokq8\b/i, /\bneste\b/i,
-  /\bq8\b/i, /\bjet\b/i, /\bteboil\b/i, /\bnaf\b/i,
+  /\bpreem\b/i,
+  /\bokq8\b/i,
+  /\bneste\s+enonteki/i,  // "Neste Enontekiö" (Finland)
+  /\benonteki/i,
+  /\bk-market\b/i, /\bk market\b/i,
+  /\bst1 se\b/i,
+  /\bq8\b/i,
+  /\bteboil\b/i,
+  /åre\b/i,             // Åre (Sverige)
+  /sälen/i,             // Sälen (Sverige)
+  /klimpfjäll/i,        // Sverige
+  /ljungdalen/i,        // Sverige
+  /\bjokkmokk\b/i,
 ];
 
 // ─── HJELPEFUNKSJONER ──────────────────────────────────────────────────────────
