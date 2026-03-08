@@ -436,9 +436,14 @@ export default function StationCandidateReview() {
           <div className="text-sm text-gray-700 mb-2">
             <strong>Stasjoner oppdatert:</strong> {ruleEngineResult.summary?.stationUpdates ?? 0} av {ruleEngineResult.summary?.totalStations ?? 0}
           </div>
-          <div className="text-sm text-gray-700 mb-3">
+          <div className="text-sm text-gray-700 mb-1">
             <strong>Reviews oppdatert med reviewReason:</strong> {ruleEngineResult.summary?.reviewsUpdated ?? 0}
           </div>
+          {ruleEngineResult.summary?.possibleDuplicatePairs > 0 && (
+            <div className="text-sm text-pink-700 font-medium mb-3">
+              ⚑ {ruleEngineResult.summary.possibleDuplicatePairs} mulige duplikat-par funnet (samme navn + &lt;50m avstand)
+            </div>
+          )}
           {ruleEngineResult.details?.possible_foreign?.length > 0 && (
             <div className="mb-3 bg-red-50 border border-red-200 rounded p-3">
               <div className="text-sm font-semibold text-red-800 mb-1">Mulige utenlandske poster:</div>
