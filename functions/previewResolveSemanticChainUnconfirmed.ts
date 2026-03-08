@@ -2,18 +2,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const norm = (s) => (s || '').toLowerCase().replace(/[^\w\s]/g, '').trim();
 
+// Strict word-boundary patterns for specialty fuel
+const SPECIALTY_FUEL_PATTERNS = [
+  { pattern: /\blpg\b/, keyword: 'lpg' },
+  { pattern: /\bcng\b/, keyword: 'cng' },
+  { pattern: /\bbiogass\b/, keyword: 'biogass' },
+  { pattern: /\bgass automat\b/, keyword: 'gass automat' },
+  { pattern: /\bparafin\b/, keyword: 'parafin' },
+  { pattern: /\bfyringsolje\b/, keyword: 'fyringsolje' },
+  { pattern: /\bhynion\b/, keyword: 'hynion' },
+  { pattern: /\bhydrogen\b/, keyword: 'hydrogen' },
+  { pattern: /\btruck diesel\b/, keyword: 'truck diesel' },
+  { pattern: /\btruckdisel\b/, keyword: 'truckdisel' },
+];
+
 const FUEL_SITE_KEYWORDS = ['tanken', 'bensin', 'diesel', 'fuel', 'tank', 'service', 'station'];
-const SPECIALTY_FUEL_KEYWORDS = ['lpg', 'cng', 'biogas', 'hydrogen', 'electric', 'ev'];
 const RETAIL_KEYWORDS = ['coop', 'spar', 'joker', 'meny', 'rema', 'narvesen', 'kiosk'];
 const NON_FUEL_KEYWORDS = ['camping', 'kafé', 'restaurant', 'pub', 'hotell', 'museum', 'havn', 'marina'];
 
 const classifySemanticBucket = (stationName, stationType, operator) => {
   const normalized = norm(stationName);
   
-  // Check specialty fuel signals
-  for (const kw of SPECIALTY_FUEL_KEYWORDS) {
-    if (normalized.includes(kw)) {
-      return { bucket: 'likely_specialty_fuel', confidence: 0.9, keyword: kw };
+  // Check specialty fuel signals using strict word-boundary patterns
+  for (const { pattern, keyword } of SPECIALTY_FUEL_PATTERNS) {
+    if (pattern.test(normalized)) {
+      return { bucket: 'likely_specialty_fuel', confidence: 0.9, keyword };
     }
   }
   
