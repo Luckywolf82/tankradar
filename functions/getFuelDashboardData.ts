@@ -13,8 +13,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const isPremium = user.role === 'premium';
-    const maxHistoryDays = isPremium ? 365 : 30;
+    // Hent freemium-grenser fra sentralisert kilde
+    const limitsResponse = await base44.functions.invoke('checkFreemiumLimits', {});
+    const { limits } = limitsResponse.data;
+    const { maxHistoryDays, canAccessRegionalBenchmark, isPremium } = limits;
 
     // Beregn historikk-cutoff
     const now = new Date();
@@ -74,7 +76,7 @@ Deno.serve(async (req) => {
 
     // 4. Hent regionalt gjennomsnitt (bare premium)
     let regionalBenchmarks = null;
-    if (isPremium && favoritesWithDetails.length > 0) {
+    if (canAccessRegionalBenchmark && favoritesWithDetails.length > 0) {
       const stationWithRegion = await base44.asServiceRole.entities.Station.get(
         favoritesWithDetails[0].stationId
       );
@@ -96,12 +98,7 @@ Deno.serve(async (req) => {
         role: user.role,
         isPremium,
       },
-      limits: {
-        maxHistoryDays,
-        maxFavorites: isPremium ? 999999 : 3,
-        canCreateAlerts: isPremium,
-        canAccessRegionalBenchmark: isPremium,
-      },
+      limits,
       favorites: favoritesWithDetails,
       priceHistory,
       nationalBenchmark: benchmarksByFuelType,

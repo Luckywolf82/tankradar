@@ -23,9 +23,33 @@ Deno.serve(async (req) => {
 
     const { stationId, fuelType, alertType, thresholdValue } = await req.json();
 
-    if (!stationId || !fuelType || !alertType || thresholdValue === undefined) {
+    if (!stationId || !fuelType || !alertType) {
       return Response.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: stationId, fuelType, alertType' },
+        { status: 400 }
+      );
+    }
+
+    // Validering av thresholdValue basert på alertType
+    const alertTypesRequiringThreshold = ['below_user_target', 'price_drop'];
+    if (alertTypesRequiringThreshold.includes(alertType) && thresholdValue === undefined) {
+      return Response.json(
+        { error: `alertType "${alertType}" krever thresholdValue` },
+        { status: 400 }
+      );
+    }
+
+    // Validering av alertType enum
+    const validAlertTypes = [
+      'below_user_target',
+      'below_national_average',
+      'price_drop',
+      'new_low_7d',
+      'new_low_30d',
+    ];
+    if (!validAlertTypes.includes(alertType)) {
+      return Response.json(
+        { error: `Invalid alertType. Valid: ${validAlertTypes.join(', ')}` },
         { status: 400 }
       );
     }

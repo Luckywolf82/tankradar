@@ -22,9 +22,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Sjekk freemium limit
-    const isPremium = user.role === 'premium';
-    const maxFavorites = isPremium ? 999999 : 3;
+    // Hent freemium-grenser fra sentralisert kilde
+    const limitsResponse = await base44.functions.invoke('checkFreemiumLimits', {});
+    const { maxFavorites } = limitsResponse.data.limits;
 
     const userFavorites = await base44.entities.UserFavoriteStation.filter(
       { created_by: user.email }
