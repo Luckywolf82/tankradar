@@ -542,6 +542,32 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Analyze Specialty Fuel Queue UI] Analyzing specialty_fuel_review queue...');
+              try {
+                const result = await base44.functions.invoke('analyzeSpecialtyFuelReviewQueue');
+                const data = result.data;
+                console.log('[Analyze Specialty Fuel Queue UI] Full result:', data);
+                console.log('[Analyze Specialty Fuel Queue UI] Summary:', data?.summary);
+                if (data?.fullResultRows) {
+                  console.log(`[Analyze Specialty Fuel Queue UI] Full rows (${data.fullResultRows.length} stations):`, data.fullResultRows);
+                }
+              } catch (e) {
+                console.error('[Analyze Specialty Fuel Queue UI] Analysis failed:', e);
+              }
+            }}
+            className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Analyze specialty_fuel_review queue
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Read-only analysis of pending specialty_fuel_review queue. Shows distribution by derived bucket, signals, and chain presence. Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Inspect State UI] Inspecting historical reclassification stations...');
               try {
                 const stationIds = [
