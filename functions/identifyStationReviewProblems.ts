@@ -71,7 +71,7 @@ const RETAIL_OPERATOR_PATTERNS = [
 ];
 
 const GENERIC_LOCAL_PATTERNS = [
-  /^bensin$/i, /^bensinstasjon$/i, /^independent$/i,
+  /^independent$/i,
   /^smia$/i, /^fitjar$/i, /^drivstoff$/i, /^stasjonen$/i,
   /^pumpe$/i, /^pumpen$/i, /^max$/i, /^lokal$/i,
   /^nærservice$/i, /^bensinstasjonen$/i,

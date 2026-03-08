@@ -93,8 +93,6 @@ const MARINE_SERVICE_PATTERNS = [
 
 // G. Generiske lokale navn → generic_name_review
 const GENERIC_LOCAL_PATTERNS = [
-  /^bensin$/i,
-  /^bensinstasjon$/i,
   /^independent$/i,
   /^smia$/i,
   /^fitjar$/i,
