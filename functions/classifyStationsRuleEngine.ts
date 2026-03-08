@@ -1,36 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ─── SHARED RULE ENGINE CONFIG ────────────────────────────────────────────────
-// KILDE FOR SANNHET: Disse reglene MÅ holdes identisk synkronisert med
-// identifyStationReviewProblems. Prioritetsrekkefølge: H→A→C→B→D→E→F→G→uklassifisert
+// Prioritetsrekkefølge: H→A→C→B→D→E→F→G→uklassifisert
+// Synkronisert med: identifyStationReviewProblems, autoConfirmChainFromName
 
-// H. Utenlandske stasjoner — høyeste prioritet
 const FOREIGN_PATTERNS = [
-  /\bpreem\b/i,
-  /\bokq8\b/i,
-  /\benonteki/i,
-  /\bk-market\b/i,
-  /\bk market\b/i,
-  /\bq8\b/i,
-  /\bteboil\b/i,
-  /\bmacken\b/i,
-  /\btännäs\b/i,
-  /\bsälen\b/i,
-  /\båre\b/i,
-  /\bljungdalen\b/i,
-  /\bklimpfjäll\b/i,
-  /\bjokkmokk\b/i,
-  /\bkilpisjärvi\b/i,
-  /\brajamarket\b/i,
-  /\bsuomen\b/i,
-  /\bfinnland\b/i,
-  /\bsverige\b/i,
-  /\btärna vilt\b/i,
-  /\bboxfjäll\b/i,
-  /\bsirbmá\b/i,
+  /\bpreem\b/i, /\bokq8\b/i, /\benonteki/i, /\bk-market\b/i, /\bk market\b/i,
+  /\bq8\b/i, /\bteboil\b/i, /\bmacken\b/i, /\btännäs\b/i, /\bsälen\b/i,
+  /\båre\b/i, /\bljungdalen\b/i, /\bklimpfjäll\b/i, /\bjokkmokk\b/i,
+  /\bkilpisjärvi\b/i, /\brajamarket\b/i, /\bsuomen\b/i, /\bfinnland\b/i,
+  /\bsverige\b/i, /\btärna vilt\b/i, /\bboxfjäll\b/i, /\bsirbmá\b/i,
 ];
 
-// A. Sikre nasjonale kjeder → secure_chain (auto_confirmed)
 const SECURE_CHAINS = [
   { chain: 'Circle K',    patterns: ['circle k', 'circlek'] },
   { chain: 'Uno-X',       patterns: ['uno-x', 'unox', 'uno x'] },
@@ -50,18 +31,13 @@ const SECURE_CHAINS = [
   { chain: 'BP',          patterns: [/^bp\b/i] },
 ];
 
-// C. Spesialtyper (LPG/CNG/hydrogen/biogas) — evalueres FØR local_chains
-// for å forhindre at f.eks. "Autogass AS" feilklassifiseres som lokal chain
 const SPECIAL_TYPES = [
   { stationType: 'lpg',          patterns: [/^lpg\b/i, /\blpg\b/i, /\bauto-gass\b/i, /\bautogass\b/i] },
-  { stationType: 'cng',          patterns: [/^cng\b/i, /\bcng\b/i] },
-  { stationType: 'cng',          patterns: ['hynion', 'hydrogen'] },
+  { stationType: 'cng',          patterns: [/^cng\b/i, /\bcng\b/i, 'hynion', 'hydrogen'] },
   { stationType: 'truck_diesel', patterns: ['truck diesel', 'truckdiesel', 'truck-diesel', 'lastebil diesel'] },
   { stationType: 'biogas',       patterns: ['biogass', 'biogas'] },
 ];
 
-// B. Regionale/lokale kjeder — etter special_types
-// NB: ^tank, ^tanken, \bbensin\b, \bdrivstoff\b er FJERNET herfra
 const LOCAL_CHAINS = [
   { chain: 'Driv',              patterns: [/^driv\b/i] },
   { chain: 'Minol',             patterns: ['minol'] },
@@ -91,12 +67,8 @@ const LOCAL_CHAINS = [
   { chain: 'Lyse Energi',       patterns: ['lyse energi'] },
 ];
 
-// D. Tankautomat
-const TANKAUTOMAT_PATTERNS = [
-  'tankautomat', 'tank automat', 'drivstoffautomat', 'bensinautomat',
-];
+const TANKAUTOMAT_PATTERNS = ['tankautomat', 'tank automat', 'drivstoffautomat', 'bensinautomat'];
 
-// E. Marine/service (servicesenter fjernet — for bredt)
 const MARINE_SERVICE_PATTERNS = [
   'marina', 'brygge', 'småbåthavn', 'småbåt', 'marin ',
   'gjestehamn', 'gjesthavn',
@@ -104,7 +76,6 @@ const MARINE_SERVICE_PATTERNS = [
   'kai', 'sjøfront', 'kanalen', 'bryggetorget',
 ];
 
-// F. Retail/dagligvare-operatør
 const RETAIL_OPERATORS = [
   { operator: 'Coop',        patterns: [/\bcoop\b/i] },
   { operator: 'Coop Extra',  patterns: [/\bcoop extra\b/i] },
@@ -121,72 +92,36 @@ const RETAIL_OPERATORS = [
   { operator: 'Extra',       patterns: [/^extra\b/i] },
 ];
 
-// G. Generiske lokale navn → generic_name_review (manuell gjennomgang)
-// NB: ^tank og ^tanken ER her nå (fjernet fra LOCAL_CHAINS)
 const GENERIC_LOCAL_PATTERNS = [
-  /^independent$/i,
-  /^smia$/i,
-  /^fitjar$/i,
-  /^stasjonen$/i,
-  /^pumpe$/i,
-  /^pumpen$/i,
-  /^max$/i,
-  /^lokal$/i,
-  /^nærservice$/i,
-  /^bensinstasjonen$/i,
-  /^tank$/i,
-  /^tanken$/i,
+  /^independent$/i, /^smia$/i, /^fitjar$/i, /^stasjonen$/i,
+  /^pumpe$/i, /^pumpen$/i, /^max$/i, /^lokal$/i,
+  /^nærservice$/i, /^bensinstasjonen$/i, /^tank$/i, /^tanken$/i,
 ];
 
 // ─── HJELPEFUNKSJONER ──────────────────────────────────────────────────────────
 
-// Normalisering for lagring (ikke for matching)
 const norm = (s) => {
   if (!s) return '';
-  return s
-    .toLowerCase()
-    .replace(/^["']+|["']+$/g, '')       // fjern ledende/etterfølgende anførselstegn
-    .replace(/\s*\(.*?\)\s*/g, ' ')      // fjern (...) suffikser
-    .replace(/[-–—]+/g, '-')             // normaliser dash
-    .replace(/\s+/g, ' ')               // normaliser mellomrom
+  return s.toLowerCase()
+    .replace(/^["']+|["']+$/g, '')
+    .replace(/\s*\(.*?\)\s*/g, ' ')
+    .replace(/[-–—]+/g, '-')
+    .replace(/\s+/g, ' ')
     .trim();
 };
 
-// Normalisering for matching (æøå → ascii)
-const normMatch = (s) => {
-  return norm(s)
-    .replace(/æ/g, 'ae')
-    .replace(/ø/g, 'oe')
-    .replace(/å/g, 'aa');
-};
+const normMatch = (s) => norm(s).replace(/æ/g, 'ae').replace(/ø/g, 'oe').replace(/å/g, 'aa');
 
 const matchesAny = (name, patterns) => {
-  const n = normMatch(name);
   const nOrig = norm(name);
+  const n = normMatch(name);
   return patterns.some(p => {
-    if (typeof p === 'string') {
-      const pNorm = normMatch(p);
-      return nOrig.includes(p.toLowerCase()) || n.includes(pNorm);
-    }
+    if (typeof p === 'string') return nOrig.includes(p.toLowerCase()) || n.includes(normMatch(p));
     if (p instanceof RegExp) return p.test(nOrig) || p.test(n);
     return false;
   });
 };
 
-// Trekk ut areaLabel fra stasjonsnavn etter kjent prefix
-const extractAreaFromName = (stationName, prefixes) => {
-  const n = norm(stationName);
-  for (const prefix of prefixes) {
-    const p = norm(prefix);
-    if (n.startsWith(p)) {
-      const rest = stationName.replace(new RegExp('^' + prefix, 'i'), '').trim();
-      if (rest.length > 1 && rest.length < 40) return rest;
-    }
-  }
-  return null;
-};
-
-// Haversine-avstand i meter
 const haversineMeters = (lat1, lon1, lat2, lon2) => {
   const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -197,7 +132,6 @@ const haversineMeters = (lat1, lon1, lat2, lon2) => {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-// Enkel name-similarity (Jaccard på bigrams)
 const nameSimilarity = (a, b) => {
   const bigrams = (s) => {
     const set = new Set();
@@ -215,109 +149,53 @@ const nameSimilarity = (a, b) => {
   return union === 0 ? 0 : intersection / union;
 };
 
-// ─── KLASSIFISERING ────────────────────────────────────────────────────────────
-
 const classifyStation = (stationName) => {
   const n = norm(stationName);
+  const nm = normMatch(stationName);
 
-  // H. Utenlandsk — høyeste prioritet
-  if (FOREIGN_PATTERNS.some(p => p.test(n) || p.test(normMatch(stationName)))) {
-    return {
-      classification: 'possible_foreign',
-      chain: null, operator: null, stationType: 'unknown', areaLabel: null,
-      reviewReason: 'possible_foreign_station',
-      note: `Utenlandsk stasjon: "${stationName}"`,
-    };
+  if (FOREIGN_PATTERNS.some(p => p.test(n) || p.test(nm))) {
+    return { classification: 'possible_foreign', chain: null, operator: null, stationType: 'unknown', reviewReason: 'possible_foreign_station' };
   }
-
-  // A. Sikre nasjonale kjeder
   for (const { chain, patterns } of SECURE_CHAINS) {
     if (matchesAny(stationName, patterns)) {
-      return {
-        classification: 'secure_chain',
-        chain, operator: null, stationType: 'standard', areaLabel: null,
-        reviewReason: 'auto_classified',
-        note: `Nasjonal kjede: "${stationName}" → "${chain}"`,
-      };
+      return { classification: 'secure_chain', chain, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
     }
   }
-
-  // C. Spesialtyper (før local chains)
   for (const { stationType, patterns } of SPECIAL_TYPES) {
     if (matchesAny(stationName, patterns)) {
-      return {
-        classification: 'special_type',
-        chain: null, operator: null, stationType, areaLabel: null,
-        reviewReason: 'special_type_detected',
-        note: `Spesialtype: "${stationName}" → stationType="${stationType}"`,
-      };
+      return { classification: 'special_type', chain: null, operator: null, stationType, reviewReason: 'special_type_detected' };
     }
   }
-
-  // B. Lokale/regionale kjeder
   for (const { chain, patterns } of LOCAL_CHAINS) {
     if (matchesAny(stationName, patterns)) {
-      return {
-        classification: 'local_chain',
-        chain, operator: null, stationType: 'standard', areaLabel: null,
-        reviewReason: 'local_chain_detected',
-        note: `Lokal kjede: "${stationName}" → "${chain}"`,
-      };
+      return { classification: 'local_chain', chain, operator: null, stationType: 'standard', reviewReason: 'local_chain_detected' };
     }
   }
-
-  // D. Tankautomat
   if (TANKAUTOMAT_PATTERNS.some(p => n.includes(p))) {
-    return {
-      classification: 'automatic_fuel_station',
-      chain: null, operator: null, stationType: 'standard', areaLabel: null,
-      reviewReason: 'auto_classified',
-      note: `Tankautomat: "${stationName}"`,
-    };
+    return { classification: 'automatic_fuel_station', chain: null, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
   }
-
-  // E. Marine/service
   if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase()))) {
-    return {
-      classification: 'marine_service',
-      chain: null, operator: null, stationType: 'marine_fuel', areaLabel: null,
-      reviewReason: 'special_type_detected',
-      note: `Marin/service: "${stationName}"`,
-    };
+    return { classification: 'marine_service', chain: null, operator: null, stationType: 'marine_fuel', reviewReason: 'special_type_detected' };
   }
-
-  // F. Retail/operatør
   for (const { operator, patterns } of RETAIL_OPERATORS) {
     if (matchesAny(stationName, patterns)) {
-      return {
-        classification: 'retail_operator',
-        chain: null, operator, stationType: 'retail_fuel', areaLabel: null,
-        reviewReason: 'retail_operator_detected',
-        note: `Retail: "${stationName}" → operator="${operator}"`,
-      };
+      return { classification: 'retail_operator', chain: null, operator, stationType: 'retail_fuel', reviewReason: 'retail_operator_detected' };
     }
   }
-
-  // G. Generiske lokale navn
   if (GENERIC_LOCAL_PATTERNS.some(p => p.test(n))) {
-    const areaLabel = extractAreaFromName(stationName, ['Tanken ', 'Tank ', 'Bensin ']);
-    return {
-      classification: 'generic_name',
-      chain: null, operator: null, stationType: 'unknown',
-      areaLabel: areaLabel || null,
-      reviewReason: 'generic_name',
-      note: `Generisk navn: "${stationName}"${areaLabel ? ` — foreslått areaLabel: "${areaLabel}"` : ''}`,
-    };
+    return { classification: 'generic_name', chain: null, operator: null, stationType: 'unknown', reviewReason: 'generic_name' };
   }
-
-  // Uklassifisert
-  return {
-    classification: 'unclassified',
-    chain: null, operator: null, stationType: null, areaLabel: null,
-    reviewReason: 'chain_unconfirmed',
-    note: `Ingen regel matchet: "${stationName}"`,
-  };
+  return { classification: 'unclassified', chain: null, operator: null, stationType: null, reviewReason: 'chain_unconfirmed' };
 };
+
+// Klassifikasjoner som LØSER chain_unconfirmed (chain er satt eller type er bekreftet)
+const AUTO_RESOLVES_CHAIN_REVIEW = new Set([
+  'secure_chain', 'local_chain', 'special_type',
+  'automatic_fuel_station', 'marine_service', 'retail_operator',
+]);
+
+// Klassifikasjoner som TRENGER manuell review
+const NEEDS_MANUAL_REVIEW = new Set(['possible_foreign', 'generic_name']);
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
 
@@ -333,23 +211,69 @@ Deno.serve(async (req) => {
       }
     }
 
-    const body = await req.json().catch(() => ({}));
-    const batchSize = body.batchSize || 200;
-
-    // Hent alle stasjoner
+    // ── Hent alle stasjoner ──
     let allStations = [];
     let page = 0;
-    const pageSize = 500;
     while (true) {
-      const batch = await base44.asServiceRole.entities.Station.list('-created_date', pageSize, page * pageSize);
+      const batch = await base44.asServiceRole.entities.Station.list('-created_date', 500, page * 500);
       if (!batch || batch.length === 0) break;
       allStations = allStations.concat(batch);
-      if (batch.length < pageSize) break;
+      if (batch.length < 500) break;
       page++;
     }
 
-    // ── Proximity duplicate detection (< 50m, identisk normalisert navn) ──
-    const possibleDuplicates = [];
+    // ── Hent alle eksisterende reviews (alle statuser) ──
+    let allReviews = [];
+    page = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.StationReview.list('-created_date', 500, page * 500);
+      if (!batch || batch.length === 0) break;
+      allReviews = allReviews.concat(batch);
+      if (batch.length < 500) break;
+      page++;
+    }
+
+    // Map: stationId → pending reviews (kun pending teller som aktive problemer)
+    const pendingByStation = {};
+    for (const r of allReviews) {
+      if (r.status !== 'pending') continue;
+      if (!pendingByStation[r.stationId]) pendingByStation[r.stationId] = [];
+      pendingByStation[r.stationId].push(r);
+    }
+
+    // Snapshot pending-tall FØR kjøring
+    const pendingBefore = allReviews.filter(r => r.status === 'pending').length;
+
+    // ── Klassifiser alle stasjoner ──
+    const classCounts = {
+      secure_chain: 0, local_chain: 0, special_type: 0,
+      marine_service: 0, retail_operator: 0, generic_name: 0,
+      possible_foreign: 0, automatic_fuel_station: 0, unclassified: 0,
+    };
+
+    const lifecycle = {
+      chainReviewsAutoResolved: 0,   // chain_unconfirmed lukket fordi chain er bekreftet
+      specialTypeResolved: 0,        // special_type/marine/retail → chain_review lukket
+      foreignCreated: 0,             // ny possible_foreign review opprettet
+      genericCreated: 0,             // ny generic_name review opprettet
+      chainUnconfirmedCreated: 0,    // ny chain_unconfirmed review opprettet
+      reviewsUpdatedNotDuplicated: 0,// eksisterende review oppdatert (ikke duplikat)
+      duplicateCandidatesMarked: 0,  // station flagget som duplicate_candidate
+      nearbyAutoResolved: 0,         // auto-resolved via nearby_same_chain
+      stationsUpdated: 0,
+    };
+
+    const details = {
+      possible_foreign: [], generic_name: [], possible_duplicate: [],
+      auto_resolved_sample: [],
+    };
+
+    const stationUpdates = [];   // { id, update }
+    const reviewResolutions = []; // { id, update } — lukke/oppdatere eksisterende reviews
+    const reviewCreations = [];   // nye reviews å opprette
+
+    // ── Proximity duplicate detection ──
+    const duplicatePairs = [];
     const duplicateFlaggedIds = new Set();
     for (let i = 0; i < allStations.length; i++) {
       const a = allStations[i];
@@ -360,185 +284,289 @@ Deno.serve(async (req) => {
         const dist = haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude);
         if (dist < 50 && norm(a.name) === norm(b.name)) {
           duplicateFlaggedIds.add(b.id);
-          possibleDuplicates.push({
-            a: { id: a.id, name: a.name },
-            b: { id: b.id, name: b.name },
-            distanceMeters: Math.round(dist),
-          });
+          duplicatePairs.push({ a: { id: a.id, name: a.name }, b: { id: b.id, name: b.name }, distanceMeters: Math.round(dist) });
         }
       }
     }
 
-    const counts = {
-      secure_chain: 0, local_chain: 0, special_type: 0,
-      marine_service: 0, retail_operator: 0, generic_name: 0,
-      possible_foreign: 0, automatic_fuel_station: 0,
-      possible_duplicate: duplicateFlaggedIds.size,
-      unclassified: 0,
-    };
-
-    const details = {
-      secure_chain: [], local_chain: [], special_type: [],
-      marine_service: [], retail_operator: [], generic_name: [],
-      possible_foreign: [], automatic_fuel_station: [],
-      possible_duplicate: possibleDuplicates,
-      unclassified: [],
-    };
-
-    const stationUpdates = [];
+    // ── Nearby same-chain auto-resolve config ──
+    const NEARBY_DISTANCE_M = 80;
+    const NEARBY_SIMILARITY = 0.88;
+    const SKIP_NEARBY = new Set(['possible_foreign', 'marine_service', 'special_type', 'generic_name', 'unclassified']);
+    const stationMap = Object.fromEntries(allStations.map(s => [s.id, s]));
 
     for (const station of allStations) {
       const result = classifyStation(station.name);
-      const key = result.classification === 'unclassified' ? 'unclassified' : result.classification;
-      counts[key] = (counts[key] || 0) + 1;
-      if (details[key]) {
-        details[key].push({ id: station.id, name: station.name, chain: result.chain, operator: result.operator, stationType: result.stationType, note: result.note });
-      }
+      classCounts[result.classification] = (classCounts[result.classification] || 0) + 1;
 
-      const update = {};
-      // Sett chain hvis regelmotor har en navngitt verdi
-      if (result.chain) update.chain = result.chain;
-      if (result.operator && !station.operator) update.operator = result.operator;
+      if (result.classification === 'possible_foreign') details.possible_foreign.push({ id: station.id, name: station.name });
+      if (result.classification === 'generic_name') details.generic_name.push({ id: station.id, name: station.name });
+
+      // ── Station feltoppdateringer ──
+      const stationUpdate = {};
+      if (result.chain) stationUpdate.chain = result.chain;
+      if (result.operator && !station.operator) stationUpdate.operator = result.operator;
       if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType) {
-        update.stationType = result.stationType;
+        stationUpdate.stationType = result.stationType;
       }
-      if (result.areaLabel && !station.areaLabel) update.areaLabel = result.areaLabel;
+      if (Object.keys(stationUpdate).length > 0) stationUpdates.push({ id: station.id, update: stationUpdate });
 
-      if (Object.keys(update).length > 0) {
-        stationUpdates.push({ id: station.id, update });
-      }
-    }
+      // ── Review lifecycle ──
+      const existingPending = pendingByStation[station.id] || [];
 
-    // Skriv oppdateringer
-    const updateBatch = stationUpdates.slice(0, batchSize);
-    const remaining = stationUpdates.length - updateBatch.length;
-
-    let updatedCount = 0;
-    let updateErrors = 0;
-    for (const { id, update } of updateBatch) {
-      try {
-        await base44.asServiceRole.entities.Station.update(id, update);
-        updatedCount++;
-      } catch (e) { updateErrors++; }
-      await new Promise(r => setTimeout(r, 30));
-    }
-
-    // ── nearby_same_chain_auto_resolve ──────────────────────────────────────
-    // Regler: innen 80m + samme chain + name similarity >= 0.88
-    // Ikke bruk på: foreign, marine, special_type, generic_name, chain=unknown
-    const NEARBY_DISTANCE_M = 80;
-    const NEARBY_SIMILARITY_THRESHOLD = 0.88;
-    const SKIP_NEARBY = new Set(['possible_foreign', 'marine_service', 'special_type', 'generic_name']);
-
-    const pendingReviews = await base44.asServiceRole.entities.StationReview.filter({ status: 'pending' });
-    const stationMap = Object.fromEntries(allStations.map(s => [s.id, s]));
-
-    let nearbyAutoResolved = 0;
-    let nearbyDuplicateCandidates = 0;
-    let reviewsUpdated = 0;
-
-    for (const review of pendingReviews) {
-      const reviewStation = stationMap[review.stationId];
-      if (!reviewStation) continue;
-
-      const result = classifyStation(reviewStation.name);
-
-      // Synkroniser reviewReason og review_type
-      let newReviewType = review.review_type;
-      if (result.classification === 'possible_foreign') newReviewType = 'possible_foreign_station';
-      if (result.classification === 'generic_name') newReviewType = 'generic_name_review';
-      if (result.classification === 'special_type' || result.classification === 'marine_service') newReviewType = 'generic_name_review';
-      if (result.classification === 'unclassified') newReviewType = 'chain_unconfirmed';
-
-      // nearby_same_chain_auto_resolve
+      // 1. Nearby same-chain auto-resolve (sjekkes FØR øvrig lifecycle)
       let nearbyResolved = false;
-      if (
-        !SKIP_NEARBY.has(result.classification) &&
-        reviewStation.chain &&
-        reviewStation.latitude && reviewStation.longitude
-      ) {
+      if (!SKIP_NEARBY.has(result.classification) && station.chain && station.latitude && station.longitude) {
         for (const candidate of allStations) {
-          if (candidate.id === reviewStation.id) continue;
+          if (candidate.id === station.id) continue;
           if (!candidate.latitude || !candidate.longitude) continue;
-          if (candidate.chain !== reviewStation.chain) continue;
-
-          const dist = haversineMeters(
-            reviewStation.latitude, reviewStation.longitude,
-            candidate.latitude, candidate.longitude
-          );
+          if (candidate.chain !== station.chain) continue;
+          const dist = haversineMeters(station.latitude, station.longitude, candidate.latitude, candidate.longitude);
           if (dist > NEARBY_DISTANCE_M) continue;
-
-          const sim = nameSimilarity(reviewStation.name, candidate.name);
-          if (sim >= NEARBY_SIMILARITY_THRESHOLD) {
-            // Trygg auto-resolve
-            try {
-              await base44.asServiceRole.entities.StationReview.update(review.id, {
-                status: 'approved',
-                reviewReason: 'auto_classified',
-                notes: `Auto-resolved: nearby_same_chain (${Math.round(dist)}m, similarity ${sim.toFixed(2)}) mot stasjon "${candidate.name}"`,
-              });
-              nearbyAutoResolved++;
-              nearbyResolved = true;
-            } catch (e) { /* ignorer */ }
+          const sim = nameSimilarity(station.name, candidate.name);
+          if (sim >= NEARBY_SIMILARITY) {
+            for (const rev of existingPending) {
+              reviewResolutions.push({ id: rev.id, update: {
+                status: 'auto_resolved',
+                reviewReason: 'nearby_same_chain',
+                notes: `Auto-resolved: nearby_same_chain (${Math.round(dist)}m, likhet ${sim.toFixed(2)}) mot "${candidate.name}"`,
+              }});
+              lifecycle.nearbyAutoResolved++;
+              details.auto_resolved_sample.push({ name: station.name, reason: `nearby_same_chain → ${candidate.name}` });
+            }
+            nearbyResolved = true;
             break;
           }
         }
       }
+      if (nearbyResolved) continue;
 
-      if (!nearbyResolved) {
-        try {
-          await base44.asServiceRole.entities.StationReview.update(review.id, {
-            reviewReason: result.reviewReason,
-            review_type: newReviewType,
-            station_stationType: result.stationType || undefined,
-            station_operator: result.operator || undefined,
-          });
-          reviewsUpdated++;
-        } catch (e) { /* ignorer */ }
+      // 2. AUTO_RESOLVES_CHAIN_REVIEW — lukk chain_unconfirmed reviews
+      if (AUTO_RESOLVES_CHAIN_REVIEW.has(result.classification)) {
+        for (const rev of existingPending) {
+          if (rev.review_type === 'chain_unconfirmed') {
+            const resolveNote = result.chain
+              ? `Auto-resolved: kjede bekreftet som "${result.chain}" av regelmotor`
+              : `Auto-resolved: klassifisert som ${result.classification} — chain-review ikke relevant`;
+            reviewResolutions.push({ id: rev.id, update: {
+              status: 'auto_resolved',
+              reviewReason: result.reviewReason,
+              station_chain: result.chain || undefined,
+              station_operator: result.operator || undefined,
+              station_stationType: result.stationType || undefined,
+              notes: resolveNote,
+            }});
+            if (result.chain) lifecycle.chainReviewsAutoResolved++;
+            else lifecycle.specialTypeResolved++;
+            details.auto_resolved_sample.push({ name: station.name, reason: resolveNote });
+          } else {
+            // Oppdater reviewReason og type uten å endre status
+            reviewResolutions.push({ id: rev.id, update: {
+              reviewReason: result.reviewReason,
+            }});
+            lifecycle.reviewsUpdatedNotDuplicated++;
+          }
+        }
+        // Ikke opprett ny review for disse klassifikasjonene
+        continue;
       }
 
+      // 3. POSSIBLE_FOREIGN — opprett eller oppdater review
+      if (result.classification === 'possible_foreign') {
+        const existingForeign = existingPending.find(r => r.review_type === 'possible_foreign_station');
+        if (!existingForeign) {
+          // Lukk evt. feilklassifiserte eksisterende reviews for denne stasjonen
+          for (const rev of existingPending) {
+            if (rev.review_type !== 'possible_foreign_station') {
+              reviewResolutions.push({ id: rev.id, update: {
+                status: 'auto_resolved',
+                notes: `Overskrevet: stasjon reklassifisert som possible_foreign`,
+              }});
+            }
+          }
+          reviewCreations.push({
+            stationId: station.id,
+            review_type: 'possible_foreign_station',
+            station_name: station.name,
+            station_chain: station.chain || null,
+            station_latitude: station.latitude,
+            station_longitude: station.longitude,
+            status: 'pending',
+            issue_description: `Mulig utenlandsk stasjon: "${station.name}"`,
+            suggested_action: 'Verifiser om dette er norsk stasjon, eller avvis',
+            reviewReason: 'possible_foreign_station',
+            source_report: 'rule_engine_classify',
+          });
+          lifecycle.foreignCreated++;
+        } else {
+          // Finnes allerede — ikke opprett duplikat
+          lifecycle.reviewsUpdatedNotDuplicated++;
+        }
+        continue;
+      }
+
+      // 4. GENERIC_NAME — opprett eller oppdater review
+      if (result.classification === 'generic_name') {
+        const existingGeneric = existingPending.find(r => r.review_type === 'generic_name_review');
+        if (!existingGeneric) {
+          reviewCreations.push({
+            stationId: station.id,
+            review_type: 'generic_name_review',
+            station_name: station.name,
+            station_chain: station.chain || null,
+            station_latitude: station.latitude,
+            station_longitude: station.longitude,
+            status: 'pending',
+            issue_description: `Generisk stasjonsnavn: "${station.name}"`,
+            suggested_action: 'Finn spesifikt navn eller merge med annen stasjon',
+            reviewReason: 'generic_name',
+            source_report: 'rule_engine_classify',
+          });
+          lifecycle.genericCreated++;
+        } else {
+          lifecycle.reviewsUpdatedNotDuplicated++;
+        }
+        continue;
+      }
+
+      // 5. UNCLASSIFIED — chain_unconfirmed (kun hvis chain mangler)
+      if (result.classification === 'unclassified' && !station.chain) {
+        const existingChainReview = existingPending.find(r => r.review_type === 'chain_unconfirmed');
+        if (!existingChainReview) {
+          reviewCreations.push({
+            stationId: station.id,
+            review_type: 'chain_unconfirmed',
+            station_name: station.name,
+            station_chain: null,
+            station_latitude: station.latitude,
+            station_longitude: station.longitude,
+            status: 'pending',
+            issue_description: `Kjede ikke bekreftet for "${station.name}" (${station.address || 'ukjent adresse'})`,
+            suggested_action: 'Verifiser kjede basert på navn og lokalisering',
+            source_report: 'rule_engine_classify',
+          });
+          lifecycle.chainUnconfirmedCreated++;
+        } else {
+          lifecycle.reviewsUpdatedNotDuplicated++;
+        }
+        continue;
+      }
+
+      // 6. UNCLASSIFIED med chain allerede satt — trenger ikke review
+      if (result.classification === 'unclassified' && station.chain) {
+        for (const rev of existingPending) {
+          if (rev.review_type === 'chain_unconfirmed') {
+            reviewResolutions.push({ id: rev.id, update: {
+              status: 'auto_resolved',
+              notes: `Auto-resolved: station har allerede chain="${station.chain}" satt`,
+            }});
+            lifecycle.chainReviewsAutoResolved++;
+          }
+        }
+      }
+
+      // 7. Duplicate candidates — egne review-poster, ikke pending-inflaterende
+      if (duplicateFlaggedIds.has(station.id)) {
+        const existingDup = existingPending.find(r => r.review_type === 'duplicate_candidate');
+        if (!existingDup) {
+          reviewCreations.push({
+            stationId: station.id,
+            review_type: 'duplicate_candidate',
+            station_name: station.name,
+            station_chain: station.chain || null,
+            station_latitude: station.latitude,
+            station_longitude: station.longitude,
+            status: 'duplicate_candidate',  // <-- ikke 'pending', inflaterer ikke kø
+            issue_description: `Mulig duplikat av annen stasjon (< 50m, identisk navn)`,
+            suggested_action: 'Merge eller fjern duplikat',
+            reviewReason: 'auto_classified',
+            source_report: 'rule_engine_classify',
+          });
+          lifecycle.duplicateCandidatesMarked++;
+        }
+      }
+    }
+
+    // ── Skriv station-oppdateringer ──
+    let stationsUpdated = 0;
+    for (const { id, update } of stationUpdates) {
+      try {
+        await base44.asServiceRole.entities.Station.update(id, update);
+        stationsUpdated++;
+      } catch (e) { /* fortsett */ }
+      await new Promise(r => setTimeout(r, 20));
+    }
+    lifecycle.stationsUpdated = stationsUpdated;
+
+    // ── Skriv review-resolusjoner (lukk/oppdater eksisterende) ──
+    for (const { id, update } of reviewResolutions) {
+      try {
+        await base44.asServiceRole.entities.StationReview.update(id, update);
+      } catch (e) { /* fortsett */ }
       await new Promise(r => setTimeout(r, 20));
     }
 
-    console.log(`[classifyRuleEngine] Stasjoner: ${allStations.length} | Oppdatert: ${updatedCount} | Gjenstår: ${remaining} | Duplikat-par: ${possibleDuplicates.length} | NearbyAutoResolved: ${nearbyAutoResolved}`);
+    // ── Opprett nye reviews ──
+    const BATCH = 25;
+    for (let i = 0; i < reviewCreations.length; i += BATCH) {
+      const batch = reviewCreations.slice(i, i + BATCH);
+      try {
+        await base44.asServiceRole.entities.StationReview.bulkCreate(batch);
+      } catch (e) {
+        console.error('Batch create failed:', e.message);
+      }
+      await new Promise(r => setTimeout(r, 80));
+    }
+
+    const totalAutoResolved = lifecycle.chainReviewsAutoResolved + lifecycle.specialTypeResolved + lifecycle.nearbyAutoResolved;
+    const totalNewPending = lifecycle.foreignCreated + lifecycle.genericCreated + lifecycle.chainUnconfirmedCreated;
+    const netChange = totalNewPending - totalAutoResolved;
+
+    console.log(`[classifyRuleEngine] Stasjoner: ${allStations.length} | Oppdatert: ${stationsUpdated} | AutoResolved: ${totalAutoResolved} | NyePending: ${totalNewPending} | NettoEndring: ${netChange > 0 ? '+' : ''}${netChange}`);
 
     return Response.json({
       success: true,
       summary: {
         totalStations: allStations.length,
-        stationUpdates: updatedCount,
-        updateErrors,
-        reviewsUpdated,
-        possibleDuplicatePairs: possibleDuplicates.length,
-        nearbyAutoResolved,
-        nearbyDuplicateCandidates,
-        nearbyThresholds: { distanceMeters: NEARBY_DISTANCE_M, nameSimilarity: NEARBY_SIMILARITY_THRESHOLD },
+        stationUpdates: stationsUpdated,
+        lifecycle: {
+          pendingBefore,
+          autoResolved: {
+            chainConfirmed: lifecycle.chainReviewsAutoResolved,
+            specialTypeOrRetail: lifecycle.specialTypeResolved,
+            nearbyAutoResolved: lifecycle.nearbyAutoResolved,
+            total: totalAutoResolved,
+          },
+          newPendingCreated: {
+            possibleForeign: lifecycle.foreignCreated,
+            genericName: lifecycle.genericCreated,
+            chainUnconfirmed: lifecycle.chainUnconfirmedCreated,
+            total: totalNewPending,
+          },
+          duplicateCandidatesMarked: lifecycle.duplicateCandidatesMarked,
+          reviewsUpdatedNotDuplicated: lifecycle.reviewsUpdatedNotDuplicated,
+          estimatedNetChange: netChange,
+          nearbyThresholds: { distanceMeters: NEARBY_DISTANCE_M, nameSimilarity: NEARBY_SIMILARITY },
+        },
         perClassification: {
-          secure_chain: counts.secure_chain,
-          local_chain: counts.local_chain,
-          special_type: counts.special_type,
-          marine_service: counts.marine_service,
-          retail_operator: counts.retail_operator,
-          generic_name: counts.generic_name,
-          possible_foreign: counts.possible_foreign,
-          automatic_fuel_station: counts.automatic_fuel_station,
-          possible_duplicate: counts.possible_duplicate,
-          chain_unconfirmed: counts.unclassified,
+          secure_chain: classCounts.secure_chain,
+          local_chain: classCounts.local_chain,
+          special_type: classCounts.special_type,
+          marine_service: classCounts.marine_service,
+          retail_operator: classCounts.retail_operator,
+          generic_name: classCounts.generic_name,
+          possible_foreign: classCounts.possible_foreign,
+          automatic_fuel_station: classCounts.automatic_fuel_station,
+          chain_unconfirmed: classCounts.unclassified,
+          possible_duplicate: duplicatePairs.length,
         },
       },
       details: {
-        secure_chain: details.secure_chain.slice(0, 20),
-        local_chain: details.local_chain.slice(0, 20),
-        special_type: details.special_type,
-        marine_service: details.marine_service,
-        retail_operator: details.retail_operator,
-        generic_name: details.generic_name,
         possible_foreign: details.possible_foreign,
-        automatic_fuel_station: details.automatic_fuel_station,
-        possible_duplicate: details.possible_duplicate.slice(0, 30),
-        unclassified_sample: details.unclassified.slice(0, 20),
+        generic_name: details.generic_name.slice(0, 20),
+        possible_duplicate: duplicatePairs.slice(0, 20),
+        auto_resolved_sample: details.auto_resolved_sample.slice(0, 20),
       },
-      remaining,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
