@@ -718,36 +718,90 @@ export default function StationCandidateReview() {
         </div>
 
         <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Analyze UI] Fetching pending review analysis...');
-              try {
-                const result = await base44.functions.invoke('analyzePendingStationReviews');
-                const data = result.data;
-                console.log('[Analyze UI] Full result:', data);
-                console.log('[Analyze UI] Summary:', data?.summary);
-                for (const item of data?.details || []) {
-                  console.log(`[Analyze UI] ${item.analysisBucket} | ${item.reviewType} | ${item.stationName}`, {
-                    reasonTags: item.reasonTags,
-                    explanation: item.explanation,
-                    chain: item.currentChain,
-                    operator: item.currentOperator,
-                    stationType: item.currentStationType,
-                  });
-                }
-              } catch (e) {
-                console.error('[Analyze UI] Analysis failed:', e);
-              }
-            }}
-            className="bg-slate-600 hover:bg-slate-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Analyze pending reviews
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Read-only analyse av pending review-køen. Ingen data endres. Resultater logges til nettleserkonsollen.
-          </p>
-        </div>
+           <Button
+             onClick={async () => {
+               console.log('[Preview Semantic Chain UI] Previewing semantic chain cleanup...');
+               try {
+                 const result = await base44.functions.invoke('previewResolveSemanticChainUnconfirmed');
+                 const data = result.data;
+                 console.log('[Preview Semantic Chain UI] Full result:', data);
+                 console.log('[Preview Semantic Chain UI] Summary:', data?.summary);
+                 if (data?.toReclassify?.length > 0) {
+                   console.log('Preview examples:', data.toReclassify.map(r => `${r.stationName} (${r.semanticBucket})`).join(' | '));
+                 }
+               } catch (e) {
+                 console.error('[Preview Semantic Chain UI] Preview failed:', e);
+               }
+             }}
+             className="bg-lime-600 hover:bg-lime-700 flex items-center gap-2"
+           >
+             <Zap className="w-4 h-4" />
+             Preview semantic chain cleanup
+           </Button>
+           <p className="text-xs text-gray-600 mt-2">
+             Dry run only. Identifies pending chain_unconfirmed reviews that can be safely reclassified to local_fuel_site_review, specialty_fuel_review, or retail_fuel_operator_review. Results logged to console.
+           </p>
+         </div>
+
+         <div className="border-t pt-3">
+           <Button
+             onClick={async () => {
+               console.log('[Apply Semantic Chain UI] Applying semantic chain cleanup...');
+               try {
+                 const result = await base44.functions.invoke('resolveSemanticChainUnconfirmed');
+                 const data = result.data;
+                 console.log('[Apply Semantic Chain UI] Full result:', data);
+                 console.log('[Apply Semantic Chain UI] Summary:', data?.summary);
+                 if (data?.reclassifiedExamples?.length > 0) {
+                   console.log('Applied stations:', data.reclassifiedExamples.map(r => `${r.stationName} → ${r.newReviewType}`).join(' | '));
+                 }
+                 loadCandidates();
+               } catch (e) {
+                 console.error('[Apply Semantic Chain UI] Apply failed:', e);
+               }
+             }}
+             disabled={autoProcessing}
+             className="bg-lime-600 hover:bg-lime-700 flex items-center gap-2"
+           >
+             <Zap className="w-4 h-4" />
+             {autoProcessing ? 'Reklassifiserer...' : 'Apply semantic chain cleanup'}
+           </Button>
+           <p className="text-xs text-gray-600 mt-2">
+             Reclassifies pending chain_unconfirmed reviews using semantic analysis. Only applies high-confidence reclassifications. Results logged to console.
+           </p>
+         </div>
+
+        <div className="border-t pt-3">
+           <Button
+             onClick={async () => {
+               console.log('[Analyze UI] Fetching pending review analysis...');
+               try {
+                 const result = await base44.functions.invoke('analyzePendingStationReviews');
+                 const data = result.data;
+                 console.log('[Analyze UI] Full result:', data);
+                 console.log('[Analyze UI] Summary:', data?.summary);
+                 for (const item of data?.details || []) {
+                   console.log(`[Analyze UI] ${item.analysisBucket} | ${item.reviewType} | ${item.stationName}`, {
+                     reasonTags: item.reasonTags,
+                     explanation: item.explanation,
+                     chain: item.currentChain,
+                     operator: item.currentOperator,
+                     stationType: item.currentStationType,
+                   });
+                 }
+               } catch (e) {
+                 console.error('[Analyze UI] Analysis failed:', e);
+               }
+             }}
+             className="bg-slate-600 hover:bg-slate-700 flex items-center gap-2"
+           >
+             <Zap className="w-4 h-4" />
+             Analyze pending reviews
+           </Button>
+           <p className="text-xs text-gray-600 mt-2">
+             Read-only analyse av pending review-køen. Ingen data endres. Resultater logges til nettleserkonsollen.
+           </p>
+         </div>
 
         <div className="border-t pt-3">
           <Button
