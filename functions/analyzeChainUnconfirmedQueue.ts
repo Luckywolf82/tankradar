@@ -222,12 +222,15 @@ Deno.serve(async (req) => {
   const analyzed = [];
   const bucketMap = {};
   const confidenceByBucket = {};
+  const semanticBucketMap = {};
+  const semanticConfidenceByBucket = {};
 
   for (const review of reviews) {
     const station = stationMap[review.stationId];
     if (!station) continue;
 
     const detection = detectLikelyChain(station.name);
+    const semantic = classifySemanticBucket(station.name);
 
     const record = {
       reviewId: review.id,
@@ -236,21 +239,36 @@ Deno.serve(async (req) => {
       currentChain: station.chain || null,
       currentOperator: station.operator || null,
       currentStationType: station.stationType || null,
+      // Chain detection
       detectedChain: detection.chain,
-      bucket: detection.bucket,
-      confidence: detection.confidence,
-      keyword: detection.keyword || null,
+      chainBucket: detection.bucket,
+      chainConfidence: detection.confidence,
+      chainKeyword: detection.keyword || null,
+      // Semantic reclassification
+      semanticBucket: semantic.semanticBucket,
+      semanticConfidence: semantic.semanticConfidence,
+      semanticSignals: semantic.detectedSignals.map((s) => s.keyword),
     };
 
     analyzed.push(record);
 
-    // Track stats
+    // Track chain stats
     if (!bucketMap[detection.bucket]) {
       bucketMap[detection.bucket] = 0;
       confidenceByBucket[detection.bucket] = [];
     }
     bucketMap[detection.bucket]++;
     confidenceByBucket[detection.bucket].push(detection.confidence);
+
+    // Track semantic stats
+    if (!semanticBucketMap[semantic.semanticBucket]) {
+      semanticBucketMap[semantic.semanticBucket] = 0;
+      semanticConfidenceByBucket[semantic.semanticBucket] = [];
+    }
+    semanticBucketMap[semantic.semanticBucket]++;
+    semanticConfidenceByBucket[semantic.semanticBucket].push(
+      semantic.semanticConfidence
+    );
   }
 
   // Calculate average confidence per bucket
