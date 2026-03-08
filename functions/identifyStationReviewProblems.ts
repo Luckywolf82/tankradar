@@ -70,7 +70,6 @@ const RETAIL_OPERATOR_PATTERNS = [
 ];
 
 const GENERIC_LOCAL_PATTERNS = [
-  /^tank$/i, /^tanken$/i, /^tanken\s/i, /^tank\s/i,
   /^bensin$/i, /^bensinstasjon$/i, /^independent$/i,
   /^smia$/i, /^fitjar$/i, /^drivstoff$/i, /^stasjonen$/i,
   /^pumpe$/i, /^pumpen$/i, /^max$/i, /^lokal$/i,
