@@ -292,7 +292,7 @@ const classifyStation = (stationName) => {
   if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase())))
     return { classification: 'marine_fuel', chain: null, operator: null, stationType: 'marine_fuel', reviewReason: 'special_type_detected' };
 
-  // 8. Retail operators
+  // 9. Retail operators
   for (const { operator, patterns } of RETAIL_OPERATORS)
     if (matchesAny(stationName, patterns))
       return { classification: 'retail_fuel_operator', chain: null, operator, stationType: 'retail_fuel', reviewReason: 'retail_operator_detected' };
