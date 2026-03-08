@@ -39,9 +39,9 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
     }
   };
 
-  const SectionHeader = ({ icon: Icon, title }) => (
+  const SectionHeader = ({ icon: IconComponent, title }) => (
     <div className="flex items-center gap-2 mb-3">
-      <Icon className="w-5 h-5 text-gray-700" />
+      <IconComponent className="w-5 h-5 text-gray-700" />
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
     </div>
   );
