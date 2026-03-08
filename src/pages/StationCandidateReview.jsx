@@ -316,7 +316,7 @@ export default function StationCandidateReview() {
             onClick={async () => {
               setAutoProcessing(true);
               try {
-                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { batchSize: 50 });
+                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { requestsPerSecond: 10 });
                 setGeocodeResult(result.data);
                 loadCandidates();
               } catch (e) {
