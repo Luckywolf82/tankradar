@@ -396,6 +396,38 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Analyze UI] Fetching pending review analysis...');
+              try {
+                const result = await base44.functions.invoke('analyzePendingStationReviews');
+                const data = result.data;
+                console.log('[Analyze UI] Full result:', data);
+                console.log('[Analyze UI] Summary:', data?.summary);
+                for (const item of data?.details || []) {
+                  console.log(`[Analyze UI] ${item.analysisBucket} | ${item.reviewType} | ${item.stationName}`, {
+                    reasonTags: item.reasonTags,
+                    explanation: item.explanation,
+                    chain: item.currentChain,
+                    operator: item.currentOperator,
+                    stationType: item.currentStationType,
+                  });
+                }
+              } catch (e) {
+                console.error('[Analyze UI] Analysis failed:', e);
+              }
+            }}
+            className="bg-slate-600 hover:bg-slate-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Analyze pending reviews
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Read-only analyse av pending review-køen. Ingen data endres. Resultater logges til nettleserkonsollen.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               setAutoProcessing(true);
               console.log('[Pipeline UI] Starting full review pipeline...');
               try {
