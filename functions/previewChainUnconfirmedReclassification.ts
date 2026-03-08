@@ -120,7 +120,7 @@ const mapSemanticToReviewType = (semanticBucket, station) => {
   }
 
   // Specialty fuel → specialty_fuel_review
-  if (semanticBucket === 'likely_specialty_fuel_site') {
+  if (semanticBucket === 'likely_specialty_fuel') {
     return {
       targetReviewType: 'specialty_fuel_review',
       safeToReclassify: true,
