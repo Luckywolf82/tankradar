@@ -2,7 +2,52 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, Zap } from 'lucide-react';
+import { ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, Zap, ExternalLink, MapPin, Globe } from 'lucide-react';
+
+// Helper function to build external lookup URLs
+const buildExternalLinks = (candidate) => {
+  const links = {};
+
+  // Google Listing URL
+  if (candidate.googlePlaceId) {
+    links.googleListing = `https://www.google.com/maps/place/?q=place_id:${candidate.googlePlaceId}`;
+  } else if (candidate.googleMapsUrl) {
+    links.googleListing = candidate.googleMapsUrl;
+  } else if (candidate.googleBusinessUrl) {
+    links.googleListing = candidate.googleBusinessUrl;
+  }
+
+  // Google Maps Search URL
+  if (candidate.stationName) {
+    const parts = [candidate.stationName];
+    if (candidate.city) parts.push(candidate.city);
+    const query = encodeURIComponent(parts.join(', '));
+    
+    if (candidate.latitude && candidate.longitude) {
+      links.googleMapsSearch = `https://www.google.com/maps/search/${query}/@${candidate.latitude},${candidate.longitude},15z`;
+    } else {
+      links.googleMapsSearch = `https://www.google.com/maps/search/${query}`;
+    }
+  }
+
+  // Website URL
+  if (candidate.website) {
+    links.website = candidate.website;
+  } else if (candidate.url) {
+    links.website = candidate.url;
+  } else if (candidate.homepage) {
+    links.website = candidate.homepage;
+  } else if (candidate.sourceUrl) {
+    links.website = candidate.sourceUrl;
+  }
+
+  // Street View URL
+  if (candidate.latitude && candidate.longitude) {
+    links.streetView = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${candidate.latitude},${candidate.longitude}`;
+  }
+
+  return links;
+};
 
 export default function ChainUnconfirmedManualReviewUI() {
   const [candidate, setCandidate] = useState(null);
