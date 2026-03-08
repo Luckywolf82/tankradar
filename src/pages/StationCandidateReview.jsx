@@ -21,6 +21,7 @@ export default function StationCandidateReview() {
   const [autoProcessing, setAutoProcessing] = useState(false);
   const [splitClusters, setSplitClusters] = useState({});
   const [autoChainResult, setAutoChainResult] = useState(null);
+  const [ruleEngineResult, setRuleEngineResult] = useState(null);
 
   useEffect(() => {
     loadCandidates();
