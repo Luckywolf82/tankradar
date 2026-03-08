@@ -22,6 +22,7 @@ export default function StationCandidateReview() {
   const [splitClusters, setSplitClusters] = useState({});
   const [autoChainResult, setAutoChainResult] = useState(null);
   const [ruleEngineResult, setRuleEngineResult] = useState(null);
+  const [geocodeResult, setGeocodeResult] = useState(null);
 
   useEffect(() => {
     loadCandidates();
