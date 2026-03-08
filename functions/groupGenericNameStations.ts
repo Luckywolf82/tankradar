@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
         totalClusters: clusters.length,
         likelyDuplicateClusters: clusterData.filter(c => c.likelyDuplicate).length,
         possibleDuplicateClusters: clusterData.filter(c => c.possibleDuplicate).length,
-        uniqueClusters: clusterData.filter(c => c.count === 1).length,
+        uniqueClusters: clusterData.filter(c => c.count === 1 && c.stations.length === 1).length,
         clusters: clusterData,
       });
     }
