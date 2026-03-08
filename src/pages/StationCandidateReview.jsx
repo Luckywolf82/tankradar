@@ -470,6 +470,11 @@ export default function StationCandidateReview() {
           <div className="text-sm text-gray-700 mb-1">
             <strong>Reviews oppdatert med reviewReason:</strong> {ruleEngineResult.summary?.reviewsUpdated ?? 0}
           </div>
+          {ruleEngineResult.summary?.nearbyAutoResolved > 0 && (
+            <div className="text-sm text-green-700 font-medium mb-2">
+              ✓ {ruleEngineResult.summary.nearbyAutoResolved} review-items auto-resolved (nearby_same_chain: &lt;{ruleEngineResult.summary.nearbyThresholds?.distanceMeters}m + navnlikhet ≥{ruleEngineResult.summary.nearbyThresholds?.nameSimilarity})
+            </div>
+          )}
           {ruleEngineResult.summary?.possibleDuplicatePairs > 0 && (
             <div className="text-sm text-pink-700 font-medium mb-3">
               ⚑ {ruleEngineResult.summary.possibleDuplicatePairs} mulige duplikat-par funnet (samme navn + &lt;50m avstand)

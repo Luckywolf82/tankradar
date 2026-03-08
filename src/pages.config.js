@@ -58,6 +58,7 @@ import DataConsistencyDiagnosis from './pages/DataConsistencyDiagnosis';
 import DataQualityDiagnostics from './pages/DataQualityDiagnostics';
 import DiscoverStations from './pages/DiscoverStations';
 import ExternalBrowserTest from './pages/ExternalBrowserTest';
+import GenericNameGroupsReport from './pages/GenericNameGroupsReport';
 import GroupReviewFixReport from './pages/GroupReviewFixReport';
 import implementationreportUserreportedpolicy from './pages/ImplementationReport_UserReportedPolicy';
 import ImportSystemReport from './pages/ImportSystemReport';
@@ -79,7 +80,6 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import ValidateStationData from './pages/ValidateStationData';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import GenericNameGroupsReport from './pages/GenericNameGroupsReport';
 import __Layout from './Layout.jsx';
 
 
@@ -95,6 +95,7 @@ export const PAGES = {
     "DataQualityDiagnostics": DataQualityDiagnostics,
     "DiscoverStations": DiscoverStations,
     "ExternalBrowserTest": ExternalBrowserTest,
+    "GenericNameGroupsReport": GenericNameGroupsReport,
     "GroupReviewFixReport": GroupReviewFixReport,
     "ImplementationReport_UserReportedPolicy": implementationreportUserreportedpolicy,
     "ImportSystemReport": ImportSystemReport,
@@ -116,7 +117,6 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "ValidateStationData": ValidateStationData,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "GenericNameGroupsReport": GenericNameGroupsReport,
 }
 
 export const pagesConfig = {
