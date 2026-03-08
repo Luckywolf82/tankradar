@@ -146,6 +146,8 @@ export default function LogPrice() {
         const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
           gps_lat: window.__gpsLat,
           gps_lon: window.__gpsLon,
+          latitude: stationInfo.latitude, // Selected station coordinates (if available)
+          longitude: stationInfo.longitude,
           station_name: stationInfo.station_name,
           station_chain: stationInfo.station_chain,
           city: stationInfo.city
