@@ -39,21 +39,51 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       setUserLocation({ latitude, longitude });
       console.log(`[StationPicker] Location obtained: lat=${latitude.toFixed(4)}, lon=${longitude.toFixed(4)}`);
 
-      // Fetch all stations
+      // Fetch all Station catalog entries
       const allStations = await base44.entities.Station.list();
-      console.log(`[StationPicker] Total stations in database: ${allStations.length}`);
+      console.log(`[StationPicker] Total stations in catalog: ${allStations.length}`);
+
+      // Fetch Google Places results (if available from backend function)
+      let googlePlacesResults = [];
+      try {
+        const gpRes = await base44.functions.invoke('discoverGooglePlacesCandidates', {
+          latitude,
+          longitude,
+          radiusMeters: 10000
+        });
+        if (gpRes.data?.results) {
+          googlePlacesResults = gpRes.data.results.map(gp => ({
+            ...gp,
+            _source: 'google_places',
+            _stationType: gp.type || 'fuel_station'
+          }));
+          console.log(`[StationPicker] Google Places candidates found: ${googlePlacesResults.length}`);
+        }
+      } catch (gpErr) {
+        console.warn(`[StationPicker] Google Places fetch failed (non-critical): ${gpErr.message}`);
+        // Continue with Station-only results
+      }
+
+      // Merge and tag results: Station catalog entries get id, GP results get place_id
+      const catalogWithTag = allStations.map(s => ({
+        ...s,
+        _source: 'station_catalog',
+        _stationType: s.stationType || 'standard'
+      }));
+      
+      const allCandidates = [...catalogWithTag, ...googlePlacesResults];
 
       // Calculate distance and filter to nearby (10km radius)
-      const nearbyWithDistance = allStations
+      const nearbyWithDistance = allCandidates
         .map(s => ({
           ...s,
           distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
         }))
         .filter(s => s.distance <= 10)
         .sort((a, b) => a.distance - b.distance)
-        .slice(0, 10);
+        .slice(0, 15);
 
-      console.log(`[StationPicker] Stations within 10km radius: ${nearbyWithDistance.length}`);
+      console.log(`[StationPicker] Combined results within 10km radius: ${nearbyWithDistance.length}`);
       setStations(nearbyWithDistance);
 
       if (nearbyWithDistance.length === 0) {
@@ -92,15 +122,19 @@ export default function StationPicker({ onSelectStation, onSkip }) {
     window.__gpsLat = userLocation.latitude;
     window.__gpsLon = userLocation.longitude;
 
+    // If station came from Google Places, include place_id; otherwise null
+    const isFromGooglePlaces = station._source === 'google_places';
+    const googlePlaceId = isFromGooglePlaces ? (station.place_id || null) : null;
+
     onSelectStation({
-      station_id: station.id,
+      station_id: station.id || null, // null if from Google Places (no Station.id yet)
       station_name: station.name || "",
-      station_chain: station.chain || "",
-      city: station.city || "",
-      region: station.region || "",
+      station_chain: station.chain || station.business_type || "",
+      city: station.city || (station.formatted_address ? station.formatted_address.split(',')[0] : ""),
+      region: station.region || null,
       latitude: station.latitude || userLocation.latitude,
       longitude: station.longitude || userLocation.longitude,
-      google_place_id: null, // From Station catalog (no GP ID), extended if future GP integration
+      google_place_id: googlePlaceId, // Populated only for unknown Google Places selections
     });
   };
 
