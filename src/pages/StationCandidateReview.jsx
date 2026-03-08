@@ -329,7 +329,7 @@ export default function StationCandidateReview() {
             className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
           >
             <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Geocoder...' : 'Geocode stasjoner fra koordinater (50 ad gangen)'}
+            {autoProcessing ? 'Geocoder alle stasjoner...' : 'Geocode alle stasjoner fra koordinater'}
           </Button>
           <p className="text-xs text-gray-600 mt-2">
             Slår opp adresse, by, postnummer og region fra GPS-koordinater via Google Geocoding API for stasjoner som mangler disse feltene.
