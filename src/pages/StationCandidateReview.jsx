@@ -464,20 +464,34 @@ export default function StationCandidateReview() {
               </div>
             ))}
           </div>
+          {/* Lifecycle-rapport */}
+          {ruleEngineResult.summary?.lifecycle && (() => {
+            const lc = ruleEngineResult.summary.lifecycle;
+            const net = lc.estimatedNetChange;
+            return (
+              <div className="mb-4 bg-white border rounded p-3 space-y-1 text-sm">
+                <div className="font-semibold text-gray-800 mb-2">Review-kø lifecycle</div>
+                <div className="text-gray-600">Pending FØR kjøring: <strong>{lc.pendingBefore ?? '?'}</strong></div>
+                <div className="text-green-700">✓ Auto-resolved (kjede bekreftet): <strong>{lc.autoResolved?.chainConfirmed ?? 0}</strong></div>
+                <div className="text-green-700">✓ Auto-resolved (spesialtype/retail): <strong>{lc.autoResolved?.specialTypeOrRetail ?? 0}</strong></div>
+                <div className="text-green-700">✓ Auto-resolved (nearby_same_chain): <strong>{lc.autoResolved?.nearbyAutoResolved ?? 0}</strong></div>
+                <div className="text-orange-600">+ Nye pending (utenlandsk): <strong>{lc.newPendingCreated?.possibleForeign ?? 0}</strong></div>
+                <div className="text-orange-600">+ Nye pending (generisk navn): <strong>{lc.newPendingCreated?.genericName ?? 0}</strong></div>
+                <div className="text-orange-600">+ Nye pending (kjede ukjent): <strong>{lc.newPendingCreated?.chainUnconfirmed ?? 0}</strong></div>
+                <div className="text-gray-500">~ Duplikat-kandidater (teller ikke i pending): <strong>{lc.duplicateCandidatesMarked ?? 0}</strong></div>
+                <div className={`font-semibold mt-1 ${net <= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                  Netto endring i pending: {net > 0 ? '+' : ''}{net ?? '?'}
+                  {net <= 0 ? ' ✓' : ' ⚠'}
+                </div>
+              </div>
+            );
+          })()}
           <div className="text-sm text-gray-700 mb-2">
             <strong>Stasjoner oppdatert:</strong> {ruleEngineResult.summary?.stationUpdates ?? 0} av {ruleEngineResult.summary?.totalStations ?? 0}
           </div>
-          <div className="text-sm text-gray-700 mb-1">
-            <strong>Reviews oppdatert med reviewReason:</strong> {ruleEngineResult.summary?.reviewsUpdated ?? 0}
-          </div>
-          {ruleEngineResult.summary?.nearbyAutoResolved > 0 && (
-            <div className="text-sm text-green-700 font-medium mb-2">
-              ✓ {ruleEngineResult.summary.nearbyAutoResolved} review-items auto-resolved (nearby_same_chain: &lt;{ruleEngineResult.summary.nearbyThresholds?.distanceMeters}m + navnlikhet ≥{ruleEngineResult.summary.nearbyThresholds?.nameSimilarity})
-            </div>
-          )}
-          {ruleEngineResult.summary?.possibleDuplicatePairs > 0 && (
-            <div className="text-sm text-pink-700 font-medium mb-3">
-              ⚑ {ruleEngineResult.summary.possibleDuplicatePairs} mulige duplikat-par funnet (samme navn + &lt;50m avstand)
+          {ruleEngineResult.summary?.lifecycle?.perClassification?.possible_duplicate > 0 && (
+            <div className="text-sm text-pink-700 font-medium mb-2">
+              ⚑ {ruleEngineResult.summary.perClassification?.possible_duplicate ?? 0} mulige duplikat-par (samme navn + &lt;50m)
             </div>
           )}
           {ruleEngineResult.details?.possible_foreign?.length > 0 && (
