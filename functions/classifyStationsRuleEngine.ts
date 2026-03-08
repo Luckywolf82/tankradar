@@ -270,7 +270,7 @@ const classifyStation = (stationName) => {
     if (matchesAny(stationName, patterns))
       return { classification: 'secure_chain', chain, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
 
-  // 3. Specialty fuel — before local chains, before non-fuel
+  // 4. Specialty fuel — before local chains, before non-fuel
   for (const { stationType, patterns } of SPECIAL_TYPES)
     if (matchesAny(stationName, patterns))
       return { classification: 'specialty_fuel_site', chain: null, operator: null, stationType, reviewReason: 'specialty_fuel_detected' };
