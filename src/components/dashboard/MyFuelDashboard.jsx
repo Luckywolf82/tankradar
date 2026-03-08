@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import FavoriteStationCard from './FavoriteStationCard';
 import PriceAlertManager from './PriceAlertManager';
 import FreemiumBanner from './FreemiumBanner';
+import AddFavoriteForm from './AddFavoriteForm';
 
 export default function MyFuelDashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -114,6 +115,17 @@ export default function MyFuelDashboard() {
       {/* Premium locked badge for free users */}
       {!canCreateAlerts && (
         <FreemiumBanner type="premium_only" message="Prisvarslinger er kun for premium-brukere" />
+      )}
+
+      {/* Add favorite modal */}
+      {showAddFavorite && (
+        <AddFavoriteForm
+          onClose={() => setShowAddFavorite(false)}
+          onSuccess={() => {
+            setShowAddFavorite(false);
+            loadData();
+          }}
+        />
       )}
     </div>
   );
