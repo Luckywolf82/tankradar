@@ -362,46 +362,63 @@ export default function StationCandidateReview() {
       {/* Auto-chain results */}
       {autoChainResult && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="font-semibold text-green-900 mb-3">Auto-bekreftelse av kjede - resultat</h3>
-          <div className="grid grid-cols-3 gap-3 mb-3">
-            <div>
-              <div className="text-2xl font-bold text-green-600">{autoChainResult.summary.chainConfirmed}</div>
-              <div className="text-sm text-green-700">Bekreftet</div>
+          <h3 className="font-semibold text-green-900 mb-3">Auto-bekreftelse av kjede — resultat (3-nivå)</h3>
+
+          {/* Teller-grid */}
+          <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
+            <div className="bg-white rounded p-3 border text-center">
+              <div className="text-2xl font-bold text-green-600">{autoChainResult.summary.autoConfirmed ?? autoChainResult.summary.chainConfirmed ?? 0}</div>
+              <div className="text-xs text-gray-600">Tier A: Auto-bekreftet</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-yellow-600">{autoChainResult.summary.stillPending}</div>
-              <div className="text-sm text-yellow-700">Fortsatt venter</div>
+            <div className="bg-white rounded p-3 border text-center">
+              <div className="text-2xl font-bold text-blue-600">{autoChainResult.summary.chainSuggested ?? 0}</div>
+              <div className="text-xs text-gray-600">Tier B: Forslag</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-red-600">{autoChainResult.summary.errors}</div>
-              <div className="text-sm text-red-700">Feil</div>
+            <div className="bg-white rounded p-3 border text-center">
+              <div className="text-2xl font-bold text-gray-500">{autoChainResult.summary.manualReviewNeeded ?? autoChainResult.summary.stillPending ?? 0}</div>
+              <div className="text-xs text-gray-600">Tier C: Manuell review</div>
             </div>
-          </div>
-          
-          <div className="text-sm text-gray-700 mb-3">
-            <strong>Kjeder brukt:</strong> {autoChainResult.summary.knownChainsUsed?.join(', ') || 'N/A'}
+            <div className="bg-white rounded p-3 border text-center">
+              <div className="text-2xl font-bold text-orange-500">{autoChainResult.summary.excluded ?? 0}</div>
+              <div className="text-xs text-gray-600">Ekskludert (LPG/CNG/retail)</div>
+            </div>
           </div>
 
-          {autoChainResult.details.confirmed.length > 0 && (
-            <div className="mb-3">
-              <div className="text-sm font-semibold text-green-900 mb-2">Bekreftet:</div>
-              <div className="space-y-1 text-sm">
-                {autoChainResult.details.confirmed.slice(0, 5).map(item => (
-                  <div key={item.id} className="text-green-700">
-                    ✓ {item.stationName} → {item.detectedChain}
-                  </div>
+          {/* Tier A detaljer */}
+          {(autoChainResult.details?.autoConfirmed ?? autoChainResult.details?.confirmed ?? []).length > 0 && (
+            <div className="mb-3 bg-green-100 rounded p-3">
+              <div className="text-sm font-semibold text-green-900 mb-2">✓ Tier A — Auto-bekreftet:</div>
+              <div className="space-y-0.5 text-sm">
+                {(autoChainResult.details.autoConfirmed ?? autoChainResult.details.confirmed).slice(0, 8).map(item => (
+                  <div key={item.id} className="text-green-800">{item.name ?? item.stationName} → <strong>{item.chain ?? item.detectedChain}</strong></div>
                 ))}
-                {autoChainResult.details.confirmed.length > 5 && (
-                  <div className="text-gray-600">... og {autoChainResult.details.confirmed.length - 5} til</div>
+                {(autoChainResult.details.autoConfirmed ?? autoChainResult.details.confirmed).length > 8 && (
+                  <div className="text-gray-500 text-xs">... og {(autoChainResult.details.autoConfirmed ?? autoChainResult.details.confirmed).length - 8} til</div>
                 )}
               </div>
             </div>
           )}
 
-          <button
-            onClick={() => setAutoChainResult(null)}
-            className="text-sm text-gray-600 hover:text-gray-900 underline"
-          >
+          {/* Tier B detaljer */}
+          {(autoChainResult.details?.chainSuggested ?? []).length > 0 && (
+            <div className="mb-3 bg-blue-50 rounded p-3">
+              <div className="text-sm font-semibold text-blue-900 mb-2">~ Tier B — Forslag (krever manuell bekreftelse):</div>
+              <div className="space-y-0.5 text-sm">
+                {autoChainResult.details.chainSuggested.slice(0, 8).map(item => (
+                  <div key={item.id} className="text-blue-800">{item.name} → mulig <strong>{item.suggestedChain}</strong></div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Regler-oppsummering */}
+          {autoChainResult.summary.rules && (
+            <div className="text-xs text-gray-500 mt-2 border-t pt-2">
+              <strong>Ekskludert fra auto-confirm:</strong> {autoChainResult.summary.rules.excludedNote}
+            </div>
+          )}
+
+          <button onClick={() => setAutoChainResult(null)} className="text-sm text-gray-600 hover:text-gray-900 underline mt-3 block">
             Lukk resultat
           </button>
         </div>
