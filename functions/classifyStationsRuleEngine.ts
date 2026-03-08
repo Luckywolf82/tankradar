@@ -248,23 +248,33 @@ const classifyStation = (stationName) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const isScheduled = req.headers.get('x-automation-source') === 'scheduled';
 
-    if (user?.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    if (!isScheduled) {
+      const user = await base44.auth.me();
+      if (user?.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
     }
 
-    // Hent alle stations (med paginering for å få hele settet)
-    let stations = [];
+    const body = await req.json().catch(() => ({}));
+    const batchSize = body.batchSize || 200; // klassifisering er billig, kan ta mer
+
+    // Hent alle stations (med paginering)
+    let allStations = [];
     let page = 0;
     const pageSize = 500;
     while (true) {
       const batch = await base44.asServiceRole.entities.Station.list('-created_date', pageSize, page * pageSize);
       if (!batch || batch.length === 0) break;
-      stations = stations.concat(batch);
+      allStations = allStations.concat(batch);
       if (batch.length < pageSize) break;
       page++;
     }
+
+    // Klassifiser alle (CPU-only, ingen timeout-risiko for selve klassifiseringen)
+    // Men skriving batches vi for å unngå timeout ved mange oppdateringer
+    const stations = allStations;
 
     const counts = {
       secure_chain: 0,
