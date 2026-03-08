@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   const stationsWithMultipleConflictingPendingReviews = [];
 
   for (const stationId of stationIdsWithLocalFuelReview) {
-    const genericReviews = [];
+    let genericReviews = [];
     page = 0;
     while (true) {
       const batch = await base44.asServiceRole.entities.StationReview.filter(
