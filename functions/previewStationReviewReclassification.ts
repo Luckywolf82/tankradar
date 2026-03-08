@@ -180,6 +180,8 @@ const SUPPORTED_REVIEW_TYPES = new Set([
   'seed_conflict',
   'possible_foreign_station',
   'duplicate_candidate',
+  'specialty_fuel_review',
+  'non_fuel_poi_review',
 ]);
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
