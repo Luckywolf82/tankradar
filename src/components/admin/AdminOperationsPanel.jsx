@@ -46,7 +46,7 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
     </div>
   );
 
-  const CollapsibleSection = ({ title, icon, children, isExpanded, section, isDanger = false }) => (
+  const CollapsibleSection = ({ title, icon: IconComponent, children, isExpanded, section, isDanger = false }) => (
     <div className={`mb-6 border rounded-lg ${isDanger ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'}`}>
       <button
         onClick={() => toggleSection(section)}
@@ -54,7 +54,7 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           isDanger ? 'hover:bg-red-100' : 'hover:bg-gray-50'
         }`}
       >
-        <SectionHeader icon={icon} title={title} />
+        <SectionHeader icon={IconComponent} title={title} />
         {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
       </button>
       {isExpanded && (
