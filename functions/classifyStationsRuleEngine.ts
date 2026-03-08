@@ -342,7 +342,8 @@ Deno.serve(async (req) => {
       let newReviewType = review.review_type;
       if (result.classification === 'possible_foreign') newReviewType = 'possible_foreign_station';
       if (result.classification === 'generic_name') newReviewType = 'generic_name_review';
-      if (result.classification === 'chain_unconfirmed') newReviewType = 'chain_unconfirmed';
+      if (result.classification === 'special_type' || result.classification === 'marine_service') newReviewType = 'generic_name_review';
+      if (result.classification === 'unclassified') newReviewType = 'chain_unconfirmed';
 
       try {
         await base44.asServiceRole.entities.StationReview.update(review.id, {
