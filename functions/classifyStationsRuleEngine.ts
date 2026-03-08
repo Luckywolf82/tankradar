@@ -370,6 +370,7 @@ Deno.serve(async (req) => {
           secure_chain: counts.secure_chain,
           local_chain: counts.local_chain,
           special_type: counts.special_type,
+          marine_service: counts.marine_service,
           retail_operator: counts.retail_operator,
           generic_name: counts.generic_name,
           possible_foreign: counts.possible_foreign,
@@ -380,10 +381,11 @@ Deno.serve(async (req) => {
         secure_chain: details.secure_chain.slice(0, 20),
         local_chain: details.local_chain.slice(0, 20),
         special_type: details.special_type,
+        marine_service: details.marine_service,
         retail_operator: details.retail_operator,
         generic_name: details.generic_name,
         possible_foreign: details.possible_foreign,
-        unclassified_sample: details.unclassified.slice(0, 10),
+        unclassified_sample: details.unclassified.slice(0, 20),
       }
     });
   } catch (error) {
