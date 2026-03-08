@@ -103,10 +103,9 @@ Deno.serve(async (req) => {
         const names = [...new Set(cluster.map(s => s.name))];
         const cities = [...new Set(cluster.map(s => s.city).filter(Boolean))];
         const chains = [...new Set(cluster.map(s => s.chain).filter(Boolean))];
-        const hasDuplicateCoords = cluster.length > 1 && cluster.every(s => s.latitude && s.longitude);
 
         return {
-          count: cluster.count,
+          count: cluster.length,
           names,
           cities,
           chains,
