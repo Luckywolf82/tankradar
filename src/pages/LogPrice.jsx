@@ -66,6 +66,9 @@ export default function LogPrice() {
     station_name: "",
     city: "",
     region: "",
+    latitude: null,
+    longitude: null,
+    google_place_id: null,
     date_observed: format(new Date(), "yyyy-MM-dd"),
   });
 
@@ -222,9 +225,9 @@ export default function LogPrice() {
             station_name: stationInfo.station_name,
             station_chain: stationInfo.station_chain,
             city: stationInfo.city,
-            gps_lat: window.__gpsLat,
-            gps_lon: window.__gpsLon,
-            google_place_id: null // Extended later if StationPicker captures this
+            gps_lat: stationInfo.latitude || window.__gpsLat,
+            gps_lon: stationInfo.longitude || window.__gpsLon,
+            google_place_id: stationInfo.google_place_id
           });
           console.log('[LogPrice] Candidate creation result:', candidateRes.data);
         } catch (candidateErr) {
@@ -245,7 +248,7 @@ export default function LogPrice() {
     setStep("station");
     setImageUrl(null);
     setDetectedPrices(emptyPrices());
-    setStationInfo(s => ({ ...s, station_id: null, station_chain: "", station_name: "", city: "", region: "" }));
+    setStationInfo(s => ({ ...s, station_id: null, station_chain: "", station_name: "", city: "", region: "", latitude: null, longitude: null, google_place_id: null }));
     setShowSuccess(false);
     setSubmitError(null);
   };

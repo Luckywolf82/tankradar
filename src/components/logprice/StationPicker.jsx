@@ -98,6 +98,9 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       station_chain: station.chain || "",
       city: station.city || "",
       region: station.region || "",
+      latitude: station.latitude || userLocation.latitude,
+      longitude: station.longitude || userLocation.longitude,
+      google_place_id: null, // From Station catalog (no GP ID), extended if future GP integration
     });
   };
 
