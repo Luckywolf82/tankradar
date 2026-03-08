@@ -307,7 +307,7 @@ export default function StationCandidateReview() {
             {autoProcessing ? 'Klassifiserer...' : 'Kjør regelmotor (full klassifisering)'}
           </Button>
           <p className="text-xs text-gray-600 mt-2">
-            Klassifiserer alle stasjoner i: sikre kjeder, lokale kjeder, spesialtyper, retail-operatører, generiske navn og mulige utenlandske poster.
+            Klassifiserer alle stasjoner etter regelmotor (kjeder, spesialtyper, retail, generiske navn). Kjøres også automatisk daglig kl 03:00.
           </p>
         </div>
 
