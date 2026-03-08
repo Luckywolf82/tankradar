@@ -25,7 +25,6 @@ export default function StationCandidateReview() {
   const [autoChainResult, setAutoChainResult] = useState(null);
   const [ruleEngineResult, setRuleEngineResult] = useState(null);
   const [geocodeResult, setGeocodeResult] = useState(null);
-  const [confirmModal, setConfirmModal] = useState(null);
 
   useEffect(() => {
     loadCandidates();
