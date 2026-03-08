@@ -490,6 +490,40 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Inspect State UI] Inspecting historical reclassification stations...');
+              try {
+                const stationIds = [
+                  '69aca2538c602f6662ce6f98',
+                  '69aca2e54d3570418b70979a',
+                  '69aca299de10b0286d782ff7',
+                  '69aca2985510daf759a31be3',
+                  '69aca1951f274bd58abd8128',
+                ];
+                const result = await base44.functions.invoke('inspectStationReviewState', { stationIds });
+                const data = result.data;
+                console.log('[Inspect State UI] Full result:', data);
+                if (data?.result) {
+                  for (const station of data.result) {
+                    console.log(`[Inspect State UI] ${station.stationName} (${station.reviewCount} reviews)`, station.reviews);
+                  }
+                }
+              } catch (e) {
+                console.error('[Inspect State UI] Inspection failed:', e);
+              }
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Inspect review state (historical test stations)
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Inspects review state for 5 test stations. Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Analyze UI] Fetching pending review analysis...');
               try {
                 const result = await base44.functions.invoke('analyzePendingStationReviews');
