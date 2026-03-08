@@ -41,6 +41,7 @@ const LOCAL_CHAINS = [
   { chain: 'Finnøy Olje',       patterns: ['finnøy olje', 'finnoy olje'] },
   { chain: 'Buskerud Olje',     patterns: ['buskerud olje', 'buskerud oil'] },
   { chain: 'Bendiks Olje',      patterns: ['bendiks olje', 'bendiks oil'] },
+  { chain: 'Tanken',            patterns: [/^tanken\b/i, /^tank\b/i] },
 ];
 
 const SPECIAL_TYPE_PATTERNS = [

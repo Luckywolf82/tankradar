@@ -48,6 +48,7 @@ const LOCAL_CHAINS = [
   { chain: 'Setesdal Olje',     patterns: ['setesdal olje'] },
   { chain: 'Haugen Olje',       patterns: ['haugen olje'] },
   { chain: 'Lyse Energi',       patterns: ['lyse energi'] },
+  { chain: 'Tanken',            patterns: [/^tanken\b/i, /^tank\b/i] },
 ];
 
 // C. Spesialtyper (LPG/CNG/Hynion) → specialty_fuel_site
