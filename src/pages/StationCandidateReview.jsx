@@ -316,6 +316,32 @@ export default function StationCandidateReview() {
             onClick={async () => {
               setAutoProcessing(true);
               try {
+                // Først dry-run for å se rapport
+                const result = await base44.functions.invoke('verifyGenericNameStations', { dryRun: false });
+                setRuleEngineResult({ ...result.data, _type: 'verify_generic' });
+                loadCandidates();
+              } catch (e) {
+                console.error('Verify generic names failed:', e);
+              } finally {
+                setAutoProcessing(false);
+              }
+            }}
+            disabled={autoProcessing}
+            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2 mb-3"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Verifiserer...' : 'Verifiser Tanken/stedsnavn mot geocodet lokasjon'}
+          </Button>
+          <p className="text-xs text-gray-600 mb-3">
+            Sjekker om stedsnavn i stasjonsnavn (f.eks. "Tanken Hjartdal") stemmer med geocodet by/kommune. Setter areaLabel automatisk der det matcher.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
+              setAutoProcessing(true);
+              try {
                 const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { requestsPerSecond: 10 });
                 setGeocodeResult(result.data);
                 loadCandidates();
