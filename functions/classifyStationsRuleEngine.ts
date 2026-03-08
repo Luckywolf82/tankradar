@@ -333,19 +333,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Utfør oppdateringer med liten pause for å unngå rate-limiting
+    // Utfør oppdateringer — begrens til batchSize for å unngå timeout
+    const updateBatch = stationUpdates.slice(0, batchSize);
+    const remaining = stationUpdates.length - updateBatch.length;
+
     let updatedCount = 0;
     let updateErrors = 0;
-    for (const { id, update } of stationUpdates) {
+    for (const { id, update } of updateBatch) {
       try {
         await base44.asServiceRole.entities.Station.update(id, update);
         updatedCount++;
       } catch (e) {
         updateErrors++;
       }
-      // Liten forsinkelse
       await new Promise(r => setTimeout(r, 30));
     }
+
+    console.log(`[classifyRuleEngine] Oppdatert: ${updatedCount}, gjenstår skriving: ${remaining}`);
 
     // Oppdater tilhørende StationReview-records med reviewReason
     const pendingReviews = await base44.asServiceRole.entities.StationReview.filter({ status: 'pending' });
