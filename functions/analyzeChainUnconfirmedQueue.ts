@@ -351,7 +351,8 @@ Deno.serve(async (req) => {
   return Response.json({
     success: true,
     summary,
-    examplesByBucket,
+    examplesByChainBucket,
+    examplesBySemanticBucket,
     fullResultRows: analyzed,
   });
 });
