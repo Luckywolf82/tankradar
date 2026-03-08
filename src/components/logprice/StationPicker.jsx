@@ -255,7 +255,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           <div className="space-y-2 mb-4">
             {stations.map(station => (
               <button
-                key={station.id}
+                key={station.id || station.place_id}
                 onClick={() => handleSelectStation(station)}
                 className="w-full text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg p-3 transition-colors"
               >
