@@ -309,6 +309,31 @@ export default function StationCandidateReview() {
             Klassifiserer alle stasjoner i: sikre kjeder, lokale kjeder, spesialtyper, retail-operatører, generiske navn og mulige utenlandske poster.
           </p>
         </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
+              setAutoProcessing(true);
+              try {
+                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { batchSize: 50 });
+                setGeocodeResult(result.data);
+                loadCandidates();
+              } catch (e) {
+                console.error('Geocoding failed:', e);
+              } finally {
+                setAutoProcessing(false);
+              }
+            }}
+            disabled={autoProcessing}
+            className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            {autoProcessing ? 'Geocoder...' : 'Geocode stasjoner fra koordinater (50 ad gangen)'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Slår opp adresse, by, postnummer og region fra GPS-koordinater via Google Geocoding API for stasjoner som mangler disse feltene.
+          </p>
+        </div>
       </div>
 
       {/* Rule engine results */}
