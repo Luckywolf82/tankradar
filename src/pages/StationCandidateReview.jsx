@@ -302,8 +302,11 @@ export default function StationCandidateReview() {
       {/* Manual Chain-Unconfirmed Review Workflow */}
       <ChainUnconfirmedManualReviewUI />
 
-      {/* Auto-approve exact duplicates */}
-      <div className="mb-6 space-y-3">
+      {/* Admin Operations Panel */}
+      <AdminOperationsPanel onLoadCandidates={loadCandidates} />
+
+      {/* Deprecated: Old buttons section removed - now in AdminOperationsPanel */}
+      <div className="mb-6 space-y-3 hidden">
         <div>
           <Button
             onClick={handleAutoApproveExactDuplicates}
