@@ -278,8 +278,14 @@ Deno.serve(async (req) => {
       scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
   }
 
-  // Extract examples per bucket
-  const examplesByBucket = {};
+  const avgSemanticConfidenceByBucket = {};
+  for (const [bucket, scores] of Object.entries(semanticConfidenceByBucket)) {
+    avgSemanticConfidenceByBucket[bucket] =
+      scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  }
+
+  // Extract examples per chain bucket
+  const examplesByChainBucket = {};
   for (const bucket of [
     'likely_circle_k',
     'likely_shell',
@@ -290,16 +296,36 @@ Deno.serve(async (req) => {
     'likely_best',
     'unknown_chain',
   ]) {
-    examplesByBucket[bucket] = analyzed
-      .filter((a) => a.bucket === bucket)
+    examplesByChainBucket[bucket] = analyzed
+      .filter((a) => a.chainBucket === bucket)
+      .slice(0, 10);
+  }
+
+  // Extract examples per semantic bucket
+  const examplesBySemanticBucket = {};
+  for (const bucket of [
+    'likely_local_fuel_site',
+    'likely_specialty_fuel_site',
+    'likely_retail_fuel_operator',
+    'likely_non_fuel_or_marine',
+    'unclear_manual_review',
+  ]) {
+    examplesBySemanticBucket[bucket] = analyzed
+      .filter((a) => a.semanticBucket === bucket)
       .slice(0, 10);
   }
 
   // Build summary
   const summary = {
     totalPendingChainUnconfirmed: reviews.length,
-    perBucket: bucketMap,
-    avgConfidencePerBucket: avgConfidenceByBucket,
+    chainDetection: {
+      perBucket: bucketMap,
+      avgConfidencePerBucket: avgConfidenceByBucket,
+    },
+    semanticReclassification: {
+      perBucket: semanticBucketMap,
+      avgConfidencePerBucket: avgSemanticConfidenceByBucket,
+    },
   };
 
   // Console logging
@@ -307,9 +333,16 @@ Deno.serve(async (req) => {
   console.log(
     `  Total pending chain_unconfirmed: ${summary.totalPendingChainUnconfirmed}`
   );
-  console.log(`  Distribution:`);
-  for (const [bucket, count] of Object.entries(summary.perBucket)) {
-    const avgConf = summary.avgConfidencePerBucket[bucket] || 0;
+  console.log(`  ── CHAIN DETECTION (strict) ──`);
+  for (const [bucket, count] of Object.entries(summary.chainDetection.perBucket)) {
+    const avgConf = summary.chainDetection.avgConfidencePerBucket[bucket] || 0;
+    console.log(
+      `    - ${bucket}: ${count} (avg confidence: ${avgConf.toFixed(2)})`
+    );
+  }
+  console.log(`  ── SEMANTIC RECLASSIFICATION ──`);
+  for (const [bucket, count] of Object.entries(summary.semanticReclassification.perBucket)) {
+    const avgConf = summary.semanticReclassification.avgConfidencePerBucket[bucket] || 0;
     console.log(
       `    - ${bucket}: ${count} (avg confidence: ${avgConf.toFixed(2)})`
     );
