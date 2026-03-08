@@ -464,6 +464,58 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Preview Safe Mass UI] Previewing safe mass reclassification...');
+              try {
+                const result = await base44.functions.invoke('applySafeMassReviewReclassification', { dryRun: true, includeForeign: false });
+                const data = result.data;
+                console.log('[Preview Safe Mass UI] Full result:', data);
+                console.log('[Preview Safe Mass UI] Summary:', data?.summary);
+                if (data?.summary?.appliedExamples?.length > 0) {
+                  console.log('Preview examples:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.category})`).join(' | '));
+                }
+              } catch (e) {
+                console.error('[Preview Safe Mass UI] Preview failed:', e);
+              }
+            }}
+            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Preview safe mass reclassification
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Dry run only. Shows what safe categories would be reclassified (non_fuel_poi + specialty_fuel). Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
+              console.log('[Apply Safe Mass UI] Applying safe mass reclassification...');
+              try {
+                const result = await base44.functions.invoke('applySafeMassReviewReclassification', { dryRun: false, includeForeign: false });
+                const data = result.data;
+                console.log('[Apply Safe Mass UI] Result:', data);
+                console.log('[Apply Safe Mass UI] Summary:', data?.summary);
+                if (data?.summary?.appliedExamples?.length > 0) {
+                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.actionTaken})`).join(' | '));
+                }
+              } catch (e) {
+                console.error('[Apply Safe Mass UI] Apply failed:', e);
+              }
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Apply safe mass reclassification
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Applies safe categories only (non_fuel_poi + specialty_fuel). Updates or creates reviews. Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Apply Historical Reclassification UI] Applying historical station reclassification...');
               try {
                 const result = await base44.functions.invoke('applyHistoricalStationReclassification', { dryRun: false });
