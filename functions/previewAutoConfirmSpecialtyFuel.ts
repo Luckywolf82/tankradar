@@ -109,7 +109,8 @@ const mapStationTypeToSuggested = (stationType, signals) => {
   if (signals.includes('cng_prefix') || signals.includes('cng_contained')) return 'cng';
   if (signals.includes('truck_diesel')) return 'truck_diesel';
   if (signals.includes('biogas')) return 'biogas';
-  if (signals.includes('hydrogen') || signals.includes('h2') || signals.includes('hynion')) return 'lpg'; // Hydrogen/Hynion → treat as alternative
+  if (signals.includes('hydrogen') || signals.includes('h2') || signals.includes('hynion')) return 'cng';
+  if (signals.includes('parafin') || signals.includes('fyringsolje')) return 'unknown';
   return stationType || 'unknown';
 };
 
