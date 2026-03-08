@@ -279,7 +279,7 @@ const classifyStation = (stationName) => {
   if (isNonFuelPoi(stationName))
     return { classification: 'non_fuel_poi', chain: null, operator: null, stationType: null, reviewReason: 'non_fuel_poi_detected' };
 
-  // 5. Local chains
+  // 6. Local chains
   for (const { chain, patterns } of LOCAL_CHAINS)
     if (matchesAny(stationName, patterns))
       return { classification: 'local_chain', chain, operator: null, stationType: 'standard', reviewReason: 'local_chain_detected' };
