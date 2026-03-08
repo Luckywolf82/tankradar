@@ -275,7 +275,7 @@ const classifyStation = (stationName) => {
     if (matchesAny(stationName, patterns))
       return { classification: 'specialty_fuel_site', chain: null, operator: null, stationType, reviewReason: 'specialty_fuel_detected' };
 
-  // 4. Non-fuel POI — only if no strong fuel compound in name
+  // 5. Non-fuel POI — only if no strong fuel compound in name
   if (isNonFuelPoi(stationName))
     return { classification: 'non_fuel_poi', chain: null, operator: null, stationType: null, reviewReason: 'non_fuel_poi_detected' };
 
