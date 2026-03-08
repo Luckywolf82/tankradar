@@ -43,10 +43,10 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       const allStations = await base44.entities.Station.list();
       console.log(`[StationPicker] Total stations in catalog: ${allStations.length}`);
 
-      // Fetch Google Places results (if available from backend function)
+      // Fetch Google Places results (read-only discovery for picker display only)
       let googlePlacesResults = [];
       try {
-        const gpRes = await base44.functions.invoke('discoverGooglePlacesCandidates', {
+        const gpRes = await base44.functions.invoke('discoverGooglePlacesCandidatesForPicker', {
           latitude,
           longitude,
           radiusMeters: 10000
@@ -55,7 +55,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           googlePlacesResults = gpRes.data.results.map(gp => ({
             ...gp,
             _source: 'google_places',
-            _stationType: gp.type || 'fuel_station'
+            _stationType: gp.business_type || 'gas_station'
           }));
           console.log(`[StationPicker] Google Places candidates found: ${googlePlacesResults.length}`);
         }

@@ -131,11 +131,15 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { gps_lat, gps_lon, station_name, station_chain, city } = payload;
+    const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude } = payload;
 
-    if (gps_lat === undefined || gps_lon === undefined || !city) {
+    // Use selected station coordinates if available, otherwise fall back to GPS
+    const matchLat = latitude !== undefined ? latitude : gps_lat;
+    const matchLon = longitude !== undefined ? longitude : gps_lon;
+
+    if (matchLat === undefined || matchLon === undefined || !city) {
       return Response.json({ 
-        error: 'Missing required fields: gps_lat, gps_lon, city' 
+        error: 'Missing required fields: latitude/longitude (or gps_lat/gps_lon), city' 
       }, { status: 400 });
     }
 
@@ -151,10 +155,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Score all candidates
+    // Score all candidates using selected station coordinates
     const scoredMatches = candidates
       .map(station => {
-        const dist = haversineDistance(gps_lat, gps_lon, station.latitude, station.longitude);
+        const dist = haversineDistance(matchLat, matchLon, station.latitude, station.longitude);
         const distClass = classifyDistance(dist);
         
         const chainMatch = matchChain(station_chain, station.chain);
