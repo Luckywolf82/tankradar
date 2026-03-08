@@ -112,24 +112,39 @@ const matchStartsWith = (name, patterns) => {
   return patterns.some(p => n.startsWith(p.toLowerCase()));
 };
 
+// Trekker ut potensielt areaLabel fra rest av navn etter prefix
+// f.eks. "Tanken Hjartdal" → areaLabel="Hjartdal"
+const extractAreaFromName = (stationName, prefixes) => {
+  const n = norm(stationName);
+  for (const prefix of prefixes) {
+    const p = norm(prefix);
+    if (n.startsWith(p)) {
+      const rest = stationName.slice(prefix.length).trim();
+      if (rest.length > 1 && rest.length < 40) return rest;
+    }
+  }
+  return null;
+};
+
 // Kjører regelmotoren på ett stasjonsnavn
-// Returnerer: { classification, chain, operator, stationType, reviewReason, note }
+// Returnerer: { classification, chain, operator, stationType, reviewReason, areaLabel, note }
 const classifyStation = (stationName) => {
   const n = norm(stationName);
 
-  // F. Mulig utenlandsk
+  // G. Mulig utenlandsk — høyeste prioritet
   if (FOREIGN_PATTERNS.some(p => p.test(n))) {
     return {
       classification: 'possible_foreign',
       chain: null,
       operator: null,
       stationType: 'unknown',
+      areaLabel: null,
       reviewReason: 'possible_foreign_station',
       note: `Navn matcher mønster for utenlandsk stasjon: "${stationName}"`
     };
   }
 
-  // A. Sikre nasjonale kjeder
+  // A. Sikre nasjonale kjeder → auto_confirmed_chain
   for (const { chain, patterns } of SECURE_CHAINS) {
     if (matchesAny(n, patterns)) {
       return {
@@ -137,13 +152,14 @@ const classifyStation = (stationName) => {
         chain,
         operator: null,
         stationType: 'standard',
+        areaLabel: null,
         reviewReason: 'auto_classified',
-        note: `Sikker kjede auto-klassifisert: "${stationName}" → "${chain}"`
+        note: `Sikker kjede auto-bekreftet: "${stationName}" → "${chain}"`
       };
     }
   }
 
-  // B. Lokale/regionale kjeder
+  // B. Lokale/regionale kjeder → auto_confirmed_chain (local tier)
   for (const { chain, patterns } of LOCAL_CHAINS) {
     if (matchesAny(n, patterns)) {
       return {
@@ -151,13 +167,14 @@ const classifyStation = (stationName) => {
         chain,
         operator: null,
         stationType: 'standard',
+        areaLabel: null,
         reviewReason: 'local_chain_detected',
-        note: `Lokal kjede auto-klassifisert: "${stationName}" → "${chain}"`
+        note: `Lokal kjede auto-bekreftet: "${stationName}" → "${chain}"`
       };
     }
   }
 
-  // C. Spesialtyper
+  // C. Spesialtyper (LPG/CNG/Hynion) → specialty_fuel_site
   for (const { stationType, patterns } of SPECIAL_TYPES) {
     if (matchesAny(n, patterns)) {
       return {
@@ -165,13 +182,27 @@ const classifyStation = (stationName) => {
         chain: null,
         operator: null,
         stationType,
+        areaLabel: null,
         reviewReason: 'special_type_detected',
-        note: `Spesialtype detektert: "${stationName}" → stationType="${stationType}"`
+        note: `Spesialtype (specialty_fuel_site) detektert: "${stationName}" → stationType="${stationType}"`
       };
     }
   }
 
-  // D. Retail/operator
+  // E. Marine/service fuel → marine_or_service_fuel_site
+  if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase()))) {
+    return {
+      classification: 'marine_service',
+      chain: null,
+      operator: null,
+      stationType: 'marine_fuel',
+      areaLabel: null,
+      reviewReason: 'special_type_detected',
+      note: `Marin/service-site detektert: "${stationName}"`
+    };
+  }
+
+  // D. Retail/operator → retail_fuel_operator
   for (const { operator, patterns } of RETAIL_OPERATORS) {
     if (matchesAny(n, patterns)) {
       return {
@@ -179,21 +210,24 @@ const classifyStation = (stationName) => {
         chain: null,
         operator,
         stationType: 'retail_fuel',
+        areaLabel: null,
         reviewReason: 'retail_operator_detected',
         note: `Retail-operatør detektert: "${stationName}" → operator="${operator}"`
       };
     }
   }
 
-  // E. Generisk navn
-  if (GENERIC_NAME_PATTERNS.some(p => p.test(n))) {
+  // F. Generiske lokale navn → generic_local_station_name (review med areaLabel-forslag)
+  if (GENERIC_LOCAL_PATTERNS.some(p => p.test(n))) {
+    const areaLabel = extractAreaFromName(stationName, ['Tanken ', 'Tank ']);
     return {
       classification: 'generic_name',
       chain: null,
       operator: null,
       stationType: 'unknown',
+      areaLabel: areaLabel || null,
       reviewReason: 'generic_name',
-      note: `Generisk navn flagget til review: "${stationName}"`
+      note: `Generisk lokalt navn flagget til review: "${stationName}"${areaLabel ? ` — foreslått areaLabel: "${areaLabel}"` : ''}`
     };
   }
 
@@ -203,6 +237,7 @@ const classifyStation = (stationName) => {
     chain: null,
     operator: null,
     stationType: null,
+    areaLabel: null,
     reviewReason: 'chain_unconfirmed',
     note: `Ingen regel matchet: "${stationName}"`
   };
