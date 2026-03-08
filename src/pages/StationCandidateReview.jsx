@@ -1070,7 +1070,7 @@ export default function StationCandidateReview() {
       {stationStats.pending_total > 0 && (
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Station-data Review</h3>
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <Card className="border-l-4 border-l-purple-400">
               <CardContent className="pt-6">
                 <div className="text-3xl font-bold text-purple-600">{stationStats.pending_total}</div>
@@ -1101,6 +1101,20 @@ export default function StationCandidateReview() {
                 <div className="text-sm text-gray-600">Ikke-drivstoff POI</div>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-teal-600">{stationStats.local_fuel_site}</div>
+                <div className="text-sm text-gray-600">Lokalt drivstoff</div>
+              </CardContent>
+            </Card>
+            {stationStats.retail_fuel_operator > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-3xl font-bold text-cyan-600">{stationStats.retail_fuel_operator}</div>
+                  <div className="text-sm text-gray-600">Retail operatør</div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       )}
