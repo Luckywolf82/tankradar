@@ -340,6 +340,37 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              // Dry run først for å vise hva som vil bli slettet
+              const preview = await base44.functions.invoke('deleteForeignStations', { dryRun: true });
+              const count = preview.data?.count ?? 0;
+              const names = (preview.data?.stations ?? []).map(s => s.name).join('\n');
+              if (count === 0) { alert('Ingen utenlandske stasjoner funnet.'); return; }
+              if (!window.confirm(`Vil du slette ${count} utenlandske stasjoner?\n\n${names}\n\nDette kan ikke angres.`)) return;
+              setAutoProcessing(true);
+              try {
+                const result = await base44.functions.invoke('deleteForeignStations', { dryRun: false });
+                alert(`Slettet ${result.data?.deletedStations} stasjoner og ${result.data?.deletedReviews} reviews.`);
+                loadCandidates();
+              } catch (e) {
+                console.error('Delete foreign failed:', e);
+              } finally {
+                setAutoProcessing(false);
+              }
+            }}
+            disabled={autoProcessing}
+            className="bg-red-700 hover:bg-red-800 flex items-center gap-2"
+          >
+            <X className="w-4 h-4" />
+            {autoProcessing ? 'Sletter...' : 'Slett alle utenlandske stasjoner'}
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Sletter stasjoner som matcher utenlandske mønstre (Preem, Tännäs, Sälen, Åre, K-market, Kilpisjärvi osv.) samt tilhørende reviews. Viser forhåndsvisning før sletting.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               setAutoProcessing(true);
               try {
                 const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { batchSize: 80 });
