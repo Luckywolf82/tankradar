@@ -173,11 +173,17 @@ const RETAIL_OPERATORS = [
   { operator: 'Extra',       patterns: [/^extra\b/i] },
 ];
 
+// TANKEN_NAME_PATTERNS — separate from generic, should trigger possible_local_fuel_site review
+const TANKEN_NAME_PATTERNS = [
+  /^tank$/i,
+  /^tanken$/i,
+];
+
 // 9. Generic local names — plain names with no stronger signal
 const GENERIC_LOCAL_PATTERNS = [
   /^independent$/i, /^smia$/i, /^fitjar$/i, /^stasjonen$/i,
   /^pumpe$/i, /^pumpen$/i, /^max$/i, /^lokal$/i,
-  /^nærservice$/i, /^bensinstasjonen$/i, /^tank$/i, /^tanken$/i,
+  /^nærservice$/i, /^bensinstasjonen$/i,
 ];
 
 // ─── CLASSIFICATION OUTCOME MODEL ─────────────────────────────────────────────
