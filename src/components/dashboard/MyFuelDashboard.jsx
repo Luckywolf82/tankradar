@@ -18,6 +18,13 @@ export default function MyFuelDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const authUser = await base44.auth.me();
       setUser(authUser);
 
@@ -27,14 +34,11 @@ export default function MyFuelDashboard() {
       }
     } catch (err) {
       console.error('[MyFuelDashboard] loadData:', err.message);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
-
-  if (!user) {
-    return null;
-  }
 
   if (loading) {
     return (
@@ -42,6 +46,10 @@ export default function MyFuelDashboard() {
         <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   if (!dashboardData) {
