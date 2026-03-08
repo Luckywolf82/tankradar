@@ -257,11 +257,15 @@ const classifyStation = (stationName) => {
   const n = norm(stationName);
   const nm = normMatch(stationName);
 
-  // 1. Foreign
+  // 1. TANKEN_NAME_PATTERNS — before generic check
+  if (TANKEN_NAME_PATTERNS.some(p => p.test(n)))
+    return { classification: 'unclassified', chain: null, operator: null, stationType: 'unknown', reviewReason: 'possible_local_fuel_site' };
+
+  // 2. Foreign
   if (FOREIGN_PATTERNS.some(p => p.test(n) || p.test(nm)))
     return { classification: 'possible_foreign', chain: null, operator: null, stationType: 'unknown', reviewReason: 'possible_foreign_station' };
 
-  // 2. Secure chains
+  // 3. Secure chains
   for (const { chain, patterns } of SECURE_CHAINS)
     if (matchesAny(stationName, patterns))
       return { classification: 'secure_chain', chain, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
