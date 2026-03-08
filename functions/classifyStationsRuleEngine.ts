@@ -284,7 +284,7 @@ const classifyStation = (stationName) => {
     if (matchesAny(stationName, patterns))
       return { classification: 'local_chain', chain, operator: null, stationType: 'standard', reviewReason: 'local_chain_detected' };
 
-  // 6. Tankautomat
+  // 7. Tankautomat
   if (TANKAUTOMAT_PATTERNS.some(p => n.includes(p)))
     return { classification: 'automatic_fuel_station', chain: null, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
 
