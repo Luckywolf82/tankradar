@@ -214,6 +214,25 @@ export default function LogPrice() {
         });
       
       await base44.entities.FuelPrice.bulkCreate(entries);
+      
+      // If no safe match exists, capture as StationCandidate for review pipeline
+      if (matchResult?.status === 'no_safe_station_match') {
+        try {
+          const candidateRes = await base44.functions.invoke('createStationCandidateFromUserReportedPrice', {
+            station_name: stationInfo.station_name,
+            station_chain: stationInfo.station_chain,
+            city: stationInfo.city,
+            gps_lat: window.__gpsLat,
+            gps_lon: window.__gpsLon,
+            google_place_id: null // Extended later if StationPicker captures this
+          });
+          console.log('[LogPrice] Candidate creation result:', candidateRes.data);
+        } catch (candidateErr) {
+          console.error('[LogPrice] Candidate creation failed (non-critical):', candidateErr.message);
+          // Non-critical: price was saved, candidate creation optional
+        }
+      }
+      
       setSubmitting(false);
     } catch (error) {
       // API failed: show error, keep optimistic UI visible
