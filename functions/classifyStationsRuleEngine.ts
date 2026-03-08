@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 // ─── SHARED RULE ENGINE CONFIG ────────────────────────────────────────────────
-// Prioritetsrekkefølge: H→A→C→B→D→E→F→G→uklassifisert
-// Synkronisert med: identifyStationReviewProblems, autoConfirmChainFromName
 
 const FOREIGN_PATTERNS = [
   /\bpreem\b/i, /\bokq8\b/i, /\benonteki/i, /\bk-market\b/i, /\bk market\b/i,
@@ -71,9 +69,8 @@ const TANKAUTOMAT_PATTERNS = ['tankautomat', 'tank automat', 'drivstoffautomat',
 
 const MARINE_SERVICE_PATTERNS = [
   'marina', 'brygge', 'småbåthavn', 'småbåt', 'marin ',
-  'gjestehamn', 'gjesthavn',
-  'båtforening', 'fiskehavn', 'båthavn', 'havneanlegg',
-  'kai', 'sjøfront', 'kanalen', 'bryggetorget',
+  'gjestehamn', 'gjesthavn', 'båtforening', 'fiskehavn', 'båthavn',
+  'havneanlegg', 'kai', 'sjøfront', 'kanalen', 'bryggetorget',
 ];
 
 const RETAIL_OPERATORS = [
@@ -98,7 +95,7 @@ const GENERIC_LOCAL_PATTERNS = [
   /^nærservice$/i, /^bensinstasjonen$/i, /^tank$/i, /^tanken$/i,
 ];
 
-// ─── HJELPEFUNKSJONER ──────────────────────────────────────────────────────────
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 const norm = (s) => {
   if (!s) return '';
@@ -133,69 +130,59 @@ const haversineMeters = (lat1, lon1, lat2, lon2) => {
 };
 
 const nameSimilarity = (a, b) => {
-  const bigrams = (s) => {
-    const set = new Set();
-    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
-    return set;
-  };
-  const na = normMatch(a);
-  const nb = normMatch(b);
+  const na = normMatch(a), nb = normMatch(b);
   if (na === nb) return 1.0;
-  const ba = bigrams(na);
-  const bb = bigrams(nb);
-  let intersection = 0;
-  for (const g of ba) { if (bb.has(g)) intersection++; }
-  const union = ba.size + bb.size - intersection;
-  return union === 0 ? 0 : intersection / union;
+  const bigrams = (s) => { const set = new Set(); for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2)); return set; };
+  const ba = bigrams(na), bb = bigrams(nb);
+  let inter = 0;
+  for (const g of ba) { if (bb.has(g)) inter++; }
+  const union = ba.size + bb.size - inter;
+  return union === 0 ? 0 : inter / union;
 };
+
+// Spatial grid bucket key (~1km cells)
+const gridKey = (lat, lon) => `${Math.floor(lat * 90)}_${Math.floor(lon * 55)}`;
 
 const classifyStation = (stationName) => {
   const n = norm(stationName);
   const nm = normMatch(stationName);
 
-  if (FOREIGN_PATTERNS.some(p => p.test(n) || p.test(nm))) {
+  if (FOREIGN_PATTERNS.some(p => p.test(n) || p.test(nm)))
     return { classification: 'possible_foreign', chain: null, operator: null, stationType: 'unknown', reviewReason: 'possible_foreign_station' };
-  }
-  for (const { chain, patterns } of SECURE_CHAINS) {
-    if (matchesAny(stationName, patterns)) {
+
+  for (const { chain, patterns } of SECURE_CHAINS)
+    if (matchesAny(stationName, patterns))
       return { classification: 'secure_chain', chain, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
-    }
-  }
-  for (const { stationType, patterns } of SPECIAL_TYPES) {
-    if (matchesAny(stationName, patterns)) {
+
+  for (const { stationType, patterns } of SPECIAL_TYPES)
+    if (matchesAny(stationName, patterns))
       return { classification: 'special_type', chain: null, operator: null, stationType, reviewReason: 'special_type_detected' };
-    }
-  }
-  for (const { chain, patterns } of LOCAL_CHAINS) {
-    if (matchesAny(stationName, patterns)) {
+
+  for (const { chain, patterns } of LOCAL_CHAINS)
+    if (matchesAny(stationName, patterns))
       return { classification: 'local_chain', chain, operator: null, stationType: 'standard', reviewReason: 'local_chain_detected' };
-    }
-  }
-  if (TANKAUTOMAT_PATTERNS.some(p => n.includes(p))) {
+
+  if (TANKAUTOMAT_PATTERNS.some(p => n.includes(p)))
     return { classification: 'automatic_fuel_station', chain: null, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
-  }
-  if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase()))) {
+
+  if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase())))
     return { classification: 'marine_service', chain: null, operator: null, stationType: 'marine_fuel', reviewReason: 'special_type_detected' };
-  }
-  for (const { operator, patterns } of RETAIL_OPERATORS) {
-    if (matchesAny(stationName, patterns)) {
+
+  for (const { operator, patterns } of RETAIL_OPERATORS)
+    if (matchesAny(stationName, patterns))
       return { classification: 'retail_operator', chain: null, operator, stationType: 'retail_fuel', reviewReason: 'retail_operator_detected' };
-    }
-  }
-  if (GENERIC_LOCAL_PATTERNS.some(p => p.test(n))) {
+
+  if (GENERIC_LOCAL_PATTERNS.some(p => p.test(n)))
     return { classification: 'generic_name', chain: null, operator: null, stationType: 'unknown', reviewReason: 'generic_name' };
-  }
+
   return { classification: 'unclassified', chain: null, operator: null, stationType: null, reviewReason: 'chain_unconfirmed' };
 };
 
-// Klassifikasjoner som LØSER chain_unconfirmed (chain er satt eller type er bekreftet)
 const AUTO_RESOLVES_CHAIN_REVIEW = new Set([
   'secure_chain', 'local_chain', 'special_type',
   'automatic_fuel_station', 'marine_service', 'retail_operator',
 ]);
-
-// Klassifikasjoner som TRENGER manuell review
-const NEEDS_MANUAL_REVIEW = new Set(['possible_foreign', 'generic_name']);
+const SKIP_NEARBY = new Set(['possible_foreign', 'marine_service', 'special_type', 'generic_name', 'unclassified']);
 
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
 
@@ -206,9 +193,8 @@ Deno.serve(async (req) => {
 
     if (!isScheduled) {
       const user = await base44.auth.me();
-      if (user?.role !== 'admin') {
+      if (user?.role !== 'admin')
         return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-      }
     }
 
     // ── Hent alle stasjoner ──
@@ -222,29 +208,88 @@ Deno.serve(async (req) => {
       page++;
     }
 
-    // ── Hent alle eksisterende reviews (alle statuser) ──
-    let allReviews = [];
+    // ── Hent kun pending reviews ──
+    let allPendingReviews = [];
     page = 0;
     while (true) {
-      const batch = await base44.asServiceRole.entities.StationReview.list('-created_date', 500, page * 500);
+      const batch = await base44.asServiceRole.entities.StationReview.filter({ status: 'pending' }, '-created_date', 500, page * 500);
       if (!batch || batch.length === 0) break;
-      allReviews = allReviews.concat(batch);
+      allPendingReviews = allPendingReviews.concat(batch);
       if (batch.length < 500) break;
       page++;
     }
 
-    // Map: stationId → pending reviews (kun pending teller som aktive problemer)
+    const pendingBefore = allPendingReviews.length;
+
+    // Map: stationId → pending reviews
     const pendingByStation = {};
-    for (const r of allReviews) {
-      if (r.status !== 'pending') continue;
+    for (const r of allPendingReviews) {
       if (!pendingByStation[r.stationId]) pendingByStation[r.stationId] = [];
       pendingByStation[r.stationId].push(r);
     }
 
-    // Snapshot pending-tall FØR kjøring
-    const pendingBefore = allReviews.filter(r => r.status === 'pending').length;
+    // ── O(n) duplicate detection via spatial grid ──
+    // Grid cell ≈ 1km — check same + adjacent cells
+    const spatialGrid = {};  // gridKey → [station]
+    for (const s of allStations) {
+      if (!s.latitude || !s.longitude) continue;
+      const key = gridKey(s.latitude, s.longitude);
+      if (!spatialGrid[key]) spatialGrid[key] = [];
+      spatialGrid[key].push(s);
+    }
 
-    // ── Klassifiser alle stasjoner ──
+    const duplicateFlaggedIds = new Set();
+    const duplicatePairs = [];
+
+    for (const s of allStations) {
+      if (!s.latitude || !s.longitude) continue;
+      const baseLat = Math.floor(s.latitude * 90);
+      const baseLon = Math.floor(s.longitude * 55);
+      // Check own cell + 8 neighbors
+      for (let dlat = -1; dlat <= 1; dlat++) {
+        for (let dlon = -1; dlon <= 1; dlon++) {
+          const neighbors = spatialGrid[`${baseLat + dlat}_${baseLon + dlon}`] || [];
+          for (const other of neighbors) {
+            if (other.id <= s.id) continue; // avoid double-counting
+            const dist = haversineMeters(s.latitude, s.longitude, other.latitude, other.longitude);
+            if (dist < 50 && norm(s.name) === norm(other.name)) {
+              duplicateFlaggedIds.add(other.id);
+              duplicatePairs.push({ a: { id: s.id, name: s.name }, b: { id: other.id, name: other.name }, distanceMeters: Math.round(dist) });
+            }
+          }
+        }
+      }
+    }
+
+    // ── O(n) nearby same-chain via chain bucket ──
+    // chain → [station with lat/lon]
+    const chainBuckets = {};
+    for (const s of allStations) {
+      if (!s.chain || !s.latitude || !s.longitude) continue;
+      if (!chainBuckets[s.chain]) chainBuckets[s.chain] = [];
+      chainBuckets[s.chain].push(s);
+    }
+
+    const NEARBY_DISTANCE_M = 80;
+    const NEARBY_SIMILARITY = 0.88;
+
+    // For each station: check if any same-chain station is within threshold
+    // Returns candidate name if found, null otherwise
+    const findNearbyChainMatch = (station, classificationChain) => {
+      const chain = classificationChain || station.chain;
+      if (!chain || !station.latitude || !station.longitude) return null;
+      const bucket = chainBuckets[chain] || [];
+      for (const candidate of bucket) {
+        if (candidate.id === station.id) continue;
+        const dist = haversineMeters(station.latitude, station.longitude, candidate.latitude, candidate.longitude);
+        if (dist > NEARBY_DISTANCE_M) continue;
+        const sim = nameSimilarity(station.name, candidate.name);
+        if (sim >= NEARBY_SIMILARITY) return { name: candidate.name, dist: Math.round(dist), sim: sim.toFixed(2) };
+      }
+      return null;
+    };
+
+    // ── Classify + build review changes ──
     const classCounts = {
       secure_chain: 0, local_chain: 0, special_type: 0,
       marine_service: 0, retail_operator: 0, generic_name: 0,
@@ -252,48 +297,15 @@ Deno.serve(async (req) => {
     };
 
     const lifecycle = {
-      chainReviewsAutoResolved: 0,   // chain_unconfirmed lukket fordi chain er bekreftet
-      specialTypeResolved: 0,        // special_type/marine/retail → chain_review lukket
-      foreignCreated: 0,             // ny possible_foreign review opprettet
-      genericCreated: 0,             // ny generic_name review opprettet
-      chainUnconfirmedCreated: 0,    // ny chain_unconfirmed review opprettet
-      reviewsUpdatedNotDuplicated: 0,// eksisterende review oppdatert (ikke duplikat)
-      duplicateCandidatesMarked: 0,  // station flagget som duplicate_candidate
-      nearbyAutoResolved: 0,         // auto-resolved via nearby_same_chain
-      stationsUpdated: 0,
+      chainReviewsAutoResolved: 0, specialTypeResolved: 0, nearbyAutoResolved: 0,
+      foreignCreated: 0, genericCreated: 0, chainUnconfirmedCreated: 0,
+      reviewsUpdatedNotDuplicated: 0, duplicateCandidatesMarked: 0, stationsUpdated: 0,
     };
 
-    const details = {
-      possible_foreign: [], generic_name: [], possible_duplicate: [],
-      auto_resolved_sample: [],
-    };
-
-    const stationUpdates = [];   // { id, update }
-    const reviewResolutions = []; // { id, update } — lukke/oppdatere eksisterende reviews
-    const reviewCreations = [];   // nye reviews å opprette
-
-    // ── Proximity duplicate detection ──
-    const duplicatePairs = [];
-    const duplicateFlaggedIds = new Set();
-    for (let i = 0; i < allStations.length; i++) {
-      const a = allStations[i];
-      if (!a.latitude || !a.longitude) continue;
-      for (let j = i + 1; j < allStations.length; j++) {
-        const b = allStations[j];
-        if (!b.latitude || !b.longitude) continue;
-        const dist = haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude);
-        if (dist < 50 && norm(a.name) === norm(b.name)) {
-          duplicateFlaggedIds.add(b.id);
-          duplicatePairs.push({ a: { id: a.id, name: a.name }, b: { id: b.id, name: b.name }, distanceMeters: Math.round(dist) });
-        }
-      }
-    }
-
-    // ── Nearby same-chain auto-resolve config ──
-    const NEARBY_DISTANCE_M = 80;
-    const NEARBY_SIMILARITY = 0.88;
-    const SKIP_NEARBY = new Set(['possible_foreign', 'marine_service', 'special_type', 'generic_name', 'unclassified']);
-    const stationMap = Object.fromEntries(allStations.map(s => [s.id, s]));
+    const details = { possible_foreign: [], generic_name: [], auto_resolved_sample: [] };
+    const stationUpdates = [];
+    const reviewResolutions = [];
+    const reviewCreations = [];
 
     for (const station of allStations) {
       const result = classifyStation(station.name);
@@ -302,125 +314,95 @@ Deno.serve(async (req) => {
       if (result.classification === 'possible_foreign') details.possible_foreign.push({ id: station.id, name: station.name });
       if (result.classification === 'generic_name') details.generic_name.push({ id: station.id, name: station.name });
 
-      // ── Station feltoppdateringer ──
+      // Station field updates
       const stationUpdate = {};
       if (result.chain) stationUpdate.chain = result.chain;
       if (result.operator && !station.operator) stationUpdate.operator = result.operator;
-      if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType) {
+      if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType)
         stationUpdate.stationType = result.stationType;
-      }
       if (Object.keys(stationUpdate).length > 0) stationUpdates.push({ id: station.id, update: stationUpdate });
 
-      // ── Review lifecycle ──
       const existingPending = pendingByStation[station.id] || [];
 
-      // 1. Nearby same-chain auto-resolve (sjekkes FØR øvrig lifecycle)
-      let nearbyResolved = false;
-      if (!SKIP_NEARBY.has(result.classification) && station.chain && station.latitude && station.longitude) {
-        for (const candidate of allStations) {
-          if (candidate.id === station.id) continue;
-          if (!candidate.latitude || !candidate.longitude) continue;
-          if (candidate.chain !== station.chain) continue;
-          const dist = haversineMeters(station.latitude, station.longitude, candidate.latitude, candidate.longitude);
-          if (dist > NEARBY_DISTANCE_M) continue;
-          const sim = nameSimilarity(station.name, candidate.name);
-          if (sim >= NEARBY_SIMILARITY) {
-            for (const rev of existingPending) {
-              reviewResolutions.push({ id: rev.id, update: {
-                status: 'auto_resolved',
-                reviewReason: 'nearby_same_chain',
-                notes: `Auto-resolved: nearby_same_chain (${Math.round(dist)}m, likhet ${sim.toFixed(2)}) mot "${candidate.name}"`,
-              }});
-              lifecycle.nearbyAutoResolved++;
-              details.auto_resolved_sample.push({ name: station.name, reason: `nearby_same_chain → ${candidate.name}` });
-            }
-            nearbyResolved = true;
-            break;
+      // 1. Nearby same-chain auto-resolve
+      if (!SKIP_NEARBY.has(result.classification)) {
+        const nearby = findNearbyChainMatch(station, result.chain);
+        if (nearby) {
+          for (const rev of existingPending) {
+            reviewResolutions.push({ id: rev.id, update: {
+              status: 'auto_resolved',
+              reviewReason: 'nearby_same_chain',
+              notes: `Auto-resolved: nearby_same_chain (${nearby.dist}m, likhet ${nearby.sim}) mot "${nearby.name}"`,
+            }});
+            lifecycle.nearbyAutoResolved++;
+            details.auto_resolved_sample.push({ name: station.name, reason: `nearby_same_chain → ${nearby.name}` });
           }
+          continue;
         }
       }
-      if (nearbyResolved) continue;
 
-      // 2. AUTO_RESOLVES_CHAIN_REVIEW — lukk chain_unconfirmed reviews
+      // 2. Auto-resolve chain reviews
       if (AUTO_RESOLVES_CHAIN_REVIEW.has(result.classification)) {
         for (const rev of existingPending) {
           if (rev.review_type === 'chain_unconfirmed') {
-            const resolveNote = result.chain
+            const note = result.chain
               ? `Auto-resolved: kjede bekreftet som "${result.chain}" av regelmotor`
-              : `Auto-resolved: klassifisert som ${result.classification} — chain-review ikke relevant`;
+              : `Auto-resolved: klassifisert som ${result.classification}`;
             reviewResolutions.push({ id: rev.id, update: {
               status: 'auto_resolved',
               reviewReason: result.reviewReason,
               station_chain: result.chain || undefined,
               station_operator: result.operator || undefined,
               station_stationType: result.stationType || undefined,
-              notes: resolveNote,
+              notes: note,
             }});
             if (result.chain) lifecycle.chainReviewsAutoResolved++;
             else lifecycle.specialTypeResolved++;
-            details.auto_resolved_sample.push({ name: station.name, reason: resolveNote });
+            details.auto_resolved_sample.push({ name: station.name, reason: note });
           } else {
-            // Oppdater reviewReason og type uten å endre status
-            reviewResolutions.push({ id: rev.id, update: {
-              reviewReason: result.reviewReason,
-            }});
+            reviewResolutions.push({ id: rev.id, update: { reviewReason: result.reviewReason } });
             lifecycle.reviewsUpdatedNotDuplicated++;
           }
         }
-        // Ikke opprett ny review for disse klassifikasjonene
         continue;
       }
 
-      // 3. POSSIBLE_FOREIGN — opprett eller oppdater review
+      // 3. Possible foreign
       if (result.classification === 'possible_foreign') {
         const existingForeign = existingPending.find(r => r.review_type === 'possible_foreign_station');
         if (!existingForeign) {
-          // Lukk evt. feilklassifiserte eksisterende reviews for denne stasjonen
           for (const rev of existingPending) {
-            if (rev.review_type !== 'possible_foreign_station') {
-              reviewResolutions.push({ id: rev.id, update: {
-                status: 'auto_resolved',
-                notes: `Overskrevet: stasjon reklassifisert som possible_foreign`,
-              }});
-            }
+            if (rev.review_type !== 'possible_foreign_station')
+              reviewResolutions.push({ id: rev.id, update: { status: 'auto_resolved', notes: 'Overskrevet: reklassifisert som possible_foreign' } });
           }
           reviewCreations.push({
-            stationId: station.id,
-            review_type: 'possible_foreign_station',
-            station_name: station.name,
-            station_chain: station.chain || null,
-            station_latitude: station.latitude,
-            station_longitude: station.longitude,
+            stationId: station.id, review_type: 'possible_foreign_station',
+            station_name: station.name, station_chain: station.chain || null,
+            station_latitude: station.latitude, station_longitude: station.longitude,
             status: 'pending',
             issue_description: `Mulig utenlandsk stasjon: "${station.name}"`,
             suggested_action: 'Verifiser om dette er norsk stasjon, eller avvis',
-            reviewReason: 'possible_foreign_station',
-            source_report: 'rule_engine_classify',
+            reviewReason: 'possible_foreign_station', source_report: 'rule_engine_classify',
           });
           lifecycle.foreignCreated++;
         } else {
-          // Finnes allerede — ikke opprett duplikat
           lifecycle.reviewsUpdatedNotDuplicated++;
         }
         continue;
       }
 
-      // 4. GENERIC_NAME — opprett eller oppdater review
+      // 4. Generic name
       if (result.classification === 'generic_name') {
         const existingGeneric = existingPending.find(r => r.review_type === 'generic_name_review');
         if (!existingGeneric) {
           reviewCreations.push({
-            stationId: station.id,
-            review_type: 'generic_name_review',
-            station_name: station.name,
-            station_chain: station.chain || null,
-            station_latitude: station.latitude,
-            station_longitude: station.longitude,
+            stationId: station.id, review_type: 'generic_name_review',
+            station_name: station.name, station_chain: station.chain || null,
+            station_latitude: station.latitude, station_longitude: station.longitude,
             status: 'pending',
             issue_description: `Generisk stasjonsnavn: "${station.name}"`,
             suggested_action: 'Finn spesifikt navn eller merge med annen stasjon',
-            reviewReason: 'generic_name',
-            source_report: 'rule_engine_classify',
+            reviewReason: 'generic_name', source_report: 'rule_engine_classify',
           });
           lifecycle.genericCreated++;
         } else {
@@ -429,19 +411,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 5. UNCLASSIFIED — chain_unconfirmed (kun hvis chain mangler)
+      // 5. Unclassified without chain
       if (result.classification === 'unclassified' && !station.chain) {
         const existingChainReview = existingPending.find(r => r.review_type === 'chain_unconfirmed');
         if (!existingChainReview) {
           reviewCreations.push({
-            stationId: station.id,
-            review_type: 'chain_unconfirmed',
-            station_name: station.name,
-            station_chain: null,
-            station_latitude: station.latitude,
-            station_longitude: station.longitude,
+            stationId: station.id, review_type: 'chain_unconfirmed',
+            station_name: station.name, station_chain: null,
+            station_latitude: station.latitude, station_longitude: station.longitude,
             status: 'pending',
-            issue_description: `Kjede ikke bekreftet for "${station.name}" (${station.address || 'ukjent adresse'})`,
+            issue_description: `Kjede ikke bekreftet for "${station.name}"`,
             suggested_action: 'Verifiser kjede basert på navn og lokalisering',
             source_report: 'rule_engine_classify',
           });
@@ -452,77 +431,68 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 6. UNCLASSIFIED med chain allerede satt — trenger ikke review
+      // 6. Unclassified with chain already set → close chain_unconfirmed
       if (result.classification === 'unclassified' && station.chain) {
         for (const rev of existingPending) {
           if (rev.review_type === 'chain_unconfirmed') {
             reviewResolutions.push({ id: rev.id, update: {
               status: 'auto_resolved',
-              notes: `Auto-resolved: station har allerede chain="${station.chain}" satt`,
+              notes: `Auto-resolved: station har allerede chain="${station.chain}"`,
             }});
             lifecycle.chainReviewsAutoResolved++;
           }
         }
       }
 
-      // 7. Duplicate candidates — egne review-poster, ikke pending-inflaterende
+      // 7. Duplicate candidates (status=duplicate_candidate, not pending — doesn't inflate queue)
       if (duplicateFlaggedIds.has(station.id)) {
         const existingDup = existingPending.find(r => r.review_type === 'duplicate_candidate');
         if (!existingDup) {
           reviewCreations.push({
-            stationId: station.id,
-            review_type: 'duplicate_candidate',
-            station_name: station.name,
-            station_chain: station.chain || null,
-            station_latitude: station.latitude,
-            station_longitude: station.longitude,
-            status: 'duplicate_candidate',  // <-- ikke 'pending', inflaterer ikke kø
+            stationId: station.id, review_type: 'duplicate_candidate',
+            station_name: station.name, station_chain: station.chain || null,
+            station_latitude: station.latitude, station_longitude: station.longitude,
+            status: 'duplicate_candidate',
             issue_description: `Mulig duplikat av annen stasjon (< 50m, identisk navn)`,
             suggested_action: 'Merge eller fjern duplikat',
-            reviewReason: 'auto_classified',
-            source_report: 'rule_engine_classify',
+            reviewReason: 'auto_classified', source_report: 'rule_engine_classify',
           });
           lifecycle.duplicateCandidatesMarked++;
         }
       }
     }
 
-    // ── Skriv station-oppdateringer ──
+    // ── Write station updates in batches (no per-record sleep) ──
+    const BATCH = 40;
     let stationsUpdated = 0;
-    for (const { id, update } of stationUpdates) {
-      try {
-        await base44.asServiceRole.entities.Station.update(id, update);
-        stationsUpdated++;
-      } catch (e) { /* fortsett */ }
-      await new Promise(r => setTimeout(r, 20));
+    for (let i = 0; i < stationUpdates.length; i += BATCH) {
+      await Promise.all(stationUpdates.slice(i, i + BATCH).map(({ id, update }) =>
+        base44.asServiceRole.entities.Station.update(id, update).then(() => stationsUpdated++).catch(() => {})
+      ));
+      if (i + BATCH < stationUpdates.length) await new Promise(r => setTimeout(r, 60));
     }
     lifecycle.stationsUpdated = stationsUpdated;
 
-    // ── Skriv review-resolusjoner (lukk/oppdater eksisterende) ──
-    for (const { id, update } of reviewResolutions) {
-      try {
-        await base44.asServiceRole.entities.StationReview.update(id, update);
-      } catch (e) { /* fortsett */ }
-      await new Promise(r => setTimeout(r, 20));
+    // ── Write review resolutions in batches ──
+    for (let i = 0; i < reviewResolutions.length; i += BATCH) {
+      await Promise.all(reviewResolutions.slice(i, i + BATCH).map(({ id, update }) =>
+        base44.asServiceRole.entities.StationReview.update(id, update).catch(() => {})
+      ));
+      if (i + BATCH < reviewResolutions.length) await new Promise(r => setTimeout(r, 60));
     }
 
-    // ── Opprett nye reviews ──
-    const BATCH = 25;
-    for (let i = 0; i < reviewCreations.length; i += BATCH) {
-      const batch = reviewCreations.slice(i, i + BATCH);
-      try {
-        await base44.asServiceRole.entities.StationReview.bulkCreate(batch);
-      } catch (e) {
-        console.error('Batch create failed:', e.message);
-      }
-      await new Promise(r => setTimeout(r, 80));
+    // ── Bulk create new reviews ──
+    const CREATE_BATCH = 50;
+    for (let i = 0; i < reviewCreations.length; i += CREATE_BATCH) {
+      await base44.asServiceRole.entities.StationReview.bulkCreate(reviewCreations.slice(i, i + CREATE_BATCH)).catch(e => console.error('bulkCreate failed:', e.message));
+      if (i + CREATE_BATCH < reviewCreations.length) await new Promise(r => setTimeout(r, 80));
     }
 
     const totalAutoResolved = lifecycle.chainReviewsAutoResolved + lifecycle.specialTypeResolved + lifecycle.nearbyAutoResolved;
     const totalNewPending = lifecycle.foreignCreated + lifecycle.genericCreated + lifecycle.chainUnconfirmedCreated;
     const netChange = totalNewPending - totalAutoResolved;
 
-    console.log(`[classifyRuleEngine] Stasjoner: ${allStations.length} | Oppdatert: ${stationsUpdated} | AutoResolved: ${totalAutoResolved} | NyePending: ${totalNewPending} | NettoEndring: ${netChange > 0 ? '+' : ''}${netChange}`);
+    console.log(`[classifyRuleEngine] n=${allStations.length} | updated=${stationsUpdated} | autoResolved=${totalAutoResolved} | newPending=${totalNewPending} | net=${netChange > 0 ? '+' : ''}${netChange}`);
 
     return Response.json({
       success: true,
@@ -544,7 +514,6 @@ Deno.serve(async (req) => {
             total: totalNewPending,
           },
           duplicateCandidatesMarked: lifecycle.duplicateCandidatesMarked,
-          reviewsUpdatedNotDuplicated: lifecycle.reviewsUpdatedNotDuplicated,
           estimatedNetChange: netChange,
           nearbyThresholds: { distanceMeters: NEARBY_DISTANCE_M, nameSimilarity: NEARBY_SIMILARITY },
         },
