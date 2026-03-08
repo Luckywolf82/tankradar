@@ -473,6 +473,21 @@ Deno.serve(async (req) => {
       const existingPending = pendingByStation[station.id] || [];
       const outcome = CLASSIFICATION_OUTCOMES[result.classification];
 
+      // PATCH 5: Safe stationType signal guard
+      const safeFuelStationTypes = new Set(['marine_fuel', 'retail_fuel', 'lpg', 'cng', 'biogas', 'truck_diesel']);
+      const hasSafeFuelStationType = station.stationType && safeFuelStationTypes.has(station.stationType);
+
+      if (hasSafeFuelStationType && result.classification === 'unclassified') {
+        // Don't create chain_unconfirmed if stationType already signals valid fuel site
+        for (const rev of existingPending) {
+          if (rev.review_type === 'chain_unconfirmed') {
+            // Leave unchanged or conservatively resolve
+            lifecycle.reviewsUpdatedNotDuplicated++;
+          }
+        }
+        continue;
+      }
+
       // 1. Nearby same-chain auto-resolve (feature-flagged)
       if (!SKIP_NEARBY.has(result.classification)) {
         const nearby = findNearbyChainMatch(station, result.chain);
