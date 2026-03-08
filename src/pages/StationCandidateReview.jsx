@@ -464,6 +464,32 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Apply Historical Reclassification UI] Applying historical station reclassification...');
+              try {
+                const result = await base44.functions.invoke('applyHistoricalStationReclassification', { dryRun: false });
+                const data = result.data;
+                console.log('[Apply Historical Reclassification UI] Result:', data);
+                console.log('[Apply Historical Reclassification UI] Summary:', data?.summary);
+                if (data?.summary?.appliedExamples?.length > 0) {
+                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.action})`).join(' | '));
+                }
+              } catch (e) {
+                console.error('[Apply Historical Reclassification UI] Apply failed:', e);
+              }
+            }}
+            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Apply historical reclassification
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Apply safe reclassifications (non_fuel_poi + specialty_fuel only). Updates existing chain_unconfirmed or creates new reviews. Results logged to console.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Analyze UI] Fetching pending review analysis...');
               try {
                 const result = await base44.functions.invoke('analyzePendingStationReviews');
