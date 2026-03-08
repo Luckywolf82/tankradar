@@ -414,7 +414,7 @@ export default function StationCandidateReview() {
       {ruleEngineResult && !ruleEngineResult._type && (
         <div className="mb-6 p-4 bg-violet-50 border border-violet-200 rounded-lg">
           <h3 className="font-semibold text-violet-900 mb-3">Regelmotor — klassifiseringsresultat</h3>
-          <div className="grid grid-cols-3 gap-3 mb-4 text-center">
+          <div className="grid grid-cols-3 gap-3 mb-4 text-center sm:grid-cols-5">
             {[
               { label: 'Auto-bekreftet kjede', key: 'secure_chain', color: 'text-green-600' },
               { label: 'Lokale kjeder', key: 'local_chain', color: 'text-blue-600' },
@@ -423,6 +423,8 @@ export default function StationCandidateReview() {
               { label: 'Retail/operatør', key: 'retail_operator', color: 'text-orange-600' },
               { label: 'Generisk lokalt navn', key: 'generic_name', color: 'text-red-600' },
               { label: 'Mulig utland', key: 'possible_foreign', color: 'text-red-800' },
+              { label: 'Tankautomat', key: 'automatic_fuel_station', color: 'text-teal-600' },
+              { label: 'Mulig duplikat', key: 'possible_duplicate', color: 'text-pink-600' },
               { label: 'Uklassifisert', key: 'chain_unconfirmed', color: 'text-gray-500' },
             ].map(({ label, key, color }) => (
               <div key={key} className="bg-white rounded p-2 border">
