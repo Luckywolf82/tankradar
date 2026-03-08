@@ -47,6 +47,37 @@ export default function StationCandidateReview() {
       const reviews = await base44.entities.StationReview.list();
       setStationReviews(reviews);
       
+      // Build detailed breakdown for debug logging
+      const reviewBreakdown = {
+        chain_unconfirmed: { total: 0, pending: 0, nonPending: 0 },
+        generic_name_review: { total: 0, pending: 0, nonPending: 0 },
+        specialty_fuel_review: { total: 0, pending: 0, nonPending: 0 },
+        non_fuel_poi_review: { total: 0, pending: 0, nonPending: 0 },
+        local_fuel_site_review: { total: 0, pending: 0, nonPending: 0 },
+        retail_fuel_operator_review: { total: 0, pending: 0, nonPending: 0 },
+      };
+
+      reviews.forEach(r => {
+        if (reviewBreakdown[r.review_type]) {
+          reviewBreakdown[r.review_type].total++;
+          if (r.status === 'pending') {
+            reviewBreakdown[r.review_type].pending++;
+          } else {
+            reviewBreakdown[r.review_type].nonPending++;
+          }
+        }
+      });
+
+      // Log detailed breakdown to console
+      console.log('[StationCandidateReview] Review Counter Debug:', {
+        timestamp: new Date().toISOString(),
+        totalReviews: reviews.length,
+        breakdown: reviewBreakdown,
+        totalPending: Object.values(reviewBreakdown).reduce((sum, bt) => sum + bt.pending, 0),
+        totalNonPending: Object.values(reviewBreakdown).reduce((sum, bt) => sum + bt.nonPending, 0),
+      });
+
+      // Count only PENDING for UI display
       const stationStatsNew = { chain_unconfirmed: 0, generic_names: 0, specialty_fuel: 0, non_fuel_poi: 0, pending_total: 0 };
       reviews.forEach(r => {
         if (r.status === 'pending') {
@@ -57,6 +88,20 @@ export default function StationCandidateReview() {
           if (r.review_type === 'non_fuel_poi_review') stationStatsNew.non_fuel_poi++;
         }
       });
+
+      // Verify total matches sum of individual types
+      const calculatedTotal = stationStatsNew.chain_unconfirmed + stationStatsNew.generic_names + stationStatsNew.specialty_fuel + stationStatsNew.non_fuel_poi;
+      if (stationStatsNew.pending_total !== calculatedTotal) {
+        console.warn('[StationCandidateReview] MISMATCH: pending_total does not equal sum of types', {
+          pending_total: stationStatsNew.pending_total,
+          calculated: calculatedTotal,
+          chain_unconfirmed: stationStatsNew.chain_unconfirmed,
+          generic_names: stationStatsNew.generic_names,
+          specialty_fuel: stationStatsNew.specialty_fuel,
+          non_fuel_poi: stationStatsNew.non_fuel_poi,
+        });
+      }
+
       setStationStats(stationStatsNew);
     } catch (error) {
       console.error('Failed to load candidates:', error);
