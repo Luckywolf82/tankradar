@@ -342,7 +342,7 @@ export default function StationCandidateReview() {
             onClick={async () => {
               setAutoProcessing(true);
               try {
-                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { requestsPerSecond: 10 });
+                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { batchSize: 80 });
                 setGeocodeResult(result.data);
                 loadCandidates();
               } catch (e) {
@@ -355,10 +355,10 @@ export default function StationCandidateReview() {
             className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
           >
             <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Geocoder alle stasjoner...' : 'Geocode alle stasjoner fra koordinater'}
+            {autoProcessing ? 'Geocoder batch...' : 'Geocode neste batch (80 stk)'}
           </Button>
           <p className="text-xs text-gray-600 mt-2">
-            Slår opp adresse, by, postnummer og region for alle stasjoner som mangler disse feltene. Kjører hele settet i én operasjon (~2-3 min for 1500 stk).
+            Kjører én batch på 80 stk manuelt. Automatisk scheduled kjøring hvert 5. minutt tar resten — ingen manuell oppfølging nødvendig.
           </p>
         </div>
       </div>
