@@ -53,21 +53,23 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const batchSize = body.batchSize || 50; // Max per run to avoid API quota
+    // requestsPerSecond: Google Geocoding API tillater 50 req/s, vi bruker 10 for å være sikre
+    const requestsPerSecond = body.requestsPerSecond || 10;
+    const delayMs = Math.ceil(1000 / requestsPerSecond);
 
-    // Hent stasjoner som mangler adressedata men har koordinater
-    const allStations = await base44.asServiceRole.entities.Station.list();
+    // Hent alle stasjoner som mangler adressedata men har koordinater
+    const allStations = await base44.asServiceRole.entities.Station.list('-created_date', 5000);
     const toGeocode = allStations.filter(s =>
       s.latitude && s.longitude &&
       (!s.address || !s.city || !s.postalCode)
     );
 
-    const batch = toGeocode.slice(0, batchSize);
+    const results = { updated: [], failed: [] };
 
-    const results = { updated: [], failed: [], skipped: 0 };
-    results.skipped = toGeocode.length - batch.length;
+    console.log(`[geocode] Starter geocoding av ${toGeocode.length} stasjoner (${delayMs}ms delay mellom kall)`);
 
-    for (const station of batch) {
+    for (let i = 0; i < toGeocode.length; i++) {
+      const station = toGeocode[i];
       try {
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${station.latitude},${station.longitude}&language=no&key=${GOOGLE_API_KEY}`;
         const res = await fetch(url);
@@ -75,6 +77,7 @@ Deno.serve(async (req) => {
 
         if (data.status !== 'OK' || !data.results?.length) {
           results.failed.push({ id: station.id, name: station.name, reason: data.status });
+          await new Promise(r => setTimeout(r, delayMs));
           continue;
         }
 
@@ -112,25 +115,31 @@ Deno.serve(async (req) => {
           results.updated.push({ id: station.id, name: station.name, updates });
         }
 
-        // Rate limit: 20 req/s is safe for Geocoding API
-        await new Promise(r => setTimeout(r, 60));
+        if ((i + 1) % 100 === 0) {
+          console.log(`[geocode] Fremgang: ${i + 1}/${toGeocode.length} — oppdatert: ${results.updated.length}, feilet: ${results.failed.length}`);
+        }
+
+        await new Promise(r => setTimeout(r, delayMs));
       } catch (err) {
         results.failed.push({ id: station.id, name: station.name, reason: err.message });
+        await new Promise(r => setTimeout(r, delayMs));
       }
     }
+
+    console.log(`[geocode] Ferdig! Oppdatert: ${results.updated.length}, feilet: ${results.failed.length}`);
 
     return Response.json({
       success: true,
       summary: {
         totalNeedingGeocode: toGeocode.length,
-        batchProcessed: batch.length,
+        batchProcessed: toGeocode.length,
         updated: results.updated.length,
         failed: results.failed.length,
-        skippedForNextRun: results.skipped,
+        skippedForNextRun: 0,
       },
       details: {
         updated: results.updated.slice(0, 20),
-        failed: results.failed.slice(0, 10),
+        failed: results.failed.slice(0, 20),
       }
     });
   } catch (error) {
