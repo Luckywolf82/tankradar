@@ -254,8 +254,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Hent alle stations
-    const stations = await base44.asServiceRole.entities.Station.list();
+    // Hent alle stations (med paginering for å få hele settet)
+    let stations = [];
+    let page = 0;
+    const pageSize = 500;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.Station.list('-created_date', pageSize, page * pageSize);
+      if (!batch || batch.length === 0) break;
+      stations = stations.concat(batch);
+      if (batch.length < pageSize) break;
+      page++;
+    }
 
     const counts = {
       secure_chain: 0,
