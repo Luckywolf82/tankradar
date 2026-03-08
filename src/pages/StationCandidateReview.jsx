@@ -332,7 +332,7 @@ export default function StationCandidateReview() {
             {autoProcessing ? 'Geocoder alle stasjoner...' : 'Geocode alle stasjoner fra koordinater'}
           </Button>
           <p className="text-xs text-gray-600 mt-2">
-            Slår opp adresse, by, postnummer og region fra GPS-koordinater via Google Geocoding API for stasjoner som mangler disse feltene.
+            Slår opp adresse, by, postnummer og region for alle stasjoner som mangler disse feltene. Kjører hele settet i én operasjon (~2-3 min for 1500 stk).
           </p>
         </div>
       </div>
