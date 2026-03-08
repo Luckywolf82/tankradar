@@ -460,6 +460,24 @@ export default function StationCandidateReview() {
               ))}
             </div>
           )}
+          {ruleEngineResult.details?.possible_duplicate?.length > 0 && (
+            <div className="mb-3 bg-pink-50 border border-pink-200 rounded p-3">
+              <div className="text-sm font-semibold text-pink-800 mb-1">Mulige duplikater (samme navn + &lt;50m):</div>
+              {ruleEngineResult.details.possible_duplicate.map((pair, i) => (
+                <div key={i} className="text-sm text-pink-700">
+                  ⚑ "{pair.a.name}" ↔ "{pair.b.name}" — {pair.distanceMeters}m
+                </div>
+              ))}
+            </div>
+          )}
+          {ruleEngineResult.details?.automatic_fuel_station?.length > 0 && (
+            <div className="mb-3 bg-teal-50 border border-teal-200 rounded p-3">
+              <div className="text-sm font-semibold text-teal-800 mb-1">Tankautomater:</div>
+              {ruleEngineResult.details.automatic_fuel_station.map(s => (
+                <div key={s.id} className="text-sm text-teal-700">⚙ {s.name}</div>
+              ))}
+            </div>
+          )}
           <button onClick={() => setRuleEngineResult(null)} className="text-sm text-gray-600 hover:text-gray-900 underline">
             Lukk resultat
           </button>
