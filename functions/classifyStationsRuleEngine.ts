@@ -360,7 +360,8 @@ Deno.serve(async (req) => {
       });
 
       const update = {};
-      if (result.chain && !station.chain) update.chain = result.chain;
+      // Sett chain alltid hvis regelmotor har en sikker verdi (overskriver gammel/feil verdi)
+      if (result.chain) update.chain = result.chain;
       if (result.operator && !station.operator) update.operator = result.operator;
       if (result.stationType && result.stationType !== 'unknown' && result.stationType !== null && !station.stationType) {
         update.stationType = result.stationType;
