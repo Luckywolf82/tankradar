@@ -19,7 +19,9 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
     const query = searchQuery.toLowerCase();
     return (
       station.name.toLowerCase().includes(query) ||
-      (station.chain && station.chain.toLowerCase().includes(query))
+      (station.chain && station.chain.toLowerCase().includes(query)) ||
+      (station.city && station.city.toLowerCase().includes(query)) ||
+      (station.address && station.address.toLowerCase().includes(query))
     );
   });
 
