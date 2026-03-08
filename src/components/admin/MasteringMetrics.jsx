@@ -16,9 +16,9 @@ export default function MasteringMetrics() {
   const loadMetrics = async () => {
     setLoading(true);
     try {
-      const stations = await base44.asServiceRole.entities.Station.list();
-      const candidates = await base44.asServiceRole.entities.StationCandidate.list();
-      const reviews = await base44.asServiceRole.entities.StationReview.list();
+      const stations = await base44.entities.Station.list();
+      const candidates = await base44.entities.StationCandidate.list();
+      const reviews = await base44.entities.StationReview.list();
 
       const candidateStats = {
         pending: candidates.filter(c => c.status === 'pending').length,
