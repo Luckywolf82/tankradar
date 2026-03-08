@@ -343,11 +343,12 @@ export default function StationCandidateReview() {
           <h3 className="font-semibold text-violet-900 mb-3">Regelmotor — klassifiseringsresultat</h3>
           <div className="grid grid-cols-3 gap-3 mb-4 text-center">
             {[
-              { label: 'Sikre kjeder', key: 'secure_chain', color: 'text-green-600' },
+              { label: 'Auto-bekreftet kjede', key: 'secure_chain', color: 'text-green-600' },
               { label: 'Lokale kjeder', key: 'local_chain', color: 'text-blue-600' },
-              { label: 'Spesialtyper', key: 'special_type', color: 'text-amber-600' },
+              { label: 'Spesialtype (LPG/CNG)', key: 'special_type', color: 'text-amber-600' },
+              { label: 'Marin/service', key: 'marine_service', color: 'text-cyan-600' },
               { label: 'Retail/operatør', key: 'retail_operator', color: 'text-orange-600' },
-              { label: 'Generisk navn', key: 'generic_name', color: 'text-red-600' },
+              { label: 'Generisk lokalt navn', key: 'generic_name', color: 'text-red-600' },
               { label: 'Mulig utland', key: 'possible_foreign', color: 'text-red-800' },
               { label: 'Uklassifisert', key: 'chain_unconfirmed', color: 'text-gray-500' },
             ].map(({ label, key, color }) => (
