@@ -288,7 +288,7 @@ const classifyStation = (stationName) => {
   if (TANKAUTOMAT_PATTERNS.some(p => n.includes(p)))
     return { classification: 'automatic_fuel_station', chain: null, operator: null, stationType: 'standard', reviewReason: 'auto_classified' };
 
-  // 7. Marine
+  // 8. Marine
   if (MARINE_SERVICE_PATTERNS.some(p => n.includes(p.toLowerCase())))
     return { classification: 'marine_fuel', chain: null, operator: null, stationType: 'marine_fuel', reviewReason: 'special_type_detected' };
 
