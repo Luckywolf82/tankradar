@@ -409,7 +409,8 @@ Deno.serve(async (req) => {
         generic_name: details.generic_name,
         possible_foreign: details.possible_foreign,
         unclassified_sample: details.unclassified.slice(0, 20),
-      }
+      },
+      remaining,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
