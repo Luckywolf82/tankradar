@@ -473,8 +473,8 @@ export default function StationCandidateReview() {
               <div className="text-xs text-gray-600">Feilet</div>
             </div>
             <div className="bg-white rounded p-2 border">
-              <div className="text-2xl font-bold text-gray-500">{geocodeResult.summary?.skippedForNextRun ?? 0}</div>
-              <div className="text-xs text-gray-600">Gjenstår (kjør igjen)</div>
+              <div className="text-2xl font-bold text-gray-500">{geocodeResult.summary?.remaining ?? 0}</div>
+              <div className="text-xs text-gray-600">{geocodeResult.summary?.done ? '✓ Alle ferdig!' : 'Gjenstår (auto kjører)'}</div>
             </div>
             <div className="bg-white rounded p-2 border">
               <div className="text-2xl font-bold text-gray-700">{geocodeResult.summary?.totalNeedingGeocode ?? 0}</div>
