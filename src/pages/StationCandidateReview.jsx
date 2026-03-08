@@ -16,7 +16,7 @@ export default function StationCandidateReview() {
   const [expandedStationReviewId, setExpandedStationReviewId] = useState(null);
   const [selectedNames, setSelectedNames] = useState({});
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0, duplicate: 0 });
-  const [stationStats, setStationStats] = useState({ chain_unconfirmed: 0, generic_names: 0, pending_total: 0 });
+  const [stationStats, setStationStats] = useState({ chain_unconfirmed: 0, generic_names: 0, specialty_fuel: 0, non_fuel_poi: 0, pending_total: 0 });
   const [splitGroupIds, setSplitGroupIds] = useState(new Set());
   const [autoProcessing, setAutoProcessing] = useState(false);
   const [splitClusters, setSplitClusters] = useState({});
@@ -47,12 +47,14 @@ export default function StationCandidateReview() {
       const reviews = await base44.entities.StationReview.list();
       setStationReviews(reviews);
       
-      const stationStatsNew = { chain_unconfirmed: 0, generic_names: 0, pending_total: 0 };
+      const stationStatsNew = { chain_unconfirmed: 0, generic_names: 0, specialty_fuel: 0, non_fuel_poi: 0, pending_total: 0 };
       reviews.forEach(r => {
         if (r.status === 'pending') {
           stationStatsNew.pending_total++;
           if (r.review_type === 'chain_unconfirmed') stationStatsNew.chain_unconfirmed++;
           if (r.review_type === 'generic_name_review') stationStatsNew.generic_names++;
+          if (r.review_type === 'specialty_fuel_review') stationStatsNew.specialty_fuel++;
+          if (r.review_type === 'non_fuel_poi_review') stationStatsNew.non_fuel_poi++;
         }
       });
       setStationStats(stationStatsNew);
@@ -778,7 +780,7 @@ export default function StationCandidateReview() {
       {stationStats.pending_total > 0 && (
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Station-data Review</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-5">
             <Card className="border-l-4 border-l-purple-400">
               <CardContent className="pt-6">
                 <div className="text-3xl font-bold text-purple-600">{stationStats.pending_total}</div>
@@ -797,6 +799,18 @@ export default function StationCandidateReview() {
                 <div className="text-sm text-gray-600">Generisk navn</div>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-amber-600">{stationStats.specialty_fuel}</div>
+                <div className="text-sm text-gray-600">Spesialdrivstoff</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-3xl font-bold text-rose-600">{stationStats.non_fuel_poi}</div>
+                <div className="text-sm text-gray-600">Ikke-drivstoff POI</div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
@@ -806,8 +820,15 @@ export default function StationCandidateReview() {
         <div className="mb-10">
           <h2 className="text-xl font-semibold mb-4 text-purple-900">Station-Data Review ({stationReviews.filter(r => r.status === 'pending').length})</h2>
           <div className="space-y-3">
-            {stationReviews.filter(r => r.status === 'pending').map(review => (
-              <Card key={review.id} className="border-l-4 border-l-purple-400">
+            {stationReviews.filter(r => r.status === 'pending').map(review => {
+              const borderColor =
+                review.review_type === 'specialty_fuel_review' ? 'border-l-amber-400' :
+                review.review_type === 'non_fuel_poi_review'   ? 'border-l-rose-400' :
+                review.review_type === 'possible_foreign_station' ? 'border-l-red-400' :
+                review.review_type === 'generic_name_review'   ? 'border-l-blue-300' :
+                'border-l-purple-400';
+              return (
+              <Card key={review.id} className={`border-l-4 ${borderColor}`}>
                 <button
                   onClick={() => setExpandedStationReviewId(expandedStationReviewId === review.id ? null : review.id)}
                   className="w-full p-4 flex justify-between items-center hover:bg-gray-50"
@@ -875,7 +896,8 @@ export default function StationCandidateReview() {
                   </CardContent>
                 )}
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
