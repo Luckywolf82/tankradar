@@ -81,6 +81,93 @@ const detectLikelyChain = (stationName) => {
   );
 };
 
+// Semantic bucketing for chain_unconfirmed reviews
+const SEMANTIC_SIGNALS = {
+  local_fuel_site: {
+    keywords: [
+      'tanken',
+      'bensin',
+      'drivstoff',
+      'diesel',
+      'oktan',
+      'shell select',
+      'prisbillig',
+      'lokaltank',
+    ],
+    score: 1.0,
+  },
+  specialty_fuel: {
+    keywords: ['lpg', 'cng', 'hydrogen', 'biogas', 'etanol', 'parafin'],
+    score: 0.9,
+  },
+  retail_fuel_operator: {
+    keywords: [
+      'coop',
+      'spar',
+      'joker',
+      'rema',
+      'kiwi',
+      'extra',
+      'meny',
+      'narvesen',
+    ],
+    score: 0.85,
+  },
+  non_fuel_or_marine: {
+    keywords: [
+      'båt',
+      'marina',
+      'sjø',
+      'marine',
+      'restaurant',
+      'kafé',
+      'pub',
+      'museum',
+      'hotell',
+      'verksted',
+      'mekaniker',
+      'automat',
+    ],
+    score: 0.8,
+  },
+};
+
+const classifySemanticBucket = (stationName) => {
+  const normalized = norm(stationName);
+  const detectedSignals = [];
+
+  for (const [bucketName, config] of Object.entries(SEMANTIC_SIGNALS)) {
+    for (const keyword of config.keywords) {
+      if (normalized.includes(norm(keyword))) {
+        detectedSignals.push({
+          bucket: bucketName,
+          keyword,
+          score: config.score,
+        });
+      }
+    }
+  }
+
+  if (detectedSignals.length === 0) {
+    return {
+      semanticBucket: 'unclear_manual_review',
+      detectedSignals: [],
+      semanticConfidence: 0,
+    };
+  }
+
+  // Highest scoring bucket wins
+  const best = detectedSignals.reduce((a, b) =>
+    a.score > b.score ? a : b
+  );
+
+  return {
+    semanticBucket: `likely_${best.bucket}`,
+    detectedSignals,
+    semanticConfidence: best.score,
+  };
+};
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
