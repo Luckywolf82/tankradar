@@ -97,29 +97,39 @@ Deno.serve(async (req) => {
 
     // === DEDUPLICATION: Check existing StationCandidate ===
     const existingCandidates = await base44.asServiceRole.entities.StationCandidate.list();
+    let matchingCandidate = null;
     
     for (const candidate of existingCandidates) {
-      // Match by googlePlaceId if available
+      // Match by googlePlaceId if available (exact match, all statuses)
       if (google_place_id && candidate.sourceStationId === google_place_id) {
-        return Response.json({
-          status: 'candidate_already_exists',
-          candidateId: candidate.id,
-          message: 'Candidate with this googlePlaceId already pending'
-        });
+        matchingCandidate = candidate;
+        break;
       }
       
-      // Match by name similarity + distance
+      // Match by name similarity + distance (all statuses, not just pending)
       const candNameNorm = normalize(candidate.proposedName);
       const similarity = levenshteinSimilarity(nameNorm, candNameNorm);
       const distance = haversineDistance(gps_lat, gps_lon, candidate.latitude || 0, candidate.longitude || 0);
       
-      if (similarity >= 0.85 && distance <= 100 && candidate.status === 'pending') {
-        return Response.json({
-          status: 'candidate_already_exists',
-          candidateId: candidate.id,
-          message: 'Similar candidate already pending'
-        });
+      if (similarity >= 0.85 && distance <= 100) {
+        matchingCandidate = candidate;
+        break;
       }
+    }
+
+    // If matching candidate exists, update metadata instead of creating duplicate
+    if (matchingCandidate) {
+      const updatedNotes = `${matchingCandidate.notes}\n[${new Date().toISOString()}] Updated from additional user price submission.`;
+      
+      await base44.asServiceRole.entities.StationCandidate.update(matchingCandidate.id, {
+        notes: updatedNotes
+      });
+
+      return Response.json({
+        status: 'candidate_updated',
+        candidateId: matchingCandidate.id,
+        message: 'Candidate metadata updated from additional submission'
+      });
     }
 
     // === CREATE StationCandidate ===
