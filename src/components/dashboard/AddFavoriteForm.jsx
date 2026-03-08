@@ -7,6 +7,7 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
   const [formData, setFormData] = useState({
     stationId: '',
     fuelType: 'diesel',
@@ -17,11 +18,64 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
     loadStations();
   }, []);
 
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const loadStations = async () => {
     setLoading(true);
     try {
+      // Try to get user location
+      let location = null;
+      try {
+        location = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+              });
+            },
+            () => reject(new Error('Geolocation denied'))
+          );
+        });
+        setUserLocation(location);
+      } catch (locErr) {
+        console.log('[AddFavoriteForm] Geolocation not available');
+      }
+
       const stationList = await base44.entities.Station.list('-updated_date', 500);
-      setStations(stationList || []);
+      let sorted = stationList || [];
+
+      // Sort by distance if location available
+      if (location && sorted.length > 0) {
+        sorted = sorted
+          .map((station) => ({
+            ...station,
+            distance:
+              station.latitude && station.longitude
+                ? calculateDistance(
+                    location.lat,
+                    location.lon,
+                    station.latitude,
+                    station.longitude
+                  )
+                : Infinity,
+          }))
+          .sort((a, b) => a.distance - b.distance);
+      }
+
+      setStations(sorted);
     } catch (err) {
       console.error('[AddFavoriteForm] loadStations:', err.message);
       setError('Kunne ikke laste stasjoner');
@@ -100,6 +154,9 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
                   <option key={station.id} value={station.id}>
                     {station.name}
                     {station.chain ? ` (${station.chain})` : ''}
+                    {station.distance && station.distance !== Infinity
+                      ? ` - ${Math.round(station.distance)} km`
+                      : ''}
                   </option>
                 ))}
               </select>
