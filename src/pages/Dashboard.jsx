@@ -11,6 +11,7 @@ import PriceChangeIndicator from "../components/dashboard/PriceChangeIndicator";
 import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
 import NearbyPrices from "../components/dashboard/NearbyPrices";
 import RecentPricesFeed from "../components/dashboard/RecentPricesFeed";
+import MyFuelDashboard from "../components/dashboard/MyFuelDashboard";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
@@ -86,6 +87,9 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        {/* MY FUEL DASHBOARD - Personalized section */}
+        <MyFuelDashboard />
 
         {/* SECTION 1: Smart Fill Indicator - Rask beslutning */}
         <div className="mb-8">
