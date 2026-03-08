@@ -61,7 +61,7 @@ const SPECIAL_TYPES = [
   { stationType: 'cng',          patterns: [/^cng\b/i, /\bcng\b/i, 'hynion', 'hydrogen'] },
   { stationType: 'truck_diesel', patterns: ['truck diesel', 'truckdiesel', 'truck-diesel', 'truckdisel', 'truck disel', 'lastebil diesel'] },
   { stationType: 'biogas',       patterns: ['biogass', 'biogas'] },
-  { stationType: 'lpg',          patterns: ['parafin', 'fyringsolje'] }, // heating fuel — specialty
+  { stationType: 'unknown',      patterns: ['parafin', 'fyringsolje'] }, // heating fuel — specialty
 ];
 
 // Compound fuel terms that OVERRIDE non-fuel signals (prevents false non-fuel classification)
