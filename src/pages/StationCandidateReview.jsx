@@ -430,6 +430,40 @@ export default function StationCandidateReview() {
         <div className="border-t pt-3">
           <Button
             onClick={async () => {
+              console.log('[Historical Reclassification UI] Previewing historical station reclassification...');
+              try {
+                const result = await base44.functions.invoke('previewHistoricalStationReclassification', { dryRun: true });
+                const data = result.data;
+                console.log('[Historical Reclassification UI] Full result:', data);
+                console.log('[Historical Reclassification UI] Summary:', data?.summary);
+                console.log('[Historical Reclassification UI] Proposals count:', data?.proposals?.length);
+                if (data?.proposals) {
+                  for (const p of data.proposals.slice(0, 10)) {
+                    console.log(`[Historical] ${p.stationName}`, {
+                      classification: p.currentExpectedClassification,
+                      targetReviewType: p.targetReviewType,
+                      historicalReviews: p.historicalReviewTypes,
+                      explanation: p.explanation,
+                    });
+                  }
+                }
+              } catch (e) {
+                console.error('[Historical Reclassification UI] Preview failed:', e);
+              }
+            }}
+            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2"
+          >
+            <Zap className="w-4 h-4" />
+            Preview historical reclassification
+          </Button>
+          <p className="text-xs text-gray-600 mt-2">
+            Re-evaluate all stations against current normalization rules. Identifies outdated historical review outcomes. Dry run only — no writes.
+          </p>
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            onClick={async () => {
               console.log('[Analyze UI] Fetching pending review analysis...');
               try {
                 const result = await base44.functions.invoke('analyzePendingStationReviews');
