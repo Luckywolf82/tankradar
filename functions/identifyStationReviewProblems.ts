@@ -182,20 +182,25 @@ Deno.serve(async (req) => {
       const classification = classifyStation(station.name);
       const existingForStation = reviewsByStation[station.id] || [];
 
-      // ── Fix eksisterende chain_unconfirmed reviews som burde vært noe annet ──
+      // ── Fix eksisterende pending reviews som burde vært noe annet ──
       for (const rev of existingForStation) {
         if (rev.status !== 'pending') continue;
-        if (rev.review_type !== 'chain_unconfirmed') continue;
 
-        if (classification === 'possible_foreign') {
+        if (classification === 'possible_foreign' && rev.review_type !== 'possible_foreign_station') {
           toFix.push({ id: rev.id, update: { review_type: 'possible_foreign_station', reviewReason: 'possible_foreign_station' } });
           results.wrong_type_fixed++;
-        } else if (classification === 'generic_name') {
+        } else if (classification === 'generic_name' && rev.review_type !== 'generic_name_review') {
           toFix.push({ id: rev.id, update: { review_type: 'generic_name_review', reviewReason: 'generic_name' } });
           results.wrong_type_fixed++;
-        } else if (SKIP_CHAIN_REVIEW.has(classification) && classification !== 'unclassified') {
-          // Disse trenger ikke chain_unconfirmed review — sett til approved automatisk
-          toFix.push({ id: rev.id, update: { status: 'approved', notes: `Auto-klassifisert som ${classification} av regelmotor. Ikke behov for manuell chain-review.` } });
+        } else if (
+          SKIP_CHAIN_REVIEW.has(classification) &&
+          classification !== 'unclassified' &&
+          classification !== 'possible_foreign' &&
+          classification !== 'generic_name'
+        ) {
+          // local_chain, secure_chain, special_type, retail_operator, marine_service, automatic_fuel_station
+          // → trenger IKKE manuell review, sett til approved uansett review_type
+          toFix.push({ id: rev.id, update: { status: 'approved', notes: `Auto-klassifisert som ${classification} av regelmotor.` } });
           results.wrong_type_fixed++;
         }
       }
