@@ -364,7 +364,54 @@ export default function StationCandidateReview() {
       </div>
 
       {/* Rule engine results */}
-      {ruleEngineResult && (
+      {ruleEngineResult?._type === 'verify_generic' && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <h3 className="font-semibold text-amber-900 mb-3">Verifisering av Tanken/stedsnavn — resultat</h3>
+          <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4 text-center">
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-amber-600">{ruleEngineResult.summary?.totalGenericStations ?? 0}</div>
+              <div className="text-xs text-gray-600">Totalt generiske</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-green-600">{ruleEngineResult.summary?.verified ?? 0}</div>
+              <div className="text-xs text-gray-600">Verifisert ✓</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-red-500">{ruleEngineResult.summary?.mismatch ?? 0}</div>
+              <div className="text-xs text-gray-600">Mismatch ✗</div>
+            </div>
+            <div className="bg-white rounded p-2 border">
+              <div className="text-2xl font-bold text-gray-400">{ruleEngineResult.summary?.noGeocode ?? 0}</div>
+              <div className="text-xs text-gray-600">Mangler geocoding</div>
+            </div>
+          </div>
+          {ruleEngineResult.summary?.areaLabelUpdated > 0 && (
+            <div className="text-sm text-green-700 font-medium mb-2">✓ {ruleEngineResult.summary.areaLabelUpdated} stasjoner fikk areaLabel satt automatisk</div>
+          )}
+          {ruleEngineResult.details?.mismatch?.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 mb-3">
+              <div className="text-sm font-semibold text-red-800 mb-1">Mismatch — stedsnavn i navn stemmer ikke med geocodet by:</div>
+              {ruleEngineResult.details.mismatch.map(s => (
+                <div key={s.id} className="text-sm text-red-700">⚑ {s.name} → geocodet by: "{s.geocodedCity || 'ukjent'}"</div>
+              ))}
+            </div>
+          )}
+          {ruleEngineResult.details?.verified?.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded p-3 mb-3">
+              <div className="text-sm font-semibold text-green-800 mb-1">Verifisert (stedsnavn matcher geocodet lokasjon):</div>
+              {ruleEngineResult.details.verified.slice(0, 10).map(s => (
+                <div key={s.id} className="text-sm text-green-700">✓ {s.name} → matchet på {s.matchedOn}: "{s.city}"</div>
+              ))}
+              {ruleEngineResult.details.verified.length > 10 && (
+                <div className="text-xs text-gray-500">... og {ruleEngineResult.details.verified.length - 10} til</div>
+              )}
+            </div>
+          )}
+          <button onClick={() => setRuleEngineResult(null)} className="text-sm text-gray-600 hover:text-gray-900 underline">Lukk resultat</button>
+        </div>
+      )}
+
+      {ruleEngineResult && !ruleEngineResult._type && (
         <div className="mb-6 p-4 bg-violet-50 border border-violet-200 rounded-lg">
           <h3 className="font-semibold text-violet-900 mb-3">Regelmotor — klassifiseringsresultat</h3>
           <div className="grid grid-cols-3 gap-3 mb-4 text-center">
