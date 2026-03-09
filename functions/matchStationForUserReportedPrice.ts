@@ -369,15 +369,43 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Fetch stations in same city
-    const candidates = await base44.entities.Station.filter({ city });
+    // PERFORMANCE: Use proximity pre-filter (3km radius) to reduce candidate pool
+    // If no nearby candidates exist, fallback to full city catalog
+    let candidates = [];
+    let candidatePoolSource = 'proximity_filter';
+    let candidateRadiusMeters = 3000;
+
+    try {
+      const preFilterResult = await base44.functions.invoke('getNearbyStationCandidates', {
+        gps_lat: matchLat,
+        gps_lon: matchLon,
+        city,
+        radius_meters: candidateRadiusMeters,
+        max_candidates: 20,
+      });
+
+      if (preFilterResult.data.candidates && preFilterResult.data.candidates.length > 0) {
+        // Use pre-filtered nearby candidates
+        candidates = preFilterResult.data.candidates;
+      } else if (preFilterResult.data.fallback_used) {
+        // Pre-filter returned fallback (all candidates sorted by distance)
+        candidates = preFilterResult.data.candidates;
+        candidatePoolSource = 'fallback_full_catalog';
+      }
+    } catch (error) {
+      // If pre-filter fails, fallback to full city catalog
+      console.warn(`getNearbyStationCandidates failed: ${error.message}. Falling back to full catalog.`);
+      candidates = await base44.entities.Station.filter({ city });
+      candidatePoolSource = 'fallback_full_catalog_error';
+    }
 
     if (!candidates || candidates.length === 0) {
       return Response.json({
         status: 'no_safe_station_match',
         stationId: null,
         candidates: [],
-        reason: 'No stations found in city'
+        reason: 'No stations found in city',
+        candidatePoolSource,
       });
     }
 
@@ -456,7 +484,14 @@ Deno.serve(async (req) => {
       stationId: decision.stationId,
       candidates: decision.candidates,
       score: scoredMatches[0].score,
-      reason: decision.reason
+      reason: decision.reason,
+      // Debug metadata for performance analysis
+      _debug: {
+        candidatePoolSource,
+        candidateRadiusMeters,
+        initialPoolSize: candidates.length,
+        scoredPoolSize: scoredMatches.length,
+      },
     });
 
   } catch (error) {
