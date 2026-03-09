@@ -34,6 +34,7 @@ const haversineKm = (lat1, lon1, lat2, lon2) => {
 };
 
 export default function RecentPricesFeed() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [regional, setRegional] = useState(false);
