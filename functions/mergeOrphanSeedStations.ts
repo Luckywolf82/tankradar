@@ -76,6 +76,13 @@ Deno.serve(async (req) => {
       !s.sourceName || !s.sourceName.startsWith('seed_')
     );
 
+    // Bulk-hent alle stasjonspriser og favoritter for å unngå rate limits
+    const allPrices = await base44.asServiceRole.entities.FuelPrice.list('-fetchedAt', 5000);
+    const allFavorites = await base44.asServiceRole.entities.UserFavoriteStation.list();
+
+    // Bygg opp set av stationIds som har prisdata
+    const stationsWithPrices = new Set(allPrices.map(p => p.stationId).filter(Boolean));
+
     const results = {
       checked: 0,
       merged: 0,
@@ -93,9 +100,8 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Sjekk om seed har prisdata
-      const prices = await base44.asServiceRole.entities.FuelPrice.filter({ stationId: seed.id });
-      if (prices.length > 0) {
+      // Sjekk om seed har prisdata (fra bulk-hentet set)
+      if (stationsWithPrices.has(seed.id)) {
         results.skipped_has_prices++;
         continue;
       }
