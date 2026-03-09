@@ -49,6 +49,7 @@ export default function Layout({ children, currentPageName }) {
             />
           </Link>
           <div className="flex gap-1 items-center">
+            <NotificationBell />
             {allNavLinks.map(({ label, page, icon: Icon }) => (
               <Link
                 key={page}

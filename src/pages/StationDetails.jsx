@@ -47,6 +47,9 @@ export default function StationDetails() {
   const [station, setStation] = useState(null);
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
     if (!stationId) return;
