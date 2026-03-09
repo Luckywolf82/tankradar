@@ -156,8 +156,8 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Current implementation (MVP):                                                │
 │   If: haversine distance > 300m                                              │
-│   Then: Score contribution from distance = 0 (no points awarded)             │
-│          Match can still proceed if other signals (chain, name) are strong.   │
+│   Then: Distance component contributes 0 points (no distance bonus awarded)   │
+│          Matching CONTINUES if other signals (chain, name) are strong.        │
 │                                                                               │
 │ NOT a hard disqualifier in current design.                                   │
 │   Example: "Circle K Heimdal" observation 400m from station                  │
