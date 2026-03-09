@@ -23,6 +23,7 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
   const [confirmModal, setConfirmModal] = useState(null);
   const [ruleEngineResult, setRuleEngineResult] = useState(null);
   const [geocodeResult, setGeocodeResult] = useState(null);
+  const [mergePreviewResult, setMergePreviewResult] = useState(null);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
