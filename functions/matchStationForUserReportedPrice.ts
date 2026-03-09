@@ -351,15 +351,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Pre-filter candidates: exclude stations with missing coordinates
+    const validCandidates = candidates.filter(
+      (s) => s.latitude !== undefined && s.latitude !== null && s.longitude !== undefined && s.longitude !== null
+    );
+
+    if (!validCandidates || validCandidates.length === 0) {
+      return Response.json({
+        status: 'no_safe_station_match',
+        stationId: null,
+        candidates: [],
+        reason: 'No stations with valid coordinates found in city',
+      });
+    }
+
     // Score all candidates using Phase 2 utilities
     const parsedObservation = parseStationName(station_name);
-    const scoredMatches = candidates
+    
+    // Use payload chain as primary; fall back to parsed chain only if payload missing
+    const observationChain = station_chain || parsedObservation.chain;
+    const observationChainConfidence = station_chain ? 0.95 : parsedObservation.chainConfidence;
+
+    const scoredMatches = validCandidates
       .map(station => {
         const matchResult = scoreStationMatch(
           {
             name: station_name,
-            chain: parsedObservation.chain,
-            chainConfidence: parsedObservation.chainConfidence,
+            chain: observationChain,
+            chainConfidence: observationChainConfidence,
             latitude: matchLat,
             longitude: matchLon,
             city: city,
