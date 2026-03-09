@@ -131,6 +131,64 @@ IMPLEMENTERING PLAN:
   ⚠️ MONITOR: Duplikat-rate i produksjon, vurder Valg B hvis nødvendig
 
 ================================================================================
+AI PROJECT INSTRUCTIONS v1.0 — FIRE MINI-PATCHES
+================================================================================
+
+PATCH 1: NYE REVIEW-TYPER KREVER EKSPLISITT GOVERNANCE-OPPDATERING
+
+StationReview brukes TIL:
+  ✓ Station-mastering (navn, chain, duplikat-slåing)
+  ✓ Klassifiseringsavvik (innen eksisterende governance-typer)
+  ✓ Manuelle avklaringer
+
+REGEL: Nye review-typer skal IKKE innføres uten eksplisitt oppdatering av
+governance-dokumentene. Hvis ny review_type skal legges til:
+  1. Definer governance-regler
+  2. Oppdater dokumentasjon
+  3. Oppdater entity-schemat (StationReview.review_type enum)
+  4. Implementer logikk
+  5. Test med representativt datasett
+  6. Dokumenter resultat
+
+INGEN UNNTAK — dette er ikke åpent for fortolking.
+
+================================================================================
+PATCH 2: REPORTEDBYUSERID SETTES NÅR TILGJENGELIG
+
+FuelPrice.reportedByUserId:
+  • Settes når pris rapporteres av innlogget bruker
+  • Settes til null hvis bruker ikke er innlogget
+  • ALDRI eksponert offentlig i MVP
+  • Grunnlag for fremtidig gamification (ikke implementert ennå)
+
+Mer robust enn: "kun satt for innloggede brukere" fordi det er mindre binært.
+
+================================================================================
+PATCH 3: AI SHALL PREVIEW BEFORE APPLY
+
+Når endring påvirker mange records eller sentrale pipelines:
+  1. Be om preview/plan før apply
+  2. Vis eksempler på hva som endres
+  3. Få eksplisitt godkjenning før implementering
+
+Gjelder: bulk-klassifisering, matching-endringer, datamigrering, parser-config
+
+Dette er gjennomgående styringsprinsipp — må være del av AI-agentrammer.
+
+================================================================================
+PATCH 4: KONSISTENTE FILREFERANSER
+
+ALLE frossen files og andre kildehente-referanser bruker .js-ending:
+  • functions/classifyStationsRuleEngine.js
+  • functions/classifyGooglePlacesConfidence.js
+  • functions/classifyPricePlausibility.js
+  • functions/deleteAllGooglePlacesPrices.js
+  • functions/deleteGooglePlacesPricesForReclassification.js
+  • functions/verifyGooglePlacesPriceNormalization.js
+
+Unngår forvirring og sikrer korrekt referering.
+
+================================================================================
 OPPSUMMERING
 ================================================================================
 
@@ -140,5 +198,9 @@ OPPSUMMERING
 | Sentralisert freemium | ✓ Implementert | Alle funksjoner bruker checkFreemiumLimits |
 | created_by = email | ⚠️ Risiko | Dokumenter e-postendring-begrensning |
 | Duplikatvern | ⚠️ Race condition | Implementer frontend debounce før lansering |
+| Nye review-typer | ✓ LOCKED | Krever governance-oppdatering (PATCH 1) |
+| reportedByUserId | ✓ LOCKED | Settes når tilgjengelig (PATCH 2) |
+| Preview før apply | ✓ LOCKED | Påkrevd for store endringer (PATCH 3) |
+| Filreferanser | ✓ LOCKED | Konsistente .js-endinger (PATCH 4) |
 
 */
