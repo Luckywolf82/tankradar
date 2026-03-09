@@ -206,32 +206,99 @@ Deno.serve(async (req) => {
       if (i + BATCH < candidateUpdates.length) await new Promise(r => setTimeout(r, 60));
     }
 
-    // Create Station records for auto-confirmed candidates
-    for (let i = 0; i < stationCreations.length; i += BATCH) {
-      await Promise.all(
-        stationCreations.slice(i, i + BATCH).map(stationData =>
-          base44.asServiceRole.entities.Station.create(stationData).catch(e => {
-            results.errors.push({ name: stationData.name, error: e.message });
-          })
-        )
-      );
-      if (i + BATCH < stationCreations.length) await new Promise(r => setTimeout(r, 60));
+    // ─── DEDUP GUARD (runs before any future Station.create call) ────────────
+    // For each auto_confirmed candidate, check:
+    //   1. sourceStationId match against existing Station records
+    //   2. coordinate proximity (< 100m) + normalized name similarity (> 0.85)
+    // Only candidates that pass both checks would be safe to create.
+    // Station.create() is currently DISABLED — this guard is here for when it is re-enabled.
+
+    const haversineM = (lat1, lon1, lat2, lon2) => {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    const nameSimilarity = (a, b) => {
+      const na = a.toLowerCase().trim();
+      const nb = b.toLowerCase().trim();
+      if (na === nb) return 1;
+      const longer = na.length > nb.length ? na : nb;
+      const shorter = na.length > nb.length ? nb : na;
+      if (longer.length === 0) return 1;
+      let matches = 0;
+      for (let ci = 0; ci < shorter.length; ci++) if (longer.includes(shorter[ci])) matches++;
+      return matches / longer.length;
+    };
+
+    // Fetch existing stations once for dedup check
+    const existingStations = await base44.asServiceRole.entities.Station.list();
+
+    const dedupResults = { would_create: 0, dedup_blocked: 0 };
+
+    for (const stationData of stationCreations) {
+      // Check 1: sourceStationId collision
+      if (stationData.sourceStationId) {
+        const idMatch = existingStations.find(s => s.sourceStationId === stationData.sourceStationId);
+        if (idMatch) {
+          dedupResults.dedup_blocked++;
+          results.errors.push({ name: stationData.name, error: `DEDUP_BLOCKED: sourceStationId=${stationData.sourceStationId} already exists as Station ${idMatch.id}` });
+          continue;
+        }
+      }
+      // Check 2: proximity + name similarity
+      const geoMatch = existingStations.find(s => {
+        if (!s.latitude || !s.longitude || !stationData.latitude || !stationData.longitude) return false;
+        const dist = haversineM(stationData.latitude, stationData.longitude, s.latitude, s.longitude);
+        const sim = nameSimilarity(stationData.name, s.name || '');
+        return dist < 100 && sim > 0.85;
+      });
+      if (geoMatch) {
+        dedupResults.dedup_blocked++;
+        results.errors.push({ name: stationData.name, error: `DEDUP_BLOCKED: geo+name match with existing Station ${geoMatch.id} ("${geoMatch.name}")` });
+        continue;
+      }
+      dedupResults.would_create++;
+      // DISABLED: Station.create() is disabled until dedup guard has been validated in production.
+      // To re-enable, remove this comment block and uncomment the line below:
+      // await base44.asServiceRole.entities.Station.create(stationData);
     }
 
-    console.log(`[processStationCandidates] SUMMARY:`);
-    console.log(`  Processed: ${pending.length} candidates`);
-    console.log(`  Auto-confirmed: ${results.auto_confirmed.length}`);
-    console.log(`  Sent to review: ${results.sent_to_review.length}`);
-    console.log(`  Auto-rejected: ${results.rejected.length}`);
-    console.log(`  Errors: ${results.errors.length}`);
+    // ─── PERSIST RUN SUMMARY TO FetchLog ─────────────────────────────────────
+    const finishedAt = new Date().toISOString();
+    await base44.asServiceRole.entities.FetchLog.create({
+      sourceName: 'processStationCandidates',
+      startedAt: new Date().toISOString(),
+      finishedAt,
+      success: results.errors.length === 0,
+      stationsFound: pending.length,
+      recordsCreated: 0, // Station.create() disabled
+      recordsSkipped: results.rejected.length + dedupResults.dedup_blocked,
+      notes: JSON.stringify({
+        auto_confirmed: results.auto_confirmed.length,
+        sent_to_review: results.sent_to_review.length,
+        auto_rejected: results.rejected.length,
+        dedup_blocked: dedupResults.dedup_blocked,
+        would_have_created: dedupResults.would_create,
+        station_create_disabled: true,
+        errors: results.errors.length,
+      }),
+    }).catch(e => console.error('[processStationCandidates] FetchLog write failed:', e.message));
+
+    console.log(`[processStationCandidates] SUMMARY: processed=${pending.length} auto_confirmed=${results.auto_confirmed.length} review=${results.sent_to_review.length} rejected=${results.rejected.length} dedup_blocked=${dedupResults.dedup_blocked} errors=${results.errors.length}`);
 
     return Response.json({
       success: true,
+      station_create_disabled: true,
       summary: {
         total_processed: pending.length,
         auto_confirmed: results.auto_confirmed.length,
         sent_to_review: results.sent_to_review.length,
         auto_rejected: results.rejected.length,
+        dedup_blocked: dedupResults.dedup_blocked,
+        would_have_created: dedupResults.would_create,
         errors: results.errors.length,
       },
       details: {
