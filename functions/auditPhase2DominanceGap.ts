@@ -316,6 +316,89 @@ Deno.serve(async (req) => {
   }
 });
 
+// ===== LIST CANDIDATES MODE (for payload design) =====
+
+async function handleListCandidatesMode(payload, base44) {
+  try {
+    let candidatePool = [];
+    try {
+      candidatePool = await base44.entities.Station.filter({ city: payload.city });
+    } catch (error) {
+      return Response.json({ error: `Failed to query stations: ${error.message}` }, { status: 500 });
+    }
+
+    const validStations = candidatePool.filter(
+      (s) => s.latitude !== undefined && s.latitude !== null && s.longitude !== undefined && s.longitude !== null
+    );
+
+    const scoredMatches = [];
+    const observationChain = payload.station_chain || null;
+    const observationChainConfidence = payload.station_chain ? 0.95 : 0;
+
+    for (const station of validStations) {
+      const distance = haversineDistance(
+        payload.gps_lat,
+        payload.gps_lon,
+        station.latitude,
+        station.longitude
+      );
+
+      const chainResult = chainMatchLogic(
+        observationChain,
+        observationChainConfidence,
+        station.chain,
+        0.92
+      );
+
+      if (chainResult.gateFails) {
+        continue;
+      }
+
+      const distanceSignal = typeof distance === 'number' && !isNaN(distance) ? calculateDistanceSignal(distance) : 0;
+      const chainSignal = chainResult.signal;
+      const nameSimilarity = bigramSimilarity(payload.station_name, station.name);
+      const nameSignal = calculateNameSignal(nameSimilarity);
+      const parsed = parseStationName(payload.station_name);
+      const locationSignal = calculateLocationSignal(
+        parsed.locationLabel,
+        parsed.locationConfidence,
+        station.areaLabel
+      );
+
+      const score = distanceSignal + chainSignal + nameSignal + locationSignal;
+
+      if (score > 0) {
+        scoredMatches.push({
+          stationId: station.id,
+          stationName: station.name,
+          chain: station.chain,
+          latitude: station.latitude,
+          longitude: station.longitude,
+          distance: Math.round(distance),
+          score: Math.max(0, score),
+          signals: {
+            distance: distanceSignal,
+            chain: chainSignal,
+            name: nameSignal,
+            location: locationSignal,
+          },
+        });
+      }
+    }
+
+    const sorted = scoredMatches.sort((a, b) => b.score - a.score).slice(0, 10);
+
+    return Response.json({
+      mode: 'list_candidates_only',
+      input: { gps_lat: payload.gps_lat, gps_lon: payload.gps_lon, city: payload.city },
+      candidateCount: sorted.length,
+      candidates: sorted,
+    });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
 // ===== INLINED UTILITIES (Phase 2) =====
 
 const KNOWN_CHAINS = {
