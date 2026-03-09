@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nb } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 const fuelTypeLabel = {
   gasoline_95: "Bensin 95",
