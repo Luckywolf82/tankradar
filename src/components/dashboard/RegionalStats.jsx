@@ -26,9 +26,17 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
     // Group by locationLabel (city/place name from FuelPrice.locationLabel)
     // This is NOT geographic grouping - it's based on the explicit location label in each observation
     const byCity = {};
+    // Normalize fuelType aliases before filtering
+    const fuelAliases = {
+      gasoline_95: ["gasoline_95", "bensin_95"],
+      gasoline_98: ["gasoline_98", "bensin_98"],
+      diesel: ["diesel", "diesel_premium"],
+    };
+    const acceptedFuelTypes = fuelAliases[selectedFuel] || [selectedFuel];
+
     observedPrices
       .filter(p =>
-        p.fuelType === selectedFuel &&
+        acceptedFuelTypes.includes(p.fuelType) &&
         p.plausibilityStatus === "realistic_price" &&
         p.priceType !== "national_average" &&
         p.locationLabel
