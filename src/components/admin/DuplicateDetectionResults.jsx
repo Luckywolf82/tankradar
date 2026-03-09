@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { AlertTriangle, Info, ChevronDown, Copy, Check } from "lucide-react";
 import DuplicateStationGroup from "./DuplicateStationGroup";
 
 export default function DuplicateDetectionResults({ results }) {
@@ -12,6 +12,7 @@ export default function DuplicateDetectionResults({ results }) {
   });
   const [confidenceFilter, setConfidenceFilter] = useState("all");
   const [sortBy, setSortBy] = useState("confidence");
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   if (!results || results.status === 'no_stations_found') {
     return (
@@ -45,6 +46,79 @@ export default function DuplicateDetectionResults({ results }) {
     }
     return 0;
   });
+
+  // Generate plain-text summary for curator export
+  const generateCuratorSummary = () => {
+    const now = new Date().toISOString();
+    const classificationCounts = {
+      exact_coordinate_duplicate: 0,
+      exact_name_chain_duplicate: 0,
+      possible_near_duplicate: 0,
+    };
+
+    filtered.forEach(g => {
+      classificationCounts[g.classification]++;
+    });
+
+    let summary = `DUPLICATE CATALOG SCAN SUMMARY\n`;
+    summary += `==============================\n\n`;
+    summary += `City: ${city}\n`;
+    summary += `Scan Date: ${now}\n`;
+    summary += `Filter State: Classifications=${Object.keys(selectedClassifications).filter(k => selectedClassifications[k]).join(', ') || 'none'}, Confidence=${confidenceFilter}, Sort=${sortBy}\n\n`;
+    summary += `RESULTS\n`;
+    summary += `-------\n`;
+    summary += `Total Groups (after filtering): ${filtered.length}\n`;
+    summary += `  • Exact Coordinate Duplicates: ${classificationCounts.exact_coordinate_duplicate}\n`;
+    summary += `  • Same Location, Different Names/Chains: ${classificationCounts.exact_name_chain_duplicate}\n`;
+    summary += `  • Possible Near-Duplicates: ${classificationCounts.possible_near_duplicate}\n\n`;
+
+    if (filtered.length > 0) {
+      summary += `GROUPS DETAILS\n`;
+      summary += `--------------\n\n`;
+      filtered.forEach((group, idx) => {
+        const classLabel = {
+          exact_coordinate_duplicate: '🔴 EXACT',
+          exact_name_chain_duplicate: '🟠 SAME LOC',
+          possible_near_duplicate: '🟡 NEAR',
+        }[group.classification] || '?';
+
+        summary += `Group ${idx + 1}: ${classLabel} | ${group.distance_meters}m | ${group.confidence} | ${group.stations.length} records\n`;
+        summary += `  Reason: ${group.explanation}\n`;
+
+        group.stations.forEach((station, sIdx) => {
+          summary += `    [${sIdx + 1}] ${station.name}`;
+          if (station.chain && station.chain !== 'unknown') {
+            summary += ` (${station.chain})`;
+          }
+          summary += `\n`;
+          if (station.address) summary += `        Address: ${station.address}\n`;
+          if (station.latitude && station.longitude) {
+            summary += `        GPS: ${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}\n`;
+          }
+          if (station.sourceName) summary += `        Source: ${station.sourceName}\n`;
+        });
+        summary += `\n`;
+      });
+    }
+
+    summary += `CURATOR NOTE\n`;
+    summary += `------------\n`;
+    summary += `This summary is for manual review only. No records have been modified.\n`;
+    summary += `All decisions require explicit governance approval.\n`;
+
+    return summary;
+  };
+
+  const handleCopySummary = async () => {
+    const text = generateCuratorSummary();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSummary(true);
+      setTimeout(() => setCopiedSummary(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy summary:", err);
+    }
+  };
 
   return (
     <div>
@@ -150,10 +224,27 @@ export default function DuplicateDetectionResults({ results }) {
         </CardContent>
       </Card>
 
-      {/* Summary */}
+      {/* Summary with export button */}
       <Card className="mb-4">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base">Scan Summary</CardTitle>
+          <button
+            onClick={handleCopySummary}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors"
+            title="Copy plain-text summary for manual review"
+          >
+            {copiedSummary ? (
+              <>
+                <Check size={14} />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} />
+                <span>Copy Summary</span>
+              </>
+            )}
+          </button>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
