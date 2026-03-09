@@ -21,29 +21,62 @@ const sourceLabel = {
   FuelFinder: { text: "FuelFinder", color: "bg-orange-100 text-orange-700" },
 };
 
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 export default function RecentPricesFeed() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [regional, setRegional] = useState(false);
 
   useEffect(() => {
+    let userLocation = null;
+
+    const getUserLocation = () =>
+      new Promise((resolve) => {
+        if (!navigator.geolocation) return resolve(null);
+        const timeout = setTimeout(() => resolve(null), 4000);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => { clearTimeout(timeout); resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }); },
+          () => { clearTimeout(timeout); resolve(null); }
+        );
+      });
+
     Promise.all([
-      base44.entities.FuelPrice.filter(
-        { plausibilityStatus: "realistic_price" },
-        "-fetchedAt",
-        100
-      ),
-      base44.entities.Station.list("-created_date", 2000),
-    ]).then(([prices, stations]) => {
+      getUserLocation(),
+      base44.entities.FuelPrice.filter({ plausibilityStatus: "realistic_price" }, "-fetchedAt", 200),
+      base44.entities.Station.list("-name", 2000),
+    ]).then(([location, prices, stations]) => {
+      userLocation = location;
       const stationMap = {};
       stations.forEach((s) => { stationMap[s.id] = s; });
+
+      // Build set of nearby station IDs if we have location (within 50km)
+      let nearbyStationIds = null;
+      if (location) {
+        nearbyStationIds = new Set(
+          stations
+            .filter((s) => s.latitude && s.longitude &&
+              haversineKm(location.lat, location.lon, s.latitude, s.longitude) <= 50)
+            .map((s) => s.id)
+        );
+        setRegional(nearbyStationIds.size > 0);
+      }
 
       const filtered = prices.filter((p) => {
         if (!p.stationId) return false;
         if (p.priceType === "national_average" || p.priceType === "regional_average") return false;
         if (p.station_match_status === "no_safe_station_match") return false;
         if (p.station_match_status === "review_needed_station_match") return false;
-        const station = stationMap[p.stationId];
-        if (!station) return false;
+        if (!stationMap[p.stationId]) return false;
+        if (nearbyStationIds && !nearbyStationIds.has(p.stationId)) return false;
         return true;
       });
 
