@@ -290,29 +290,17 @@ All operational distance bands validated through direct tests and multi-candidat
 
 ---
 
-## CATALOG STATE (TRONDHEIM) — VERIFIED
+## CATALOG STATE (TRONDHEIM) — VERIFIED (from auditResults.json)
 
-**Total stations in Trondheim:** ~142 (as of last detection run)
+**Total stations in Trondheim:** ~142
 
-**High-Confidence Duplicates Found:**
-1. Coop Midt-Norge SA
-   - ID-A: 69ac67869fc0127214f27885
-   - ID-B: 69ac677debcf770a215802b8
-   - Distance between: 0m (identical GPS)
-   - Classification: EXACT_DUPLICATE ✓
+**Duplicates Found:**
+- Coop Midt-Norge SA (0m, EXACT_DUPLICATE)
+- Uno-X Ladetorget (~233m, POSSIBLE_NEAR_DUPLICATE)
 
-**Medium-Confidence Possible Near-Duplicates Found:**
-1. Uno-X Ladetorget
-   - Record A: 63.4469642, 10.4430271
-   - Record B: 63.4471622, 10.4427235
-   - Distance: ~233m
-   - Classification: POSSIBLE_NEAR_DUPLICATE ✓
-
-**Verified Catalog Quality Classification:**
-- Duplicates identified as DATA QUALITY issue, NOT matching-engine defect
-- Top candidate selection remains correct despite duplicates
-- Duplicate detection tool working correctly (preview-only) ✓
-- Duplicate consolidation is separate from Phase 2 matching (governance-pending)
+**Classification:**
+- Data quality issue, NOT matching-engine defect ✓
+- Duplicate consolidation: governance-pending
 
 ---
 
@@ -419,8 +407,19 @@ All operational distance bands validated through direct tests and multi-candidat
 
 ---
 
-**Verification Authority:** Test functions (`auditPhase2DominanceGap`, `auditCircleKMultiCandidateAmbiguity`, `detectStationDuplicates`)  
-**Test Environment:** Production Trondheim station catalog  
-**Last Updated:** 2026-03-09 18:30 UTC+1 (synchronized with completed Phase 2 audits)  
-**Synchronization Status:** ✅ Distance bands 0-30m, ~50m, 76-150m, ~200m confirmed. Catalog duplicates classified as data-quality. No matching logic changes.  
-**Next Verification:** When new major changes are made
+---
+
+## AUDIT DATA SOURCE
+
+**File:** `components/governance/auditResults.json`  
+**Status:** Transitional (machine-readable, manually seeded)  
+**Currently:** Data rendered from static JSON  
+**Next Step:** Full automation when test functions emit JSON output  
+
+**Locked Files (UNCHANGED):**
+- ✅ matchStationForUserReportedPrice
+- ✅ auditPhase2DominanceGap
+- ✅ getNearbyStationCandidates
+- ✅ validateDistanceBands
+
+**Last Updated:** 2026-03-09 18:30 UTC+1
