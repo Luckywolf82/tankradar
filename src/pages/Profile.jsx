@@ -70,6 +70,10 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-4">
+        <PrivacySettings user={user} onSaved={() => base44.auth.me().then(setUser)} />
+      </div>
     </div>
   );
 }
