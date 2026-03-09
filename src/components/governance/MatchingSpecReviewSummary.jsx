@@ -85,18 +85,26 @@ These gates are applied BEFORE or DURING scoring. If any gate fails, matching
 stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ GATE 1: CITY MISMATCH (Hard disqualifier — checked first)                    │
+│ GATE 1: CITY MISMATCH (Hard disqualifier ONLY if both cities are explicit)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ If: observation.city ≠ station.city                                           │
-│ Then: INSTANT REJECTION                                                      │
-│       Score = 0, outcome = NO_SAFE_STATION_MATCH                             │
+│ Rule: ONLY terminal if BOTH observation.city AND station.city are:           │
+│   - Explicitly provided (not inferred)                                        │
+│   - High-confidence values (not "unknown")                                    │
 │                                                                               │
-│ Rationale: Prevents cross-city false matches (e.g., "Circle K Heimdal"      │
-│ from another region matching to "Circle K Heimdal" in Trondheim).            │
-│ City is hard boundary; no geographic distance can override.                  │
+│ If both explicit: observation.city ≠ station.city → INSTANT REJECTION        │
+│   Score = 0, outcome = NO_SAFE_STATION_MATCH                                 │
 │                                                                               │
-│ Enforcement: Applied during candidate pool filtering (before scoring).       │
-│ Impact: Eliminates entire out-of-city candidate pool immediately.            │
+│ If either is weak/null/"unknown": City mismatch = 0 points (neutral)          │
+│   Continue scoring on other signals (distance, chain, name).                 │
+│   City information does not block but also does not reward.                  │
+│                                                                               │
+│ Rationale: Prevents cross-city false matches when city data is reliable.     │
+│ But missing or uncertain city data should not block strong signal matches.   │
+│ Example: GooglePlaces returns coords but city="unknown" → city gate neutral. │
+│                                                                               │
+│ Enforcement: Applied during candidate pool filtering, but with city          │
+│ confidence check first. Unknown city = include in pool, not filtered.         │
+│ Impact: Conservative fallback when city confidence is low.                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
