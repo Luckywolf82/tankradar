@@ -30,6 +30,7 @@ export default function RegionalStats({ observedPrices, ssbData, selectedFuel })
       .filter(p =>
         p.fuelType === selectedFuel &&
         p.plausibilityStatus === "realistic_price" &&
+        p.priceType !== "national_average" &&
         p.locationLabel
       )
       .forEach(p => {
