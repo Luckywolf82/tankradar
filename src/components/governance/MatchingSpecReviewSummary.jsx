@@ -24,7 +24,8 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 │ 31–75m:     +20 points (good proximity)                                      │
 │ 76–150m:    +10 points (acceptable, requires strong name/chain signals)      │
 │ 151–300m:   +5 points (weak, requires very strong name/chain)                │
-│ 301+ m:     0 points (disqualifies match entirely)                           │
+│ 301+ m:     0 points (no distance contribution; match continues if other      │
+│             signals strong enough)                                            │
 │                                                                               │
 │ Rationale: Conservative geographic threshold. Prevents false matches          │
 │ across different stations in same city. No match possible beyond 300m.       │
