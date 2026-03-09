@@ -608,8 +608,22 @@ CONSERVATISM ASSESSMENT
   Location = 10 (optional bonus, never penalty)
 
 CONCLUSION: Specification prioritizes data integrity over automation speed.
-False attribution prevented by multiple independent gates and conservative thresholds.
-System defaults to review (human judgment) when signals are ambiguous or conflicting.
+
+Key conservatism mechanisms:
+  1. Weak/uncertain chain signals do NOT block matching (neutral, not terminal)
+  2. Weak/missing city signals do NOT block matching (neutral, not terminal)
+  3. Location conflicts trigger -15 penalty, forcing review
+  4. Dominance gap (≥10 points) required even with score ≥65
+  5. Distance 300m is baseline MVP only; marked for calibration post-launch
+
+Result: False attribution prevented by:
+  - Multiple independent signal gates
+  - Conservative thresholds (≥65 + 10-point gap for auto-match)
+  - Location conflict penalties
+  - Default-to-review for ambiguous/weak signals
+  - Curator judgment for all borderline cases
+
+System defaults to human judgment when signals are uncertain, conflicting, or close-competing.
 
 ════════════════════════════════════════════════════════════════════════════════
 `;
