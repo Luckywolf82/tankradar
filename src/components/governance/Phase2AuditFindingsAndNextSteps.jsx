@@ -213,38 +213,44 @@ Payload (generic input, no specific location):
 
 ---
 
-## DATA QUALITY FINDING: Station Catalog Duplicates
+## DATA QUALITY FINDING: Station Catalog Duplicates (PENDING GOVERNANCE)
 
 **Classification:** Catalog data-quality issue (NOT a matching-engine defect)
 
-**Observed duplicates in Trondheim Station catalog:**
-- **Uno-X Ladetorget** (2 records)
-  - ID: 69acd0a544f694069e963674 @ 63.4469642, 10.4430271
-  - ID: 69acd0a51e512b71fb301301 @ 63.4471622, 10.4427235
-- **Circle K** (multiple generic entries)
-  - At least 2-3 records with identical or near-identical coordinates
-- **Coop Midt-Norge SA** (2 identical records)
+**Status:** Detection preview tool implemented. Remediation workflow **PENDING GOVERNANCE APPROVAL**.
+
+### Detection Tool
+- `detectStationDuplicates` function: preview-only report
+- Groups stations by exact name+chain, exact coordinate match
+- No automatic actions
+- Conservative: flags only identical/≤1m GPS duplicates as high-confidence
+
+### Observed Candidates in Trondheim
+
+**HIGH CONFIDENCE (identical coordinates):**
+- **Coop Midt-Norge SA** (2 identical records) ✓
   - ID: 69ac67869fc0127214f27885 @ 63.44345149, 10.447601
   - ID: 69ac677debcf770a215802b8 @ 63.44345149, 10.447601
-- **Other partial duplicates** (various Circle K locations with suspiciously identical coords)
+  - **Distance:** 0m (identical GPS)
 
-**Impact on matching validation:**
-1. Artificially increases candidate pool and can create false ties
-2. May inflate dominance-gap values (if second-place is a duplicate of first)
-3. Inflates review queue with redundant candidates
-4. Requires explicit de-duplication before evaluating dominance-gap reliability
+**SAME NAME + CHAIN (may or may not be duplicates):**
+- **Uno-X Ladetorget** (2 records, 233m apart)
+  - Requires manual inspection
 
-**Resolution path:**
-- Duplicate cleanup is a **review-safe catalog pass** (outside matching-engine scope)
-- Should follow normal StationCandidate/StationReview governance pipeline
-- NOT a blocker for matching-engine approval
-- Recommend: De-duplicate catalog AFTER matching-engine is approved, before dominance-gap production validation
+### Governance Status
+- Detection: ✅ Implemented
+- Remediation workflow: ⏳ Pending governance approval
+  - Requires: PROJECT_INSTRUCTIONS update + review_type definition
+  - Requires: StationReview schema update (if new review_type needed)
+  - Requires: Explicit approval before consolidation logic implemented
 
-**Critical note for audit interpretation:**
-- Matching-engine logic is **independent of catalog quality**
-- Shell Trondheim Sentrum validation is valid despite duplicates
-- Top candidate was correctly ranked (duplicate catalog doesn't affect single correct match)
-- Dominance-gap reliability testing should occur with clean catalog
+### Impact on Phase 2 Matching Validation
+- **Does NOT invalidate matching-engine testing**
+- Top candidate was correctly ranked
+- Duplicate catalog inflates candidate pool but doesn't affect single correct match
+- Conservative dominance-gap testing should use clean catalog (post-approval)
+
+**Critical:** Duplicates are a catalog/governance issue, not a matching-engine defect.
 
 ---
 
