@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Early return for list_candidates_only mode
+    if (payload.mode === 'list_candidates_only') {
+      return await handleListCandidatesMode(payload, base44);
+    }
+
     const audit = {
       input: payload,
       steps: [],
