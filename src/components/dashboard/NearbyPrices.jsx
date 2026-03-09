@@ -206,7 +206,8 @@ export default function NearbyPrices({ selectedFuel }) {
                 : null;
 
               return (
-                <div key={p.id} className="flex items-center gap-3 py-3">
+                <div key={p.id} className="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50 rounded-lg px-1 -mx-1 transition-colors" onClick={() => navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))}>
+
                   <span className="text-sm font-bold text-slate-400 w-4 text-center">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">
