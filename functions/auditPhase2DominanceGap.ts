@@ -1,26 +1,37 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * PHASE 2 DOMINANCE-GAP AUDIT FUNCTION
- * 
- * Purpose: Execute the full matching pipeline with detailed logging
- * to validate multi-candidate scoring, gap calculation, and decision logic.
- * 
- * Usage: base44.functions.invoke('auditPhase2DominanceGap', {
- *   gps_lat: 63.4251,
- *   gps_lon: 10.4051,
- *   station_name: "Neste Singsås",
- *   station_chain: "neste",
- *   city: "Trondheim"
- * })
- * 
- * Output: Full audit trail including:
- * - Candidate pool from city pre-filter
- * - Individual candidate scoring breakdown
- * - Distance/chain/name/location signals
- * - Top two candidate scores and gap
- * - Final decision with gate evaluation
- */
+  * PHASE 2 DOMINANCE-GAP AUDIT FUNCTION
+  * 
+  * Purpose: Execute the full matching pipeline with detailed logging
+  * to validate multi-candidate scoring, gap calculation, and decision logic.
+  * 
+  * Usage (full audit): base44.functions.invoke('auditPhase2DominanceGap', {
+  *   gps_lat: 63.4251,
+  *   gps_lon: 10.4051,
+  *   station_name: "Neste Singsås",
+  *   station_chain: "neste",
+  *   city: "Trondheim"
+  * })
+  * 
+  * Usage (compact list for payload design): base44.functions.invoke('auditPhase2DominanceGap', {
+  *   gps_lat: 63.4251,
+  *   gps_lon: 10.4051,
+  *   station_name: "Neste Singsås",
+  *   station_chain: "neste",
+  *   city: "Trondheim",
+  *   mode: "list_candidates_only"
+  * })
+  * 
+  * Output (full): Full audit trail including:
+  * - Candidate pool from city pre-filter
+  * - Individual candidate scoring breakdown
+  * - Distance/chain/name/location signals
+  * - Top two candidate scores and gap
+  * - Final decision with gate evaluation
+  * 
+  * Output (list): Top 10 candidates with stationId, name, lat/lon, score, distance, signals
+  */
 
 Deno.serve(async (req) => {
   try {
