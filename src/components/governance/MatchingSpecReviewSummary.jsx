@@ -519,28 +519,41 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ TEST CASE 5: High Distance, Strong Name Match (City Mismatch)                │
+│ TEST CASE 5: GooglePlaces Cross-City Observation (High Distance)              │
 │────────────────────────────────────────────────────────────────────────────│
-│ Observation: OSM "Circle K Heimdal" at (63.4100, 10.3900)                    │
-│ Observation city: Trondheim                                                  │
+│ Observation: GooglePlaces "Circle K Heimdal" at (63.4100, 10.3900)           │
+│ Parsed chain: "Circle K" (confidence 0.92)                                    │
+│ Parsed city: Trondheim (from address geocoding)                              │
 │                                                                               │
-│ Station:     "Circle K Heimdal" at (63.4100, 10.5200), city=Oslo             │
-│             (17 kilometers away)                                             │
+│ Station Pool: Trondheim only (explicit city gate filter)                     │
+│   Nearest "Circle K" station: 4.2 km away, different address                 │
+│   ("Circle K Lade" at 63.4550, 10.4100)                                      │
 │                                                                               │
-│ Gates:       City mismatch: Trondheim ≠ Oslo → INSTANT DISQUALIFICATION      │
-│             (checked BEFORE distance calculation)                            │
+│ Scoring (candidate: "Circle K Lade"):                                        │
+│   Distance (4200m):      0 points (>300m disqualifies distance component)    │
+│   Chain ("Circle K" =    25 points (exact match, both high-confidence)        │
+│          "Circle K"):                                                        │
+│   Name similarity:       5 points ("Heimdal" vs "Lade" = 0.45 bigram)        │
+│   ("Circle K Heimdal"                                                        │
+│   vs "Circle K Lade"):                                                       │
+│   Location conflict:     -15 points (observation "Heimdal" but station       │
+│                         areaLabel="Lade"; different areas, parsed conflict)   │
+│   ────────────────────────────────────────────────────────                  │
+│   TOTAL:                 15 points                                            │
 │                                                                               │
-│ Scoring (never runs):                                                        │
-│   Pre-gate rejection prevents distance scoring.                              │
+│ Gates:       City ✓ (both Trondheim), Chain ✓, Distance gate (>300m disq.)   │
+│              Location conflict penalty triggered                             │
 │                                                                               │
-│ Outcome:     NO_SAFE_STATION_MATCH                                           │
-│ Action:      Station pool filtered to exclude Oslo records.                  │
-│              Observation "Circle K Heimdal" searches only Trondheim stations  │
-│              If no Trondheim "Circle K Heimdal" → Create StationCandidate    │
+│ Outcome:     NO_SAFE_STATION_MATCH (score <35, location conflict)            │
+│ Action:      Create StationCandidate(sourceName="GooglePlaces",              │
+│              proposedName="Circle K Heimdal", reason="location_mismatch")    │
+│              Do NOT create FuelPrice                                         │
+│              Log large distance + location conflict in FetchLog              │
 │                                                                               │
-│ Safety verdict:         ✓ SAFE — City boundary is hard constraint.           │
-│                         Prevents cross-city false matches despite perfect    │
-│                         name/chain alignment.                                │
+│ Safety verdict:         ✓ SAFE — Distance >300m + location conflict signals  │
+│                         possible data error or new station. Creates candidate│
+│                         for async curator review. No FuelPrice until reviewed│
+│                         Prevents false cross-area attribution within city.    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
