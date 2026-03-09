@@ -413,24 +413,34 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │ TEST CASE 2: Ambiguous Location, Same Chain (Multiple High-Score Candidates) │
 │────────────────────────────────────────────────────────────────────────────│
 │ Observation: User reports "Uno-X Lade" at (63.4050, 10.4100)                │
-│ City:        Trondheim                                                       │
+│ City:        Trondheim (explicit)                                            │
 │                                                                               │
-│ Station A:   "Uno-X Ladetorget" at (63.4048, 10.4102), chain="Uno-X"         │
+│ Station A:   "Uno-X Ladetorget" at (63.4048, 10.4102), chain="Uno-X",        │
+│              areaLabel="Lade"                                                │
 │   Distance:  3 meters                                                        │
 │   Scoring:   Distance 30 + Chain 25 + Name 20 + Location 10 = 85             │
 │                                                                               │
-│ Station B:   "Uno-X Lade Terminal" at (63.4055, 10.4110), chain="Uno-X"      │
+│ Station B:   "Uno-X Lade Terminal" at (63.4055, 10.4110), chain="Uno-X",     │
+│              areaLabel="Lade"                                                │
 │   Distance:  8 meters                                                        │
 │   Scoring:   Distance 30 + Chain 25 + Name 15 + Location 10 = 80             │
 │                                                                               │
-│ Gates:       City ✓, Distance ✓, Chain ✓ (both)                              │
-│ Outcome:     REVIEW_NEEDED_STATION_MATCH (multiple candidates ≥65)          │
-│ Action:      Return both [A: 85, B: 80] to user/curator for selection       │
-│              NO FuelPrice created; waiting for curator choice                │
+│ Gates:       City ✓ (both explicit), Chain ✓ (both high-confidence),         │
+│              Distance ✓                                                      │
 │                                                                               │
-│ Safety verdict:         ✓ SAFE — Prevents arbitrary choice between          │
-│                         similarly-scored, nearby stations (location ambiguity)│
-│                         Curator resolves which "Lade" is correct              │
+│ Dominance Gap Check:                                                         │
+│   Top (A) = 85, Second (B) = 80                                              │
+│   Gap = 85 − 80 = 5 points < 10 points threshold ✗                          │
+│                                                                               │
+│ Outcome:     REVIEW_NEEDED_STATION_MATCH (gap too small despite both ≥65)   │
+│ Action:      Return both [A: 85, B: 80] to user/curator for selection       │
+│              Curator confirms which station based on local knowledge         │
+│              NO FuelPrice created until curator chooses                      │
+│                                                                               │
+│ Safety verdict:         ✓ SAFE — Dominance gap rule prevents arbitrary      │
+│                         selection between closely-scored candidates.         │
+│                         Same chain, nearby distance, similar names = ambiguous│
+│                         Curator resolves which "Lade" location is intended    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
