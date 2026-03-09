@@ -73,33 +73,54 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Coordinate duplicates (within ~50m)
+    // Coordinate duplicates: EXACT coordinate match only (≤1m tolerance)
+    // Do NOT flag stations as duplicates just because they are nearby
+    // Only flag identical or near-identical GPS coordinates
     const coordinateDuplicates = [];
     Object.entries(byCoordinates).forEach(([coordKey, stations]) => {
       if (stations.length > 1) {
-        const maxDist = Math.max(...stations.map((s1, i) =>
-          Math.max(...stations.slice(i + 1).map(s2 => haversine(s1.latitude, s1.longitude, s2.latitude, s2.longitude)))
-        )) * 1000; // Convert to meters
+        // Calculate actual distances between all pairs
+        const distances = [];
+        for (let i = 0; i < stations.length; i++) {
+          for (let j = i + 1; j < stations.length; j++) {
+            const dist = haversine(
+              stations[i].latitude,
+              stations[i].longitude,
+              stations[j].latitude,
+              stations[j].longitude
+            ) * 1000; // Convert to meters
+            distances.push(dist);
+          }
+        }
 
-        coordinateDuplicates.push({
-          type: 'coordinate_proximity_duplicate',
-          maxDistanceMeters: Math.round(maxDist),
-          count: stations.length,
-          stations: stations.map(s => ({
-            id: s.id,
-            name: s.name,
-            chain: s.chain,
-            latitude: s.latitude,
-            longitude: s.longitude,
-            address: s.address,
-            created_date: s.created_date,
-            sourceName: s.sourceName
-          }))
-        });
+        const maxDist = Math.max(...distances);
+        const minDist = Math.min(...distances);
+
+        // CONSERVATIVE: Only flag as coordinate duplicate if max distance ≤1m
+        // This catches only truly identical or near-identical coordinates
+        if (maxDist <= 1) {
+          coordinateDuplicates.push({
+            type: 'exact_coordinate_duplicate',
+            maxDistanceMeters: Math.round(maxDist),
+            minDistanceMeters: Math.round(minDist),
+            count: stations.length,
+            classification: 'EXACT_DUPLICATE (identical coordinates)',
+            stations: stations.map(s => ({
+              id: s.id,
+              name: s.name,
+              chain: s.chain,
+              latitude: s.latitude,
+              longitude: s.longitude,
+              address: s.address,
+              created_date: s.created_date,
+              sourceName: s.sourceName
+            }))
+          });
+        }
       }
     });
 
-    // Filter out single-station coordinate groups
+    // Filter out single-station coordinate groups (should not exist after above logic)
     const coordDupesFiltered = coordinateDuplicates.filter(g => g.stations.length > 1);
 
     return Response.json({
