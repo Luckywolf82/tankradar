@@ -1,8 +1,27 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
- * PHASE 2 UTILITIES: CHAIN NORMALIZATION, NAME PARSING, MATCHING ENGINE
- * Per matching specification with explicit dual-requirement gate.
+ * PHASE 2 MATCHING ENGINE — TEMPORARY INTEGRATED IMPLEMENTATION
+ * 
+ * STATUS: Inlined utilities due to Base44 backend function isolation constraint.
+ * Backend functions cannot import from sibling files in functions/ folder.
+ * 
+ * PENDING: Refactor to shared module file if Base44 supports non-deployed helper modules.
+ * 
+ * UTILITIES INCLUDED:
+ * - Chain normalization (conservative registry, explicit matching only)
+ * - Station name parsing (chain + location extraction)
+ * - Matching engine (scoring per specification)
+ * - Decision logic (explicit dual-requirement gate for auto-match)
+ * 
+ * AUTO-MATCH REQUIREMENTS:
+ * - Single candidate: score ≥65 (dominance gap N/A)
+ * - Multi-candidate: score ≥65 AND dominance gap ≥10
+ * 
+ * LOCATION SCORING:
+ * - Match (+10): parsedLocation == stationAreaLabel (both explicit sub-region labels)
+ * - No signal (0): either value null/missing or weakly parsed
+ * - Conflict (-15): both values explicit sub-region labels AND differ
  */
 
 // Conservative chain registry (ambiguous aliases excluded)
