@@ -51,10 +51,10 @@
    - Jaccard similarity on character bigrams
    - Used only for name matching signals
 
-5. **calculateLocationSignal(parsedLocation, stationAreaLabel)** → `10 | 0 | -15`
-   - +10: both explicit sub-region labels AND match
-   - 0: either value null/missing
-   - -15: both explicit sub-region labels AND differ
+5. **calculateLocationSignal(parsedLocation, parsedLocationConfidence, stationAreaLabel)** → `10 | 0 | -15`
+    - +10: both explicit sub-region labels AND match (confidence ≥0.80)
+    - 0: either value null/missing OR confidence <0.80
+    - -15: both explicit sub-region labels AND differ (confidence ≥0.80)
 
 6. **calculateDistanceSignal(meters, maxDistanceMeters = 300)** → `30 | 20 | 10 | 5 | 0`
    - ≤30m: 30 pts
