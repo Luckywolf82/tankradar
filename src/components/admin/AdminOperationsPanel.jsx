@@ -397,6 +397,27 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
 
             <OperationButton
               onClick={() => executeWithConfirmation(async () => {
+                setAutoProcessing(true);
+                try {
+                  const result = await base44.functions.invoke('mergeOrphanSeedStations', { preview: false });
+                  console.log('[MergeOrphan] Result:', result.data);
+                  alert(`Merget: ${result.data?.merged_this_run ?? 0} stasjoner. Gjenstår: ${result.data?.remaining ?? 0}`);
+                  setMergePreviewResult(null);
+                  onLoadCandidates();
+                } catch (e) {
+                  console.error('[MergeOrphan] Failed:', e);
+                } finally {
+                  setAutoProcessing(false);
+                }
+              }, true)}
+              loading={autoProcessing}
+              isDanger={true}
+            >
+              Apply: merge orphan seed-stasjoner (maks 10)
+            </OperationButton>
+
+            <OperationButton
+              onClick={() => executeWithConfirmation(async () => {
                 const preview = await base44.functions.invoke('deleteForeignStations', { dryRun: true });
                 const count = preview.data?.count ?? 0;
                 const names = (preview.data?.stations ?? []).map(s => s.name).join('\n');
