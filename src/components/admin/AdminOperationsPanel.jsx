@@ -91,6 +91,24 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
               onClick={async () => {
                 setAutoProcessing(true);
                 try {
+                  const result = await base44.functions.invoke('processStationCandidates');
+                  console.log('[ProcessCandidates] Result:', result.data);
+                  onLoadCandidates();
+                } catch (e) {
+                  console.error('[ProcessCandidates] Failed:', e);
+                } finally {
+                  setAutoProcessing(false);
+                }
+              }}
+              loading={autoProcessing}
+            >
+              Prosesser pending kandidater (regelmotor)
+            </OperationButton>
+
+            <OperationButton
+              onClick={async () => {
+                setAutoProcessing(true);
+                try {
                   const result = await base44.functions.invoke('runStationReviewPipeline');
                   console.log('[Pipeline UI] Full result:', result.data);
                   onLoadCandidates();
