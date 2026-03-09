@@ -182,7 +182,7 @@ const TEST_CASES = [
   {
     name: 'TC-08: Strict dominance-gap gate (score ≥65 but gap <10 → REVIEW ONLY)',
     observation: {
-      station_name: 'Neste Singsås',
+      station_name: 'Neste nearby',
       station_chain: 'neste',
       gps_lat: 63.4251,
       gps_lon: 10.4051,
@@ -190,10 +190,10 @@ const TEST_CASES = [
     },
     expectedOutcomes: ['review_needed_station_match'],
     expectedScore: '≥65 with gap <10',
-    expectedTopScore: '~68',
+    expectedTopScore: '~70',
     expectedGap: '<10',
-    expectedRunnerUpScore: '>58',
-    reason: 'Top score ≥65 (Neste Singsås ~68) but second candidate close enough to fail gap gate (gap <10): multi-candidate rule blocks auto-match → forces review_needed',
+    expectedRunnerUpScore: '>60',
+    reason: 'Two Neste/Esso stations very close: Neste Singsås scores high but Esso Singsås is nearby enough (gap <10) to block auto-match → review_needed required',
   },
   {
     name: 'TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → AUTO-MATCH)',
