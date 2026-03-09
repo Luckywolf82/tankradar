@@ -73,6 +73,53 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 9: Curator Export Summary for Duplicate Scan Results (Preview-Only Handoff Support)
+**Date/Time:** 2026-03-09 21:00 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (Curator Handoff — Preview-Only)
+
+**Files Modified:**
+- `components/admin/DuplicateDetectionResults.jsx` — Added copy-summary button + plain-text export generation
+
+**Summary:**
+Added read-only curator export feature to support manual review handoff workflows. Curators can now copy a plain-text summary of duplicate scan results (respecting active filters/sort) to clipboard for transfer into external review tools or documentation systems.
+
+**Export Features (Client-Side Only):**
+- ✅ "Copy Summary" button in scan header (copy-to-clipboard, no file download)
+- ✅ Plain-text summary generation including:
+  - Scan metadata (city, timestamp, active filter state)
+  - Classification breakdown (counts per type)
+  - Per-group compact details: classification, distance, confidence, station count
+  - Per-station details: name, chain, address, GPS, source
+- ✅ Respects active filters (classification, confidence, sort order)
+- ✅ Zero-persistence, browser-only clipboard operation
+- ✅ Toast feedback: "Copied!" confirmation with 2-second display
+- ✅ Curator note footer reminding of governance requirements
+
+**Key Constraints (MAINTAINED):**
+- ✅ Read-only text generation only (no writes, no API calls)
+- ✅ Zero persistence
+- ✅ Zero backend modifications
+- ✅ No merge/delete/apply actions
+- ✅ No remediation logic
+- ✅ No new review types
+- ✅ No schema changes
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ Zero locked component modifications
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Use Case:**
+Curators can now quickly export scan results to text format for manual review workflows (e.g., into StationReview queue, governance review docs, or audit trails).
+
+**Status:** ✅ IMPLEMENTED (curator handoff support, read-only export, governance-safe)
+
+---
+
 ### Entry 8: Duplicate Group Card UI Clarity & Curator Readability (Preview-Only)
 **Date/Time:** 2026-03-09 20:00 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (UI/UX Clarity — Preview-Only)
