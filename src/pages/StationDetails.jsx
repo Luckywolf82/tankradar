@@ -220,6 +220,19 @@ export default function StationDetails() {
                     </div>
                     <div className="text-right shrink-0 flex items-center gap-2">
                       {TrendIcon && <TrendIcon size={14} className={trendColor} />}
+                      {user && (
+                        <button
+                          onClick={() => toggleFavorite(ft)}
+                          disabled={favLoading}
+                          title={isFavorite(ft) ? "Fjern favoritt og varsel" : "Legg til som favoritt og aktiver prisvarsel"}
+                          className="text-slate-300 hover:text-yellow-400 transition-colors"
+                        >
+                          <Star
+                            size={16}
+                            className={isFavorite(ft) ? "fill-yellow-400 text-yellow-400" : ""}
+                          />
+                        </button>
+                      )}
                       <SharePriceButton
                         stationId={stationId}
                         stationName={station.name}
