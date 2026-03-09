@@ -73,6 +73,52 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 3: Station Duplicate Review Admin UI (Preview-Only)
+**Date/Time:** 2026-03-09 18:10 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (Data Quality — Governance-Safe)
+
+**Files Created:**
+- `components/admin/DuplicateDetectionScanner.jsx` — City input + scan trigger UI
+- `components/admin/DuplicateStationGroup.jsx` — Individual duplicate group card renderer
+- `components/admin/DuplicateDetectionResults.jsx` — Results container with summary and grouped display
+
+**Files Modified:**
+- `pages/SuperAdmin.jsx` — Integrated duplicate detection UI into admin dashboard
+
+**Summary:**
+Added preview-only admin surface for Station duplicate detection. Admins can scan a city for duplicates (exact coordinate, exact name+chain, and possible near-duplicates), view results grouped by classification, and understand potential cleanup candidates without any write-to-database actions.
+
+**Key Constraints (MAINTAINED):**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ detectStationDuplicates logic UNCHANGED (calls existing function, no modifications)
+- ✅ No merge/delete/apply actions implemented
+- ✅ No StationReview creation
+- ✅ No schema changes
+- ✅ No PROJECT_INSTRUCTIONS changes
+- ✅ No governance modifications
+
+**Features Implemented:**
+- City input + scan button in SuperAdmin dashboard
+- Admin-gated access (requires admin role, enforced by detectStationDuplicates backend)
+- Three classification sections: Exact Duplicates, Coordinate Duplicates, Possible Near-Duplicates
+- Station detail cards with: name, chain, address, GPS coordinates, source, created_date, station ID
+- Preview-only warning banner on results
+- Summary statistics (total stations, count per classification)
+- Distance display for near-duplicates
+- Error handling and empty states
+- Loading spinner during scan
+
+**UI Behavior (Preview-Only):**
+- Read-only display of duplicate candidates
+- No buttons to apply, merge, or delete
+- No creation of review_type or StationReview records
+- No database modifications from UI
+- Review action suggested in each group (curator must do manual work)
+
+**Status:** ✅ IMPLEMENTED (admin UI only, no backend logic changes)
+
+---
+
 ### Entry 2: Station Proximity Pre-Filter Performance Optimization
 **Date/Time:** 2026-03-09 17:15 UTC+1  
 **Workstream:** Performance Optimization (Non-Logic-Modifying)
@@ -410,10 +456,12 @@ Before ANY code modification:
 |------|------------|--------|---------|
 | 2026-03-09 17:30 | Mandatory change logging mandate | Implemented | ProjectControlPanel Entry 2 |
 | 2026-03-09 17:45 | AI preflight workflow rules | Implemented | ProjectControlPanel AI PREFLIGHT RULES |
+| 2026-03-09 18:10 | Station duplicate review admin UI (preview-only) | Implemented | ProjectControlPanel Entry 3 |
 
 ---
 
 **Project Control Panel maintained by:** AI-assisted development workflow  
-**Last verified:** 2026-03-09 17:45 UTC+1  
+**Last verified:** 2026-03-09 18:10 UTC+1  
 **Governance Mandate:** Mandatory change logging + AI preflight workflow effective 2026-03-09  
-**Enforcement:** All code modifications require PRECHECK pass before implementation
+**Enforcement:** All code modifications require PRECHECK pass before implementation  
+**Latest Entry:** Station Duplicate Review Admin UI (preview-only, no matching logic modifications)
