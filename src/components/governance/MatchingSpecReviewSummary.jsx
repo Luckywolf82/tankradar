@@ -558,7 +558,7 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │   ("Circle K Lade" at 63.4550, 10.4100)                                      │
 │                                                                               │
 │ Scoring (candidate: "Circle K Lade"):                                        │
-│   Distance (4200m):      0 points (>300m disqualifies distance component)    │
+│   Distance (4200m):      0 points (distance contributes 0 beyond 300m)       │
 │   Chain ("Circle K" =    25 points (exact match, both high-confidence)        │
 │          "Circle K"):                                                        │
 │   Name similarity:       5 points ("Heimdal" vs "Lade" = 0.45 bigram)        │
