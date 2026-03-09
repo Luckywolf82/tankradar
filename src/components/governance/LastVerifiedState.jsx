@@ -7,6 +7,52 @@
 
 ---
 
+## ADMIN DUPLICATE REVIEW UI — IMPLEMENTED (2026-03-09)
+
+### Duplicate Detection Scanner & Results Display
+**Files:** 
+- `components/admin/DuplicateDetectionScanner.jsx` — City input UI + scan trigger
+- `components/admin/DuplicateStationGroup.jsx` — Duplicate group card display
+- `components/admin/DuplicateDetectionResults.jsx` — Summary + grouped results
+- `pages/SuperAdmin.jsx` — Dashboard integration
+
+**Status:** ✅ IMPLEMENTED (preview-only, no write actions)
+
+**Verified Behavior:**
+- ✅ Admin can input city name and trigger scan
+- ✅ Loading state displayed during scan
+- ✅ Results grouped by classification (EXACT_DUPLICATE, COORDINATE_DUPLICATE, POSSIBLE_NEAR_DUPLICATE)
+- ✅ Each group shows: duplicate type, confidence, reason, distance, station details
+- ✅ Station cards display: name, chain, address, GPS, source, created_date, ID
+- ✅ Preview-only warning banner displayed
+- ✅ Summary statistics calculated per classification
+- ✅ Empty state handled (no duplicates)
+- ✅ Error state handled (scan failure)
+- ✅ No write actions implemented
+- ✅ No StationReview creation
+- ✅ No merge/delete buttons
+
+**Confirmed Non-Modification:**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ detectStationDuplicates function logic UNCHANGED (called as-is, no modifications)
+- ✅ No schema changes
+- ✅ No governance changes
+- ✅ No PROJECT_INSTRUCTIONS modifications
+
+**Expected User Flow:**
+1. Admin navigates to SuperAdmin
+2. Scrolls to "Datakvalitet — Duplikatvarsling" section
+3. Enters city name (default: "Trondheim")
+4. Clicks "Scan" button
+5. UI shows loading spinner
+6. Results load and display grouped by classification
+7. Admin reviews stations and notes candidates for manual cleanup
+8. No automatic actions taken
+
+**Status:** ✅ IMPLEMENTED, preview-only, governance-safe
+
+---
+
 ## PERFORMANCE OPTIMIZATION LAYER — VERIFIED (2026-03-09)
 
 ### Station Proximity Pre-Filter
