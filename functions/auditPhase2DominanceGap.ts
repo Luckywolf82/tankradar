@@ -252,7 +252,46 @@ Deno.serve(async (req) => {
       result: audit.decision,
     });
 
-    return Response.json({ status: 'audit_complete', audit });
+    // Diagnostic: Top candidate detailed trace
+    let diagnostic = null;
+    if (sorted.length > 0) {
+      const topCandidate = sorted[0];
+      const obsChain = parsedObs.parsedChain;
+      const stnChain = topCandidate.stationChain;
+      const normalizedObs = normalizeChainName(obsChain);
+      const normalizedStn = normalizeChainName(stnChain);
+      
+      diagnostic = {
+        topCandidate: {
+          stationId: topCandidate.stationId,
+          stationName: topCandidate.stationName,
+          distance: topCandidate.distance,
+          score: topCandidate.score
+        },
+        chainTrace: {
+          observation: {
+            raw: obsChain || null,
+            normalized: normalizedObs
+          },
+          station: {
+            raw: stnChain || null,
+            normalized: normalizedStn
+          },
+          gateResult: topCandidate.gateFails !== undefined 
+            ? { gateFails: topCandidate.gateFails, signal: topCandidate.signals?.chain || 0 }
+            : null
+        },
+        distanceTrace: {
+          observationGPS: { lat: auditInput.gps_lat, lon: auditInput.gps_lon },
+          stationGPS: { lat: topCandidate.latitude, lon: topCandidate.longitude },
+          distanceMeters: topCandidate.distance,
+          distanceSignalReturned: topCandidate.signals?.distance || 0
+        },
+        signals: topCandidate.signals || {}
+      };
+    }
+
+    return Response.json({ status: 'audit_complete', audit, diagnostic });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
