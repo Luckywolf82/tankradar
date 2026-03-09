@@ -140,29 +140,80 @@ function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
 
 ---
 
+## PROPOSED TEST PAYLOADS (Revised)
+
+### **Test Case F: Close multi-candidate auto-match candidate (distance activation)**
+
+**Payload:**
+```json
+{
+  "gps_lat": 63.42667,
+  "gps_lon": 10.38833,
+  "station_name": "Circle K Øya",
+  "station_chain": "circle k",
+  "city": "Trondheim"
+}
+```
+
+**Rationale:**
+- GPS placed ~150m from actual Circle K Øya station location
+- Should find exact match candidate (Circle K Øya) at 150m distance
+- Distance ≤150m → signal 10 points
+- Chain exact match → signal 25 points
+- Name exact match → signal 30 points
+- **Estimated score: 10+25+30 = 65 (at threshold)**
+- Single candidate, score ≥65 → **Expected: `matched_station_id`**
+
+**Critical validation:** Will confirm distance scoring activates when observation is close to candidate.
+
+---
+
+### **Test Case G: Dense cluster with realistic competition (dominance-gap gate)**
+
+**Payload:**
+```json
+{
+  "gps_lat": 63.41667,
+  "gps_lon": 10.38833,
+  "station_name": "Circle K",
+  "station_chain": "circle k",
+  "city": "Trondheim"
+}
+```
+
+**Rationale:**
+- GPS placed between Circle K Øya (~900m) and Circle K Nidarvoll (~1200m)
+- Generic name "Circle K" = +25 chain signal, +0 name signal (no differentiation)
+- Both candidates equidistant from GPS (~900-1200m) = both signal 0 (beyond 300m)
+- **Expected scores: both ~25 (chain only)**
+- Gap = 0, top score 25 < 65 → **Expected: `review_needed_station_match`**
+- Will confirm multi-candidate gap gate fires correctly when tie exists
+
+---
+
 ## EXECUTION PLAN
 
-### Next: Run Test Cases D & E
+### Next: Run Test Cases F & G
 
-1. Execute D payload → inspect audit logs for distance signals
-2. Execute E payload → confirm multi-candidate gap gate with real competing stations
-3. Document distance signal values from each candidate
-4. Return full JSON logs for external review
+1. Execute F payload → verify distance ≤300m triggers scoring bands
+2. Observe distance signal in top candidate (should be 10, 20, or 30)
+3. Execute G payload → confirm multi-candidate tie routes to review
+4. Return full JSON audit logs for external review
 
-### After audit logs reviewed:
+### Success criteria:
 
-- **If distance signals appear:** Approve Phase 2 as production-stable (contingent on gate validation)
-- **If distance signals still 0:** Debug distance calculation in function directly
-- **If gate passes both D & E:** Final sign-off with known distance caveat
+- **Test F:** Distance signal appears as expected for ≤300m candidate
+- **Test G:** Tie scenario correctly routes to review (or shows gap-based decision if one candidate pulls ahead)
 
 ---
 
 ## NOTES
 
-- Explanation text bug fix is **deployed immediately**
-- No code changes to logic; diagnosis-only on distance path
-- All gate logic appears **structurally correct**; remaining validation is empirical
+- Explanation text bug fix **deployed**
+- Gate logic structure **validated as correct**
+- Distance and dominance-gap behavior **pending real-world empirical validation**
+- No claims of production stability until F & G complete
 
 ---
 
-**Awaiting:** Test case D & E audit results
+**Awaiting:** Test case F & G audit results with full JSON logs
