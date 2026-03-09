@@ -84,23 +84,35 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 │                                                                               │
 │ NEGATIVE SIGNAL (conflict penalty):                                          │
 │   MVP definition of location conflict:                                       │
-│   - Observation has parsed location (e.g., "Lade" extracted from name)      │
-│   - Station has explicit areaLabel (e.g., areaLabel="Heimdal")              │
-│   - parsedLocation ≠ areaLabel (string comparison, normalized)              │
-│   → Apply -15 points penalty                                                 │
+│   Only trigger -15 penalty if BOTH conditions hold:                          │
+│     (1) Observation has parsed location sub-region (e.g., "Lade", "Heimdal") │
+│     (2) Station has explicit areaLabel (same geographic level as parsed loc) │
+│     (3) parsedLocation ≠ areaLabel (normalized string comparison)            │
+│                                                                               │
+│   Location hierarchy (only same-level conflicts count):                      │
+│     City (national level)        → ignored for conflict if only city parsed  │
+│     areaLabel (sub-region)       → conflicts with parsed sub-region ONLY    │
+│     address (street/parcel)      → not used for conflict detection (MVP)     │
 │                                                                               │
 │   Enforcement: Check only if BOTH parsed location AND areaLabel exist.      │
 │   If either is null/missing: no conflict penalty (0 points for location).    │
+│   If types differ (city parsed but areaLabel exists): no conflict, neutral.  │
 │                                                                               │
 │   Effect: Score reduced by 15. If score was 60, becomes 45 (drops from      │
 │   auto-match to review_needed). If score was 40, becomes 25 (drops to       │
 │   no_safe_match). Conflict forces curator review or rejection.               │
 │                                                                               │
-│ Example (conflict applies):                                                  │
+│ Example (conflict DOES apply):                                               │
 │   Observation: "Uno-X Lade" at (63.405, 10.410)                             │
-│   parsedLocation = "Lade"                                                    │
-│   Station: "Circle K Heimdal", areaLabel="Heimdal"                          │
-│   Result: parsedLocation ("Lade") ≠ areaLabel ("Heimdal") → -15 penalty     │
+│   parsedLocation = "Lade" (sub-region level)                                 │
+│   Station: "Uno-X Heimdal", areaLabel="Heimdal" (sub-region level)          │
+│   Comparison: "Lade" ≠ "Heimdal" (both sub-regions) → -15 penalty           │
+│                                                                               │
+│ Example (conflict does NOT apply):                                           │
+│   Observation: "Uno-X Trondheim" at (63.405, 10.410)                        │
+│   parsedLocation = "Trondheim" (city level)                                  │
+│   Station: "Uno-X Heimdal", areaLabel="Heimdal" (sub-region level)          │
+│   Comparison: Different levels (city vs sub-region) → no penalty, neutral    │
 │                                                                               │
 │ Example (conflict does NOT apply):                                           │
 │   Observation: "Uno-X Station" at (63.405, 10.410)                          │
