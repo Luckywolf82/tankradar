@@ -362,10 +362,10 @@ function calculateLocationSignal(parsedLocation, parsedLocationConfidence, stati
 function calculateDistanceSignal(meters) {
   const m = Number(meters);
   if (!isFinite(m)) return 0;
-  if (m <= 100) return 30;
-  if (m <= 200) return 20;
-  if (m <= 500) return 10;
-  if (m <= 1000) return 5;
+  if (m <= 30) return 30;
+  if (m <= 75) return 20;
+  if (m <= 150) return 10;
+  if (m <= 300) return 5;
   return 0;
 }
 
