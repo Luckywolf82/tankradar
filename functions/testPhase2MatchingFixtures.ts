@@ -179,7 +179,10 @@ const TEST_CASES = [
     },
     expectedOutcomes: ['matched_station_id'],
     expectedScore: '≥65 with gap ≥10',
-    reason: 'Top score ≥65 AND gap ≥10: meets explicit dual-requirement gate for auto-match in multi-candidate scenario',
+    expectedTopScore: '~80+',
+    expectedGap: '≥10',
+    expectedRunnerUpScore: '<70',
+    reason: 'Top score ≥65 (Circle K Heimdal ~80+) AND dominance gap ≥10: meets explicit dual-requirement gate → matched_station_id auto-confirms',
   },
 ];
 
