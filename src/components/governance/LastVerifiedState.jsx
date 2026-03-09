@@ -7,6 +7,54 @@
 
 ---
 
+## DUPLICATE CATALOG WORKSTREAM — VERIFIED (2026-03-09)
+
+### Detector Output Structure (Enhanced)
+**File:** `functions/detectStationDuplicates`  
+**Status:** ✅ ENHANCED (output structure improved, logic conservative unchanged)
+
+**Verified Changes:**
+- ✅ Classification values updated to `exact_coordinate_duplicate`, `exact_name_chain_duplicate`, `possible_near_duplicate`
+- ✅ `explanation` field added per group (human-readable summary)
+- ✅ `reason`, `review_action` fields removed (cleaner preview-only output)
+- ✅ Summary keys updated to match new classifications
+- ✅ Sort order improved: confidence → group size
+- ✅ No auto-action suggestions in output
+- ✅ Conservative classification logic UNCHANGED
+
+**Confirmed Non-Modification:**
+- ✅ Haversine distance calculation UNCHANGED
+- ✅ Duplicate detection logic UNCHANGED (same thresholds: >1m, <50m for near-duplicates)
+- ✅ Confidence assignment UNCHANGED (HIGH for exact, MEDIUM for near)
+- ✅ No matching-engine interference
+
+### Admin Duplicate Review UI (Enhanced)
+**Files:** 
+- `components/admin/DuplicateStationGroup.jsx` — Enhanced card with expand/collapse
+- `components/admin/DuplicateDetectionResults.jsx` — Updated classification rendering
+
+**Status:** ✅ VERIFIED (expandable groups, cleaner labels)
+
+**Verified Behavior:**
+- ✅ Groups collapsible by default (stations list hidden until expanded)
+- ✅ Click to expand shows all candidate stations in group
+- ✅ Classification badges replaced with descriptive labels
+- ✅ Distance shown inline with confidence badge
+- ✅ Preview-only warning banner maintained
+- ✅ No write actions available
+- ✅ Error and empty states handled
+
+**Expected User Flow (Enhanced):**
+1. Admin enters city name
+2. Clicks "Scan"
+3. Results load grouped by classification
+4. Groups collapsed by default (summary visible)
+5. Admin can expand individual group to inspect station candidates
+6. No merge/delete/apply actions available
+7. Admin notes candidates for manual review
+
+---
+
 ## ADMIN DUPLICATE REVIEW UI — IMPLEMENTED (2026-03-09)
 
 ### Duplicate Detection Scanner & Results Display
