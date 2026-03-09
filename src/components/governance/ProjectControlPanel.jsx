@@ -1,8 +1,73 @@
 # PROJECT CONTROL PANEL — TankRadar
 ## Single Source of Truth for AI-Assisted Changes
 
-**Last Updated:** 2026-03-09 16:00 UTC+1  
+**Last Updated:** 2026-03-09 17:30 UTC+1  
 **Project Status:** Phase 2 Matching Engine Approved + Catalog Duplicate Remediation Pending
+
+---
+
+## MANDATORY CHANGE LOGGING (Effective 2026-03-09)
+
+**All future code changes MUST follow this procedure:**
+
+1. **Read this file** before any modification
+2. **Verify no locked components** are being changed
+3. **Create change log entry** (see CHANGE LOG format below)
+4. **Implement code change**
+5. **Update LastVerifiedState only** if behavior is tested
+
+**Change Log Entry Format:**
+```
+### Entry N: [Title]
+**Date/Time:** YYYY-MM-DD HH:MM UTC+1  
+**Workstream:** [Name]
+**Files Created/Modified:** [...list...]
+**Purpose:** [What and why]
+**Risk Assessment:** [Potential impacts]
+**Status:** [planned | implemented | audit]
+```
+
+**Key Rules:**
+- ✅ **APPEND-ONLY:** Never delete or modify previous entries
+- ✅ **LOCKED COMPONENTS:** See section below — do not modify without explicit approval
+- ✅ **READ-BEFORE-CHANGE:** Always check active workstreams and locked areas
+- ✅ **NO SILENT CHANGES:** All modifications must be logged within 24 hours
+- ✅ **GOVERNANCE PRIORITY:** Locked components override feature requests
+
+---
+
+## LOCKED COMPONENTS (DO NOT MODIFY)
+
+These components are frozen pending explicit governance approval or failing test case:
+
+### Phase 2 Matching Scoring Logic
+| Component | Threshold | Why Locked | Change Condition |
+|-----------|-----------|-----------|------------------|
+| Score threshold | ≥65 points | Validated by audit tests | Concrete failing test case from production |
+| Dominance gap | ≥10 point gap | Validated in multi-candidate scenarios | Concrete failing test case from production |
+| Distance scoring | 0-30m→30, 31-75m→20, 76-150m→10, 151-300m→5, >300m→0 | Haversine verified, live-tested | Concrete failing test case from production |
+| Chain matching | Normalization + gate logic | Conservative registry validated | Concrete failing test case from production |
+| Name similarity | Bigram matching (0.95→30, 0.85→20, 0.70→10, 0.50→5) | Validated against known matches | Concrete failing test case from production |
+| Auto-match gate | `score ≥65 AND dominanceGap ≥10` (dual requirement) | Validated in all test scenarios | Concrete failing test case from production |
+| Review routing | Score ≥35 AND <65 OR insufficient gap | Validated in ambiguous cases | Concrete failing test case from production |
+
+**Files Containing Locked Logic:**
+- `functions/matchStationForUserReportedPrice` — Scoring & decision gates
+- `functions/auditPhase2DominanceGap` — Validation function
+- `functions/validateDistanceBands` — Distance signal tests
+- `functions/auditCircleKMultiCandidateAmbiguity` — Ambiguity validation
+
+**Modification Prohibition:**
+🚫 DO NOT change thresholds (65, 10, similarity bands) without explicit approval  
+🚫 DO NOT modify gate logic (dual-requirement AND) without explicit approval  
+🚫 DO NOT alter distance band signals without failing production test  
+🚫 DO NOT optimize matching logic based on limited fixtures  
+
+**Allowed Non-Modifying Changes:**
+✅ Pre-filter candidate pool (does not change scoring)  
+✅ Add debug metadata (read-only reporting)  
+✅ Improve candidate retrieval efficiency  
+✅ Add audit trails and logging  
 
 ---
 
@@ -258,6 +323,25 @@ Phase 2 integrated matching engine implemented with:
 
 ---
 
+---
+
+## CHANGE PROCEDURE CHECKLIST
+
+Before ANY code modification:
+
+- [ ] Read ProjectControlPanel CHANGE LOG
+- [ ] Check LOCKED COMPONENTS section
+- [ ] Verify change does not violate locked areas
+- [ ] Determine active workstream
+- [ ] Plan change log entry
+- [ ] Implement code change
+- [ ] Append entry to CHANGE LOG (APPEND-ONLY)
+- [ ] Update LastVerifiedState ONLY if tested
+- [ ] Mark entry status as `implemented`
+
+---
+
 **Project Control Panel maintained by:** AI-assisted development workflow  
-**Last verified:** 2026-03-09 16:00 UTC+1  
-**Next review:** As changes occur
+**Last verified:** 2026-03-09 17:30 UTC+1  
+**Governance Mandate:** Mandatory change logging effective 2026-03-09  
+**Next review:** Before any code modification
