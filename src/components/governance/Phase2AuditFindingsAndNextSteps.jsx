@@ -213,44 +213,57 @@ Payload (generic input, no specific location):
 
 ---
 
-## DATA QUALITY FINDING: Station Catalog Duplicates (PENDING GOVERNANCE)
+## CATALOG DATA QUALITY: Duplicate Detection (Separate Workstream)
 
-**Classification:** Catalog data-quality issue (NOT a matching-engine defect)
+**Classification:** Catalog quality issue (INDEPENDENT of matching-engine logic)
 
-**Status:** Detection preview tool implemented. Remediation workflow **PENDING GOVERNANCE APPROVAL**.
+**Status:** Detection tool implemented (`detectStationDuplicates`). Remediation pending formal governance approval.
+
+**Key principle:** Duplicates in the Station catalog do NOT invalidate matching-engine validation. Catalog cleanup is a separate data-quality workstream.
 
 ### Detection Tool
-- `detectStationDuplicates` function: preview-only report
-- Groups stations by exact name+chain, exact coordinate match
-- No automatic actions
-- Conservative: flags only identical/≤1m GPS duplicates as high-confidence
+- `detectStationDuplicates`: Preview-only report function
+- Classifies candidates:
+  1. **EXACT DUPLICATES** (identical GPS + same name/chain)
+  2. **COORDINATE DUPLICATES** (same GPS, different names)
+  3. **POSSIBLE NEAR-DUPLICATES** (same name+chain, 1–50m apart)
+- No automatic actions performed
+- Conservative: requires matching evidence before flagging
 
-### Observed Candidates in Trondheim
+### Observed Examples (Trondheim)
 
-**HIGH CONFIDENCE (identical coordinates):**
-- **Coop Midt-Norge SA** (2 identical records) ✓
-  - ID: 69ac67869fc0127214f27885 @ 63.44345149, 10.447601
-  - ID: 69ac677debcf770a215802b8 @ 63.44345149, 10.447601
-  - **Distance:** 0m (identical GPS)
+**High-Confidence Duplicates:**
+- **Coop Midt-Norge SA**
+  - ID-A: 69ac67869fc0127214f27885 @ 63.44345149, 10.447601
+  - ID-B: 69ac677debcf770a215802b8 @ 63.44345149, 10.447601
+  - Distance: 0m
+  - Classification: EXACT_DUPLICATE
+  - Recommendation: Consolidate (keep primary, retire duplicate)
 
-**SAME NAME + CHAIN (may or may not be duplicates):**
-- **Uno-X Ladetorget** (2 records, 233m apart)
-  - Requires manual inspection
+**Medium-Confidence Possible Near-Duplicates:**
+- **Uno-X Ladetorget**
+  - Record A: 63.4469642, 10.4430271
+  - Record B: 63.4471622, 10.4427235
+  - Distance: ~233m
+  - Classification: POSSIBLE_NEAR_DUPLICATE
+  - Recommendation: Manual curator review (may be two separate locations or data entry error)
 
 ### Governance Status
-- Detection: ✅ Implemented
-- Remediation workflow: ⏳ Pending governance approval
-  - Requires: PROJECT_INSTRUCTIONS update + review_type definition
-  - Requires: StationReview schema update (if new review_type needed)
-  - Requires: Explicit approval before consolidation logic implemented
+- **Detection tool:** ✅ Ready
+- **Preview reports:** ✅ Accessible
+- **Curator review:** ✅ Can start now
+- **Consolidation workflow:** ⏳ Pending governance approval
+  - Requires: PROJECT_INSTRUCTIONS update (define duplicate handling)
+  - Requires: StationReview schema confirmation (review_type for duplicates)
+  - Requires: Explicit approval before any merge/delete logic
 
-### Impact on Phase 2 Matching Validation
-- **Does NOT invalidate matching-engine testing**
-- Top candidate was correctly ranked
-- Duplicate catalog inflates candidate pool but doesn't affect single correct match
-- Conservative dominance-gap testing should use clean catalog (post-approval)
+### Impact on Matching-Engine Validation
+- Duplicate catalog does NOT invalidate matching-engine logic
+- Top candidate selection remains correct (duplicate doesn't displace correct match)
+- Dominance-gap calculations may inflate candidate pool but core logic unaffected
+- Optional: Re-validate dominance-gap with clean catalog post-remediation
 
-**Critical:** Duplicates are a catalog/governance issue, not a matching-engine defect.
+**Recommendation:** Proceed with catalog cleanup as independent workstream, in parallel with matching-engine production deployment.
 
 ---
 
