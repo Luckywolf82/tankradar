@@ -34,7 +34,7 @@ export default function Statistics() {
     setLoading(true);
     try {
       const [priceData, ssbDataResp] = await Promise.all([
-        base44.entities.FuelPrice.list("-fetchedAt", 1000),
+        base44.entities.FuelPrice.list("-fetchedAt", 3000),
         base44.entities.SSBData.list("-created_date", 200)
       ]);
       setPrices(priceData);
