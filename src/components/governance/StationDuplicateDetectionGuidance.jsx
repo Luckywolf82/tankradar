@@ -77,99 +77,75 @@ Backend function: `detectStationDuplicates`
 
 ---
 
-## Recommended Review-Safe Workflow
+## Current Status: Governance Decision Pending
 
-### Step 1: Generate Duplicate Report (No Action)
+**Important:** Duplicate remediation is NOT yet approved for implementation.
 
-**Trigger:**
-```
-Admin runs: base44.functions.invoke('detectStationDuplicates', {city: 'Trondheim'})
-```
+The following workflow is **proposed for future governance approval**:
 
-**Output:**
-- Candidate duplicate groups
-- All details preserved for manual inspection
+### Proposed Workflow (NOT YET APPROVED)
 
-### Step 2: Manual Classification
+**Phase 1: Detection & Preview (IMPLEMENTED)**
+- `detectStationDuplicates` function generates preview-only reports
+- No automatic actions
+- Admin inspection required
 
-For each duplicate group:
+**Phase 2: Governance Decision (PENDING)**
+- Define how duplicates should be handled
+- Determine if new StationReview review_type is needed
+- Update PROJECT_INSTRUCTIONS with duplicate-handling guidance
+- Update StationReview entity schema if new review_type required
+- Get explicit approval before implementation
 
-1. **Inspect station data:**
-   - Names
-   - Chains
-   - Coordinates
-   - Address
-   - Source (when created, by whom)
-
-2. **Classify as:**
-   - **Clear duplicate:** Same station, identical/very close coords, same name
-   - **Possible duplicate:** Same location, different names (brand change?)
-   - **Not a duplicate:** Adjacent different stations, legitimately separate entities
-
-### Step 3: Create StationReview Records
-
-For each "clear duplicate" group:
-
-**Create StationReview entity:**
-```json
-{
-  "stationId": "ID_OF_LIKELY_DUPLICATE",
-  "review_type": "legacy_duplicate",
-  "reviewReason": "exact_duplicate_found",
-  "station_name": "Coop Midt-Norge SA",
-  "station_chain": "Coop",
-  "status": "pending",
-  "issue_description": "Exact coordinate match with ID: 69ac67869fc0127214f27885. Appears to be data entry duplication.",
-  "suggested_action": "Consolidate: Keep newer record (by created_date), retire older record.",
-  "duplicate_of_station_id": "69ac67869fc0127214f27885",
-  "source_report": "Phase2_CatalogDuplicateAudit"
-}
-```
-
-### Step 4: Review Queue Processing
-
-Reviews flow through normal **StationReview governance:**
-
-- Curators inspect and approve/reject consolidation
-- Approved consolidations documented in review notes
-- If consolidation approved:
-  - Mark duplicate station as `deprecated` or `merged`
-  - Keep primary record
-  - Document merge in station history/notes
-
-### Step 5: Optional Automated Cleanup (After Approval)
-
-Once StationReview approvals are recorded:
-
-- Develop safe consolidation function (separate from matching engine)
-- Function reads approved StationReview records
-- For each approved consolidation:
-  - Merge metadata from duplicate
-  - Redirect any FuelPrice records to primary stationId
-  - Mark duplicate as inactive (do not delete)
-- Log all consolidations in FetchLog or separate audit trail
+**Phase 3: Future Implementation (BLOCKED UNTIL PHASE 2 COMPLETE)**
+- Once governance is approved:
+  - Create StationReview records (using approved review_type)
+  - Curators manually review and approve consolidations
+  - Safe consolidation logic (separate from matching engine)
+  - Redirect FuelPrice records to primary stationId
+  - Document all changes in audit trail
 
 ---
 
-## Governance Constraints
+## For Now: Detection Only
 
-### ✅ Permitted Actions
+Until duplicate handling governance is approved:
+
+1. Run `detectStationDuplicates` to generate preview reports
+2. Share reports with governance/curator team for discussion
+3. Collect feedback on:
+   - Which duplicates are definitely problematic
+   - Which are acceptable variations
+   - How to classify and handle each type
+   - What review_type (if new) should be used
+4. Propose formal governance update once consensus exists
+
+---
+
+---
+
+## Governance Status
+
+### ✅ Currently Permitted
 - Preview duplicate reports (detectStationDuplicates)
-- Create StationReview records with "duplicate" classification
-- Curator manual review and approval
-- Documented consolidation via approved review
+- Admin inspection and manual review
+- Discussion and feedback gathering
 
-### ❌ Not Permitted (Without Explicit Approval)
+### ❌ Currently Blocked (Pending Governance Approval)
+- Creating StationReview records for duplicates (review_type not yet approved)
 - Automatic merge of station records
 - Deletion of duplicate records
 - Modification of stationId references
-- Silent consolidation
+- Consolidation logic implementation
 
-### 🔒 Data Integrity
-- All duplicate consolidations must be traceable
-- Original record IDs preserved (never reuse IDs)
-- Merge history documented in station notes
-- FuelPrice records must not break (update stationId references first)
+### 🔒 Why Blocked
+Per project governance rules:
+- New review_type values require:
+  1. Governance update
+  2. PROJECT_INSTRUCTIONS update
+  3. Entity schema update
+  4. Implementation approval
+- Duplicate handling does not yet have this approval
 
 ---
 
@@ -190,10 +166,11 @@ Catalog duplicates do NOT invalidate Phase 2 matching-engine validation.
 ## Recommended Execution Order
 
 1. ✅ Phase 2 matching engine: AUDIT-VALIDATED
-2. ⏳ Catalog duplicate detection: PREVIEW REPORT
-3. ⏳ Manual curator review: GOVERNANCE PIPELINE
-4. ⏳ Approved consolidation: DOCUMENTED CLEANUP
-5. ⏳ Dominance-gap re-validation: OPTIONAL (with clean catalog)
+2. ✅ Catalog duplicate detection: PREVIEW TOOL (implemented)
+3. ⏳ Governance discussion: Curator + team feedback on duplicate handling
+4. ⏳ Governance approval: Update PROJECT_INSTRUCTIONS, define review_type, approve workflow
+5. ⏳ Implementation: StationReview creation, curator review, approved consolidation
+6. ⏳ Optional: Dominance-gap re-validation (with clean catalog)
 
 ---
 
