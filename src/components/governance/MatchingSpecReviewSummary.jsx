@@ -36,14 +36,19 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Exact normalized match:        +25 points                                     │
 │ No observation chain:          0 points (neutral, not penalized)              │
-│ MISMATCH (e.g. "Circle K" ≠    INSTANT DISQUALIFICATION                      │
-│ "Uno-X"):                      Score = 0, match impossible                    │
+│ MISMATCH (only if both         INSTANT DISQUALIFICATION (high-confidence      │
+│ high-confidence ≥0.85):        only; see Gate 3 for details)                  │
+│                                Score = 0, match impossible                    │
 │                                                                               │
-│ Rationale: Chain is most reliable identifier. Any clear mismatch is          │
-│ terminal. Prevents wrong attribution across competing chains.                 │
+│ Weak/parsed chain mismatch:    0 points (neutral; continue scoring)           │
 │                                                                               │
-│ Example: Even if distance=10m, name=30, location=10, if chains don't match → │
-│ Total Score = 0 (chain mismatch overrides all other signals).                │
+│ Rationale: High-confidence chain mismatch is most reliable terminal signal.  │
+│ Weak/parsed chains do not block matching. Prevents wrong attribution across   │
+│ competing chains when identification is certain.                              │
+│                                                                               │
+│ Example (high-conf mismatch): distance=10m, name=30, location=10,            │
+│ obs_chain="Circle K" (0.95), stn_chain="Uno-X" (0.95) → Total Score = 0     │
+│ (high-confidence chain mismatch overrides all other signals).                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
