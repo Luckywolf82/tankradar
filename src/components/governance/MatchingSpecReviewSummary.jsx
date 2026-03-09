@@ -581,8 +581,9 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │                                                                               │
 │ Dominance Check:                                                             │
 │   Only one candidate in pool (single YX Heimdal station)                     │
-│   Gap = N/A (no competitor)                                                  │
-│   Sufficient dominance by default (no ambiguity)                             │
+│   Gap = N/A (no competitor exists)                                           │
+│   Single candidate ≥65 → Dominance requirement satisfied by default          │
+│   (Gap rule only applies when multiple candidates exist in pool)             │
 │                                                                               │
 │ Gates:       City ✓, Distance ✓, Chain ✓ (high-confidence match)             │
 │ Outcome:     MATCHED_STATION_ID (≥65 + dominant)                             │
