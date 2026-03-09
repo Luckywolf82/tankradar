@@ -240,8 +240,8 @@ function scoreStationMatch(observation, candidateStation, config = {}) {
   signals.name = calculateNameSignal(nameSimilarity);
   breakdown.name = { similarity: nameSimilarity, signal: signals.name };
 
-  // Location signal
-  signals.location = calculateLocationSignal(observation.areaLabel, candidateStation.areaLabel);
+  // Location signal (explicit sub-region labels only)
+  signals.location = calculateLocationSignal(observation.areaLabel, observation.areaLabelConfidence || 0, candidateStation.areaLabel);
   breakdown.location = { signal: signals.location };
 
   const score = signals.distance + signals.chain + signals.name + signals.location;
