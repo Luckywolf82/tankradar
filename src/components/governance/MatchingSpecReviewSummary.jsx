@@ -444,29 +444,36 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ TEST CASE 3: Different Chains, Close Distance                                │
+│ TEST CASE 3: Different Chains, Close Distance (High-Confidence Mismatch)     │
 │────────────────────────────────────────────────────────────────────────────│
 │ Observation: GooglePlaces "Circle K Oslo Torgata" at (59.9142, 10.7502)      │
-│ Station:     "Uno-X Oslo Torgata" at (59.9140, 10.7500), chain="Uno-X"       │
-│ City:        Oslo (match)                                                    │
+│ Parsed chain: "Circle K" (confidence = 0.95)                                 │
+│                                                                               │
+│ Station:     "Uno-X Oslo Torgata" at (59.9140, 10.7500)                      │
+│ Station chain: "Uno-X" (confidence = 0.98, known from Station record)         │
+│ City:        Oslo (explicit, matches)                                        │
 │ Distance:    25 meters                                                       │
 │                                                                               │
-│ Gates:       City ✓                                                          │
-│ Chain Gate:  "Circle K" ≠ "Uno-X" → INSTANT DISQUALIFICATION                 │
+│ Gates:       City ✓ (both explicit)                                          │
+│                                                                               │
+│ Chain Gate Check:                                                            │
+│   obs_chain = "Circle K" (confidence 0.95 ≥ 0.85) ✓                          │
+│   stn_chain = "Uno-X" (confidence 0.98 ≥ 0.85) ✓                             │
+│   obs_chain ≠ stn_chain: "Circle K" ≠ "Uno-X" ✓                              │
+│   Result: INSTANT DISQUALIFICATION (chain gate triggered)                    │
 │                                                                               │
 │ Scoring (halted):                                                            │
-│   Would be: Distance 30 + ??? + Name 15 + Location 0 = insufficient         │
-│   BUT chain mismatch overrides.                                              │
-│   Final Score = 0                                                            │
+│   Chain mismatch overrides; final Score = 0                                  │
 │                                                                               │
 │ Outcome:     NO_SAFE_STATION_MATCH                                           │
 │ Action:      Create StationCandidate(sourceName="GooglePlaces",              │
-│              proposedName="Circle K Oslo Torgata"), mark for curator review   │
+│              proposedName="Circle K Oslo Torgata", reason="chain_mismatch")  │
 │              Do NOT create FuelPrice                                         │
+│              Log chain mismatch in FetchLog                                  │
 │                                                                               │
-│ Safety verdict:         ✓ SAFE — Prevents attribution of Circle K price     │
-│                         to Uno-X station despite proximity. Chain mismatch   │
-│                         is terminal safeguard.                               │
+│ Safety verdict:         ✓ SAFE — High-confidence chain mismatch is terminal. │
+│                         Prevents attribution of Circle K price to Uno-X      │
+│                         station despite proximity. Separate operator chains. │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
