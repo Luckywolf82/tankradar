@@ -35,6 +35,7 @@ export default function RecentPricesFeed() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [regional, setRegional] = useState(false);
+  const [hasLocation, setHasLocation] = useState(null); // null=pending, true, false
 
   useEffect(() => {
     let userLocation = null;
