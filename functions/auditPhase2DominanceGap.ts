@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
             ? `Auto-match: score ${top.score} >= ${SCORE_MATCHED} AND gap ${gap} >= ${DOMINANCE_GAP_MIN}`
             : `Review required: score ${top.score} ${
                 top.score >= SCORE_MATCHED ? `>= ${SCORE_MATCHED}` : `< ${SCORE_MATCHED}`
-              } but gap ${gap} < ${DOMINANCE_GAP_MIN}`,
+              } (gap: ${gap} ${gap >= DOMINANCE_GAP_MIN ? `>= ${DOMINANCE_GAP_MIN}` : `< ${DOMINANCE_GAP_MIN}`})`,
         },
         reason: status,
       };
