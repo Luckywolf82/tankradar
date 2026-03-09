@@ -144,6 +144,8 @@ Deno.serve(async (req) => {
         stationName: station.name,
         chain: station.chain,
         areaLabel: station.areaLabel,
+        latitude: station.latitude,
+        longitude: station.longitude,
         distance,
         nameSimilarity,
         score: Math.max(0, score),
