@@ -205,13 +205,15 @@ if (score < 35) {
 
 **Test Environment:**
 - 4 fixture stations (Circle K, Uno-X, Shell, Neste)
-- 6 test cases covering:
-  - Exact match single candidate
-  - Chain mismatch rejection
-  - Area conflict detection
-  - Generic name weak signals
-  - Far distance no-match
-  - Multi-candidate dominance gap
+- 8 test cases covering:
+   - Exact match single candidate (score ≥65, auto-match)
+   - Single candidate (score ≥65, auto-match, no gap required)
+   - Multi-candidate dominance gap (gap <10, must review)
+   - Multi-candidate dominance gap (gap ≥10, auto-match)
+   - Area conflict detection (explicit sub-region penalty)
+   - Generic name weak signals (no chain, proximity only)
+   - Chain mismatch high-confidence rejection
+   - Far distance no-match (>300m, score <35)
 
 **Test Results Disclaimer:**
 ```
