@@ -332,34 +332,43 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Score all candidates using selected station coordinates
+    // Score all candidates using Phase 2 utilities
+    const parsedObservation = parseStationName(station_name);
     const scoredMatches = candidates
       .map(station => {
-        const dist = haversineDistance(matchLat, matchLon, station.latitude, station.longitude);
-        const distClass = classifyDistance(dist);
-        
-        const chainMatch = matchChain(station_chain, station.chain);
-        const nameMatch = matchNames(station_name, station.name, station.chain);
-        const cityMatch = station.city === city;
-        
-        const score = calculateMatchScore(distClass, chainMatch, nameMatch, cityMatch, station_chain);
-        
+        const matchResult = scoreStationMatch(
+          {
+            name: station_name,
+            chain: parsedObservation.chain,
+            chainConfidence: parsedObservation.chainConfidence,
+            latitude: matchLat,
+            longitude: matchLon,
+            city: city,
+            cityConfidence: 0.95, // Explicit city from payload
+            areaLabel: parsedObservation.locationLabel,
+          },
+          {
+            id: station.id,
+            name: station.name,
+            chain: station.chain,
+            city: station.city,
+            latitude: station.latitude,
+            longitude: station.longitude,
+            areaLabel: station.areaLabel,
+          }
+        );
+
         return {
           station,
-          score,
-          dist,
-          distClass,
-          chainMatch,
-          nameMatch,
-          cityMatch
+          score: matchResult.score,
+          stationId: station.id,
+          signals: matchResult.signals,
+          gateFailures: matchResult.gateFailures,
+          dist: matchResult.rawSignalBreakdown.distance?.meters || 0,
         };
       })
       .filter(m => m.score > 0)
       .sort((a, b) => b.score - a.score);
-
-    // SCORE_MATCHED threshold
-    const SCORE_MATCHED = 65;
-    const SCORE_REVIEW_THRESHOLD = 35;
 
     if (scoredMatches.length === 0) {
       return Response.json({
@@ -370,51 +379,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const topMatch = scoredMatches[0];
+    // Apply explicit dual-requirement gate via matchDecision
+    const decision = matchDecision(scoredMatches);
 
-    // Single strong match (high confidence)
-    if (topMatch.score >= SCORE_MATCHED) {
-      return Response.json({
-        status: 'matched_station_id',
-        stationId: topMatch.station.id,
-        candidates: [topMatch.station.id],
-        score: topMatch.score,
-        matchDetails: {
-          dist: Math.round(topMatch.dist),
-          distClass: topMatch.distClass,
-          chainMatch: topMatch.chainMatch,
-          nameMatch: topMatch.nameMatch,
-          cityMatch: topMatch.cityMatch
-        }
-      });
-    }
-
-    // Review needed: has some signal but not strong enough for auto-match
-    if (topMatch.score >= SCORE_REVIEW_THRESHOLD) {
-      return Response.json({
-        status: 'review_needed_station_match',
-        stationId: null,
-        candidates: scoredMatches.slice(0, 3).map(m => m.station.id),
-        topScore: topMatch.score,
-        reasons: scoredMatches.slice(0, 3).map(m => ({
-          stationId: m.station.id,
-          stationName: m.station.name,
-          score: m.score,
-          dist: Math.round(m.dist),
-          distClass: m.distClass,
-          chainMatch: m.chainMatch,
-          nameMatch: m.nameMatch,
-          cityMatch: m.cityMatch
-        }))
-      });
-    }
-
-    // No safe match
     return Response.json({
-      status: 'no_safe_station_match',
-      stationId: null,
-      candidates: [],
-      reason: 'No candidates passed review threshold'
+      status: decision.outcome.toLowerCase().replace(/_/g, '_'),
+      stationId: decision.stationId,
+      candidates: decision.candidates,
+      score: scoredMatches[0].score,
+      reason: decision.reason
     });
 
   } catch (error) {
