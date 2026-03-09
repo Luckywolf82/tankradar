@@ -36,6 +36,59 @@ export default function DuplicateStationGroup({ group, index }) {
   }[group.confidence] || "bg-slate-100 text-slate-800";
   const [expanded, setExpanded] = useState(false);
 
+  // Compute difference summary
+  const computeDifferenceSummary = () => {
+    const uniqueNames = [...new Set(group.stations.map(s => s.name))];
+    const uniqueChains = [...new Set(group.stations.map(s => s.chain || 'unknown').filter(c => c !== 'unknown'))];
+    const uniqueAddresses = [...new Set(group.stations.map(s => s.address).filter(Boolean))];
+
+    // Coordinate spread
+    let coordSpreadNote = "All records at identical GPS coordinates";
+    if (group.distance_meters > 0) {
+      if (group.distance_meters <= 10) {
+        coordSpreadNote = `Records within ${group.distance_meters}m (very close proximity)`;
+      } else if (group.distance_meters <= 50) {
+        coordSpreadNote = `Records within ${group.distance_meters}m (nearby vicinity)`;
+      } else {
+        coordSpreadNote = `Records span ${group.distance_meters}m distance`;
+      }
+    }
+
+    // Build observations
+    const observations = [];
+    if (uniqueNames.length === 1) {
+      observations.push("Same station name across all records");
+    } else {
+      observations.push(`${uniqueNames.length} different station names`);
+    }
+
+    if (uniqueChains.length === 0) {
+      observations.push("No chain information available");
+    } else if (uniqueChains.length === 1) {
+      observations.push(`Consistent chain: ${uniqueChains[0]}`);
+    } else {
+      observations.push(`${uniqueChains.length} different chain assignments`);
+    }
+
+    if (uniqueAddresses.length === 0) {
+      observations.push("No address information available");
+    } else if (uniqueAddresses.length === 1) {
+      observations.push("Same address across records");
+    } else {
+      observations.push(`${uniqueAddresses.length} different addresses`);
+    }
+
+    return {
+      uniqueNames,
+      uniqueChains,
+      uniqueAddresses,
+      coordSpreadNote,
+      observations,
+    };
+  };
+
+  const summary = computeDifferenceSummary();
+
   return (
     <Card className={`${styles.bg} border-2 ${styles.border} mb-3`}>
       <CardContent className="pt-4">
@@ -70,6 +123,73 @@ export default function DuplicateStationGroup({ group, index }) {
 
           {/* Explanation */}
           <p className="text-sm text-slate-700 leading-relaxed">{group.explanation}</p>
+        </div>
+
+        {/* Difference Summary - Read-Only Comparison */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3 mb-3">
+          <h4 className="text-xs font-bold text-slate-900 mb-2 uppercase">Difference Summary</h4>
+          
+          {/* Coordinate spread */}
+          <div className="mb-2.5 pb-2.5 border-b border-slate-200">
+            <p className="text-xs text-slate-600 font-medium mb-1">📍 Location Variance</p>
+            <p className="text-xs text-slate-700">{summary.coordSpreadNote}</p>
+          </div>
+
+          {/* Names */}
+          <div className="mb-2.5 pb-2.5 border-b border-slate-200">
+            <p className="text-xs text-slate-600 font-medium mb-1">📛 Station Names ({summary.uniqueNames.length})</p>
+            <div className="space-y-1">
+              {summary.uniqueNames.map((name, idx) => (
+                <p key={idx} className="text-xs text-slate-700 bg-slate-50 px-2 py-1 rounded">
+                  {name}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          {/* Chains */}
+          <div className="mb-2.5 pb-2.5 border-b border-slate-200">
+            <p className="text-xs text-slate-600 font-medium mb-1">🏷️ Chains ({summary.uniqueChains.length})</p>
+            {summary.uniqueChains.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">No chain information</p>
+            ) : (
+              <div className="space-y-1">
+                {summary.uniqueChains.map((chain, idx) => (
+                  <p key={idx} className="text-xs text-slate-700 bg-slate-50 px-2 py-1 rounded">
+                    {chain}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Addresses */}
+          <div className="mb-2">
+            <p className="text-xs text-slate-600 font-medium mb-1">🏢 Addresses ({summary.uniqueAddresses.length})</p>
+            {summary.uniqueAddresses.length === 0 ? (
+              <p className="text-xs text-slate-500 italic">No address information</p>
+            ) : (
+              <div className="space-y-1">
+                {summary.uniqueAddresses.map((addr, idx) => (
+                  <p key={idx} className="text-xs text-slate-700 bg-slate-50 px-2 py-1 rounded line-clamp-2">
+                    {addr}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick observations */}
+          <div className="pt-2 border-t border-slate-200">
+            <p className="text-xs text-slate-600 font-medium mb-1">ℹ️ At a Glance</p>
+            <ul className="space-y-0.5">
+              {summary.observations.map((obs, idx) => (
+                <li key={idx} className="text-xs text-slate-700">
+                  • {obs}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Expand/collapse button with better styling */}
