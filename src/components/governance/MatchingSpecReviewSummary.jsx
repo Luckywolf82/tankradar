@@ -127,24 +127,34 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ GATE 3: CHAIN MISMATCH (Hard disqualifier — checked during chain scoring)    │
+│ GATE 3: CHAIN MISMATCH (Hard disqualifier ONLY if both chains high-          │
+│         confidence)                                                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ If: observation.chain ≠ null AND station.chain ≠ null AND                    │
-│     observation.chain ≠ station.chain (after normalization)                  │
-│ Then: INSTANT REJECTION                                                      │
-│       Score = 0, outcome = NO_SAFE_STATION_MATCH                             │
+│ Rule: ONLY terminal if BOTH observation.chain AND station.chain are:         │
+│   - Explicitly recognized (in known chain registry)                           │
+│   - Parser confidence ≥0.85 (high-confidence parse)                          │
+│   AND they differ after normalization                                        │
 │                                                                               │
-│ Rationale: Chain mismatch is explicit error signal. "Circle K" ≠ "Uno-X"    │
-│ despite proximity or name similarity indicates different operators.          │
-│ Chain is most reliable identifier; mismatch overrides all other signals.     │
+│ If both high-confidence AND unequal: INSTANT REJECTION                       │
+│   Score = 0, outcome = NO_SAFE_STATION_MATCH                                 │
+│   Example: "Circle K" (confidence 0.95) vs "Uno-X" (confidence 0.90)        │
+│   → Mismatch is terminal.                                                    │
 │                                                                               │
-│ Exception: If observation chain = null (unparseable), chain component        │
-│ contributes 0 points but does NOT trigger disqualification. Allows           │
-│ matching on other signals (distance + name).                                 │
+│ If either chain is weak / uncertain / parser-derived:                        │
+│   Chain component = 0 points (neutral, no penalty or reward)                 │
+│   Continue scoring on distance + name. Do NOT reject.                        │
+│   Example: "Bensin stasjon" parsed as chain=null (low confidence)            │
+│   vs station.chain="Circle K" → continue matching on other signals.          │
 │                                                                               │
-│ Scenario: Observation "Circle K Heimdal" at 15m from "Uno-X Heimdal"        │
-│ Station → REJECTED despite distance (30pts) + name (20pts). Even score of 50 │
-│ is overridden by chain mismatch.                                             │
+│ If both chain=null: Chain component = 0 (neutral, neither provides signal)   │
+│                                                                               │
+│ Rationale: High-confidence chain mismatch is strong error signal.            │
+│ But weak/uncertain chain signals should not block matches based on distance. │
+│ Prevents false rejection of price reports without clear chain identification.│
+│                                                                               │
+│ Enforcement: Parser output includes confidence_score for each chain.         │
+│ Gate evaluates (obs_confidence ≥0.85 AND stn_confidence ≥0.85 AND            │
+│ obs_chain ≠ stn_chain) BEFORE disqualifying.                                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
