@@ -8,6 +8,8 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [contributions, setContributions] = useState(0);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
