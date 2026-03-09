@@ -325,23 +325,95 @@ Phase 2 integrated matching engine implemented with:
 
 ---
 
+## AI PREFLIGHT RULES (Mandatory Workflow)
+
+**All AI-assisted work follows this preflight before any code modification:**
+
+### Step 1: Read Control Documents
+- [ ] Read `ProjectControlPanel` (change log + locked components)
+- [ ] Read `LastVerifiedState` (verified outcomes only)
+- [ ] Confirm no conflicting active workstreams
+
+### Step 2: Classify Work Type
+Classify requested task as one of:
+- **INSPECT:** Read-only analysis, no changes
+- **PROPOSE:** Suggest changes, do not apply
+- **APPLY:** Implement code changes (requires PRECHECK pass)
+
+### Step 3: Internal PRECHECK Output
+Before applying any changes, output PRECHECK section with:
+```
+PRECHECK
+--------
+Requested Task: [description]
+Workstream: [name or "ad-hoc"]
+Files Proposed for Change: [list]
+Risk Level: low | medium | high
+Locked Components Affected: yes | no
+[if yes, which ones]
+Work Classification: inspect | propose | apply
+Governance Check: [pass/fail + reason]
+```
+
+### Step 4: Governance Decision Gate
+**FAIL conditions (stop, do not apply):**
+- 🚫 Locked components would be modified without explicit approval
+- 🚫 Change would bundle unrelated tasks
+- 🚫 Silent improvements outside requested scope
+- 🚫 No workstream identified for the change
+
+**PASS conditions (safe to apply):**
+- ✅ Only requested task addressed
+- ✅ No locked components affected
+- ✅ Clear workstream identified
+- ✅ PRECHECK passed all checks
+
+### Step 5: Log Change
+- [ ] Create change log entry (APPEND-ONLY)
+- [ ] Include: date, workstream, filesTouched, purpose, risk, status
+- [ ] Mark status as `planned` (before implementation)
+- [ ] Update to `implemented` after code change
+- [ ] Update LastVerifiedState ONLY if behavior is tested
+
+### Step 6: No Silent Improvements
+- 🚫 Do NOT refactor unrelated code
+- 🚫 Do NOT optimize code outside scope
+- 🚫 Do NOT add debug features not requested
+- 🚫 Do NOT change UI/logic unless explicitly asked
+
+---
+
 ## CHANGE PROCEDURE CHECKLIST
 
 Before ANY code modification:
 
 - [ ] Read ProjectControlPanel CHANGE LOG
-- [ ] Check LOCKED COMPONENTS section
-- [ ] Verify change does not violate locked areas
+- [ ] Read ProjectControlPanel LOCKED COMPONENTS
+- [ ] Read LastVerifiedState
+- [ ] Output PRECHECK section
+- [ ] Verify PRECHECK passes (no governance violations)
 - [ ] Determine active workstream
-- [ ] Plan change log entry
+- [ ] Plan change log entry (mark as `planned`)
 - [ ] Implement code change
 - [ ] Append entry to CHANGE LOG (APPEND-ONLY)
-- [ ] Update LastVerifiedState ONLY if tested
 - [ ] Mark entry status as `implemented`
+- [ ] Update LastVerifiedState ONLY if tested
+- [ ] Confirm no silent improvements were made
+
+---
+
+---
+
+## GOVERNANCE AUDIT TRAIL
+
+| Date | Change Type | Status | Control |
+|------|------------|--------|---------|
+| 2026-03-09 17:30 | Mandatory change logging mandate | Implemented | ProjectControlPanel Entry 2 |
+| 2026-03-09 17:45 | AI preflight workflow rules | Implemented | ProjectControlPanel AI PREFLIGHT RULES |
 
 ---
 
 **Project Control Panel maintained by:** AI-assisted development workflow  
-**Last verified:** 2026-03-09 17:30 UTC+1  
-**Governance Mandate:** Mandatory change logging effective 2026-03-09  
-**Next review:** Before any code modification
+**Last verified:** 2026-03-09 17:45 UTC+1  
+**Governance Mandate:** Mandatory change logging + AI preflight workflow effective 2026-03-09  
+**Enforcement:** All code modifications require PRECHECK pass before implementation
