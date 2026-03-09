@@ -414,6 +414,7 @@ Deno.serve(async (req) => {
             city: city,
             cityConfidence: 0.95, // Explicit city from payload
             areaLabel: parsedObservation.locationLabel,
+            areaLabelConfidence: parsedObservation.locationConfidence,
           },
           {
             id: station.id,
