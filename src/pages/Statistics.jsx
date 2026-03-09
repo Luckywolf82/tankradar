@@ -30,15 +30,19 @@ export default function Statistics() {
     restoreScroll();
   }, []);
 
+  const [stations, setStations] = useState([]);
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [priceData, ssbDataResp] = await Promise.all([
+      const [priceData, ssbDataResp, stationData] = await Promise.all([
         base44.entities.FuelPrice.list("-fetchedAt", 1000),
-        base44.entities.SSBData.list("-created_date", 200)
+        base44.entities.SSBData.list("-created_date", 200),
+        base44.entities.Station.list(null, 2000)
       ]);
       setPrices(priceData);
       setSsbData(ssbDataResp);
+      setStations(stationData);
     } catch (err) {
       console.error("[Statistics] loadData", err.message);
     } finally {
