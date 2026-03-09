@@ -1,14 +1,266 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+/**
+ * PHASE 2 UTILITIES: CHAIN NORMALIZATION, NAME PARSING, MATCHING ENGINE
+ * Per matching specification with explicit dual-requirement gate.
+ */
+
+// Conservative chain registry (ambiguous aliases excluded)
+const KNOWN_CHAINS = {
+  'circle k': ['circle k', 'circlk'],
+  'uno-x': ['uno-x', 'unox'],
+  'shell': ['shell'],
+  'esso': ['esso'],
+  'statoil': ['statoil'],
+  'bp': ['bp'],
+  'neste': ['neste'],
+  'jet': ['jet'],
+};
+
+const AREA_KEYWORDS = [
+  'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
+  'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
+];
+
+function normalizeChainName(rawChain) {
+  if (!rawChain || typeof rawChain !== 'string') {
+    return { normalized: null, confidence: 0 };
+  }
+
+  const trimmed = rawChain.toLowerCase().trim();
+
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      if (trimmed === alias) {
+        return { normalized: canonical, confidence: 0.92 };
+      }
+    }
+  }
+
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      const similarity = stringSimilarity(trimmed, alias);
+      if (similarity >= 0.80) {
+        return { normalized: canonical, confidence: Math.max(0.50, similarity - 0.30) };
+      }
+    }
+  }
+
+  return { normalized: null, confidence: 0 };
+}
+
+function chainMatchLogic(obsChain, obsChainConfidence, stnChain, stnChainConfidence) {
+  if (!obsChain && !stnChain) {
+    return { matches: true, signal: 0, gateFails: false, reason: 'both_chains_null' };
+  }
+
+  if (!obsChain) {
+    return { matches: true, signal: 0, gateFails: false, reason: 'obs_chain_null_neutral' };
+  }
+
+  if (!stnChain) {
+    return { matches: true, signal: 0, gateFails: false, reason: 'stn_chain_null_neutral' };
+  }
+
+  const normalizedObs = normalizeChainName(obsChain);
+  const normalizedStn = normalizeChainName(stnChain);
+
+  if (normalizedObs.normalized === normalizedStn.normalized && normalizedObs.normalized) {
+    return { matches: true, signal: 25, gateFails: false, reason: 'exact_match' };
+  }
+
+  if (normalizedObs.normalized && normalizedStn.normalized) {
+    if (obsChainConfidence >= 0.85 && stnChainConfidence >= 0.85) {
+      return { matches: false, signal: 0, gateFails: true, reason: 'high_confidence_mismatch' };
+    }
+  }
+
+  return { matches: true, signal: 0, gateFails: false, reason: 'weak_or_uncertain_chains' };
+}
+
+function parseStationName(rawName) {
+  if (!rawName || typeof rawName !== 'string') {
+    return { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
+  }
+
+  const tokens = rawName.toLowerCase().trim().split(/\s+/);
+  const result = { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
+
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      const aliasTokens = alias.split(/\s+/);
+      const nameStart = tokens.slice(0, aliasTokens.length).join(' ');
+      if (nameStart === alias) {
+        result.chain = canonical;
+        result.chainConfidence = 0.92;
+        result.chainTokens = tokens.slice(0, aliasTokens.length);
+        tokens.splice(0, aliasTokens.length);
+        break;
+      }
+    }
+    if (result.chain) break;
+  }
+
+  for (const token of tokens) {
+    if (AREA_KEYWORDS.includes(token)) {
+      result.locationLabel = token;
+      result.locationLevel = 'area';
+      result.locationTokens.push(token);
+      break;
+    }
+  }
+
+  result.unparsedTokens = tokens.filter(t => !result.chainTokens.includes(t) && !result.locationTokens.includes(t));
+  return result;
+}
+
+function bigramSimilarity(name1, name2) {
+  if (!name1 || !name2) return 0;
+  if (name1.toLowerCase() === name2.toLowerCase()) return 1;
+
+  const n1 = normalize(name1);
+  const n2 = normalize(name2);
+
+  const bigrams1 = extractBigrams(n1);
+  const bigrams2 = extractBigrams(n2);
+
+  if (bigrams1.size === 0 || bigrams2.size === 0) return 0;
+
+  const intersection = new Set([...bigrams1].filter(x => bigrams2.has(x)));
+  const union = new Set([...bigrams1, ...bigrams2]);
+
+  return intersection.size / union.size;
+}
+
+function calculateLocationSignal(parsedLocation, stationAreaLabel) {
+  if (!parsedLocation || !stationAreaLabel) return 0;
+  const pLoc = parsedLocation.toLowerCase().trim();
+  const sArea = stationAreaLabel.toLowerCase().trim();
+  if (pLoc === sArea) return 10;
+  if (pLoc !== sArea) return -15;
+  return 0;
+}
+
+function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
+  if (meters <= 30) return 30;
+  if (meters <= 75) return 20;
+  if (meters <= 150) return 10;
+  if (meters <= 300) return 5;
+  return 0;
+}
+
+function calculateNameSignal(similarity) {
+  if (similarity >= 0.95) return 30;
+  if (similarity >= 0.85) return 20;
+  if (similarity >= 0.70) return 10;
+  if (similarity >= 0.50) return 5;
+  return 0;
+}
+
+function scoreStationMatch(observation, candidateStation, config = {}) {
+  const { maxDistanceMeters = 300 } = config;
+  const signals = { distance: 0, chain: 0, name: 0, location: 0 };
+  const gateFailures = [];
+  const breakdown = {};
+
+  // City gate: explicit-city-only rejection
+  if (observation.city && observation.cityConfidence >= 0.85 && observation.city.toLowerCase() !== candidateStation.city.toLowerCase()) {
+    gateFailures.push('city_mismatch');
+    return { score: 0, signals, gateFailures, rawSignalBreakdown: breakdown };
+  }
+
+  // Distance
+  const distance = haversineDistance(
+    observation.latitude, observation.longitude,
+    candidateStation.latitude, candidateStation.longitude
+  );
+  signals.distance = calculateDistanceSignal(distance, maxDistanceMeters);
+  breakdown.distance = { meters: distance, signal: signals.distance };
+
+  // Chain gate: high-confidence mismatch only
+  const chainResult = chainMatchLogic(observation.chain, observation.chainConfidence, candidateStation.chain, 1.0);
+  if (chainResult.gateFails) {
+    gateFailures.push('chain_mismatch');
+    return { score: 0, signals, gateFailures, rawSignalBreakdown: breakdown };
+  }
+  signals.chain = chainResult.signal;
+  breakdown.chain = chainResult;
+
+  // Name similarity
+  const nameSimilarity = bigramSimilarity(observation.name, candidateStation.name);
+  signals.name = calculateNameSignal(nameSimilarity);
+  breakdown.name = { similarity: nameSimilarity, signal: signals.name };
+
+  // Location signal
+  signals.location = calculateLocationSignal(observation.areaLabel, candidateStation.areaLabel);
+  breakdown.location = { signal: signals.location };
+
+  const score = signals.distance + signals.chain + signals.name + signals.location;
+
+  return {
+    score: Math.max(0, score),
+    signals,
+    gateFailures,
+    rawSignalBreakdown: breakdown,
+  };
+}
+
+/**
+ * EXPLICIT DUAL-REQUIREMENT GATE for auto-match:
+ * Single candidate ≥65 → MATCHED_STATION_ID (dominance gap N/A)
+ * Multi-candidate: requires score ≥65 AND gap ≥10
+ */
+function matchDecision(scores) {
+  const SCORE_MATCHED = 65;
+  const SCORE_REVIEW_THRESHOLD = 35;
+  const DOMINANCE_GAP_MIN = 10;
+
+  if (!scores || scores.length === 0) {
+    return { outcome: 'NO_SAFE_STATION_MATCH', stationId: null, candidates: [], reason: 'no_candidates' };
+  }
+
+  const sorted = [...scores].sort((a, b) => b.score - a.score);
+  const topCandidate = sorted[0];
+
+  // SINGLE CANDIDATE: ≥65 → MATCHED_STATION_ID
+  if (sorted.length === 1) {
+    if (topCandidate.score >= SCORE_MATCHED) {
+      return { outcome: 'MATCHED_STATION_ID', stationId: topCandidate.stationId, candidates: [topCandidate.stationId], score: topCandidate.score, reason: 'single_candidate_above_threshold' };
+    }
+    if (topCandidate.score >= SCORE_REVIEW_THRESHOLD) {
+      return { outcome: 'REVIEW_NEEDED_STATION_MATCH', stationId: null, candidates: [topCandidate.stationId], topScore: topCandidate.score, reason: 'single_candidate_borderline' };
+    }
+    return { outcome: 'NO_SAFE_STATION_MATCH', stationId: null, candidates: [], reason: 'single_candidate_below_threshold' };
+  }
+
+  // MULTI-CANDIDATE: Explicit dominance gap requirement
+  const secondCandidate = sorted[1];
+  const dominanceGap = topCandidate.score - secondCandidate.score;
+
+  if (topCandidate.score >= SCORE_MATCHED && dominanceGap >= DOMINANCE_GAP_MIN) {
+    return { outcome: 'MATCHED_STATION_ID', stationId: topCandidate.stationId, candidates: [topCandidate.stationId], score: topCandidate.score, reason: `multi_candidate_gap_${dominanceGap}` };
+  }
+
+  if (topCandidate.score >= SCORE_MATCHED) {
+    return { outcome: 'REVIEW_NEEDED_STATION_MATCH', stationId: null, candidates: sorted.slice(0, 3).map(m => m.stationId), topScore: topCandidate.score, reason: `insufficient_gap_${dominanceGap}` };
+  }
+
+  if (topCandidate.score >= SCORE_REVIEW_THRESHOLD) {
+    return { outcome: 'REVIEW_NEEDED_STATION_MATCH', stationId: null, candidates: sorted.slice(0, 3).map(m => m.stationId), topScore: topCandidate.score, reason: 'borderline_match' };
+  }
+
+  return { outcome: 'NO_SAFE_STATION_MATCH', stationId: null, candidates: [], reason: 'all_candidates_below_threshold' };
+}
+
 function haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c * 1000; // Return in meters
+  return R * c * 1000;
 }
 
 function normalize(str) {
