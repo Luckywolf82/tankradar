@@ -152,6 +152,32 @@ const TEST_CASES = [
     expectedScore: '<35',
     reason: 'Distance >300m contributes 0 points; weak name match + far = no match',
   },
+  {
+    name: 'TC-08: Strict dominance-gap gate (score ≥65 but gap <10 → REVIEW ONLY)',
+    observation: {
+      station_name: 'Neste Singsås',
+      station_chain: 'neste',
+      gps_lat: 63.4251,
+      gps_lon: 10.4051,
+      city: 'Trondheim',
+    },
+    expectedOutcomes: ['review_needed_station_match'],
+    expectedScore: '≥65 with gap <10',
+    reason: 'Top score ≥65 but second candidate too close (gap <10): multi-candidate gate requires gap ≥10 for auto-match',
+  },
+  {
+    name: 'TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → AUTO-MATCH)',
+    observation: {
+      station_name: 'Circle K Heimdal',
+      station_chain: 'circle k',
+      gps_lat: 63.4100,
+      gps_lon: 10.3900,
+      city: 'Trondheim',
+    },
+    expectedOutcomes: ['matched_station_id'],
+    expectedScore: '≥65 with gap ≥10',
+    reason: 'Top score ≥65 AND gap ≥10: meets explicit dual-requirement gate for auto-match in multi-candidate scenario',
+  },
 ];
 
 Deno.serve(async (req) => {
