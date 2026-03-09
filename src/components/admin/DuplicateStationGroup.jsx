@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, MapPin, Link2 } from "lucide-react";
@@ -34,7 +34,7 @@ export default function DuplicateStationGroup({ group, index }) {
     MEDIUM: "bg-yellow-100 text-yellow-800",
     LOW: "bg-blue-100 text-blue-800",
   }[group.confidence] || "bg-slate-100 text-slate-800";
-  const [expanded, setExpanded] = React.useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <Card className={`${styles.bg} border-2 ${styles.border} mb-3`}>
