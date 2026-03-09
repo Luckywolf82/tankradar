@@ -16,6 +16,8 @@ import { base44 } from "@/api/base44Client";
 import DataSourceStatus from "../components/admin/DataSourceStatus";
 import ReviewQueueSummary from "../components/admin/ReviewQueueSummary";
 import StationDiscoveryQueue from "../components/admin/StationDiscoveryQueue";
+import DuplicateDetectionScanner from "../components/admin/DuplicateDetectionScanner";
+import DuplicateDetectionResults from "../components/admin/DuplicateDetectionResults";
 
 const activeSections = [
   {
@@ -63,6 +65,18 @@ const activeSections = [
     pages: [
       { label: "Production Model Lockdown", page: "ProductionModelLockdown", desc: "Produksjonsmodell og låsestatus" },
       { label: "Confidence Policy", page: "ConfidencePolicyReport", desc: "Konfidenspoeng-policy dokumentasjon" },
+    ],
+  },
+];
+
+const duplicateSections = [
+  {
+    title: "Datakvalitet",
+    icon: Database,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    pages: [
+      { label: "Duplicate Preview", page: "StationDuplicatePreview", desc: "Forhåndsvisning av potensielle duplikater" },
     ],
   },
 ];
@@ -118,6 +132,8 @@ export default function SuperAdmin() {
   const [showArchive, setShowArchive] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [duplicateResults, setDuplicateResults] = useState(null);
+  const [duplicateError, setDuplicateError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -165,6 +181,23 @@ export default function SuperAdmin() {
       <DataSourceStatus />
       <ReviewQueueSummary />
       <StationDiscoveryQueue />
+
+      {/* Duplicate Detection Preview */}
+      <div className="mt-6 mb-6 border-t pt-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Datakvalitet — Duplikatvarsling</p>
+        <DuplicateDetectionScanner 
+          onResults={setDuplicateResults} 
+          onError={setDuplicateError}
+        />
+        {duplicateError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
+            {duplicateError}
+          </div>
+        )}
+        {duplicateResults && (
+          <DuplicateDetectionResults results={duplicateResults} />
+        )}
+      </div>
 
       {/* Aktive driftssider */}
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 mt-2">Driftssider</p>
