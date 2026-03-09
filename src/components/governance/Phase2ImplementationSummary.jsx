@@ -196,25 +196,52 @@ if (score < 35) {
 
 ---
 
-## TESTING
+## TESTING STRATEGY: TWO-LAYER VALIDATION
 
-### Test Function
+### Layer 1: Fixture Tests
 **Path:** `functions/testPhase2MatchingFixtures.js`
 
-**Status:** FIXTURE-BASED ONLY
+**Status:** 7/9 PASSING (deterministic rules validated)
 
 **Test Environment:**
-- 4 fixture stations (Circle K, Uno-X, Shell, Neste)
+- 7 fixture stations (expanded: added Esso Singsås, BP Heimdal, Statoil Heimdal)
 - 9 test cases covering:
-   - TC-01: Exact match single candidate (score ≥80, auto-match)
-   - TC-02: Single candidate (score ≥75, auto-match, no gap required)
-   - TC-03: Multi-candidate dominance gap (gap ≥10, auto-match)
-   - TC-04: Area conflict detection (explicit sub-region penalty, -15 signal)
-   - TC-05: Generic name weak signals (no chain, proximity only)
-   - TC-06: Chain mismatch high-confidence rejection
-   - TC-07: Far distance no-match (>300m, score <35)
-   - TC-08: Strict dominance-gap gate (score ≥65 but gap <10 → REVIEW_NEEDED)
-   - TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → MATCHED_STATION_ID)
+   - TC-01: Exact match single candidate (score ≥80, auto-match) ✅
+   - TC-02: Single candidate (score ≥75, auto-match, no gap required) ✅
+   - TC-03: Multi-candidate dominance gap (gap ≥10, auto-match) ✅
+   - TC-04: Area conflict detection (explicit sub-region penalty, -15 signal) ✅
+   - TC-05: Generic name weak signals (no chain, proximity only) ✅
+   - TC-06: Chain mismatch high-confidence rejection ✅
+   - TC-07: Far distance no-match (>300m, score <35) ✅
+   - TC-08: Strict dominance-gap gate (score ≥65 but gap <10 → REVIEW_NEEDED) ⚠️
+   - TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → MATCHED_STATION_ID) ⚠️
+
+**Fixture Results Disclaimer:**
+```
+FIXTURE TEST ENVIRONMENT ONLY.
+Match-rate and coverage data are NOT representative of real-world performance.
+Station catalog, parser, and matching thresholds should not be optimized based on these results.
+Results validate technical integration and deterministic rule behavior only.
+```
+
+### Layer 2: Live Audit (Real-World Validation)
+**Path:** `functions/auditPhase2DominanceGap.js`
+
+**Status:** ⏳ READY FOR EXECUTION (awaiting real candidate scenario validation)
+
+**Audit Capability:**
+- Executes full matching pipeline on real Station catalog (Trondheim: 63 stations)
+- Logs per-candidate scoring breakdown (distance/chain/name/location signals)
+- Captures top-2 candidate competition and dominance gap
+- Validates dual-requirement gate (score ≥65 AND gap ≥10)
+- Reports decision outcome with gate explanation
+
+**Validation Targets:**
+- **Scenario A:** Tight race (gap <10) → verify review_needed outcome
+- **Scenario B:** Clear dominance (gap ≥10) → verify matched_station_id outcome
+- **Scenario C:** Single survivor → verify single-candidate rule applies
+
+**Production Approval Gate:** All 3 scenarios must execute as expected before marking Phase 2 production-stable
 
 **Test Results Disclaimer:**
 ```
