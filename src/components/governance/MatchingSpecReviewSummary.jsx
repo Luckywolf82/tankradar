@@ -349,9 +349,9 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │       (15m proximity + weak name signal, no chain confidence)                 │
 │       Requires curation: proximity alone insufficient                        │
 │                                                                               │
-│   (B) Distance 20 + Chain 15 = 35                                             │
-│       (50m distance + chain present but no name confirmation)                 │
-│       Requires curation: multiple weak signals, no single strong anchor      │
+│   (B) Distance 20 + Name 15 = 35                                              │
+│       (50m distance + medium name similarity 0.70–0.79, no chain)             │
+│       Requires curation: two weak signals together, no strong anchor         │
 │                                                                               │
 │ Example review_needed cases:                                                 │
 │   - Same chain, ambiguous location (top 3 candidates all similar scores)    │
