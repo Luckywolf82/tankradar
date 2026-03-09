@@ -127,22 +127,34 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ GATE 2: MAX DISTANCE CUTOFF (Hard disqualifier — checked during distance     │
-│         scoring)                                                              │
+│ GATE 2: MAX DISTANCE CUTOFF — MVP baseline 300m (calibration-needed)         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ If: haversine distance > 300m (Trondheim reference)                          │
-│ Then: INSTANT REJECTION                                                      │
-│       Score = 0, outcome = NO_SAFE_STATION_MATCH                             │
+│ Current implementation (MVP):                                                │
+│   If: haversine distance > 300m                                              │
+│   Then: Score contribution from distance = 0 (no points awarded)             │
+│          Match can still proceed if other signals (chain, name) are strong.   │
 │                                                                               │
-│ Rationale: Even with perfect name/chain match, stations 300+ meters apart    │
-│ are likely different physical locations (different buildings). Prevents      │
-│ false attribution across adjacent neighborhoods.                              │
+│ NOT a hard disqualifier in current design.                                   │
+│   Example: "Circle K Heimdal" observation 400m from station                  │
+│   with perfect chain/name match: score = 0 (distance) + 25 (chain) +         │
+│   30 (name) = 55 → review_needed (curator confirms geographic mismatch).     │
 │                                                                               │
-│ Exception: None. Max distance is absolute.                                   │
-│ Enforcement: Calculated during scoring; any distance >300m → score=0.        │
+│ Status: MVP baseline only. Subject to calibration after real-world testing.  │
+│   - May need adjustment up (e.g., 400m or 500m) if stations are sparse      │
+│   - May need adjustment down (e.g., 200m) if false matches occur            │
+│   - May need urban/rural differentiation post-MVP                            │
 │                                                                               │
-│ Scenario: "Circle K Heimdal" observation 400m from "Circle K Heimdal"        │
-│ Station → REJECTED despite perfect chain/name match.                         │
+│ Rationale: Conservative MVP: distance >300m is weak signal but not terminal. │
+│ Allows manual review for edge cases. Real data will inform calibration.      │
+│                                                                               │
+│ Enforcement: Distance component scoring uses 300m as breakpoint currently.   │
+│ Flag for post-MVP: Revisit based on observed match quality and false         │
+│ positive rate by distance band.                                              │
+│                                                                               │
+│ Post-MVP Monitoring:                                                         │
+│   - Track false match rate by distance band (0–50m, 50–100m, etc.)          │
+│   - Track curator override rate for >300m matches                            │
+│   - Consider population density (urban may need tighter threshold)           │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
