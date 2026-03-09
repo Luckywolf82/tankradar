@@ -205,15 +205,16 @@ if (score < 35) {
 
 **Test Environment:**
 - 4 fixture stations (Circle K, Uno-X, Shell, Neste)
-- 8 test cases covering:
-   - Exact match single candidate (score ≥65, auto-match)
-   - Single candidate (score ≥65, auto-match, no gap required)
-   - Multi-candidate dominance gap (gap <10, must review)
-   - Multi-candidate dominance gap (gap ≥10, auto-match)
-   - Area conflict detection (explicit sub-region penalty)
-   - Generic name weak signals (no chain, proximity only)
-   - Chain mismatch high-confidence rejection
-   - Far distance no-match (>300m, score <35)
+- 9 test cases covering:
+   - TC-01: Exact match single candidate (score ≥80, auto-match)
+   - TC-02: Single candidate (score ≥75, auto-match, no gap required)
+   - TC-03: Multi-candidate dominance gap (gap ≥10, auto-match)
+   - TC-04: Area conflict detection (explicit sub-region penalty, -15 signal)
+   - TC-05: Generic name weak signals (no chain, proximity only)
+   - TC-06: Chain mismatch high-confidence rejection
+   - TC-07: Far distance no-match (>300m, score <35)
+   - TC-08: Strict dominance-gap gate (score ≥65 but gap <10 → REVIEW_NEEDED)
+   - TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → MATCHED_STATION_ID)
 
 **Test Results Disclaimer:**
 ```
