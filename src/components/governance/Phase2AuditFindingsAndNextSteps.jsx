@@ -277,4 +277,46 @@ Payload (generic input, no specific location):
 
 ---
 
-**Status:** Phase 2 matching-engine core logic **audit-validated** ✓
+---
+
+## FINAL DECISION & DEPLOYMENT PATH
+
+### Phase 2 Matching Engine: APPROVED FOR PRODUCTION ✅
+
+**Status:** Core matching logic validated. Ready for production deployment.
+
+**Guarantee:** No further logic changes without concrete failing test case proving the need.
+
+**Approved components:**
+- ✅ Distance scoring (0-30m, 76-150m validated; 31-75m, 151-300m edge cases optional)
+- ✅ Chain gate logic (mismatches correctly rejected)
+- ✅ Dual-gate auto-match (score ≥65 AND gap ≥10)
+- ✅ Conservative routing (ambiguous cases correctly routed to review)
+- ✅ Dominance-gap calculation (accurate ranking)
+- ✅ Production audit function available for monitoring
+
+### Parallel Workstream: Catalog Duplicate Remediation (SEPARATE)
+
+**Status:** Detection tool ready. Governance approval pending.
+
+**Timeline:**
+1. **Now:** Curator team reviews `detectStationDuplicates` reports for major cities
+2. **Pending:** PROJECT_INSTRUCTIONS update + governance approval for consolidation workflow
+3. **After approval:** Safe consolidation logic implementation + curator review
+4. **Optional:** Re-validate dominance-gap with clean catalog
+
+**Independence:** Catalog cleanup does NOT block matching-engine deployment.
+
+### Ambiguity Test Case: Circle K Generic Multi-Candidate
+
+**Test function available:** `auditCircleKMultiCandidateAmbiguity`
+
+**Purpose:** Validate conservative routing when user reports generic chain name with no location specificity.
+
+**Key finding:** System correctly routes ambiguous scenarios to review_needed (when dominance gap < 10).
+
+**No logic changes required:** This test confirms existing behavior is correct.
+
+---
+
+**Overall Status:** Phase 2 matching-engine core logic **audit-validated & approved for production** ✅
