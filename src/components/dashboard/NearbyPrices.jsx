@@ -38,6 +38,7 @@ const fuelTypeLabel = {
 };
 
 export default function NearbyPrices({ selectedFuel }) {
+  const navigate = useNavigate();
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
   const [stations, setStations] = useState([]);
