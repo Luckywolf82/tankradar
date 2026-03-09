@@ -97,6 +97,7 @@ export default function RecentPricesFeed() {
         <CardTitle className="text-base flex items-center gap-2">
           <Clock size={16} className="text-slate-400" />
           Siste rapporterte priser
+          {regional && <span className="text-xs font-normal text-slate-400 ml-1">· i nærheten</span>}
         </CardTitle>
       </CardHeader>
       <CardContent>
