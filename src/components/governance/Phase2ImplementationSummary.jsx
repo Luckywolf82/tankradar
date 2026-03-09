@@ -41,10 +41,11 @@
    - Signal: 25 (exact match) or 0 (neutral/null chains)
    - Never penalizes weak/null chains
 
-3. **parseStationName(rawName)** → `{chain, chainConfidence, locationLabel, locationLevel, tokens...}`
-   - Extracts chain (if known in registry)
-   - Extracts area label from AREA_KEYWORDS list
-   - Returns null for unparseable values (never inferred)
+3. **parseStationName(rawName)** → `{chain, chainConfidence, locationLabel, locationConfidence, locationLevel, tokens...}`
+    - Extracts chain (if known in registry)
+    - Extracts area label from AREA_KEYWORDS list
+    - Returns locationConfidence (0.92 for explicit match, 0 for not found)
+    - Returns null for unparseable values (never inferred)
 
 4. **bigramSimilarity(name1, name2)** → `number (0–1)`
    - Jaccard similarity on character bigrams
