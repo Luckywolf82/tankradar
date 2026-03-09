@@ -48,13 +48,13 @@ Deno.serve(async (req) => {
 
     // Main test suite: single bearing (north)
     const mainTests = [
-      { offsetMeters: 15, expectedSignal: 30, bearing: 0 },
-      { offsetMeters: 50, expectedSignal: 20, bearing: 0 },
-      { offsetMeters: 100, expectedSignal: 10, bearing: 0 },
-      { offsetMeters: 200, expectedSignal: 5, bearing: 0 },
-      { offsetMeters: 295, expectedSignal: 5, bearing: 0 },
-      { offsetMeters: 305, expectedSignal: 0, bearing: 0 },
-      { offsetMeters: 400, expectedSignal: 0, bearing: 0 },
+      { offsetMeters: 15, expectedSignal: 30, bearing: 0, band: '0-30m' },
+      { offsetMeters: 50, expectedSignal: 20, bearing: 0, band: '31-75m' },
+      { offsetMeters: 100, expectedSignal: 10, bearing: 0, band: '76-150m' },
+      { offsetMeters: 200, expectedSignal: 5, bearing: 0, band: '151-300m' },
+      { offsetMeters: 295, expectedSignal: 5, bearing: 0, band: '151-300m upper edge' },
+      { offsetMeters: 305, expectedSignal: 0, bearing: 0, band: '>300m lower fail edge' },
+      { offsetMeters: 400, expectedSignal: 0, bearing: 0, band: '>300m' },
     ];
 
     // Symmetry check: 25m on all 4 bearings (expected signal still 30)
@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
 
       testResults.push({
         offsetMeters: test.offsetMeters,
+        band: test.band,
         bearing: `${test.bearing}°`,
         generatedPoint: {
           gps_lat: parseFloat(gpsPoint.lat.toFixed(6)),
@@ -118,7 +119,7 @@ Deno.serve(async (req) => {
       );
 
       const actualSignal = calculateDistanceSignal(actualDistance);
-      const pass = actualSignal === 30; // All should return 30 at 30m
+      const pass = actualSignal === 30; // All should return 30 at 25m
 
       symmetryResults.push({
         bearing: test.label,
