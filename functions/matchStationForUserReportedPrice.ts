@@ -271,106 +271,31 @@ function normalize(str) {
     .replace(/\s+/g, ' '); // Multiple spaces to single
 }
 
-function levenshteinSimilarity(str1, str2) {
-  const s1 = normalize(str1);
-  const s2 = normalize(str2);
-  
-  if (!s1 || !s2) return 0;
+function stringSimilarity(s1, s2) {
   if (s1 === s2) return 1;
-  
+  if (!s1 || !s2) return 0;
+  const longer = s1.length > s2.length ? s1 : s2;
+  const shorter = s1.length > s2.length ? s2 : s1;
+  const editDistance = levenshteinDistance(longer, shorter);
+  return (longer.length - editDistance) / longer.length;
+}
+
+function levenshteinDistance(s1, s2) {
   const len1 = s1.length;
   const len2 = s2.length;
-  const maxLen = Math.max(len1, len2);
-  
   const dp = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
-  
+
   for (let i = 0; i <= len1; i++) dp[i][0] = i;
   for (let j = 0; j <= len2; j++) dp[0][j] = j;
-  
+
   for (let i = 1; i <= len1; i++) {
     for (let j = 1; j <= len2; j++) {
       const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
-      );
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
     }
   }
-  
-  const distance = dp[len1][len2];
-  return 1 - (distance / maxLen);
-}
 
-function classifyDistance(meters) {
-  if (meters <= 100) return 'close';
-  if (meters <= 300) return 'uncertain';
-  return 'far';
-}
-
-function matchChain(scanChain, stationChain) {
-  if (!scanChain || scanChain === '') return 'missing';
-  if (scanChain === stationChain) return 'match';
-  return 'mismatch';
-}
-
-function startsWithSameChain(norm1, norm2, stationChain) {
-  if (!stationChain) return false;
-  const chainNorm = normalize(stationChain);
-  return norm1.startsWith(chainNorm) && norm2.startsWith(chainNorm);
-}
-
-function shortNameContained(norm1, norm2) {
-  if (norm1.length > 15) return false; // Only for short names
-  return norm2.includes(norm1) && norm1.length > 2;
-}
-
-function matchNames(scanName, stationName, stationChain) {
-  if (!scanName || scanName === '') return 'missing';
-  
-  const norm1 = normalize(scanName);
-  const norm2 = normalize(stationName);
-  
-  if (norm1 === norm2) return 'exact';
-  
-  const levScore = levenshteinSimilarity(norm1, norm2);
-  if (levScore >= 0.75) return 'similar';
-  
-  if (startsWithSameChain(norm1, norm2, stationChain)) return 'same_chain';
-  
-  if (shortNameContained(norm1, norm2)) return 'contained';
-  
-  return 'mismatch';
-}
-
-function calculateMatchScore(distClass, chainMatch, nameMatch, cityMatch, scanChain) {
-  let score = 0;
-  
-  // Distance points
-  if (distClass === 'close') score += 30;
-  if (distClass === 'uncertain') score += 10;
-  if (distClass === 'far') return 0;
-  
-  // Chain points
-  if (chainMatch === 'match') score += 25;
-  if (chainMatch === 'mismatch') return 0;
-  
-  // Name points (ADJUSTED: same_chain and contained are support signals only)
-  if (nameMatch === 'exact') score += 30;
-  if (nameMatch === 'similar') score += 20;
-  if (nameMatch === 'same_chain') score += 15; // Support signal, but strengthened for close+chain
-  if (nameMatch === 'contained') score += 10; // Support signal, but strengthened for close+chain
-  if (nameMatch === 'mismatch') return 0; // Hard block: mismatch with chain=match is too risky
-  
-  // City points (support)
-  if (cityMatch) score += 10;
-  
-  // Missing chain penalty
-  if (!scanChain || scanChain === '') {
-    score -= 10; // Harsher penalty for missing chain
-  }
-  
-  return score;
+  return dp[len1][len2];
 }
 
 Deno.serve(async (req) => {
