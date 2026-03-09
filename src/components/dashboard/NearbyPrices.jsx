@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import SharePriceButton from "@/components/shared/SharePriceButton";
 
 const RADIUS_KM = 10;
 

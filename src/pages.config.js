@@ -72,6 +72,7 @@ import SeedImport from './pages/SeedImport';
 import SeedTrondheimStations from './pages/SeedTrondheimStations';
 import Settings from './pages/Settings';
 import StationCandidateReview from './pages/StationCandidateReview';
+import StationDetails from './pages/StationDetails';
 import StationImport from './pages/StationImport';
 import Statistics from './pages/Statistics';
 import SuperAdmin from './pages/SuperAdmin';
@@ -80,7 +81,6 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import ValidateStationData from './pages/ValidateStationData';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import StationDetails from './pages/StationDetails';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +110,7 @@ export const PAGES = {
     "SeedTrondheimStations": SeedTrondheimStations,
     "Settings": Settings,
     "StationCandidateReview": StationCandidateReview,
+    "StationDetails": StationDetails,
     "StationImport": StationImport,
     "Statistics": Statistics,
     "SuperAdmin": SuperAdmin,
@@ -118,7 +119,6 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "ValidateStationData": ValidateStationData,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "StationDetails": StationDetails,
 }
 
 export const pagesConfig = {
