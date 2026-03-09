@@ -73,6 +73,45 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 6: Curator Review-Only Controls (Duplicate Catalog Workstream)
+**Date/Time:** 2026-03-09 19:45 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (Data Quality)
+
+**Files Modified:**
+- `components/admin/DuplicateDetectionResults.jsx` — Added curator review controls
+
+**Summary:**
+Enhanced duplicate detection UI with review-focused controls for curators:
+- Classification filter (checkboxes: Exact, Same Location, Near)
+- Confidence filter (dropdown: All, HIGH, MEDIUM, LOW)
+- Sort order (Confidence, Group Size, Distance)
+- Collapsible "Why Grouped" explanations per classification type
+- No persistence, local component state only
+- Filtered results displayed dynamically
+- Empty states handled
+
+**Key Constraints (MAINTAINED):**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ No backend modifications
+- ✅ No schema changes
+- ✅ No merge/delete/apply logic
+- ✅ No auto-actions
+- ✅ No StationReview creation
+- ✅ No consolidation workflow
+- ✅ Preview-only philosophy reinforced
+- ✅ Zero locked component modifications
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Status:** ✅ IMPLEMENTED (UI controls only, no logic changes, governance-safe)
+
+---
+
 ### Entry 5: Governance Control Files Synchronized to Verified Phase-2 Reality
 **Date/Time:** 2026-03-09 18:30 UTC+1  
 **Workstream:** Governance Synchronization (Documentation-Only)
