@@ -188,8 +188,69 @@
 //   • Diesel: 15 — 24 NOK/L
 
 // ============================================================================
+// DEL 10: REPOSITORY VERIFICATION
+// ============================================================================
+
+// AI-agenter er eksplisitt tillatt å inspisere repository-tilstanden for å verifisere
+// systemets faktiske kode.
+//
+// Verifikasjon skal inkludere:
+//   • Repository-struktur
+//   • Nylige commits
+//   • File diffs
+//   • Faktisk filinnhold
+//   • Governance-kontrollfiler
+//
+// Kontrolldokumenter som:
+//   • ProjectControlPanel
+//   • LastVerifiedState
+// må behandles som operasjonelle logger, IKKE som absolutt sannhet.
+//
+// Hvis repository-kode og governance-filer er uenige:
+// Dette må rapporteres før videre arbeid fortsetter.
+//
+// Verifikasjonsprioritet:
+//   1. Git-commit-historie
+//   2. File-diff-analyse
+//   3. Faktisk filinnhold
+//   4. Governance-kontrollfiler
+//
+// Repository-kode er alltid den endelige sannhetskilden.
+
+// ============================================================================
+// DEL 11: LOCKED PHASE-2 MATCHING ENGINE
+// ============================================================================
+
+// Følgende systemkomponenter betraktes som kritiske for Phase-2 matching-motoren
+// og må IKKE endres uten eksplisitt godkjenning:
+//
+//   • station matching scoring logic
+//   • distance band scoring logic
+//   • dominance gap logic
+//   • review routing logic
+//
+// Typiske implementasjonssteder:
+//   • functions/matchStationForUserReportedPrice
+//   • functions/stationMatchingEngine
+//   • functions/stationDistanceScoring
+//   • functions/reviewRouting
+//
+// Hvis endringer oppdages i disse komponentene:
+//
+//   1. Modifikasjonen må rapporteres
+//   2. Difffen må analyseres
+//   3. Endringen må evalueres mot governance-regler
+//   4. Ingen videre implementering skal fortsette før avklart
+
+// ============================================================================
 // VERSJONHISTORIE
 // ============================================================================
+
+// v1.1 (2026-03-09) — GOVERNANCE PATCH
+//   • Repository verification rules added
+//   • Locked Phase-2 matching engine components defined
+//   • Workflow for "fortsett" standardized
+//   • Governance control files reclassified as operational logs
 
 // v1.0 (2026-03-09) — INITIAL RELEASE
 //   • Formalisert systemstruktur
@@ -202,7 +263,7 @@
 //   • Låst for produksjon
 
 export const AI_PROJECT_INSTRUCTIONS = {
-  version: "1.0",
+  version: "1.1",
   dated: "2026-03-09",
   status: "LOCKED IN PRODUCTION",
   documentType: "AI GOVERNANCE + PROJECT INSTRUCTIONS",
