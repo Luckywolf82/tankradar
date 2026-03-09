@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, ShieldCheck } from "lucide-react";
+import PrivacySettings from "../components/profile/PrivacySettings";
 
 export default function Profile() {
   const [user, setUser] = useState(null);

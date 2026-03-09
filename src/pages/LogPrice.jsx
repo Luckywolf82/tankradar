@@ -218,6 +218,16 @@ export default function LogPrice() {
           return entry;
         });
       
+      // Attach reportedByUserId if user is logged in
+      let reporterUserId = null;
+      try {
+        const me = await base44.auth.me();
+        if (me?.id) reporterUserId = me.id;
+      } catch (_) {}
+      if (reporterUserId) {
+        entries.forEach(e => { e.reportedByUserId = reporterUserId; });
+      }
+
       await base44.entities.FuelPrice.bulkCreate(entries);
       
       // If no safe match exists, capture as StationCandidate for review pipeline
