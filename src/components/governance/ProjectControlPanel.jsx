@@ -73,6 +73,56 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 10: Difference Summary for Duplicate Groups (Read-Only Curator Comparison)
+**Date/Time:** 2026-03-09 21:30 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (Curator Comparison Support — Preview-Only)
+
+**Files Modified:**
+- `components/admin/DuplicateStationGroup.jsx` — Added difference summary display block
+
+**Summary:**
+Added read-only "Difference Summary" section to each duplicate group card to help curators quickly understand what differs across records without expanding individual station rows. Purely comparative, no remediation logic.
+
+**Difference Summary Features (Read-Only Display Only):**
+- ✅ **Location Variance** — Displays coordinate spread description (identical GPS / small vicinity / notable distance)
+- ✅ **Unique Names** — Lists all distinct station names in the group
+- ✅ **Unique Chains** — Lists all distinct chain assignments (if present)
+- ✅ **Unique Addresses** — Lists all distinct address values (if available)
+- ✅ **Quick Observations** — Human-readable bullet points:
+  - "Same station name across all records" / "N different station names"
+  - "Consistent chain" / "No chain information" / "N different chain assignments"
+  - "Same address across records" / "No address information" / "N different addresses"
+- ✅ **Compact layout** — Placed before station detail list, uses collapsible structure
+- ✅ **Zero logic** — Pure data comparison, no scoring, no predictions
+- ✅ **Client-side only** — No backend calls, no persistence
+
+**Key Constraints (MAINTAINED):**
+- ✅ Read-only descriptive display only
+- ✅ Zero persistence
+- ✅ Zero backend modifications
+- ✅ No merge/delete/apply actions
+- ✅ No remediation logic
+- ✅ No canonical record selection
+- ✅ No risk scoring for consolidation
+- ✅ No new review types
+- ✅ No schema changes
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ Zero locked component modifications
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Use Case:**
+Curators can now see key differences at a glance (names, chains, addresses, coordinate variance) before expanding detailed station records. Speeds up manual triage without adding complexity or merge suggestions.
+
+**Status:** ✅ IMPLEMENTED (read-only comparison display, governance-safe)
+
+---
+
 ### Entry 9: Curator Export Summary for Duplicate Scan Results (Preview-Only Handoff Support)
 **Date/Time:** 2026-03-09 21:00 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (Curator Handoff — Preview-Only)
