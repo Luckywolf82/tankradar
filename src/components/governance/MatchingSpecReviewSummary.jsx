@@ -76,24 +76,31 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 │   No location parsed OR location not found in station: 0 points              │
 │   Missing location does not penalize matching on distance/chain/name.        │
 │                                                                               │
-│ NEGATIVE SIGNAL (conflict):                                                  │
-│   If observation location explicitly parsed AND station areaLabel/address    │
-│   both exist AND they conflict geographically/semantically:                  │
+│ NEGATIVE SIGNAL (conflict penalty):                                          │
+│   MVP definition of location conflict:                                       │
+│   - Observation has parsed location (e.g., "Lade" extracted from name)      │
+│   - Station has explicit areaLabel (e.g., areaLabel="Heimdal")              │
+│   - parsedLocation ≠ areaLabel (string comparison, normalized)              │
+│   → Apply -15 points penalty                                                 │
 │                                                                               │
-│   Conflicting location parsed (e.g., observation "Lade" but station          │
-│   areaLabel="Heimdal" + different coords): -15 points                        │
+│   Enforcement: Check only if BOTH parsed location AND areaLabel exist.      │
+│   If either is null/missing: no conflict penalty (0 points for location).    │
 │                                                                               │
 │   Effect: Score reduced by 15. If score was 60, becomes 45 (drops from      │
 │   auto-match to review_needed). If score was 40, becomes 25 (drops to       │
 │   no_safe_match). Conflict forces curator review or rejection.               │
 │                                                                               │
-│ Rationale: Location is optional bonus for matching. But explicit location    │
-│ conflict is a red flag. Example: "Uno-X Lade" observation but all nearby     │
-│ Uno-X stations are in Heimdal (different area) → conflict. Forces review.    │
+│ Example (conflict applies):                                                  │
+│   Observation: "Uno-X Lade" at (63.405, 10.410)                             │
+│   parsedLocation = "Lade"                                                    │
+│   Station: "Circle K Heimdal", areaLabel="Heimdal"                          │
+│   Result: parsedLocation ("Lade") ≠ areaLabel ("Heimdal") → -15 penalty     │
 │                                                                               │
-│ Enforcement: Compare observation.parsedLocation with                         │
-│ (station.areaLabel OR geocoded address from station coords).                 │
-│ If parsedLocation ≠ null AND differs from station location → apply -15.      │
+│ Example (conflict does NOT apply):                                           │
+│   Observation: "Uno-X Station" at (63.405, 10.410)                          │
+│   parsedLocation = null (no explicit location parsed)                        │
+│   Station: "Circle K Heimdal", areaLabel="Heimdal"                          │
+│   Result: parsedLocation = null → no penalty, neutral (0 points) for locn.  │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ════════════════════════════════════════════════════════════════════════════════
