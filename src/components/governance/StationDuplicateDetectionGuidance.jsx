@@ -59,7 +59,10 @@ Backend function: `detectStationDuplicates`
   - lat: 63.4471622, lon: 10.4427235
 - **Distance:** ~233m
 
-**Classification:** May be data entry error (different coords for same station) or two adjacent Uno-X locations.
+**Classification:** Same name + same chain, but >1m apart. Could be:
+- Data entry error with incorrect GPS
+- Two separate Uno-X locations at same address
+- Requires manual inspection before deciding if true duplicate
 
 #### Circle K Generic Records
 - Multiple records with identical or near-identical generic names "Circle K"
@@ -67,13 +70,15 @@ Backend function: `detectStationDuplicates`
 
 **Classification:** May include actual duplicates + legitimate separate locations. Manual inspection required.
 
-#### Coop Midt-Norge SA (Exact Coordinate Duplicate)
+#### Coop Midt-Norge SA (Exact Coordinate Duplicate) ⚠️
 - ID: 69ac67869fc0127214f27885
   - lat: 63.44345149, lon: 10.447601
 - ID: 69ac677debcf770a215802b8
   - lat: 63.44345149, lon: 10.447601
 
-**Classification:** Identical coordinates AND similar names. Likely clear duplicate candidate.
+**Classification:** Identical coordinates (0m distance) AND same name. **HIGH CONFIDENCE DUPLICATE** ✓
+
+This is the primary candidate for consolidation review (once governance is approved).
 
 ---
 
