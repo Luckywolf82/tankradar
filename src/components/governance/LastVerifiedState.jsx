@@ -1,9 +1,10 @@
 # LAST VERIFIED STATE — TankRadar
-## Confirmed Test Results & Verified Outcomes Only
+## Machine-Readable Audit Architecture (Transitional)
 
-**Last Updated:** 2026-03-09 17:15 UTC+1  
-**Verification Method:** Live function testing against production station catalog  
-**Caveat:** This file contains only test-confirmed behavior, not proposed features or assumptions
+**Data Source:** `functions/auditResults.json` (manually seeded, not yet auto-generated)  
+**Last Updated:** 2026-03-09 18:30 UTC+1  
+**Status:** Transitional — Reading from machine-readable audit state, but not yet automated  
+**Note:** This page renders verification data from auditResults.json. Full automation pending—currently manual-seeded until test functions emit JSON audit output.
 
 ---
 
