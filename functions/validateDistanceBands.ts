@@ -3,11 +3,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 /**
  * DISTANCE BANDS VALIDATION FUNCTION
  *
- * Purpose: Systematically validate distance scoring tiers without manual
- * payload generation or audit log parsing.
+ * Scope: UNIT TEST ONLY
+ * 
+ * What this validates:
+ * ✓ Haversine distance calculation behaves consistently
+ * ✓ Distance tier mapping works as intended
+ * ✓ Generated GPS points fall into expected signal bands
  *
- * Unit test: Tests haversine distance calculation and signal mapping only.
- * Does NOT test multi-candidate matching or dominance gap.
+ * What this does NOT validate:
+ * ✗ Full matching pipeline behavior
+ * ✗ Multi-candidate ranking
+ * ✗ Dominance gap logic
+ * ✗ Auto-match conditions (score ≥ 65 AND gap ≥ 10)
+ * ✗ Whether production matching functions use the same distance logic
+ *
+ * Next step: Run auditPhase2DominanceGap with ~15–50m payload to confirm
+ * integration between distance scoring and candidate ranking.
  *
  * Usage:
  * base44.functions.invoke('validateDistanceBands', {
