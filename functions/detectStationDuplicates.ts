@@ -95,15 +95,14 @@ Deno.serve(async (req) => {
               s1.longitude === s2.longitude
             ) {
               duplicateGroups.push({
-                classification: 'EXACT_DUPLICATE',
+                classification: 'exact_coordinate_duplicate',
                 confidence: 'HIGH',
-                reason: 'Identical coordinates + same name & chain',
+                explanation: `Two stations with identical GPS coordinates (${s1.latitude}, ${s1.longitude}), same name "${s1.name}", same chain "${s1.chain || 'none'}". Likely data entry error or duplicate record.`,
                 stations: [
                   formatStationSummary(s1),
                   formatStationSummary(s2),
                 ],
                 distance_meters: 0,
-                review_action: 'CONSOLIDATE (keep newer by created_date)',
               });
             }
           }
@@ -124,12 +123,11 @@ Deno.serve(async (req) => {
 
         if (!alreadyFlagged) {
           duplicateGroups.push({
-            classification: 'COORDINATE_DUPLICATE',
+            classification: 'exact_name_chain_duplicate',
             confidence: 'HIGH',
-            reason: 'Identical coordinates but different names/chains',
+            explanation: `Multiple stations at identical GPS coordinates (${stationGroup[0].latitude}, ${stationGroup[0].longitude}) with different names or chains. May represent legitimate variations (e.g., same station known by multiple names) or duplicate records.`,
             stations: stationGroup.map(formatStationSummary),
             distance_meters: 0,
-            review_action: 'MANUAL REVIEW (may be legitimate variation)',
           });
         }
       }
@@ -155,15 +153,14 @@ Deno.serve(async (req) => {
               // Only flag if >1m and <50m (near but not identical)
               if (dist > 1 && dist < 50) {
                 duplicateGroups.push({
-                  classification: 'POSSIBLE_NEAR_DUPLICATE',
+                  classification: 'possible_near_duplicate',
                   confidence: 'MEDIUM',
-                  reason: `Same name & chain, ${Math.round(dist)}m apart (may be different entrances or data entry error)`,
+                  explanation: `Stations with identical name "${s1.name}" and chain "${s1.chain || 'none'}" are located ${Math.round(dist)}m apart. May represent different entrances to same station, or duplicate record with slightly offset GPS coordinates.`,
                   stations: [
                     formatStationSummary(s1),
                     formatStationSummary(s2),
                   ],
                   distance_meters: Math.round(dist),
-                  review_action: 'INSPECT & CLASSIFY (different entrances vs. duplicate)',
                 });
               }
             }
@@ -188,10 +185,12 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Sort by confidence
+    // Sort by confidence, then by number of stations in group
     const sorted = uniqueDuplicateGroups.sort((a, b) => {
       const confidenceOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
-      return confidenceOrder[a.confidence] - confidenceOrder[b.confidence];
+      const confDiff = confidenceOrder[a.confidence] - confidenceOrder[b.confidence];
+      if (confDiff !== 0) return confDiff;
+      return b.stations.length - a.stations.length; // More stations first within same confidence
     });
 
     return Response.json({
@@ -201,19 +200,19 @@ Deno.serve(async (req) => {
       duplicate_groups: sorted,
       summary: {
         total_stations: stations.length,
-        exact_duplicates: sorted.filter(
-          (dg) => dg.classification === 'EXACT_DUPLICATE'
+        exact_coordinate_duplicates: sorted.filter(
+          (dg) => dg.classification === 'exact_coordinate_duplicate'
         ).length,
-        coordinate_duplicates: sorted.filter(
-          (dg) => dg.classification === 'COORDINATE_DUPLICATE'
+        exact_name_chain_duplicates: sorted.filter(
+          (dg) => dg.classification === 'exact_name_chain_duplicate'
         ).length,
         possible_near_duplicates: sorted.filter(
-          (dg) => dg.classification === 'POSSIBLE_NEAR_DUPLICATE'
+          (dg) => dg.classification === 'possible_near_duplicate'
         ).length,
         total_groups: sorted.length,
       },
       governance_note:
-        'This is a PREVIEW-ONLY report. No consolidation or deletion is performed. Manual curator review required for any cleanup decisions.',
+        'PREVIEW-ONLY REPORT. No automatic consolidation, deletion, or modification is performed. Manual curator review required for any cleanup decisions. This detector is conservative and does not propose specific actions.',
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
