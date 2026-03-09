@@ -27,8 +27,9 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 │ 301+ m:     0 points (no distance contribution; match continues if other      │
 │             signals strong enough)                                            │
 │                                                                               │
-│ Rationale: Conservative geographic threshold. Prevents false matches          │
-│ across different stations in same city. No match possible beyond 300m.       │
+│ Rationale: Conservative geographic threshold. Prevents false matches across   │
+│ different stations in same city. Distance >300m contributes 0 points but      │
+│ matching continues if other signals are strong.                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
