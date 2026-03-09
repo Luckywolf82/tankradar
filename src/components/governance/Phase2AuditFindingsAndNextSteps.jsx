@@ -126,10 +126,17 @@ function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
 > **Audit-ready**  
 > **NOT production-stable**  
 >
-> **Blocking issues:**
-> 1. Distance scoring path unclear (all signals = 0)
-> 2. No validated positive auto-match case (score ≥65, gap ≥10)
-> 3. No validated true single-candidate scenario
+> **What is validated:**
+> - Chain gate logic (mismatch rejection)
+> - Conservative no-safe routing (<35)
+> - Review routing (35–64)
+> - Multi-candidate decision structure
+> - Explanation text (fixed)
+>
+> **What is NOT yet validated:**
+> - True positive auto-match case (live score ≥65 AND practical dominance gap ≥10)
+> - Distance scoring band activation (candidates ≤300m from observation)
+> - Practical effect of sparse areaLabel coverage in real catalog
 
 ---
 
