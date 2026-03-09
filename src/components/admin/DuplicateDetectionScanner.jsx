@@ -31,7 +31,12 @@ export default function DuplicateDetectionScanner({ onResults, onError }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
-      <h3 className="font-semibold text-slate-900 mb-3">Scan for Duplicates</h3>
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="font-semibold text-slate-900">Scan for Duplicates</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Preview analysis only — no data modifications</p>
+        </div>
+      </div>
       <div className="flex gap-2 items-end">
         <div className="flex-1">
           <label className="block text-sm font-medium text-slate-600 mb-1">City</label>
