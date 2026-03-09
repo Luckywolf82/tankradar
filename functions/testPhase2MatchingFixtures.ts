@@ -56,6 +56,33 @@ const FIXTURE_STATIONS = [
     latitude: 63.4250,
     longitude: 10.4050,
   },
+  {
+    id: 'stn_005',
+    name: 'Esso Singsås',
+    chain: 'esso',
+    city: 'Trondheim',
+    areaLabel: 'Singsås',
+    latitude: 63.4252,
+    longitude: 10.4052,
+  },
+  {
+    id: 'stn_006',
+    name: 'BP Heimdal',
+    chain: 'bp',
+    city: 'Trondheim',
+    areaLabel: 'Heimdal',
+    latitude: 63.4105,
+    longitude: 10.3905,
+  },
+  {
+    id: 'stn_007',
+    name: 'Statoil Heimdal',
+    chain: 'statoil',
+    city: 'Trondheim',
+    areaLabel: 'Heimdal',
+    latitude: 63.4108,
+    longitude: 10.3908,
+  },
 ];
 
 // Test cases: observation -> expected matching outcomes
