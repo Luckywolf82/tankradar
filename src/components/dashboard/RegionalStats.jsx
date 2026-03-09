@@ -2,8 +2,13 @@ import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
-export default function RegionalStats({ observedPrices, ssbData, selectedFuel }) {
+export default function RegionalStats({ observedPrices, stations = [], ssbData, selectedFuel }) {
   const stats = useMemo(() => {
+    // Build stationId -> city lookup
+    const stationCityMap = {};
+    stations.forEach(s => {
+      if (s.id && s.city) stationCityMap[s.id] = s.city;
+    });
     // Map fuel types for SSB comparison
     const fuelMap = {
       gasoline_95: "bensin",
