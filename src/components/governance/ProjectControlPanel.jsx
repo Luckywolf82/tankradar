@@ -73,6 +73,51 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 7: Curator Review Controls Documentation Verification & Sync
+**Date/Time:** 2026-03-09 19:50 UTC+1  
+**Workstream:** Governance Documentation (Verification & Sync Only)
+
+**Files Modified:**
+- `components/governance/LastVerifiedState.jsx` — Added curator review controls verification section
+- `components/governance/ProjectControlPanel.jsx` — This entry (documentation synchronization)
+
+**Summary:**
+Synchronized governance documentation to reflect verified implementation of curator review-only controls. No code behavior changes, no backend modifications, no persistence introduced. Documentation-only synchronization to maintain governance audit trail accuracy.
+
+**Verified Behavior (from code inspection):**
+- ✅ Classification filter implemented with checkboxes (local state, non-persistent)
+- ✅ Confidence filter implemented with dropdown (local state, non-persistent)
+- ✅ Sort controls implemented with radio-style dropdown (local state, non-persistent)
+- ✅ "Why Grouped" explanations implemented as collapsible section (local state, non-persistent)
+- ✅ All filtering/sorting applied to UI rendering layer only
+- ✅ No backend modifications
+- ✅ No schema changes
+- ✅ No persistence mechanism
+- ✅ No auto-actions or consolidation logic
+
+**Key Constraints (MAINTAINED):**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ No backend modifications
+- ✅ No schema changes
+- ✅ No merge/delete/apply logic
+- ✅ No auto-actions
+- ✅ No StationReview creation
+- ✅ No consolidation workflow
+- ✅ Preview-only philosophy reinforced
+- ✅ Zero locked component modifications
+- ✅ Documentation-only change
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Status:** ✅ IMPLEMENTED (documentation sync, no code changes, governance-safe)
+
+---
+
 ### Entry 6: Curator Review-Only Controls (Duplicate Catalog Workstream)
 **Date/Time:** 2026-03-09 19:45 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (Data Quality)
@@ -574,6 +619,8 @@ Before ANY code modification:
 | 2026-03-09 18:10 | Station duplicate review admin UI (preview-only) | Implemented | ProjectControlPanel Entry 3 |
 | 2026-03-09 18:25 | Duplicate catalog workstream enhancement | Implemented | ProjectControlPanel Entry 4 |
 | 2026-03-09 18:30 | Governance control files synchronized to verified state | Implemented | ProjectControlPanel Entry 5 |
+| 2026-03-09 19:45 | Curator review-only controls (duplicate catalog) | Implemented | ProjectControlPanel Entry 6 |
+| 2026-03-09 19:50 | Curator review controls documentation verification & sync | Implemented | ProjectControlPanel Entry 7 |
 
 ---
 

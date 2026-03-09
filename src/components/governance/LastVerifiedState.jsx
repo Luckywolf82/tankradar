@@ -101,6 +101,73 @@
 
 ---
 
+## CURATOR REVIEW-ONLY CONTROLS — VERIFIED (2026-03-09)
+
+### Duplicate Detection Results Filter & Sort Controls
+**File:** `components/admin/DuplicateDetectionResults.jsx`  
+**Status:** ✅ VERIFIED (UI-only controls, local state, no persistence)
+
+**Verified Implementation:**
+- ✅ Classification filter (checkboxes: Exact Coordinate, Same Location, Near-Duplicate)
+- ✅ Confidence filter (dropdown: All, HIGH, MEDIUM, LOW)
+- ✅ Sort order controls (radio: Confidence, Group Size, Distance)
+- ✅ "Why Grouped" collapsible explanations per classification
+- ✅ Filtered results dynamically updated
+- ✅ Empty state handling ("No duplicates match filters")
+
+**State Management (Verified Non-Persistent):**
+- ✅ `selectedClassifications` state (component-level, resets on page reload)
+- ✅ `confidenceFilter` state (component-level, resets on page reload)
+- ✅ `sortBy` state (component-level, resets on page reload)
+- ✅ `showWhyGrouped` state (component-level, resets on page reload)
+- ✅ No database writes
+- ✅ No local storage
+- ✅ No persistence layer
+
+**Filtering Logic (Verified):**
+- ✅ Classification filter uses checkboxes mapped to classifications array
+- ✅ Confidence filter applied with dropdown selection
+- ✅ Both filters combined with AND logic (line 31-35)
+- ✅ Filtering applied before rendering (line 219)
+
+**Sorting Logic (Verified):**
+- ✅ Sorts by confidence (HIGH → MEDIUM → LOW) as default
+- ✅ Optional sort by group size (descending, most first)
+- ✅ Optional sort by distance (ascending, nearest first)
+- ✅ Sort applied after filtering (line 37-47)
+
+**Why Grouped Explanations (Verified):**
+- ✅ Explains "Exact Coordinate Duplicates" classification
+- ✅ Explains "Same Location, Different Names/Chains" classification
+- ✅ Explains "Possible Near-Duplicates" classification
+- ✅ Each explanation includes curator guidance
+- ✅ Collapsible UI (chevron toggle) for space efficiency
+
+**Confirmed Non-Modification:**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ detectStationDuplicates backend logic UNCHANGED
+- ✅ No schema changes
+- ✅ No StationReview creation
+- ✅ No merge/delete/apply logic
+- ✅ No consolidation workflow
+- ✅ Preview-only philosophy reinforced
+- ✅ No auto-actions
+
+**Expected User Flow (Curator Review):**
+1. Admin enters city name and scans
+2. Results display with controls visible
+3. Curator can filter by classification (checkboxes)
+4. Curator can filter by confidence level (dropdown)
+5. Curator can sort results (dropdown)
+6. Curator can expand "Why Grouped" to understand grouping logic
+7. Curator reviews groups and manually decides on action
+8. Page reload resets all UI filters (no persistence)
+9. No automatic consolidation actions taken
+
+**Status:** ✅ VERIFIED (UI controls only, local state, non-persistent, curator-focused, governance-safe)
+
+---
+
 ## PERFORMANCE OPTIMIZATION LAYER — VERIFIED (2026-03-09)
 
 ### Station Proximity Pre-Filter
