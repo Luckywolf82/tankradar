@@ -198,7 +198,7 @@ const TEST_CASES = [
   {
     name: 'TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → AUTO-MATCH)',
     observation: {
-      station_name: 'Circle K Heimdal',
+      station_name: 'Circle K strong match',
       station_chain: 'circle k',
       gps_lat: 63.4100,
       gps_lon: 10.3900,
@@ -209,7 +209,7 @@ const TEST_CASES = [
     expectedTopScore: '~80+',
     expectedGap: '≥10',
     expectedRunnerUpScore: '<70',
-    reason: 'Top score ≥65 (Circle K Heimdal ~80+) AND dominance gap ≥10: meets explicit dual-requirement gate → matched_station_id auto-confirms',
+    reason: 'Circle K Heimdal dominates: chain match + near-exact name + area match. BP/Statoil runners-up far behind (different chains) → gap ≥10 allows auto-match',
   },
 ];
 
