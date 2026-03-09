@@ -43,14 +43,14 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
       .filter(p =>
         acceptedFuelTypes.includes(p.fuelType) &&
         p.plausibilityStatus === "realistic_price" &&
-        p.priceType !== "national_average" &&
-        p.locationLabel
+        p.priceType !== "national_average"
       )
       .forEach(p => {
-        if (!byCity[p.locationLabel]) {
-          byCity[p.locationLabel] = [];
-        }
-        byCity[p.locationLabel].push(p.priceNok);
+        // Prefer station.city via stationId, fallback to locationLabel
+        const cityKey = (p.stationId && stationCityMap[p.stationId]) || p.locationLabel;
+        if (!cityKey) return;
+        if (!byCity[cityKey]) byCity[cityKey] = [];
+        byCity[cityKey].push(p.priceNok);
       });
 
     const results = Object.entries(byCity)
