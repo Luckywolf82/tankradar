@@ -61,20 +61,39 @@ Total Match Score = Distance + Chain + Name Similarity + Location
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ PARSED LOCATION COMPONENT — 10 points max                                    │
+│ PARSED LOCATION COMPONENT — 10 points max / -15 points (conflict penalty)    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ (Optional; parsed from observation name upstream)                            │
 │                                                                               │
-│ Explicit location match           +10 points                                  │
-│ (observation "Heimdal" = station areaLabel="Heimdal")                        │
+│ POSITIVE SIGNALS:                                                            │
+│   Explicit location match           +10 points                                │
+│   (observation "Heimdal" = station areaLabel="Heimdal")                      │
 │                                                                               │
-│ Location mentioned in station name: +5 points                                 │
-│ (observation "Heimdal" found in station name "Circle K Heimdal")             │
+│   Location mentioned in station name: +5 points                               │
+│   (observation "Heimdal" found in station name "Circle K Heimdal")           │
 │                                                                               │
-│ No location signal:   0 points (neutral)                                      │
+│ NEUTRAL (no signal):                                                         │
+│   No location parsed OR location not found in station: 0 points              │
+│   Missing location does not penalize matching on distance/chain/name.        │
 │                                                                               │
-│ Rationale: Location is optional bonus. Only rewards well-structured,         │
-│ unambiguous location parsing. Missing location does not penalize.            │
+│ NEGATIVE SIGNAL (conflict):                                                  │
+│   If observation location explicitly parsed AND station areaLabel/address    │
+│   both exist AND they conflict geographically/semantically:                  │
+│                                                                               │
+│   Conflicting location parsed (e.g., observation "Lade" but station          │
+│   areaLabel="Heimdal" + different coords): -15 points                        │
+│                                                                               │
+│   Effect: Score reduced by 15. If score was 60, becomes 45 (drops from      │
+│   auto-match to review_needed). If score was 40, becomes 25 (drops to       │
+│   no_safe_match). Conflict forces curator review or rejection.               │
+│                                                                               │
+│ Rationale: Location is optional bonus for matching. But explicit location    │
+│ conflict is a red flag. Example: "Uno-X Lade" observation but all nearby     │
+│ Uno-X stations are in Heimdal (different area) → conflict. Forces review.    │
+│                                                                               │
+│ Enforcement: Compare observation.parsedLocation with                         │
+│ (station.areaLabel OR geocoded address from station coords).                 │
+│ If parsedLocation ≠ null AND differs from station location → apply -15.      │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ════════════════════════════════════════════════════════════════════════════════
