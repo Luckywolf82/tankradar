@@ -256,8 +256,8 @@ Deno.serve(async (req) => {
     let diagnostic = null;
     if (sorted.length > 0) {
       const topCandidate = sorted[0];
-      const obsChain = parsedObs.parsedChain;
-      const stnChain = topCandidate.stationChain;
+      const obsChain = observationChain;
+      const stnChain = topCandidate.chain;
       const normalizedObs = normalizeChainName(obsChain);
       const normalizedStn = normalizeChainName(stnChain);
       
@@ -282,8 +282,7 @@ Deno.serve(async (req) => {
             : null
         },
         distanceTrace: {
-          observationGPS: { lat: auditInput.gps_lat, lon: auditInput.gps_lon },
-          stationGPS: { lat: topCandidate.latitude, lon: topCandidate.longitude },
+          observationGPS: { lat: payload.gps_lat, lon: payload.gps_lon },
           distanceMeters: topCandidate.distance,
           distanceSignalReturned: topCandidate.signals?.distance || 0
         },
