@@ -25,7 +25,7 @@ export default function SharePriceButton({ stationId, stationName, priceNok, fue
   const handleShare = async (e) => {
     e.stopPropagation();
 
-    const url = `${window.location.origin}${window.location.pathname.replace(/\/[^/]*$/, "")}/${createPageUrl(`StationDetails?stationId=${stationId}`)}`;
+    const url = `${window.location.origin}/${createPageUrl(`StationDetails?stationId=${stationId}`)}`;
     const fuelLabel = fuelTypeLabel[fuelType] || fuelType;
     const text = `${stationName} – ${fuelLabel}: ${priceNok?.toFixed(2)} kr/l`;
 
@@ -33,8 +33,8 @@ export default function SharePriceButton({ stationId, stationName, priceNok, fue
       // Native share (app / mobil)
       await navigator.share({ title: "TankRadar", text, url });
     } else {
-      // Fallback: kopier delbar URL
-      await navigator.clipboard.writeText(`${text}\n${url}`);
+      // Fallback: kopier kun URL til utklippstavlen
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
