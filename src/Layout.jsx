@@ -29,6 +29,7 @@ export default function Layout({ children, currentPageName }) {
     extraNavLinks.push({ label: "Profil", page: "Profile", icon: User });
   } else if (role === "admin") {
     extraNavLinks.push({ label: "Admin", page: "SuperAdmin", icon: ShieldCheck });
+    extraNavLinks.push({ label: "Profil", page: "Profile", icon: User });
   }
 
   const allNavLinks = [...baseNavLinks, ...extraNavLinks];
