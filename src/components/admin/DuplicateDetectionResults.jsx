@@ -41,15 +41,15 @@ export default function DuplicateDetectionResults({ results }) {
               <p className="text-xl font-bold text-slate-900">{summary.total_stations}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Exact Duplicates</p>
-              <p className="text-xl font-bold text-red-600">{summary.exact_duplicates}</p>
+              <p className="text-xs text-slate-500">Exact Coordinates</p>
+              <p className="text-xl font-bold text-red-600">{summary.exact_coordinate_duplicates}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Coordinate Duplicates</p>
-              <p className="text-xl font-bold text-orange-600">{summary.coordinate_duplicates}</p>
+              <p className="text-xs text-slate-500">Same Coords</p>
+              <p className="text-xl font-bold text-orange-600">{summary.exact_name_chain_duplicates}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Possible Near-Dupes</p>
+              <p className="text-xs text-slate-500">Near-Duplicates</p>
               <p className="text-xl font-bold text-yellow-600">{summary.possible_near_duplicates}</p>
             </div>
           </div>
@@ -67,40 +67,40 @@ export default function DuplicateDetectionResults({ results }) {
         </Card>
       ) : (
         <div>
-          {/* Exact Duplicates */}
-          {duplicate_groups.filter(g => g.classification === 'EXACT_DUPLICATE').length > 0 && (
+          {/* Exact Coordinate Duplicates */}
+          {duplicate_groups.filter(g => g.classification === 'exact_coordinate_duplicate').length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-2">
                 <span className="text-red-600">●</span>
-                Exact Coordinate + Name Duplicates ({duplicate_groups.filter(g => g.classification === 'EXACT_DUPLICATE').length})
+                Exact Coordinate Duplicates ({duplicate_groups.filter(g => g.classification === 'exact_coordinate_duplicate').length})
               </h3>
-              {duplicate_groups.filter(g => g.classification === 'EXACT_DUPLICATE').map((group, idx) => (
+              {duplicate_groups.filter(g => g.classification === 'exact_coordinate_duplicate').map((group, idx) => (
                 <DuplicateStationGroup key={`exact-${idx}`} group={group} index={idx} />
               ))}
             </div>
           )}
 
-          {/* Coordinate Duplicates */}
-          {duplicate_groups.filter(g => g.classification === 'COORDINATE_DUPLICATE').length > 0 && (
+          {/* Exact Name Chain Duplicates */}
+          {duplicate_groups.filter(g => g.classification === 'exact_name_chain_duplicate').length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-2">
                 <span className="text-orange-600">●</span>
-                Same Coordinates, Different Names/Chains ({duplicate_groups.filter(g => g.classification === 'COORDINATE_DUPLICATE').length})
+                Same Coordinates, Different Names ({duplicate_groups.filter(g => g.classification === 'exact_name_chain_duplicate').length})
               </h3>
-              {duplicate_groups.filter(g => g.classification === 'COORDINATE_DUPLICATE').map((group, idx) => (
+              {duplicate_groups.filter(g => g.classification === 'exact_name_chain_duplicate').map((group, idx) => (
                 <DuplicateStationGroup key={`coord-${idx}`} group={group} index={idx} />
               ))}
             </div>
           )}
 
           {/* Possible Near-Duplicates */}
-          {duplicate_groups.filter(g => g.classification === 'POSSIBLE_NEAR_DUPLICATE').length > 0 && (
+          {duplicate_groups.filter(g => g.classification === 'possible_near_duplicate').length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-slate-900 mb-2 flex items-center gap-2">
                 <span className="text-yellow-600">●</span>
-                Possible Near-Duplicates ({duplicate_groups.filter(g => g.classification === 'POSSIBLE_NEAR_DUPLICATE').length})
+                Possible Near-Duplicates ({duplicate_groups.filter(g => g.classification === 'possible_near_duplicate').length})
               </h3>
-              {duplicate_groups.filter(g => g.classification === 'POSSIBLE_NEAR_DUPLICATE').map((group, idx) => (
+              {duplicate_groups.filter(g => g.classification === 'possible_near_duplicate').map((group, idx) => (
                 <DuplicateStationGroup key={`near-${idx}`} group={group} index={idx} />
               ))}
             </div>
