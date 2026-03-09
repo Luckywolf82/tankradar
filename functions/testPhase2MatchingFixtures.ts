@@ -163,7 +163,10 @@ const TEST_CASES = [
     },
     expectedOutcomes: ['review_needed_station_match'],
     expectedScore: '≥65 with gap <10',
-    reason: 'Top score ≥65 but second candidate too close (gap <10): multi-candidate gate requires gap ≥10 for auto-match',
+    expectedTopScore: '~68',
+    expectedGap: '<10',
+    expectedRunnerUpScore: '>58',
+    reason: 'Top score ≥65 (Neste Singsås ~68) but second candidate close enough to fail gap gate (gap <10): multi-candidate rule blocks auto-match → forces review_needed',
   },
   {
     name: 'TC-09: Strict dominance-gap gate (score ≥65 AND gap ≥10 → AUTO-MATCH)',
