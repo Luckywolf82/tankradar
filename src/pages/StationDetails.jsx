@@ -60,7 +60,44 @@ export default function StationDetails() {
       setStation(stationRes[0] || null);
       setPrices(pricesRes.filter((p) => p.plausibilityStatus === "realistic_price"));
     }).finally(() => setLoading(false));
+
+    base44.auth.isAuthenticated().then(async (auth) => {
+      if (auth) {
+        const u = await base44.auth.me();
+        setUser(u);
+        const favs = await base44.entities.UserFavoriteStation.filter({ created_by: u.email });
+        setFavorites(favs);
+      }
+    });
   }, [stationId]);
+
+  const isFavorite = (fuelType) =>
+    favorites.some(f => f.station === stationId && f.fuelType === fuelType);
+
+  const toggleFavorite = async (fuelType) => {
+    if (!user) return;
+    setFavLoading(true);
+    const existing = favorites.find(f => f.station === stationId && f.fuelType === fuelType);
+    if (existing) {
+      await base44.entities.UserFavoriteStation.delete(existing.id);
+      setFavorites(prev => prev.filter(f => f.id !== existing.id));
+    } else {
+      const created = await base44.entities.UserFavoriteStation.create({
+        station: stationId,
+        fuelType,
+      });
+      setFavorites(prev => [...prev, created]);
+      // Opprett price_drop-varsling automatisk
+      await base44.entities.UserPriceAlert.create({
+        station: stationId,
+        fuelType,
+        alertType: 'price_drop',
+        isActive: true,
+        isUnread: false,
+      });
+    }
+    setFavLoading(false);
+  };
 
   if (!stationId) {
     return <div className="max-w-2xl mx-auto p-6 text-slate-500">Ingen stasjon valgt.</div>;
