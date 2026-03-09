@@ -647,10 +647,10 @@ CONSERVATISM ASSESSMENT
   No single >35 candidate → no_safe_match (creates candidate, awaits review)
 
 ✓ SIGNAL WEIGHTS:
-  Chain = 25 (most reliable, mismatch is terminal)
-  Name = 30 (important but variant-prone; scaled conservatively)
-  Distance = 30 (strong but alone insufficient)
-  Location = 10 (optional bonus, never penalty)
+   Chain = 25 (most reliable, mismatch is terminal)
+   Name = 30 (important but variant-prone; scaled conservatively)
+   Distance = 30 (strong but alone insufficient)
+   Location = +10 bonus (optional, explicit area match); -15 penalty (area conflict)
 
 CONCLUSION: Specification prioritizes data integrity over automation speed.
 
