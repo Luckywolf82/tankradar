@@ -569,7 +569,7 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │   ────────────────────────────────────────────────────────                  │
 │   TOTAL:                 15 points                                            │
 │                                                                               │
-│ Gates:       City ✓ (both Trondheim), Chain ✓, Distance gate (>300m disq.)   │
+│ Gates:       City ✓ (both Trondheim), Chain ✓, Distance >300m (0 contribution)│
 │              Location conflict penalty triggered                             │
 │                                                                               │
 │ Outcome:     NO_SAFE_STATION_MATCH (score <35, location conflict)            │
