@@ -360,10 +360,25 @@ function calculateLocationSignal(parsedLocation, parsedLocationConfidence, stati
 }
 
 function calculateDistanceSignal(meters) {
-  if (meters <= 30) return 30;
-  if (meters <= 75) return 20;
-  if (meters <= 150) return 10;
-  if (meters <= 300) return 5;
+  // DEBUG: Log input to diagnose signal=0 bug
+  console.log(`[DEBUG-DISTANCE] Input: ${meters}, Type: ${typeof meters}, IsNaN: ${isNaN(meters)}`);
+  if (meters <= 30) {
+    console.log(`[DEBUG-DISTANCE] Signal: 30 (<=30)`);
+    return 30;
+  }
+  if (meters <= 75) {
+    console.log(`[DEBUG-DISTANCE] Signal: 20 (31-75)`);
+    return 20;
+  }
+  if (meters <= 150) {
+    console.log(`[DEBUG-DISTANCE] Signal: 10 (76-150)`);
+    return 10;
+  }
+  if (meters <= 300) {
+    console.log(`[DEBUG-DISTANCE] Signal: 5 (151-300)`);
+    return 5;
+  }
+  console.log(`[DEBUG-DISTANCE] Signal: 0 (>300)`);
   return 0;
 }
 
