@@ -25,7 +25,7 @@ export default function SharePriceButton({ stationId, stationName, priceNok, fue
   const handleShare = async (e) => {
     e.stopPropagation();
 
-    const url = `${window.location.origin}/${createPageUrl(`StationDetails?stationId=${stationId}`)}`;
+    const url = `${window.location.origin}${createPageUrl(`StationDetails?stationId=${stationId}`)}`;
     const fuelLabel = fuelTypeLabel[fuelType] || fuelType;
     const text = `${stationName} – ${fuelLabel}: ${priceNok?.toFixed(2)} kr/l`;
 
