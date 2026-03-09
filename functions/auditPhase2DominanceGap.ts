@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const distanceSignal = calculateDistanceSignal(distance);
+      const distanceSignal = typeof distance === 'number' && !isNaN(distance) ? calculateDistanceSignal(distance) : 0;
       const chainSignal = chainResult.signal;
       const nameSimilarity = bigramSimilarity(payload.station_name, station.name);
       const nameSignal = calculateNameSignal(nameSimilarity);
