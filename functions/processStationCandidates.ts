@@ -148,10 +148,13 @@ Deno.serve(async (req) => {
         candidateUpdates.push({
           id: candidate.id,
           update: {
-            status: 'auto_confirmed',
+            // DISABLED: status kept as "pending" while Station.create() is disabled.
+            // Prevents misleading hidden state where candidate appears processed but no Station exists.
+            // Change back to "auto_confirmed" when Station.create() is re-enabled and dedup guard validated.
+            status: 'pending',
             classification: result.classification,
             proposedChain: result.chain || candidate.proposedChain || null,
-            notes: `${candidate.notes || ''}\n[auto_confirmed] Regelmotor: ${result.classification}, chain="${result.chain}"`.trim(),
+            notes: `${candidate.notes || ''}\n[classified] Regelmotor: ${result.classification}, chain="${result.chain}" — venter på Station.create() (deaktivert)`.trim(),
           }
         });
         stationCreations.push({
