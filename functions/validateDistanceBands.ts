@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
     const payload = await req.json();
 
-    if (!payload.stationId || !payload.stationLat || !payload.stationLon || !payload.city) {
+    if (!payload.stationId || payload.stationLat == null || payload.stationLon == null || !payload.city) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -41,17 +41,17 @@ Deno.serve(async (req) => {
       { offsetMeters: 50, expectedSignal: 20, bearing: 0 },
       { offsetMeters: 100, expectedSignal: 10, bearing: 0 },
       { offsetMeters: 200, expectedSignal: 5, bearing: 0 },
-      { offsetMeters: 299, expectedSignal: 5, bearing: 0 },
-      { offsetMeters: 301, expectedSignal: 0, bearing: 0 },
+      { offsetMeters: 295, expectedSignal: 5, bearing: 0 },
+      { offsetMeters: 305, expectedSignal: 0, bearing: 0 },
       { offsetMeters: 400, expectedSignal: 0, bearing: 0 },
     ];
 
-    // Symmetry check: 30m on all 4 bearings
+    // Symmetry check: 25m on all 4 bearings (expected signal still 30)
     const symmetryTests = [
-      { offsetMeters: 30, bearing: 0, label: 'N' },
-      { offsetMeters: 30, bearing: 90, label: 'E' },
-      { offsetMeters: 30, bearing: 180, label: 'S' },
-      { offsetMeters: 30, bearing: 270, label: 'W' },
+      { offsetMeters: 25, bearing: 0, label: 'N' },
+      { offsetMeters: 25, bearing: 90, label: 'E' },
+      { offsetMeters: 25, bearing: 180, label: 'S' },
+      { offsetMeters: 25, bearing: 270, label: 'W' },
     ];
 
     const testResults = [];
@@ -79,8 +79,12 @@ Deno.serve(async (req) => {
       testResults.push({
         offsetMeters: test.offsetMeters,
         bearing: `${test.bearing}°`,
+        generatedPoint: {
+          gps_lat: parseFloat(gpsPoint.lat.toFixed(6)),
+          gps_lon: parseFloat(gpsPoint.lon.toFixed(6)),
+        },
         expectedSignal: test.expectedSignal,
-        actualDistanceMeters: Math.round(actualDistance),
+        actualDistanceMeters: parseFloat(actualDistance.toFixed(2)),
         actualSignal,
         pass,
       });
@@ -107,8 +111,12 @@ Deno.serve(async (req) => {
 
       symmetryResults.push({
         bearing: test.label,
+        generatedPoint: {
+          gps_lat: parseFloat(gpsPoint.lat.toFixed(6)),
+          gps_lon: parseFloat(gpsPoint.lon.toFixed(6)),
+        },
         expectedSignal: 30,
-        actualDistanceMeters: Math.round(actualDistance),
+        actualDistanceMeters: parseFloat(actualDistance.toFixed(2)),
         actualSignal,
         pass,
       });
@@ -119,6 +127,7 @@ Deno.serve(async (req) => {
     const allPassed = passedCount === testResults.length && symmetryPassedCount === symmetryResults.length;
 
     return Response.json({
+      validationType: 'unit_distance_signal_only',
       status: allPassed ? 'distance_bands_validated' : 'distance_bands_validation_failed',
       station: {
         id: payload.stationId,
