@@ -571,13 +571,13 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 │ Scoring:                                                                     │
 │   Distance (55m):       20 points (31–75m bracket)                            │
 │   Chain ("YX" = "YX"):  25 points (exact match, both high-confidence)        │
-│   Name similarity       25 points (exact "YX Heimdal" = "YX Heimdal"         │
-│   ("YX Heimdal" =       bigram ≈ 0.99)                                       │
+│   Name similarity       30 points (exact "YX Heimdal" = "YX Heimdal"         │
+│   ("YX Heimdal" =       bigram ≥0.95 → 30 points per scoring table)          │
 │   "YX Heimdal"):                                                             │
 │   Location ("Heimdal"   10 points (explicit areaLabel match)                  │
 │   = areaLabel):                                                              │
 │   ────────────────────────────────────────────────────────                  │
-│   TOP SCORE:             80 points                                            │
+│   TOP SCORE:             85 points                                            │
 │                                                                               │
 │ Dominance Check:                                                             │
 │   Only one candidate in pool (single YX Heimdal station)                     │
