@@ -275,34 +275,51 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 ════════════════════════════════════════════════════════════════════════════════
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ THRESHOLD 1: Score ≥ 65 → MATCHED_STATION_ID                                 │
+│ THRESHOLD 1: Score ≥ 65 + DOMINANCE GAP → MATCHED_STATION_ID                 │
 │                           (Automatic match, no review)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ Conservative basis for 65:                                                   │
+│ DUAL REQUIREMENTS for auto-match:                                            │
 │                                                                               │
-│ Minimum configuration for auto-match:                                        │
-│   Distance (20–30) + Chain (25) + Name (10–20) = 55–75 points               │
+│ (1) TOP SCORE ≥ 65                                                           │
+│     Minimum configuration: Distance (20–30) + Chain (25) + Name (10–20)      │
 │                                                                               │
-│ Example configurations reaching ≥65:                                         │
-│   (A) Distance 30 + Chain 25 + Name 20 = 75                                   │
-│       "Circle K Heimdal" at 25m, 95% name similarity, chain match            │
-│       SAFE AUTO-MATCH                                                        │
+│ (2) DOMINANCE GAP ≥ 10 points                                                 │
+│     Top candidate score − Second-best candidate score ≥ 10                   │
 │                                                                               │
-│   (B) Distance 20 + Chain 25 + Name 20 = 65                                   │
-│       "Uno-X Lade" at 50m, 85% name similarity, chain match                  │
-│       At threshold but requires strong chain + name (no distance weakness)   │
-│       SAFE AUTO-MATCH                                                        │
+│     Conservative threshold: 10-point gap ensures clear separation.           │
+│     Prevents auto-match when close competitors exist.                        │
 │                                                                               │
-│ NEVER reaches 65 with:                                                       │
-│   - Chain mismatch (game over)                                                │
-│   - Distance >300m (gate blocks)                                              │
-│   - Weak name + weak distance                                                 │
+│ Example configurations:                                                      │
+│   (A) Top score 75, Second score 60 → Gap 15 ✓ → AUTO-MATCH                 │
+│       "Circle K Heimdal" at 25m, 95% name similarity                        │
+│       No competing strong candidate → Safe auto-match                        │
 │                                                                               │
-│ Safety: Requires at least TWO strong signals (e.g., chain + distance OR      │
-│ name + distance). Single strong signal + weak others = review_needed.        │
+│   (B) Top score 70, Second score 62 → Gap 8 ✗ → REVIEW_NEEDED               │
+│       Even though both meet 65, gap too close                                │
+│       Ambiguity forces curator decision                                      │
 │                                                                               │
-│ Prevents: False attribution across competing stations                        │
-│ Enables: Fast path for obvious, high-confidence matches                      │
+│   (C) Top score 65, Second score 58 → Gap 7 ✗ → REVIEW_NEEDED               │
+│       At threshold but insufficient separation from runner-up               │
+│       Curator confirms selection                                             │
+│                                                                               │
+│ NEVER auto-match with:                                                       │
+│   - Score <65 (regardless of gap)                                             │
+│   - Gap <10 (regardless of top score, unless gap=0 case below)               │
+│   - Chain mismatch (high-confidence) / Location conflict                      │
+│   - Multiple candidates ≥65 (at least two strong options exist)              │
+│                                                                               │
+│ Tie case (gap=0):                                                            │
+│   Multiple candidates with same score → REVIEW_NEEDED (curator breaks tie)  │
+│   Example: Two "Uno-X Lade" stations both score 75 → Return both for review  │
+│                                                                               │
+│ Safety rationale:                                                            │
+│   - ≥65 alone is not sufficient; top score must dominate runner-up          │
+│   - 10-point gap chosen conservatively: ~33% of max score (95)              │
+│   - Prevents auto-match in ambiguous geographies (same chain, similar names) │
+│   - Allows curator to resolve unclear cases                                  │
+│                                                                               │
+│ Prevents: False attribution when multiple plausible candidates exist         │
+│ Enables: Fast path only for unambiguous, well-separated matches              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
