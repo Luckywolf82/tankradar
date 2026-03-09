@@ -94,7 +94,8 @@ export default function RecentPricesFeed() {
     }).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return null;
+  if (loading || hasLocation === null) return null;
+  if (hasLocation === false) return null;
 
   return (
     <Card className="shadow-sm">
