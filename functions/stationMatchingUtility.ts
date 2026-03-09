@@ -2,17 +2,13 @@
  * PHASE 2 STATION MATCHING UTILITY
  * 
  * Consolidated utility for user_reported price matching.
- * Implements the complete matching specification with conservative signal weighting.
+ * Implements matching specification: conservative signal weighting, explicit dual-requirement gate.
  * 
  * Observation-side confidence is internal heuristic metadata only.
  * Station master-data fields are explicit/authoritative when present.
- * City prefiltering is an existing entrypoint constraint, not guaranteed by matcher.
  */
 
-// ============================================================================
-// CHAIN NORMALIZATION
-// ============================================================================
-
+// Chain registry: conservative (ambiguous aliases excluded)
 const KNOWN_CHAINS = {
   'circle k': ['circle k', 'circlk'],
   'uno-x': ['uno-x', 'unox'],
@@ -24,11 +20,17 @@ const KNOWN_CHAINS = {
   'jet': ['jet'],
 };
 
-/**
- * Normalize a chain name to canonical form.
- * Returns {normalized, confidence} where confidence is heuristic only.
- */
-export function normalizeChainName(rawChain) {
+// Area keywords for location parsing
+const AREA_KEYWORDS = [
+  'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
+  'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
+];
+
+// ============================================================================
+// CHAIN NORMALIZATION
+// ============================================================================
+
+function normalizeChainName(rawChain) {
   if (!rawChain || typeof rawChain !== 'string') {
     return { normalized: null, confidence: 0 };
   }
@@ -55,12 +57,7 @@ export function normalizeChainName(rawChain) {
   return { normalized: null, confidence: 0 };
 }
 
-/**
- * Check if two chains match (observation vs station).
- * Returns {matches, signal, gateFails, reason}.
- * Gate fails ONLY if both chains are high-confidence (≥0.85) and differ.
- */
-export function chainMatch(obsChain, obsChainConfidence, stnChain, stnChainConfidence) {
+function chainMatch(obsChain, obsChainConfidence, stnChain, stnChainConfidence) {
   if (!obsChain && !stnChain) {
     return { matches: true, signal: 0, gateFails: false, reason: 'both_chains_null' };
   }
@@ -90,15 +87,10 @@ export function chainMatch(obsChain, obsChainConfidence, stnChain, stnChainConfi
 }
 
 // ============================================================================
-// STATION NAME PARSER
+// NAME PARSING & SIMILARITY
 // ============================================================================
 
-/**
- * Parse station observation name into components.
- * Returns {chain, chainConfidence, locationLabel, locationLevel, ...tokens}.
- * Confidence is heuristic only; unknown values remain null.
- */
-export function parseStationName(rawName) {
+function parseStationName(rawName) {
   if (!rawName || typeof rawName !== 'string') {
     return {
       chain: null,
@@ -122,7 +114,6 @@ export function parseStationName(rawName) {
     unparsedTokens: [],
   };
 
-  // Identify chain in first token(s)
   for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
     for (const alias of aliases) {
       const aliasTokens = alias.split(/\s+/);
@@ -138,14 +129,8 @@ export function parseStationName(rawName) {
     if (result.chain) break;
   }
 
-  // Extract location label from remaining tokens
-  const areaKeywords = [
-    'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
-    'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
-  ];
-
   for (const token of tokens) {
-    if (areaKeywords.includes(token)) {
+    if (AREA_KEYWORDS.includes(token)) {
       result.locationLabel = token;
       result.locationLevel = 'area';
       result.locationTokens.push(token);
@@ -160,34 +145,7 @@ export function parseStationName(rawName) {
   return result;
 }
 
-/**
- * Extract area/neighborhood label from name.
- * Returns {label, confidence, source} with confidence as heuristic only.
- */
-export function extractLocationLabel(name) {
-  if (!name || typeof name !== 'string') {
-    return { label: null, confidence: 0, source: null };
-  }
-
-  const areaKeywords = [
-    'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
-    'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
-  ];
-
-  const lowerName = name.toLowerCase();
-  for (const area of areaKeywords) {
-    if (lowerName.includes(area)) {
-      return { label: area, confidence: 0.85, source: 'explicit' };
-    }
-  }
-
-  return { label: null, confidence: 0, source: null };
-}
-
-/**
- * Bigram similarity: 0–1 scale for name matching.
- */
-export function bigramSimilarity(name1, name2) {
+function bigramSimilarity(name1, name2) {
   if (!name1 || !name2) return 0;
   if (name1.toLowerCase() === name2.toLowerCase()) return 1;
 
@@ -206,13 +164,10 @@ export function bigramSimilarity(name1, name2) {
 }
 
 // ============================================================================
-// STATION MATCHING
+// MATCHING ENGINE
 // ============================================================================
 
-/**
- * Haversine distance in meters.
- */
-export function haversineDistance(lat1, lon1, lat2, lon2) {
+function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -226,10 +181,7 @@ export function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c * 1000;
 }
 
-/**
- * City gate: explicit-city-only rejection.
- */
-export function cityGate(obsCity, obsCityConfidence, stnCity) {
+function cityGate(obsCity, obsCityConfidence, stnCity) {
   if (!obsCity) {
     return { passes: true, reason: 'obs_city_null_neutral' };
   }
@@ -241,10 +193,7 @@ export function cityGate(obsCity, obsCityConfidence, stnCity) {
   return { passes: true, reason: 'city_compatible' };
 }
 
-/**
- * Location signal: +10, 0, or -15 (exact per specification).
- */
-export function calculateLocationSignal(parsedLocation, stationAreaLabel) {
+function calculateLocationSignal(parsedLocation, stationAreaLabel) {
   if (!parsedLocation || !stationAreaLabel) {
     return 0;
   }
@@ -263,10 +212,7 @@ export function calculateLocationSignal(parsedLocation, stationAreaLabel) {
   return 0;
 }
 
-/**
- * Distance signal: 0–30 points based on distance bands.
- */
-export function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
+function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
   if (meters <= 30) return 30;
   if (meters <= 75) return 20;
   if (meters <= 150) return 10;
@@ -274,10 +220,7 @@ export function calculateDistanceSignal(meters, maxDistanceMeters = 300) {
   return 0;
 }
 
-/**
- * Name signal: 0–30 points based on bigram similarity.
- */
-export function calculateNameSignal(similarity) {
+function calculateNameSignal(similarity) {
   if (similarity >= 0.95) return 30;
   if (similarity >= 0.85) return 20;
   if (similarity >= 0.70) return 10;
@@ -285,18 +228,13 @@ export function calculateNameSignal(similarity) {
   return 0;
 }
 
-/**
- * Score observation against candidate station.
- * Returns {score, signals, gateFailures, rawSignalBreakdown}.
- */
-export function scoreStationMatch(observation, candidateStation, config = {}) {
+function scoreStationMatch(observation, candidateStation, config = {}) {
   const { maxDistanceMeters = 300 } = config;
 
   const signals = { distance: 0, chain: 0, name: 0, location: 0 };
   const gateFailures = [];
   const breakdown = {};
 
-  // GATE 1: City
   const cityGateResult = cityGate(observation.city, observation.cityConfidence, candidateStation.city);
   breakdown.cityGate = cityGateResult;
   if (!cityGateResult.passes) {
@@ -304,7 +242,6 @@ export function scoreStationMatch(observation, candidateStation, config = {}) {
     return { score: 0, signals, gateFailures, rawSignalBreakdown: breakdown };
   }
 
-  // GATE 2: Distance (not hard-disqualifier)
   const distance = haversineDistance(
     observation.latitude,
     observation.longitude,
@@ -314,12 +251,11 @@ export function scoreStationMatch(observation, candidateStation, config = {}) {
   breakdown.distance = { meters: distance, signal: calculateDistanceSignal(distance, maxDistanceMeters) };
   signals.distance = calculateDistanceSignal(distance, maxDistanceMeters);
 
-  // GATE 3: Chain (high-conf mismatch only)
   const chainResult = chainMatch(
     observation.chain,
     observation.chainConfidence,
     candidateStation.chain,
-    1.0 // Station chain is master data
+    1.0
   );
   breakdown.chain = chainResult;
   if (chainResult.gateFails) {
@@ -328,12 +264,10 @@ export function scoreStationMatch(observation, candidateStation, config = {}) {
   }
   signals.chain = chainResult.signal;
 
-  // SCORING: Name
   const nameSimilarity = bigramSimilarity(observation.name, candidateStation.name);
   signals.name = calculateNameSignal(nameSimilarity);
   breakdown.name = { similarity: nameSimilarity, signal: signals.name };
 
-  // SCORING: Location
   signals.location = calculateLocationSignal(observation.areaLabel, candidateStation.areaLabel);
   breakdown.location = { signal: signals.location, reason: describeLocationSignal(signals.location) };
 
@@ -347,12 +281,7 @@ export function scoreStationMatch(observation, candidateStation, config = {}) {
   };
 }
 
-/**
- * Match decision: applies EXPLICIT dual-requirement gate.
- * Single candidate ≥65 → MATCHED_STATION_ID (gap N/A).
- * Multi-candidate: requires score ≥65 AND gap ≥10.
- */
-export function matchDecision(scores) {
+function matchDecision(scores) {
   const SCORE_MATCHED = 65;
   const SCORE_REVIEW_THRESHOLD = 35;
   const DOMINANCE_GAP_MIN = 10;
@@ -369,7 +298,6 @@ export function matchDecision(scores) {
   const sorted = [...scores].sort((a, b) => b.score - a.score);
   const topCandidate = sorted[0];
 
-  // SINGLE CANDIDATE: ≥65 → MATCHED_STATION_ID
   if (sorted.length === 1) {
     if (topCandidate.score >= SCORE_MATCHED) {
       return {
@@ -397,7 +325,6 @@ export function matchDecision(scores) {
     };
   }
 
-  // MULTI-CANDIDATE: Explicit dominance gap requirement
   const secondCandidate = sorted[1];
   const dominanceGap = topCandidate.score - secondCandidate.score;
 
@@ -437,16 +364,14 @@ export function matchDecision(scores) {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================================
 
 function stringSimilarity(s1, s2) {
   if (s1 === s2) return 1;
   if (!s1 || !s2) return 0;
-
   const longer = s1.length > s2.length ? s1 : s2;
   const shorter = s1.length > s2.length ? s2 : s1;
-
   const editDistance = levenshteinDistance(longer, shorter);
   return (longer.length - editDistance) / longer.length;
 }
@@ -473,11 +398,7 @@ function levenshteinDistance(s1, s2) {
 
 function normalize(str) {
   if (!str) return '';
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[-\s]+/g, ' ')
-    .replace(/\s+/g, ' ');
+  return str.toLowerCase().trim().replace(/[-\s]+/g, ' ').replace(/\s+/g, ' ');
 }
 
 function extractBigrams(str) {
@@ -494,3 +415,10 @@ function describeLocationSignal(signal) {
   if (signal === -15) return 'area_conflict_penalty';
   return 'no_location_signal';
 }
+
+// Export for integration into matchStationForUserReportedPrice
+self.scoreStationMatch = scoreStationMatch;
+self.matchDecision = matchDecision;
+self.parseStationName = parseStationName;
+self.bigramSimilarity = bigramSimilarity;
+self.chainMatch = chainMatch;
