@@ -236,6 +236,38 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
             >
               Auto-fyll stedsinfo fra navn
             </OperationButton>
+
+            <OperationButton
+              onClick={async () => {
+                setAutoProcessing(true);
+                setMergePreviewResult(null);
+                try {
+                  const result = await base44.functions.invoke('mergeOrphanSeedStations', { preview: true });
+                  setMergePreviewResult(result.data);
+                } catch (e) {
+                  console.error('Merge preview failed:', e);
+                } finally {
+                  setAutoProcessing(false);
+                }
+              }}
+              loading={autoProcessing}
+            >
+              Preview: merge orphan seed-stasjoner
+            </OperationButton>
+
+            {mergePreviewResult && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                <div className="font-semibold text-blue-900 mb-1">
+                  Merge-kandidater: {mergePreviewResult.merge_candidates} (av {mergePreviewResult.total_seed_stations} seed-stasjoner)
+                </div>
+                {mergePreviewResult.candidates?.map((c, i) => (
+                  <div key={i} className="text-blue-800 text-xs mb-1">
+                    <strong>{c.seed_name}</strong> → {c.canonical_name} ({c.distance_m}m, {c.name_similarity_pct}% likhet{c.favorites_to_redirect > 0 ? `, ${c.favorites_to_redirect} favoritter` : ''})
+                  </div>
+                ))}
+                <button onClick={() => setMergePreviewResult(null)} className="text-xs text-gray-500 underline mt-1">Lukk</button>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
 
