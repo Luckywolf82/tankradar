@@ -2,14 +2,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 /**
  * STATION DUPLICATE DETECTION (PREVIEW ONLY)
- * 
+ *
  * Purpose:
- * - Identify duplicate and near-duplicate Station records
- * - Group by city, chain, location
- * - Generate preview report for manual review
- * 
- * NO automatic merge, delete, or apply operations.
- * Report only. Admin use only.
+ * - Generate preview report of potential duplicate Station records
+ * - Identify candidates for manual curator review
+ * - NO AUTOMATIC ACTIONS (no merge, delete, or consolidation)
+ *
+ * Classification levels:
+ * 1. EXACT DUPLICATES: identical coordinates + same/similar names
+ * 2. POSSIBLE NEAR-DUPLICATES: same chain + name, coordinates >1m apart
+ * 3. AMBIGUOUS: same name, very different chains or locations
+ *
+ * This is a DATA QUALITY inspection tool, not a matching-engine audit.
  */
 
 Deno.serve(async (req) => {
@@ -22,130 +26,216 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const city = payload.city || 'Trondheim';
 
-    // Query all stations in the city
-    const allStations = await base44.entities.Station.filter({ city }, '-updated_date', 500);
-
-    if (!allStations || allStations.length === 0) {
-      return Response.json({ error: `No stations found in ${city}` }, { status: 400 });
+    if (!payload.city) {
+      return Response.json({ error: 'Missing required field: city' }, { status: 400 });
     }
 
-    // Group by normalized name + chain for quick duplicate detection
-    const groups = {};
-    const byCoordinates = {};
+    const city = payload.city;
 
-    allStations.forEach(station => {
-      const normalizedName = (station.normalizedName || station.name || '').toLowerCase().trim();
-      const chain = (station.chain || 'unknown').toLowerCase().trim();
-      const key = `${normalizedName}|${chain}`;
+    // Fetch all stations for the city
+    const stations = await base44.entities.Station.filter({ city });
 
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(station);
+    if (!stations || stations.length === 0) {
+      return Response.json({
+        status: 'no_stations_found',
+        city,
+        duplicates: [],
+        summary: {
+          total: 0,
+          exact_duplicates: 0,
+          possible_near_duplicates: 0,
+          ambiguous_cases: 0,
+        },
+      });
+    }
 
-      // Also group by near-duplicate coordinates (within ~50m)
-      const coordKey = `${Math.round(station.latitude * 10000)},${Math.round(station.longitude * 10000)}`;
-      if (!byCoordinates[coordKey]) byCoordinates[coordKey] = [];
-      byCoordinates[coordKey].push(station);
+    // === EXACT NAME + CHAIN GROUPING ===
+    const byNormalizedKey = {};
+    const normalizeKey = (name, chain) => {
+      const n = (name || '').toLowerCase().trim();
+      const c = (chain || '').toLowerCase().trim() || 'unknown';
+      return `${n}|${c}`;
+    };
+
+    stations.forEach((s) => {
+      const key = normalizeKey(s.name, s.chain);
+      if (!byNormalizedKey[key]) byNormalizedKey[key] = [];
+      byNormalizedKey[key].push(s);
     });
 
-    // Find groups with duplicates (same name + chain, or coordinates)
-    const duplicateGroups = [];
+    // === COORDINATE GROUPING (for spotting coordinate-only duplicates) ===
+    const byCoordinates = {};
+    const coordKey = (lat, lon) => {
+      return `${lat.toFixed(6)}|${lon.toFixed(6)}`;
+    };
 
-    // Name + chain duplicates
-    Object.entries(groups).forEach(([key, stations]) => {
-      if (stations.length > 1) {
-        duplicateGroups.push({
-          type: 'exact_name_chain_duplicate',
-          key,
-          count: stations.length,
-          stations: stations.map(s => ({
-            id: s.id,
-            name: s.name,
-            chain: s.chain,
-            latitude: s.latitude,
-            longitude: s.longitude,
-            address: s.address,
-            created_date: s.created_date,
-            sourceName: s.sourceName
-          }))
-        });
+    stations.forEach((s) => {
+      if (s.latitude != null && s.longitude != null) {
+        const key = coordKey(s.latitude, s.longitude);
+        if (!byCoordinates[key]) byCoordinates[key] = [];
+        byCoordinates[key].push(s);
       }
     });
 
-    // Coordinate duplicates: EXACT coordinate match only (≤1m tolerance)
-    // Do NOT flag stations as duplicates just because they are nearby
-    // Only flag identical or near-identical GPS coordinates
-    const coordinateDuplicates = [];
-    Object.entries(byCoordinates).forEach(([coordKey, stations]) => {
-      if (stations.length > 1) {
-        // Calculate actual distances between all pairs
-        const distances = [];
-        for (let i = 0; i < stations.length; i++) {
-          for (let j = i + 1; j < stations.length; j++) {
-            const dist = haversine(
-              stations[i].latitude,
-              stations[i].longitude,
-              stations[j].latitude,
-              stations[j].longitude
-            ) * 1000; // Convert to meters
-            distances.push(dist);
+    // === CLASSIFY DUPLICATES ===
+    const duplicateGroups = [];
+
+    // 1. EXACT DUPLICATES: Same normalized name+chain AND identical coordinates
+    Object.entries(byNormalizedKey).forEach(([nameChainKey, stationGroup]) => {
+      if (stationGroup.length > 1) {
+        // Check if any pairs share exact coordinates
+        for (let i = 0; i < stationGroup.length; i++) {
+          for (let j = i + 1; j < stationGroup.length; j++) {
+            const s1 = stationGroup[i];
+            const s2 = stationGroup[j];
+
+            if (
+              s1.latitude === s2.latitude &&
+              s1.longitude === s2.longitude
+            ) {
+              duplicateGroups.push({
+                classification: 'EXACT_DUPLICATE',
+                confidence: 'HIGH',
+                reason: 'Identical coordinates + same name & chain',
+                stations: [
+                  formatStationSummary(s1),
+                  formatStationSummary(s2),
+                ],
+                distance_meters: 0,
+                review_action: 'CONSOLIDATE (keep newer by created_date)',
+              });
+            }
           }
         }
+      }
+    });
 
-        const maxDist = Math.max(...distances);
-        const minDist = Math.min(...distances);
+    // 2. COORDINATE DUPLICATES: Multiple stations at same GPS point (regardless of name)
+    Object.entries(byCoordinates).forEach(([coordKey, stationGroup]) => {
+      if (stationGroup.length > 1) {
+        // Check if we haven't already flagged this as exact_duplicate above
+        const alreadyFlagged = duplicateGroups.some((dg) =>
+          dg.stations.length === 2 &&
+          dg.stations.every((s) =>
+            stationGroup.some((sg) => sg.id === s.id)
+          )
+        );
 
-        // CONSERVATIVE: Only flag as coordinate duplicate if max distance ≤1m
-        // This catches only truly identical or near-identical coordinates
-        if (maxDist <= 1) {
-          coordinateDuplicates.push({
-            type: 'exact_coordinate_duplicate',
-            maxDistanceMeters: Math.round(maxDist),
-            minDistanceMeters: Math.round(minDist),
-            count: stations.length,
-            classification: 'EXACT_DUPLICATE (identical coordinates)',
-            stations: stations.map(s => ({
-              id: s.id,
-              name: s.name,
-              chain: s.chain,
-              latitude: s.latitude,
-              longitude: s.longitude,
-              address: s.address,
-              created_date: s.created_date,
-              sourceName: s.sourceName
-            }))
+        if (!alreadyFlagged) {
+          duplicateGroups.push({
+            classification: 'COORDINATE_DUPLICATE',
+            confidence: 'HIGH',
+            reason: 'Identical coordinates but different names/chains',
+            stations: stationGroup.map(formatStationSummary),
+            distance_meters: 0,
+            review_action: 'MANUAL REVIEW (may be legitimate variation)',
           });
         }
       }
     });
 
-    // Filter out single-station coordinate groups (should not exist after above logic)
-    const coordDupesFiltered = coordinateDuplicates.filter(g => g.stations.length > 1);
+    // 3. POSSIBLE NEAR-DUPLICATES: Same name+chain, close coordinates (>1m, <50m)
+    Object.entries(byNormalizedKey).forEach(([nameChainKey, stationGroup]) => {
+      if (stationGroup.length > 1) {
+        // Calculate pairwise distances
+        for (let i = 0; i < stationGroup.length; i++) {
+          for (let j = i + 1; j < stationGroup.length; j++) {
+            const s1 = stationGroup[i];
+            const s2 = stationGroup[j];
+
+            if (s1.latitude != null && s2.latitude != null) {
+              const dist = haversineDistance(
+                s1.latitude,
+                s1.longitude,
+                s2.latitude,
+                s2.longitude
+              );
+
+              // Only flag if >1m and <50m (near but not identical)
+              if (dist > 1 && dist < 50) {
+                duplicateGroups.push({
+                  classification: 'POSSIBLE_NEAR_DUPLICATE',
+                  confidence: 'MEDIUM',
+                  reason: `Same name & chain, ${Math.round(dist)}m apart (may be different entrances or data entry error)`,
+                  stations: [
+                    formatStationSummary(s1),
+                    formatStationSummary(s2),
+                  ],
+                  distance_meters: Math.round(dist),
+                  review_action: 'INSPECT & CLASSIFY (different entrances vs. duplicate)',
+                });
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Remove duplicate group entries
+    const uniqueDuplicateGroups = [];
+    const seen = new Set();
+
+    duplicateGroups.forEach((dg) => {
+      const signature = dg.stations
+        .map((s) => s.id)
+        .sort()
+        .join('|');
+
+      if (!seen.has(signature)) {
+        seen.add(signature);
+        uniqueDuplicateGroups.push(dg);
+      }
+    });
+
+    // Sort by confidence
+    const sorted = uniqueDuplicateGroups.sort((a, b) => {
+      const confidenceOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+      return confidenceOrder[a.confidence] - confidenceOrder[b.confidence];
+    });
 
     return Response.json({
-      status: 'preview_report',
+      status: 'duplicate_detection_complete',
       city,
-      totalStations: allStations.length,
-      duplicateClusters: {
-        exactNameChain: duplicateGroups.length,
-        coordinateProximity: coordDupesFiltered.length
-      },
-      duplicateGroups: [
-        ...duplicateGroups,
-        ...coordDupesFiltered
-      ],
+      total_stations: stations.length,
+      duplicate_groups: sorted,
       summary: {
-        analysisNote: 'PREVIEW ONLY. No automatic actions taken. Manual review required before any cleanup.',
-        recommendedNextStep: 'Review groups manually via StationReview governance pipeline. Propose consolidation or correction via StationCandidate process.'
-      }
+        total_stations: stations.length,
+        exact_duplicates: sorted.filter(
+          (dg) => dg.classification === 'EXACT_DUPLICATE'
+        ).length,
+        coordinate_duplicates: sorted.filter(
+          (dg) => dg.classification === 'COORDINATE_DUPLICATE'
+        ).length,
+        possible_near_duplicates: sorted.filter(
+          (dg) => dg.classification === 'POSSIBLE_NEAR_DUPLICATE'
+        ).length,
+        total_groups: sorted.length,
+      },
+      governance_note:
+        'This is a PREVIEW-ONLY report. No consolidation or deletion is performed. Manual curator review required for any cleanup decisions.',
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
 
-function haversine(lat1, lon1, lat2, lon2) {
+// ===== UTILITIES =====
+
+function formatStationSummary(station) {
+  return {
+    id: station.id,
+    name: station.name,
+    chain: station.chain || 'unknown',
+    address: station.address || null,
+    latitude: station.latitude,
+    longitude: station.longitude,
+    created_date: station.created_date,
+    sourceName: station.sourceName,
+  };
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -156,5 +246,5 @@ function haversine(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Return in km
+  return R * c * 1000; // Return in meters
 }

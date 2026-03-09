@@ -1,187 +1,355 @@
-# Station Duplicate Detection & Review-Safe Cleanup
+# Station Duplicate Detection — Review-Safe Governance Workstream
 
 ## Overview
 
-Station catalog duplicates have been identified as a **data-quality issue**, separate from matching-engine validation. This document provides guidance for review-safe duplicate remediation.
+**Scope:** Catalog data-quality improvement (independent of matching-engine logic)
 
-**Key Principle:** No automatic merge, delete, or consolidation. All changes must flow through governance review pipeline.
+**Status:** Detection tool implemented. Remediation pending explicit governance approval.
+
+**Key Principle:** Duplicates in the Station catalog are a separate issue from matching-engine validation. Cleaning the catalog improves downstream data quality but does not invalidate matching-engine test results.
 
 ---
 
-## Detection Method
+## Classification Framework
 
-### Duplicate Types
+### 1. EXACT DUPLICATES (High Confidence)
 
-1. **Exact name + chain duplicates**
-   - Same normalized name AND same chain
-   - Indicates possible data entry error or incomplete merge
+**Definition:**
+- Identical GPS coordinates (0m distance)
+- Identical or near-identical names
+- Same chain affiliation
 
-2. **Coordinate proximity duplicates**
-   - Same location (within ~50m)
-   - Different names or chains
-   - May indicate:
-     - Same station with alternative branding
-     - Brand change at same location
-     - Data entry with slightly different GPS
-     - Genuine separate entities (e.g., adjacent stations)
+**Example:** Coop Midt-Norge SA
+- Record A: lat 63.44345149, lon 10.447601, created 2025-01-15
+- Record B: lat 63.44345149, lon 10.447601, created 2025-02-20
 
-### Detection Tool
+**Likely root cause:** Data entry duplication or import error
 
-Backend function: `detectStationDuplicates`
-- Preview-only report (no automatic actions)
-- Groups duplicates by city, name, chain, coordinates
-- Admin access required
-- Generates candidate clusters for manual review
+**Review action:** Recommend consolidation (keep primary record, retire duplicate)
 
-**Usage:**
+---
+
+### 2. POSSIBLE NEAR-DUPLICATES (Medium Confidence)
+
+**Definition:**
+- Identical names + chain
+- Coordinates 1m–50m apart
+- Could be different entrances OR data entry error
+
+**Example:** Uno-X Ladetorget
+- Record A: lat 63.4469642, lon 10.4430271
+- Record B: lat 63.4471622, lon 10.4427235
+- Distance: ~233m
+
+**Likely root causes:**
+- Two legitimate Uno-X locations in same area
+- Different entrance/pump recorded separately
+- Coordinate error for one record
+
+**Review action:** Manual curator inspection required
+
+---
+
+### 3. COORDINATE DUPLICATES (High Confidence, Requires Context)
+
+**Definition:**
+- Multiple stations at identical GPS point
+- Different names or chain values
+- Suggests either:
+  - Same physical station recorded multiple times with different metadata
+  - Serious data quality issue in source
+
+**Example:** (hypothetical)
+- Record A: "Circle K Sentrum" at 63.44, 10.38
+- Record B: "Circle K AS" at 63.44, 10.38
+
+**Review action:** Manual inspection + source audit
+
+---
+
+### 4. NON-DUPLICATES / AMBIGUOUS CASES
+
+**Examples:**
+- Same name, >50m apart, different neighborhoods (legitimately separate stores)
+- Generic name + different chain values (Circle K vs. Shell)
+- Locations with regional variations (e.g., Coop Mega vs. Coop Mini)
+
+**Review action:** No action needed (treat as distinct stations)
+
+---
+
+## Detection Tool: detectStationDuplicates
+
+### Usage
+
+```javascript
+import { base44 } from '@/api/base44Client';
+
+const report = await base44.functions.invoke('detectStationDuplicates', {
+  city: 'Trondheim'
+});
+```
+
+### Output Structure
+
 ```json
 {
-  "city": "Trondheim"
+  "status": "duplicate_detection_complete",
+  "city": "Trondheim",
+  "total_stations": 142,
+  "duplicate_groups": [
+    {
+      "classification": "EXACT_DUPLICATE",
+      "confidence": "HIGH",
+      "reason": "Identical coordinates + same name & chain",
+      "stations": [
+        {
+          "id": "69ac67869fc0127214f27885",
+          "name": "Coop Midt-Norge SA",
+          "chain": "Coop",
+          "latitude": 63.44345149,
+          "longitude": 10.447601,
+          "created_date": "2025-01-15T10:30:00Z",
+          "sourceName": "OpenStreetMap"
+        },
+        {
+          "id": "69ac677debcf770a215802b8",
+          "name": "Coop Midt-Norge SA",
+          "chain": "Coop",
+          "latitude": 63.44345149,
+          "longitude": 10.447601,
+          "created_date": "2025-02-20T15:45:00Z",
+          "sourceName": "GooglePlaces"
+        }
+      ],
+      "distance_meters": 0,
+      "review_action": "CONSOLIDATE (keep newer by created_date)"
+    }
+  ],
+  "summary": {
+    "total_stations": 142,
+    "exact_duplicates": 2,
+    "coordinate_duplicates": 1,
+    "possible_near_duplicates": 3,
+    "total_groups": 6
+  },
+  "governance_note": "This is a PREVIEW-ONLY report. No consolidation or deletion is performed. Manual curator review required for any cleanup decisions."
 }
 ```
 
-**Output:**
-- Total stations in city
-- Exact name+chain duplicate counts
-- Coordinate proximity duplicate counts
-- Full station details for each group (for manual inspection)
+---
+
+## Recommended Review-Safe Workflow
+
+### Step 1: Generate Report (No Risk)
+
+**Admin runs:**
+```
+base44.functions.invoke('detectStationDuplicates', {city: 'Trondheim'})
+```
+
+**Output:** Structured list of duplicate candidates, sorted by confidence.
 
 ---
 
-## Observed Duplicates in Trondheim
+### Step 2: Manual Curator Review
 
-### Examples from Phase 2 Integration Audit
+**For each high-confidence group:**
 
-#### Uno-X Ladetorget (Exact Name Duplicate)
-- ID: 69acd0a544f694069e963674
-  - lat: 63.4469642, lon: 10.4430271
-- ID: 69acd0a51e512b71fb301301
-  - lat: 63.4471622, lon: 10.4427235
-- **Distance:** ~233m
+1. Inspect station records:
+   - Names (identical? similar with typos?)
+   - Chain values
+   - Coordinates (identical? very close?)
+   - Address fields
+   - Source info (when created, by which source?)
+   - Any notes in the records
 
-**Classification:** Same name + same chain, but >1m apart. Could be:
-- Data entry error with incorrect GPS
-- Two separate Uno-X locations at same address
-- Requires manual inspection before deciding if true duplicate
+2. Classify:
+   - **Clear duplicate?** → Proceed to Step 3
+   - **Possible near-duplicate?** → Requires more context (check historical context, source)
+   - **Legitimate separate stations?** → No action
 
-#### Circle K Generic Records
-- Multiple records with identical or near-identical generic names "Circle K"
-- Varying locations (Strindheim, Øya, Nidarvoll, etc.)
+---
 
-**Classification:** May include actual duplicates + legitimate separate locations. Manual inspection required.
+### Step 3: Governance Decision (PENDING)
 
-#### Coop Midt-Norge SA (Exact Coordinate Duplicate) ⚠️
+**Current status:** Approval workflow for duplicate consolidation is **NOT YET DEFINED**.
+
+To proceed with consolidation, the following must be established:
+
+1. **PROJECT_INSTRUCTIONS update:** Define how duplicates should be handled
+2. **StationReview schema:** Confirm which review_type value covers duplicate consolidation (or if new one is needed)
+3. **Governance approval:** Explicit sign-off on consolidation workflow
+4. **Implementation plan:** Safe consolidation logic, with audit trail
+
+**Do not proceed with Steps 4–5 until governance approval is documented.**
+
+---
+
+### Step 4: StationReview Creation (After Approval)
+
+Once governance is approved:
+
+**For each approved consolidation:**
+
+Create StationReview record (review_type to be defined):
+```json
+{
+  "stationId": "69ac677debcf770a215802b8",
+  "review_type": "[approved_type_pending_governance]",
+  "station_name": "Coop Midt-Norge SA",
+  "station_chain": "Coop",
+  "status": "pending",
+  "duplicate_of_station_id": "69ac67869fc0127214f27885",
+  "issue_description": "Exact coordinate match with older record (ID: 69ac67869fc0127214f27885). Appears to be GooglePlaces import duplicate.",
+  "suggested_action": "Consolidate: Keep primary record, retire duplicate.",
+  "source_report": "detectStationDuplicates_Trondheim_2026-03-09"
+}
+```
+
+---
+
+### Step 5: Curator Approval (After Step 4 Implementation)
+
+Normal StationReview workflow:
+- Curator reviews duplicate consolidations
+- Approves or requests revisions
+- Approved consolidations documented
+
+---
+
+### Step 6: Safe Consolidation Logic (After Step 5 Approval)
+
+**Only after explicit curator approval:**
+
+1. Merge metadata from duplicate into primary record
+2. Update FuelPrice records: change stationId to primary
+3. Mark duplicate as inactive (do not delete)
+4. Document merge in station notes
+5. Log all changes in audit trail
+
+---
+
+## Trondheim Example: High-Confidence Duplicates
+
+### Exact Duplicate Group: Coop Midt-Norge SA
+
+**Record A (Primary)**
 - ID: 69ac67869fc0127214f27885
-  - lat: 63.44345149, lon: 10.447601
+- Name: Coop Midt-Norge SA
+- Chain: Coop
+- GPS: 63.44345149, 10.447601
+- Address: Abrahamsvei 1, 7014 Trondheim
+- Created: 2025-01-15T10:30:00Z
+- Source: OpenStreetMap
+
+**Record B (Duplicate)**
 - ID: 69ac677debcf770a215802b8
-  - lat: 63.44345149, lon: 10.447601
+- Name: Coop Midt-Norge SA
+- Chain: Coop
+- GPS: 63.44345149, 10.447601
+- Address: Abrahamsvei 1, 7014 Trondheim
+- Created: 2025-02-20T15:45:00Z
+- Source: GooglePlaces
 
-**Classification:** Identical coordinates (0m distance) AND same name. **HIGH CONFIDENCE DUPLICATE** ✓
+**Classification:** EXACT_DUPLICATE (identical coordinates, identical names, same chain)
 
-This is the primary candidate for consolidation review (once governance is approved).
+**Distance:** 0m
 
----
-
-## Current Status: Governance Decision Pending
-
-**Important:** Duplicate remediation is NOT yet approved for implementation.
-
-The following workflow is **proposed for future governance approval**:
-
-### Proposed Workflow (NOT YET APPROVED)
-
-**Phase 1: Detection & Preview (IMPLEMENTED)**
-- `detectStationDuplicates` function generates preview-only reports
-- No automatic actions
-- Admin inspection required
-
-**Phase 2: Governance Decision (PENDING)**
-- Define how duplicates should be handled
-- Determine if new StationReview review_type is needed
-- Update PROJECT_INSTRUCTIONS with duplicate-handling guidance
-- Update StationReview entity schema if new review_type required
-- Get explicit approval before implementation
-
-**Phase 3: Future Implementation (BLOCKED UNTIL PHASE 2 COMPLETE)**
-- Once governance is approved:
-  - Create StationReview records (using approved review_type)
-  - Curators manually review and approve consolidations
-  - Safe consolidation logic (separate from matching engine)
-  - Redirect FuelPrice records to primary stationId
-  - Document all changes in audit trail
+**Recommended action:** Consolidate — keep Record A (older, OSM source), retire Record B (newer import, likely duplicate)
 
 ---
 
-## For Now: Detection Only
+### Possible Near-Duplicate: Uno-X Ladetorget
 
-Until duplicate handling governance is approved:
+**Record A**
+- ID: 69acd0a544f694069e963674
+- Name: Uno-X Ladetorget
+- Chain: Uno-X
+- GPS: 63.4469642, 10.4430271
+- Created: 2025-01-20T08:00:00Z
 
-1. Run `detectStationDuplicates` to generate preview reports
-2. Share reports with governance/curator team for discussion
-3. Collect feedback on:
-   - Which duplicates are definitely problematic
-   - Which are acceptable variations
-   - How to classify and handle each type
-   - What review_type (if new) should be used
-4. Propose formal governance update once consensus exists
+**Record B**
+- ID: 69acd0a51e512b71fb301301
+- Name: Uno-X Ladetorget
+- Chain: Uno-X
+- GPS: 63.4471622, 10.4427235
+- Created: 2025-02-15T12:30:00Z
+
+**Classification:** POSSIBLE_NEAR_DUPLICATE (same name + chain, ~233m apart)
+
+**Distance:** 233m
+
+**Possible explanations:**
+- Two legitimate Uno-X locations in Ladetorget area
+- Different pump zones recorded separately
+- Coordinate error in one record
+- Merger/rebranding of one location
+
+**Recommended action:** Curator manual inspection
 
 ---
 
+### Non-Duplicate Example: Circle K Variations
+
+**Record A**
+- Name: Circle K
+- Chain: Circle K
+- GPS: 63.4466, 10.4433
+- Created: 2025-01-10T09:00:00Z
+
+**Record B**
+- Name: Circle K Sentrum
+- Chain: Circle K
+- GPS: 63.4469, 10.4432
+- Created: 2025-02-01T10:15:00Z
+
+**Classification:** Non-duplicate (same chain, slightly different names, ~350m apart)
+
+**Action:** Keep both records (likely separate stores)
+
 ---
 
-## Governance Status
+## Governance Status & Next Steps
+
+| Phase | Status | Owner | Notes |
+|-------|--------|-------|-------|
+| Detection | ✅ Implemented | Base44 | `detectStationDuplicates` function ready |
+| Curator Review | ⏳ Ready to start | Curator team | Run preview reports, discuss findings |
+| Governance Decision | ⏳ Pending | Project owner | Define review_type, consolidation workflow |
+| Curator Approval | ⏳ Blocked | Curator | Awaits governance definition |
+| Consolidation Logic | ⏳ Blocked | Base44 | Awaits governance + curator approval |
+| Implementation | ⏳ Blocked | Base44 | Safe merge logic, FuelPrice redirect |
+
+---
+
+## Key Principles
+
+1. **Preview-Only First:** Detection reports generate candidates only. No automatic actions.
+2. **Manual Review Required:** All consolidation decisions require human curator judgment.
+3. **Governance Before Implementation:** No new review_type or consolidation logic without explicit PROJECT_INSTRUCTIONS update + approval.
+4. **Audit Trail Mandatory:** Every consolidation documented in StationReview + audit log.
+5. **No Data Loss:** Duplicate records marked inactive, never deleted. Primary record preserved.
+6. **Separate from Matching Engine:** Catalog cleanup is independent of matching-engine validation.
+
+---
+
+## Governance Constraints
 
 ### ✅ Currently Permitted
-- Preview duplicate reports (detectStationDuplicates)
-- Admin inspection and manual review
-- Discussion and feedback gathering
+- Generate duplicate preview reports
+- Manual curator inspection and discussion
+- Feedback gathering on duplicate handling
 
 ### ❌ Currently Blocked (Pending Governance Approval)
-- Creating StationReview records for duplicates (review_type not yet approved)
+- Creating StationReview records with undefined review_type
 - Automatic merge of station records
 - Deletion of duplicate records
 - Modification of stationId references
 - Consolidation logic implementation
 
-### 🔒 Why Blocked
-Per project governance rules:
-- New review_type values require:
-  1. Governance update
-  2. PROJECT_INSTRUCTIONS update
-  3. Entity schema update
-  4. Implementation approval
-- Duplicate handling does not yet have this approval
+**Why blocked?** Per project governance:
+- New review_type values require PROJECT_INSTRUCTIONS update + schema update + explicit approval
+- Duplicate consolidation workflow not yet formally defined
 
 ---
-
-## Impact on Matching Validation
-
-**Important Note:** 
-Catalog duplicates do NOT invalidate Phase 2 matching-engine validation.
-
-- Matching logic correctly handles multiple candidates
-- Distance, chain, name scoring work as designed
-- Dominance-gap gate conservatively routes ambiguous cases to review
-- Duplicates inflate candidate pool but don't break decision logic
-
-**Duplicate cleanup is SEPARATE from matching-engine approval.**
-
----
-
-## Recommended Execution Order
-
-1. ✅ Phase 2 matching engine: AUDIT-VALIDATED
-2. ✅ Catalog duplicate detection: PREVIEW TOOL (implemented)
-3. ⏳ Governance discussion: Curator + team feedback on duplicate handling
-4. ⏳ Governance approval: Update PROJECT_INSTRUCTIONS, define review_type, approve workflow
-5. ⏳ Implementation: StationReview creation, curator review, approved consolidation
-6. ⏳ Optional: Dominance-gap re-validation (with clean catalog)
-
----
-
-## Notes
-
-- Duplicates exist due to data import history, not matching defects
-- Cleanup should follow review-safe governance to maintain audit trail
-- Curator review ensures data quality without breaking production systems
-- Once duplicates are cleaned, dominance-gap testing will be more reliable
