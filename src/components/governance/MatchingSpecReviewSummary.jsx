@@ -586,11 +586,14 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 CONSERVATISM ASSESSMENT
 ════════════════════════════════════════════════════════════════════════════════
 
-✓ GATE SUMMARY:
-  1. City mismatch → REJECTED
-  2. Distance >300m → REJECTED
-  3. Chain mismatch → REJECTED
-  4. Missing coordinates → EXCLUDED
+✓ GATE SUMMARY (Hard Disqualifiers):
+  1. City mismatch → REJECTED ONLY if both cities explicit + high-confidence
+     (Weak/missing city = neutral, continue scoring)
+  2. Distance >300m → NOT terminal (distance component = 0, continue on chain/name)
+     MVP baseline only; subject to post-launch calibration
+  3. Chain mismatch → REJECTED ONLY if both chains high-confidence (≥0.85)
+     (Weak/parsed chain = neutral, continue scoring)
+  4. Missing coordinates → EXCLUDED (cannot calculate distance)
 
 ✓ THRESHOLD SUMMARY:
   ≥65:  Requires TWO+ strong signals; prevents single-signal false positives
