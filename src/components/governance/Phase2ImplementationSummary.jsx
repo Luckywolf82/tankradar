@@ -287,13 +287,26 @@ Requires admin role.
 
 ---
 
-## NEXT STEPS
+## NEXT STEPS (SEQUENTIAL)
 
-1. **Run fixture tests** → confirm all test cases pass
-2. **Validate with live city data** → ensure station catalog is representative
-3. **Monitor real user_reported submissions** → measure matching outcomes and gather audit data
-4. **Plan module refactor** → if Base44 confirms shared module support
-5. **Post-MVP calibration** → may adjust distance threshold (currently 300m baseline) based on audit data
+### Phase: Fixture Regression (COMPLETE)
+1. ✅ Run fixture tests → 7/9 passing, deterministic rules validated
+2. ✅ Expand station catalog → TC-08 & TC-09 require real competition (added 3 stations)
+3. ✅ Establish regression coverage → 9 test cases locked for future protection
+
+### Phase: Live Audit Validation (IN PROGRESS)
+4. **Execute auditPhase2DominanceGap on 3 real scenarios**
+   - Scenario A: user_reported near 2+ competing stations (gap <10 expected)
+   - Scenario B: user_reported with strong leader (gap ≥10 expected)
+   - Scenario C: user_reported in sparse area (single survivor)
+5. **Inspect candidate pool and scoring breakdown** for each scenario
+6. **Verify gate logic correctness** (dual-requirement passes/fails as expected)
+7. **Document findings** per governance/Phase2DominanceGapAuditReport.md
+
+### Phase: Production Approval (PENDING AUDIT)
+8. **Approve or refactor:** If all 3 scenarios pass, sign off production stability
+9. **Plan module refactor** → if Base44 confirms shared module support (deferred post-MVP)
+10. **Post-MVP calibration** → may adjust distance threshold (currently 300m) based on audit results
 
 ---
 
