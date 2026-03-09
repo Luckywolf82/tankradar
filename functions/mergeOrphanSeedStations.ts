@@ -135,15 +135,14 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Redirect favorites fra seed → kanonisk
-      const favorites = await base44.asServiceRole.entities.UserFavoriteStation.filter({ station: seed.id });
+      // Redirect favorites fra seed → kanonisk (fra bulk-data)
+      const favorites = allFavorites.filter(f => f.station === seed.id);
       for (const fav of favorites) {
-        // Sjekk at det ikke allerede finnes en favoritt for kanonisk stasjon med samme fuelType
-        const existing = await base44.asServiceRole.entities.UserFavoriteStation.filter({
-          station: bestMatch.station.id,
-          created_by: fav.created_by
-        });
-        if (existing.length === 0) {
+        // Sjekk om det allerede finnes favoritt for kanonisk stasjon fra samme bruker
+        const alreadyExists = allFavorites.some(f =>
+          f.station === bestMatch.station.id && f.created_by === fav.created_by
+        );
+        if (!alreadyExists) {
           await base44.asServiceRole.entities.UserFavoriteStation.update(fav.id, {
             station: bestMatch.station.id
           });
