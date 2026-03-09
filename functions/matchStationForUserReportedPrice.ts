@@ -151,12 +151,41 @@ function bigramSimilarity(name1, name2) {
   return intersection.size / union.size;
 }
 
-function calculateLocationSignal(parsedLocation, stationAreaLabel) {
-  if (!parsedLocation || !stationAreaLabel) return 0;
+/**
+ * EXPLICIT SUB-REGION LOCATION SIGNAL
+ * 
+ * +10: Both are explicit sub-region labels (from AREA_KEYWORDS) AND match
+ * 0: Either is null/missing OR parsed with low confidence
+ * -15: Both are explicit sub-region labels (from AREA_KEYWORDS) AND differ
+ * 
+ * Conservative: does NOT apply -15 for mixed-level or weakly parsed labels.
+ */
+function calculateLocationSignal(parsedLocation, parsedLocationConfidence, stationAreaLabel) {
+  // No signal if either is missing
+  if (!parsedLocation || !stationAreaLabel) {
+    return 0;
+  }
+
+  // No signal if parsed location was inferred with low confidence
+  // (only apply bonus/conflict if explicitly recognized from AREA_KEYWORDS)
+  if (parsedLocationConfidence < 0.80) {
+    return 0;
+  }
+
   const pLoc = parsedLocation.toLowerCase().trim();
   const sArea = stationAreaLabel.toLowerCase().trim();
-  if (pLoc === sArea) return 10;
-  if (pLoc !== sArea) return -15;
+
+  // Explicit match: both are sub-region labels and identical
+  if (pLoc === sArea) {
+    return 10;
+  }
+
+  // Explicit conflict: both are sub-region labels but differ
+  // (This is conservative—no mixed-level comparisons)
+  if (pLoc !== sArea) {
+    return -15;
+  }
+
   return 0;
 }
 
