@@ -76,6 +76,33 @@ export default function Profile() {
       <div className="mt-4">
         <PrivacySettings user={user} onSaved={() => base44.auth.me().then(setUser)} />
       </div>
+
+      {user.role === "admin" && (
+        <Card className="mt-4 border-amber-200 bg-amber-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-800">
+              <ShieldCheck size={18} /> Admin-snarveier
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-2 text-sm">
+            {[
+              { label: "SuperAdmin", page: "SuperAdmin" },
+              { label: "Review-kø", page: "ReviewQueue" },
+              { label: "Systemstatus", page: "SystemStatus" },
+              { label: "Stasjonsimport", page: "StationImport" },
+            ].map(({ label, page }) => (
+              <Link
+                key={page}
+                to={createPageUrl(page)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-amber-200 text-amber-800 hover:bg-amber-100 transition-colors font-medium"
+              >
+                <ExternalLink size={13} />
+                {label}
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
