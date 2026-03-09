@@ -70,7 +70,7 @@ export default function AddFavoriteForm({ onClose, onSuccess }) {
         console.log('[AddFavoriteForm] Geolocation not available:', locErr.message);
       }
 
-      const stationList = await base44.entities.Station.list('-updated_date', 500);
+      const stationList = await base44.entities.Station.list('-name', 2000);
       let sorted = stationList || [];
 
       // Sort by distance if location available
