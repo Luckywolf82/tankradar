@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, MapPin, Link2 } from "lucide-react";
+import { AlertTriangle, MapPin, ChevronDown } from "lucide-react";
 
 const classificationStyles = {
   exact_coordinate_duplicate: {
@@ -16,7 +17,7 @@ const classificationStyles = {
     border: "border-orange-200",
     badge: "bg-orange-100 text-orange-800",
     icon: "text-orange-600",
-    label: "Same Coordinates, Different Names",
+    label: "Same Location, Different Names/Chains",
   },
   possible_near_duplicate: {
     bg: "bg-yellow-50",
@@ -39,94 +40,118 @@ export default function DuplicateStationGroup({ group, index }) {
   return (
     <Card className={`${styles.bg} border-2 ${styles.border} mb-3`}>
       <CardContent className="pt-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3 pb-3 border-b border-current border-opacity-10">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge className={styles.badge}>{styles.label}</Badge>
-              <Badge className={confidenceBg}>
-                {group.confidence === 'HIGH' ? '🔴' : group.confidence === 'MEDIUM' ? '🟡' : '🔵'} {group.confidence} confidence
-              </Badge>
-              {group.distance_meters > 0 && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <MapPin size={12} />
-                  {group.distance_meters}m apart
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-slate-700 leading-relaxed">{group.explanation}</p>
+        {/* Preview-only warning banner */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3 flex items-start gap-2">
+          <AlertTriangle size={14} className="text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-900">
+            <strong>Preview only.</strong> Curator review — no automated actions.
           </div>
         </div>
 
-        {/* Expand/collapse */}
+        {/* Header with better hierarchy */}
+        <div className="mb-3">
+          {/* Classification title */}
+          <h3 className="text-lg font-bold text-slate-900 mb-2">{styles.label}</h3>
+          
+          {/* Metadata badges on one line */}
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <Badge className={confidenceBg} className="text-xs">
+              {group.confidence === 'HIGH' ? '🔴' : group.confidence === 'MEDIUM' ? '🟡' : '🔵'} {group.confidence}
+            </Badge>
+            {group.distance_meters > 0 && (
+              <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                <MapPin size={12} />
+                {group.distance_meters}m
+              </Badge>
+            )}
+            <Badge variant="outline" className="text-xs">
+              {group.stations.length} record{group.stations.length !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+
+          {/* Explanation */}
+          <p className="text-sm text-slate-700 leading-relaxed">{group.explanation}</p>
+        </div>
+
+        {/* Expand/collapse button with better styling */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-sm font-medium text-slate-700 hover:text-slate-900 mb-3 flex items-center gap-1.5"
+          className="w-full text-left text-sm font-medium text-slate-700 hover:text-slate-900 py-2 px-2 -mx-2 hover:bg-slate-100 rounded-lg transition-colors flex items-center justify-between"
         >
-          <span className="text-xs">{expanded ? '▼' : '▶'}</span>
-          <span className="font-medium">{group.stations.length} station{group.stations.length !== 1 ? 's' : ''} in group</span>
-          {!expanded && <span className="text-xs text-slate-500">(click to view details)</span>}
+          <span className="flex items-center gap-2">
+            <ChevronDown size={16} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            <span>{expanded ? 'Hide' : 'Show'} station details</span>
+          </span>
         </button>
 
-        {/* Stations */}
+        {/* Stations detail list */}
         {expanded && (
-        <div className="space-y-2.5 bg-slate-50 -mx-4 -mb-4 px-4 py-3 rounded-b-lg">
-          {group.stations.map((station, idx) => (
-            <div key={station.id} className="bg-white rounded-lg p-3 border border-slate-200 hover:border-slate-300 transition-colors">
-              {/* Station name + index */}
-              <div className="flex items-start gap-2 mb-2">
-                <div className="flex-shrink-0 bg-slate-200 text-slate-700 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">
-                  {idx + 1}
+          <div className="space-y-2.5 bg-slate-50 -mx-4 -mb-4 px-4 py-3 rounded-b-lg border-t-2 border-current border-opacity-10">
+            {group.stations.map((station, idx) => (
+              <div key={station.id} className="bg-white rounded-lg p-3 border border-slate-200 hover:border-slate-300 transition-colors">
+                {/* Station header with number and name */}
+                <div className="flex items-start gap-3 mb-2.5">
+                  <div className="flex-shrink-0 bg-slate-200 text-slate-700 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-900 text-sm break-words">{station.name}</div>
+                    <div className="flex items-center gap-2 flex-wrap mt-1">
+                      {station.chain && station.chain !== 'unknown' && (
+                        <Badge variant="outline" className="text-xs">
+                          Chain: {station.chain}
+                        </Badge>
+                      )}
+                      {idx > 0 && group.stations[0].name !== station.name && (
+                        <Badge className="bg-orange-100 text-orange-800 text-xs">
+                          ⚠️ Name differs
+                        </Badge>
+                      )}
+                      {idx > 0 && group.stations[0].chain !== station.chain && (
+                        <Badge className="bg-orange-100 text-orange-800 text-xs">
+                          ⚠️ Chain differs
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-slate-900 text-sm">{station.name}</div>
-                  {station.chain && station.chain !== 'unknown' && (
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      Chain: <span className="font-medium text-slate-700">{station.chain}</span>
+
+                {/* Metadata grid - cleaner layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs border-t pt-2.5">
+                  {station.address && (
+                    <div>
+                      <p className="text-slate-500 font-semibold uppercase text-xs">Address</p>
+                      <p className="text-slate-700 mt-0.5">{station.address}</p>
+                    </div>
+                  )}
+                  {station.latitude && station.longitude && (
+                    <div>
+                      <p className="text-slate-500 font-semibold uppercase text-xs">GPS Coordinates</p>
+                      <p className="text-slate-700 font-mono text-xs mt-0.5">
+                        {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)}
+                      </p>
+                    </div>
+                  )}
+                  {station.sourceName && (
+                    <div>
+                      <p className="text-slate-500 font-semibold uppercase text-xs">Data Source</p>
+                      <p className="text-slate-700 mt-0.5">{station.sourceName}</p>
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Metadata grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs border-t pt-2">
-                {station.address && (
-                  <div className="sm:col-span-2">
-                    <p className="text-slate-500 font-medium">Address</p>
-                    <p className="text-slate-700">{station.address}</p>
-                  </div>
-                )}
-                {station.latitude && station.longitude && (
-                  <div>
-                    <p className="text-slate-500 font-medium">GPS</p>
-                    <p className="text-slate-700 font-mono text-xs">
-                      {station.latitude.toFixed(4)}
-                    </p>
-                    <p className="text-slate-700 font-mono text-xs">
-                      {station.longitude.toFixed(4)}
-                    </p>
-                  </div>
-                )}
-                {station.sourceName && (
-                  <div>
-                    <p className="text-slate-500 font-medium">Source</p>
-                    <p className="text-slate-700">{station.sourceName}</p>
-                  </div>
-                )}
+                {/* Footer with ID and dates */}
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-500 flex-wrap">
+                  <span className="font-mono bg-slate-100 px-2 py-1 rounded">ID: {station.id.substring(0, 8)}...</span>
+                  {station.created_date && (
+                    <span>Added: {new Date(station.created_date).toLocaleDateString('nb-NO')}</span>
+                  )}
+                </div>
               </div>
-
-              {/* ID and created date footer */}
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">{station.id.substring(0, 12)}...</span>
-                {station.created_date && (
-                  <span>Created: {new Date(station.created_date).toLocaleDateString('nb-NO')}</span>
-                )}
-              </div>
-            </div>
             ))}
-            </div>
-            )}
-              </CardContent>
-              </Card>
-              );
-              }
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

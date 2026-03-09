@@ -73,6 +73,48 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 8: Duplicate Group Card UI Clarity & Curator Readability (Preview-Only)
+**Date/Time:** 2026-03-09 20:00 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (UI/UX Clarity — Preview-Only)
+
+**Files Modified:**
+- `components/admin/DuplicateStationGroup.jsx` — Enhanced card layout for curator clarity
+
+**Summary:**
+Improved duplicate group card readability without adding remediation logic, merge logic, persistence, or backend calls. Pure UI/UX enhancements for curator review workflow.
+
+**UI Improvements (Read-Only Only):**
+- ✅ Better header hierarchy (larger classification title, improved spacing)
+- ✅ Consolidated metadata badges on one line (confidence + distance + record count)
+- ✅ Per-group preview-only warning banner
+- ✅ Cleaner "Show/Hide details" button with better affordance
+- ✅ Improved station card layout with visual hierarchy
+- ✅ Visual difference hints: orange badges for name/chain mismatches (labels only, no logic)
+- ✅ Better metadata grid layout (address, GPS, source)
+- ✅ Clearer ID and date footer with improved typography
+
+**Key Constraints (MAINTAINED):**
+- ✅ No remediation logic
+- ✅ No merge/delete/apply actions
+- ✅ No persistence
+- ✅ No backend calls
+- ✅ No new review types
+- ✅ No schema changes
+- ✅ No authentication/authorization changes
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ Zero locked component modifications
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Status:** ✅ IMPLEMENTED (UI/UX clarity only, read-only, no logic changes, governance-safe)
+
+---
+
 ### Entry 7: Curator Review Controls Documentation Verification & Sync
 **Date/Time:** 2026-03-09 19:50 UTC+1  
 **Workstream:** Governance Documentation (Verification & Sync Only)
