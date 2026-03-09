@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import NotificationBell from "@/components/shared/NotificationBell";
 
 /**
  * MobileHeader Component
