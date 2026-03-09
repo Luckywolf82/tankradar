@@ -56,20 +56,24 @@ export default function RecentPricesFeed() {
       base44.entities.Station.list("-name", 2000),
     ]).then(([location, prices, stations]) => {
       userLocation = location;
+      setHasLocation(!!location);
+
       const stationMap = {};
       stations.forEach((s) => { stationMap[s.id] = s; });
 
-      // Build set of nearby station IDs if we have location (within 50km)
-      let nearbyStationIds = null;
-      if (location) {
-        nearbyStationIds = new Set(
-          stations
-            .filter((s) => s.latitude && s.longitude &&
-              haversineKm(location.lat, location.lon, s.latitude, s.longitude) <= 50)
-            .map((s) => s.id)
-        );
-        setRegional(nearbyStationIds.size > 0);
+      // Require location — without it, don't show any prices
+      if (!location) {
+        setItems([]);
+        return;
       }
+
+      const nearbyStationIds = new Set(
+        stations
+          .filter((s) => s.latitude && s.longitude &&
+            haversineKm(location.lat, location.lon, s.latitude, s.longitude) <= 50)
+          .map((s) => s.id)
+      );
+      setRegional(nearbyStationIds.size > 0);
 
       const filtered = prices.filter((p) => {
         if (!p.stationId) return false;
@@ -77,7 +81,7 @@ export default function RecentPricesFeed() {
         if (p.station_match_status === "no_safe_station_match") return false;
         if (p.station_match_status === "review_needed_station_match") return false;
         if (!stationMap[p.stationId]) return false;
-        if (nearbyStationIds && !nearbyStationIds.has(p.stationId)) return false;
+        if (!nearbyStationIds.has(p.stationId)) return false;
         return true;
       });
 
