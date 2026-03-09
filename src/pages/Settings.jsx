@@ -3,9 +3,7 @@ import { APP_VERSION_LABEL } from "../components/version";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, FlaskConical } from "lucide-react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { AlertCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,22 +85,6 @@ export default function Settings() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dev Tools */}
-      <Card className="mb-6 border-slate-300">
-        <CardHeader>
-          <CardTitle className="text-slate-600 text-base flex items-center gap-2">
-            <FlaskConical size={16} /> Diagnostikk
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Link to={createPageUrl("ExternalBrowserTest")}>
-            <Button variant="outline" className="w-full">
-              Browser Handoff Test
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
       {/* App Info */}
       <Card>
         <CardHeader>
@@ -117,15 +99,7 @@ export default function Settings() {
             <p className="font-semibold text-slate-900">Plattform</p>
             <p>Drivstoffpris.no</p>
           </div>
-          <div>
-            <p className="font-semibold text-slate-900 mb-2">Hjelp</p>
-            <p>
-              For spørsmål eller support, kontakt{" "}
-              <a href="mailto:support@drivstoffpris.no" className="text-blue-600 hover:underline">
-                support@drivstoffpris.no
-              </a>
-            </p>
-          </div>
+
         </CardContent>
       </Card>
     </div>
