@@ -178,8 +178,14 @@ export default function StationDetails() {
                         )}
                       </div>
                     </div>
-                    <div className="text-right shrink-0 flex items-center gap-1">
+                    <div className="text-right shrink-0 flex items-center gap-2">
                       {TrendIcon && <TrendIcon size={14} className={trendColor} />}
+                      <SharePriceButton
+                        stationId={stationId}
+                        stationName={station.name}
+                        priceNok={p.priceNok}
+                        fuelType={ft}
+                      />
                       <div>
                         <p className="text-lg font-bold text-slate-800">{p.priceNok.toFixed(2)}</p>
                         <p className="text-xs text-slate-400">kr/l</p>

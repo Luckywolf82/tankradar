@@ -231,9 +231,17 @@ export default function NearbyPrices({ selectedFuel }) {
                       </span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-lg font-bold text-green-700">{p.priceNok.toFixed(2)}</p>
-                    <p className="text-xs text-slate-400">kr/l</p>
+                  <div className="text-right shrink-0 flex items-center gap-1">
+                    <SharePriceButton
+                      stationId={p.stationId}
+                      stationName={p._station.name}
+                      priceNok={p.priceNok}
+                      fuelType={p.fuelType}
+                    />
+                    <div>
+                      <p className="text-lg font-bold text-green-700">{p.priceNok.toFixed(2)}</p>
+                      <p className="text-xs text-slate-400">kr/l</p>
+                    </div>
                   </div>
                 </div>
               );
