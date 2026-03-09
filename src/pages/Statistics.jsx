@@ -105,7 +105,7 @@ export default function Statistics() {
         {/* SECTION 3: Regional Analysis */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-slate-800 mb-4">Regional analyse</h2>
-          <RegionalStats observedPrices={prices} ssbData={ssbData} selectedFuel={selectedFuel} />
+          <RegionalStats observedPrices={prices} stations={stations} ssbData={ssbData} selectedFuel={selectedFuel} />
         </div>
 
         {/* Data Quality Info */}
