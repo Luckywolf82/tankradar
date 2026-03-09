@@ -477,32 +477,45 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ TEST CASE 4: Generic Name, Low Confidence                                    │
+│ TEST CASE 4: Generic Name + Weak Chain (Low Confidence)                      │
 │────────────────────────────────────────────────────────────────────────────│
 │ Observation: User reports "Bensin Station Trondheim" at (63.4200, 10.3900)   │
-│ City:        Trondheim                                                       │
+│ Parsed chain: null (generic, unparseable; confidence <0.50)                  │
+│ City:        Trondheim (explicit)                                            │
 │                                                                               │
-│ Station A:   "Shell Trondheim Singsås" at (63.4195, 10.3895), chain="Shell"  │
+│ Station A:   "Shell Trondheim Singsås" at (63.4195, 10.3895)                 │
+│ Station chain: "Shell" (confidence 0.99, known)                              │
 │   Distance:  7 meters                                                        │
-│   Scoring:   Distance 30 + Chain 0 + Name 0 + Location 0 = 30                │
-│   (Generic observation name has no clear chain, doesn't match "Shell")       │
+│   City:      Trondheim ✓                                                     │
+│   Scoring:   Distance 30 + Chain 0 (obs=null, neutral) +                     │
+│              Name 0 (similarity 0.35) + Location 0 = 30 points               │
 │                                                                               │
-│ Station B:   "Circle K Trondheim" at (63.4210, 10.3905), chain="Circle K"    │
+│ Station B:   "Circle K Trondheim" at (63.4210, 10.3905)                      │
+│ Station chain: "Circle K" (confidence 0.95, known)                           │
 │   Distance:  15 meters                                                       │
-│   Scoring:   Distance 30 + Chain 0 + Name 5 + Location 0 = 35                │
-│   (Generic "Bensin" vs "Circle K Trondheim" similarity ≈ 0.50 bigram)       │
+│   City:      Trondheim ✓                                                     │
+│   Scoring:   Distance 30 + Chain 0 (obs=null, neutral) +                     │
+│              Name 5 (similarity 0.50) + Location 0 = 35 points               │
 │                                                                               │
-│ Gates:       City ✓, Distance ✓                                              │
-│ Best Match:  Station B with 35 points (exactly at review_needed threshold)   │
+│ Gates:       City ✓ (both explicit and match)                                │
+│              Chain gate: NOT triggered (obs_chain=null, not high-confidence)  │
+│              Both stations pass gates, continue scoring                      │
 │                                                                               │
-│ Outcome:     REVIEW_NEEDED_STATION_MATCH                                     │
+│ Dominance Gap Check:                                                         │
+│   Top (B) = 35, Second (A) = 30                                              │
+│   Gap = 5 points < 10 points threshold ✗                                     │
+│   Also, both <65, so no auto-match regardless of gap.                        │
+│                                                                               │
+│ Outcome:     REVIEW_NEEDED_STATION_MATCH (best candidate only 35)            │
 │ Action:      Return Station B to curator: "Generic 'Bensin Station'         │
-│              observation — is this Circle K Trondheim?"                      │
-│              NO FuelPrice created until curator confirms                     │
+│              observation with weak chain signal — is this Circle K?"         │
+│              Or possibly offer Station A as alternative.                     │
+│              NO FuelPrice created until curator selects and confirms         │
 │                                                                               │
-│ Safety verdict:         ✓ SAFE — Generic name + missing chain signals       │
-│                         force curator judgment. Prevents wrong attribution   │
-│                         of generic observation to any chain.                 │
+│ Safety verdict:         ✓ SAFE — Generic name + weak/absent chain signal    │
+│                         force curator judgment. Chain weakness (null) does   │
+│                         not block matching but prevents auto-attribution.    │
+│                         Curator resolves correct station.                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
