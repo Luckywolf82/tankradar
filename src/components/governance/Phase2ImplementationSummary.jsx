@@ -129,10 +129,12 @@
 **Process:**
 1. Authenticate user
 2. Parse observation via `parseStationName()`
-3. Filter Station candidates by city
-4. Score each candidate via `scoreStationMatch()`
-5. Apply `matchDecision()` logic
-6. Return outcome
+3. Use payload chain as primary; fall back to parsed chain only if payload missing
+4. Pre-filter candidates: exclude stations with missing coordinates
+5. Filter Station candidates by city
+6. Score each candidate via `scoreStationMatch()`
+7. Apply `matchDecision()` logic
+8. Return outcome
 
 ---
 
