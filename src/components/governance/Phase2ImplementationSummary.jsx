@@ -256,11 +256,11 @@ Requires admin role.
 
 ## NEXT STEPS
 
-1. **Run fixture tests** → confirm all 6 test cases pass
+1. **Run fixture tests** → confirm all test cases pass
 2. **Validate with live city data** → ensure station catalog is representative
-3. **Monitor real user_reported submissions** → confirm matching accuracy >90%
+3. **Monitor real user_reported submissions** → measure matching outcomes and gather audit data
 4. **Plan module refactor** → if Base44 confirms shared module support
-5. **Post-MVP calibration** → may adjust distance threshold (currently 300m baseline)
+5. **Post-MVP calibration** → may adjust distance threshold (currently 300m baseline) based on audit data
 
 ---
 
