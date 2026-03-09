@@ -99,10 +99,7 @@ Deno.serve(async (req) => {
         expectedDistanceSignal: expectedSignal,
         description: `Distance band: ${expectedBand} → expected distanceSignal = ${expectedSignal}`,
       },
-      testPayloads: testPayloads.map(tp => ({
-        ...tp,
-        instructions: `Call: base44.functions.invoke('auditPhase2DominanceGap', ${JSON.stringify(tp.payload)})`,
-      })),
+      testPayloads,
       validationCriteria: {
         mustHave: `distanceSignal = ${expectedSignal}`,
         distance_reported: `approximately ${offsetMeters}m`,
