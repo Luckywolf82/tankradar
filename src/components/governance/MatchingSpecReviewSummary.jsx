@@ -216,11 +216,14 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Outcome: MATCHED_STATION_ID                                                  │
 │ Action: Proceed directly to FuelPrice creation                               │
-│         NO manual review required                                             │
+│         NO manual review required (dominance automatic with single candidate)│
+│                                                                               │
+│ Dominance rule: Single candidate ≥65 satisfies dominance by default          │
+│ (no competitor exists in pool to measure gap against)                        │
 │                                                                               │
 │ Example: Circle K Heimdal observation at 15m + chain match → 85 points       │
 │ Only one station in pool scores ≥65.                                         │
-│ Result: Automatic match, FuelPrice created.                                  │
+│ Result: Automatic match, FuelPrice created. No gap calculation needed.       │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
