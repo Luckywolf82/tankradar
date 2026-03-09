@@ -237,7 +237,7 @@ export default function NearbyPrices({ selectedFuel }) {
         )}
         {nearbyResults.length > 0 && nearbyResults.length < 3 && (
           <p className="text-xs text-slate-400 mt-2 border-t border-slate-100 pt-2">
-            For lite datagrunnlag i området – kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med pris funnet.
+            Kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med {fuelTypeLabel[selectedFuel] || selectedFuel}-pris funnet innen {RADIUS_KM} km.
           </p>
         )}
       </CardContent>
