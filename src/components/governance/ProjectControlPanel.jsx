@@ -73,6 +73,46 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 4: Duplicate Catalog Workstream Enhancement (Improved Detection & UI)
+**Date/Time:** 2026-03-09 18:25 UTC+1  
+**Workstream:** Catalog Duplicate Remediation (Data Quality)
+
+**Files Modified:**
+- `functions/detectStationDuplicates` — Enhanced output structure and classification labels
+- `components/admin/DuplicateStationGroup.jsx` — Improved group card with expandable stations
+- `components/admin/DuplicateDetectionResults.jsx` — Updated classification handling
+
+**Summary:**
+Improved duplicate-catalog workstream by refining detector output structure and enhancing admin UI:
+
+**Detector Changes:**
+- Renamed classifications for clarity: `EXACT_DUPLICATE` → `exact_coordinate_duplicate`, `COORDINATE_DUPLICATE` → `exact_name_chain_duplicate`, `POSSIBLE_NEAR_DUPLICATE` → `possible_near_duplicate`
+- Added explicit `explanation` field per group (human-readable reason for flagging)
+- Removed `reason` and `review_action` fields (conflicted with preview-only philosophy)
+- Updated summary keys to match new classifications
+- Improved sort order: by confidence first, then by group size (larger groups first within same confidence)
+- Removed auto-action suggestions from output (conservative, detector does not propose fixes)
+
+**UI Changes:**
+- Station groups now collapsible (expandable to inspect candidates)
+- Replaced classification badges with descriptive labels (`exact_coordinate_duplicate` → "Exact Coordinate Duplicate")
+- Distance now shown inline with confidence badge (cleaner UI)
+- Removed "Review action" note field (preview-only display only)
+- Better explanation display for each group
+
+**Key Constraints (MAINTAINED):**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ No merge/delete/auto-fix actions
+- ✅ No StationReview creation
+- ✅ No schema changes
+- ✅ No PROJECT_INSTRUCTIONS modifications
+- ✅ Conservative classification logic UNCHANGED
+- ✅ Preview-only philosophy reinforced
+
+**Status:** ✅ IMPLEMENTED (detector and UI improvements, no logic broadening)
+
+---
+
 ### Entry 3: Station Duplicate Review Admin UI (Preview-Only)
 **Date/Time:** 2026-03-09 18:10 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (Data Quality — Governance-Safe)
@@ -457,11 +497,12 @@ Before ANY code modification:
 | 2026-03-09 17:30 | Mandatory change logging mandate | Implemented | ProjectControlPanel Entry 2 |
 | 2026-03-09 17:45 | AI preflight workflow rules | Implemented | ProjectControlPanel AI PREFLIGHT RULES |
 | 2026-03-09 18:10 | Station duplicate review admin UI (preview-only) | Implemented | ProjectControlPanel Entry 3 |
+| 2026-03-09 18:25 | Duplicate catalog workstream enhancement | Implemented | ProjectControlPanel Entry 4 |
 
 ---
 
 **Project Control Panel maintained by:** AI-assisted development workflow  
-**Last verified:** 2026-03-09 18:10 UTC+1  
+**Last verified:** 2026-03-09 18:25 UTC+1  
 **Governance Mandate:** Mandatory change logging + AI preflight workflow effective 2026-03-09  
 **Enforcement:** All code modifications require PRECHECK pass before implementation  
-**Latest Entry:** Station Duplicate Review Admin UI (preview-only, no matching logic modifications)
+**Latest Entry:** Duplicate Catalog Workstream Enhancement (detector output + UI improvements)
