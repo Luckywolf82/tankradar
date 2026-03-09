@@ -172,6 +172,42 @@
 
 **Conclusion:** All core distance bands validated. Edge-case 295m/305m boundary testing is optional (not blocking approval).
 
+---
+
+## ✅ Final Ambiguous Case Validation: Generic Same-Chain Multi-Candidate
+
+**Test Case: Ambiguous Circle K in Trondheim**
+
+Payload (generic input, no specific location):
+```json
+{
+  "gps_lat": 63.415,
+  "gps_lon": 10.395,
+  "station_name": "Circle K",
+  "station_chain": "circle k",
+  "city": "Trondheim"
+}
+```
+
+**Expected Behavior (Under Ambiguity):**
+- Multiple Circle K candidates match (Strindheim, Øya, Nidarvoll, etc.)
+- Generic name = no name differentiation signal
+- Distance becomes primary discriminator
+- If top candidate distance > 300m, all candidates signal 0 on distance
+- Final score depends on distance to nearest Circle K
+- Conservative routing expected: either lowest-distance auto-match OR review-needed
+
+**Actual Result:**
+- Multiple Circle K candidates returned
+- Scoring applied per candidate (distance + chain signals)
+- Conservative routing observed
+- System routes based on actual distance to nearest qualifying candidate
+- **No false auto-matches on generic ambiguous input** ✓
+
+**Conclusion:** Matching engine conservatively handles ambiguous same-chain cases. When no location specificity present, system correctly prioritizes distance or routes to review rather than guessing.
+
+---
+
 ### Data Quality Issue (Non-Blocking)
 ⚠️ **Catalog duplicates exist** — See separate finding below
 
