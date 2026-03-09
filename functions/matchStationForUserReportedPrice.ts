@@ -99,11 +99,11 @@ function chainMatchLogic(obsChain, obsChainConfidence, stnChain, stnChainConfide
 
 function parseStationName(rawName) {
   if (!rawName || typeof rawName !== 'string') {
-    return { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
+    return { chain: null, chainConfidence: 0, locationLabel: null, locationConfidence: 0, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
   }
 
   const tokens = rawName.toLowerCase().trim().split(/\s+/);
-  const result = { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
+  const result = { chain: null, chainConfidence: 0, locationLabel: null, locationConfidence: 0, locationLevel: null, chainTokens: [], locationTokens: [], unparsedTokens: [] };
 
   for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
     for (const alias of aliases) {
@@ -123,6 +123,7 @@ function parseStationName(rawName) {
   for (const token of tokens) {
     if (AREA_KEYWORDS.includes(token)) {
       result.locationLabel = token;
+      result.locationConfidence = 0.92; // Explicit match from AREA_KEYWORDS
       result.locationLevel = 'area';
       result.locationTokens.push(token);
       break;
