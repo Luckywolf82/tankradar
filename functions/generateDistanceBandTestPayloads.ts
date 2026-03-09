@@ -86,25 +86,19 @@ Deno.serve(async (req) => {
 
     return Response.json({
       mode: 'distance_band_test_generator',
-      stationReference: {
+      station: {
         stationId: payload.stationId || 'unknown',
-        stationName: payload.stationName,
-        stationChain: payload.stationChain,
-        latitude: payload.stationLat,
-        longitude: payload.stationLon,
+        name: payload.stationName,
+        chain: payload.stationChain,
+        lat: payload.stationLat,
+        lon: payload.stationLon,
       },
-      testConfiguration: {
+      test: {
         offsetMeters,
         expectedBand,
         expectedDistanceSignal: expectedSignal,
-        description: `Distance band: ${expectedBand} → expected distanceSignal = ${expectedSignal}`,
       },
-      testPayloads,
-      validationCriteria: {
-        mustHave: `distanceSignal = ${expectedSignal}`,
-        distance_reported: `approximately ${offsetMeters}m`,
-        note: 'Signal activation confirms distance scoring tier is working correctly',
-      },
+      payloads: testPayloads,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
