@@ -25,7 +25,7 @@ export default function NotificationBell() {
     base44.auth.isAuthenticated().then(auth => {
       setIsAuth(auth);
       if (auth) loadUnread();
-    });
+    }).catch(() => {});
   }, []);
 
   // Poll hvert minutt
@@ -46,32 +46,39 @@ export default function NotificationBell() {
   }, [open]);
 
   const loadUnread = async () => {
-    const all = await base44.entities.UserPriceAlert.filter({ isActive: true });
-    const unread = all.filter(a => a.isUnread && a.lastTriggeredAt);
-    setUnreadAlerts(unread);
+    try {
+      const u = await base44.auth.me();
+      if (!u) return;
+      const all = await base44.entities.UserPriceAlert.filter({ created_by: u.email, isActive: true });
+      const unread = all.filter(a => a.isUnread && a.lastTriggeredAt);
+      setUnreadAlerts(unread);
 
-    const ids = [...new Set(unread.map(a => a.station).filter(Boolean))];
-    const names = {};
-    await Promise.all(
-      ids.map(async id => {
-        const stations = await base44.entities.Station.filter({ id });
-        if (stations[0]) names[id] = stations[0].name;
-      })
-    );
-    setStationNames(names);
+      const ids = [...new Set(unread.map(a => a.station).filter(Boolean))];
+      const names = {};
+      await Promise.all(
+        ids.map(async id => {
+          const s = await base44.entities.Station.get(id);
+          if (s) names[id] = s.name;
+        })
+      );
+      setStationNames(names);
+    } catch (e) {
+      // stille feil — varsler er ikke kritisk
+    }
   };
 
   const handleOpen = async () => {
     const wasOpen = open;
     setOpen(!wasOpen);
     if (!wasOpen && unreadAlerts.length > 0) {
-      // Merk alle som lest
-      await Promise.all(
-        unreadAlerts.map(a =>
-          base44.entities.UserPriceAlert.update(a.id, { isUnread: false })
-        )
-      );
-      setUnreadAlerts([]);
+      try {
+        await Promise.all(
+          unreadAlerts.map(a =>
+            base44.entities.UserPriceAlert.update(a.id, { isUnread: false })
+          )
+        );
+        setUnreadAlerts([]);
+      } catch (e) {}
     }
   };
 
