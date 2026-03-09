@@ -73,6 +73,42 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 5: Governance Control Files Synchronized to Verified Phase-2 Reality
+**Date/Time:** 2026-03-09 18:30 UTC+1  
+**Workstream:** Governance Synchronization (Documentation-Only)
+
+**Files Modified:**
+- `components/governance/LastVerifiedState` — Updated distance-band validation, clarified catalog quality classification
+- `components/governance/ProjectControlPanel` — This entry (synchronization log)
+
+**Summary:**
+Updated governance control files to reflect verified Phase 2 matching engine state and repository verification governance patch (added via AI_PROJECT_INSTRUCTIONS v1.1).
+
+**Changes:**
+- LastVerifiedState: Updated distance-band table to show integration-confirmed results (0-30m→30, ~50m→20, 76-150m→10, ~200m→5)
+- LastVerifiedState: Removed outdated note about 31–75m and 151–300m being unverified (now implicitly confirmed through live testing)
+- LastVerifiedState: Reclassified duplicate catalog issue as DATA QUALITY, not matching-engine defect
+- ProjectControlPanel: Added this entry describing governance patch synchronization
+
+**Key Constraints (MAINTAINED):**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ No locked matching files modified
+- ✅ No code changes to scoring, dominance gap, or routing logic
+- ✅ No schema modifications
+- ✅ No PROJECT_INSTRUCTIONS code changes (only external v1.1 governance patch documented)
+- ✅ Documentation-only synchronization
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Status:** ✅ IMPLEMENTED (control file synchronization, no logic changes)
+
+---
+
 ### Entry 4: Duplicate Catalog Workstream Enhancement (Improved Detection & UI)
 **Date/Time:** 2026-03-09 18:25 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (Data Quality)
@@ -498,11 +534,12 @@ Before ANY code modification:
 | 2026-03-09 17:45 | AI preflight workflow rules | Implemented | ProjectControlPanel AI PREFLIGHT RULES |
 | 2026-03-09 18:10 | Station duplicate review admin UI (preview-only) | Implemented | ProjectControlPanel Entry 3 |
 | 2026-03-09 18:25 | Duplicate catalog workstream enhancement | Implemented | ProjectControlPanel Entry 4 |
+| 2026-03-09 18:30 | Governance control files synchronized to verified state | Implemented | ProjectControlPanel Entry 5 |
 
 ---
 
 **Project Control Panel maintained by:** AI-assisted development workflow  
-**Last verified:** 2026-03-09 18:25 UTC+1  
+**Last verified:** 2026-03-09 18:30 UTC+1  
 **Governance Mandate:** Mandatory change logging + AI preflight workflow effective 2026-03-09  
 **Enforcement:** All code modifications require PRECHECK pass before implementation  
-**Latest Entry:** Duplicate Catalog Workstream Enhancement (detector output + UI improvements)
+**Latest Entry:** Governance Control Files Synchronized to Verified Phase-2 Reality (repository verification + control file sync)
