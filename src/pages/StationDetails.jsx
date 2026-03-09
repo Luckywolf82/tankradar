@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, Fuel, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { MapPin, Clock, Fuel, TrendingDown, TrendingUp, Minus, Star } from "lucide-react";
 import SharePriceButton from "@/components/shared/SharePriceButton";
 import { formatDistanceToNow, format } from "date-fns";
 import { nb } from "date-fns/locale";
