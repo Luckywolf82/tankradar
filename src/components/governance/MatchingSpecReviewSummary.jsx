@@ -544,34 +544,42 @@ stops and outcome = NO_SAFE_STATION_MATCH (no FuelPrice created).
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ TEST CASE 6: Partial Chain, Borderline Distance (Score = 80)                 │
+│ TEST CASE 6: Borderline Distance, Strong Chain/Name (Dominance Test)         │
 │────────────────────────────────────────────────────────────────────────────│
 │ Observation: User "YX Heimdal" at (63.4100, 10.3900)                         │
-│ City:        Trondheim                                                       │
+│ Parsed chain: "YX" (confidence 0.90)                                          │
+│ City:        Trondheim (explicit)                                            │
 │                                                                               │
-│ Station:     "YX Heimdal" at (63.4100, 10.3850), chain="YX", city=Trondheim  │
+│ Station:     "YX Heimdal" at (63.4100, 10.3850), chain="YX"                  │
+│ Station chain: "YX" (confidence 0.95, known)                                 │
+│ City:        Trondheim                                                       │
 │ Distance:    55 meters (in 31–75m bracket)                                   │
 │                                                                               │
 │ Scoring:                                                                     │
 │   Distance (55m):       20 points (31–75m bracket)                            │
-│   Chain ("YX" =         25 points (exact match)                               │
-│          "YX"):                                                              │
+│   Chain ("YX" = "YX"):  25 points (exact match, both high-confidence)        │
 │   Name similarity       25 points (exact "YX Heimdal" = "YX Heimdal"         │
 │   ("YX Heimdal" =       bigram ≈ 0.99)                                       │
 │   "YX Heimdal"):                                                             │
 │   Location ("Heimdal"   10 points (explicit areaLabel match)                  │
 │   = areaLabel):                                                              │
 │   ────────────────────────────────────────────────────────                  │
-│   TOTAL:                 80 points                                            │
+│   TOP SCORE:             80 points                                            │
 │                                                                               │
-│ Gates:       City ✓, Distance ✓, Chain ✓                                      │
-│ Outcome:     MATCHED_STATION_ID (≥65, single candidate)                      │
+│ Dominance Check:                                                             │
+│   Only one candidate in pool (single YX Heimdal station)                     │
+│   Gap = N/A (no competitor)                                                  │
+│   Sufficient dominance by default (no ambiguity)                             │
+│                                                                               │
+│ Gates:       City ✓, Distance ✓, Chain ✓ (high-confidence match)             │
+│ Outcome:     MATCHED_STATION_ID (≥65 + dominant)                             │
 │ Action:      Create FuelPrice immediately (no curator review)                │
 │                                                                               │
 │ Safety verdict:         ✓ SAFE — Distance concern (55m, medium proximity)    │
 │                         is mitigated by strong chain + name + location       │
-│                         signals. Multiple independent confirmations justify   │
-│                         auto-match.                                          │
+│                         signals. Single dominant candidate. Multiple         │
+│                         independent confirmations justify auto-match.         │
+│                         No ambiguity.                                        │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ════════════════════════════════════════════════════════════════════════════════
