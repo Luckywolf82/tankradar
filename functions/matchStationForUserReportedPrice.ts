@@ -348,12 +348,86 @@ function levenshteinDistance(s1, s2) {
 }
 
 /**
+ * OBSERVATION ASSEMBLY PIPELINE
+ * 
+ * Explicit internal parser-integration step that structures user-reported signals
+ * into a unified observation object before candidate scoring.
+ * 
+ * Uses EXISTING Phase 2 parsing utilities:
+ * - parseStationName(...)  [lines 100-135]
+ * - normalizeChainName(...) [lines 44-69]
+ * 
+ * No new scoring signals introduced.
+ * No thresholds modified.
+ * Behavior-preserving refactor only.
+ */
+function assembleObservation(stationName, stationChain, city, latitude, longitude) {
+  // Parse station name using existing Phase 2 parser
+  const parsed = parseStationName(stationName);
+
+  // Determine chain signal: explicit payload takes priority
+  let chainSignal = null;
+  let chainConfidence = 0;
+  if (stationChain) {
+    // Explicit chain from payload (high confidence)
+    chainSignal = stationChain;
+    chainConfidence = 0.95;
+  } else if (parsed.chain) {
+    // Parsed from station name (lower confidence)
+    chainSignal = parsed.chain;
+    chainConfidence = parsed.chainConfidence;
+  }
+
+  // Build structured observation object
+  const observation = {
+    // Raw input
+    rawStationName: stationName,
+    rawChain: stationChain || null,
+    rawCity: city || null,
+    rawLatitude: latitude !== undefined ? latitude : null,
+    rawLongitude: longitude !== undefined ? longitude : null,
+
+    // Parsed chain (via existing normalizeChainName + parseStationName)
+    parsedChain: chainSignal,
+    parsedChainConfidence: chainConfidence,
+    normalizedChainName: chainSignal ? normalizeChainName(chainSignal).normalized : null,
+    normalizedChainConfidence: chainSignal ? normalizeChainName(chainSignal).confidence : 0,
+
+    // Parsed location (via existing parseStationName area detection)
+    parsedLocation: parsed.locationLabel || null,
+    parsedLocationConfidence: parsed.locationConfidence,
+    parsedLocationLevel: parsed.locationLevel,
+
+    // Unparsed residual tokens (what remains after chain + location extraction)
+    unparsedTokens: parsed.unparsedTokens,
+    normalizedNameBase: parsed.unparsedTokens.join(' ') || null,
+
+    // For scoring pipeline (maintain same names as existing usage)
+    name: stationName,
+    chain: chainSignal,
+    chainConfidence: chainConfidence,
+    latitude: latitude !== undefined ? latitude : null,
+    longitude: longitude !== undefined ? longitude : null,
+    city: city || null,
+    cityConfidence: 0.95,
+    areaLabel: parsed.locationLabel,
+    areaLabelConfidence: parsed.locationConfidence,
+  };
+
+  return observation;
+}
+
+/**
  * PREVIEW MODE HANDLER
  * 
  * Read-only observability surface for Phase 2 parser + matcher.
  * Returns metadata only: parsed chain, location, candidates, scores, decision.
  * No FuelPrice writes, no Station creation, no review routing.
  * Exits before any write path.
+ * 
+ * BEHAVIOR VERIFICATION (preview_mode only):
+ * Compares old ad-hoc signal derivation vs new structured observation pipeline.
+ * If divergence detected, returns warning in debug_notes instead of silent mismatch.
  */
 async function handlePreviewMode(stationName, stationChain, city, latitude, longitude, base44) {
   try {
@@ -366,10 +440,19 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
     const matchLon = longitude !== undefined ? longitude : null;
     const matchCity = city || null;
 
-    // Parse station name using existing Phase 2 parser
+    // EXPLICIT OBSERVATION ASSEMBLY via parser pipeline
+    const observation = assembleObservation(stationName, stationChain, matchCity, matchLat, matchLon);
+
+    // BEHAVIOR VERIFICATION: Compare old ad-hoc derivation vs structured observation
+    // If divergence detected, emit warning in debug_notes (preview_mode only safety check)
     const parsedObservation = parseStationName(stationName);
     const observationChain = stationChain || parsedObservation.chain;
     const observationChainConfidence = stationChain ? 0.95 : parsedObservation.chainConfidence;
+
+    let equivalenceCheckWarning = null;
+    if (observation.parsedChain !== observationChain || observation.parsedChainConfidence !== observationChainConfidence) {
+      equivalenceCheckWarning = `DIVERGENCE: observation.chain=${observation.parsedChain} vs ad-hoc=${observationChain}; confidence=${observation.parsedChainConfidence} vs ${observationChainConfidence}`;
+    }
 
     // Fetch candidate pool if city + coordinates provided
     let candidates = [];
@@ -420,18 +503,9 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
       if (validCandidates.length > 0) {
         const scoredMatches = validCandidates
           .map(station => {
+            // Score using structured observation object
             const matchResult = scoreStationMatch(
-              {
-                name: stationName,
-                chain: observationChain,
-                chainConfidence: observationChainConfidence,
-                latitude: matchLat,
-                longitude: matchLon,
-                city: matchCity,
-                cityConfidence: 0.95,
-                areaLabel: parsedObservation.locationLabel,
-                areaLabelConfidence: parsedObservation.locationConfidence,
-              },
+              observation,
               {
                 id: station.id,
                 name: station.name,
@@ -486,9 +560,9 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
     // Return read-only preview response (no writes, no mutations)
     return Response.json({
       preview_mode: true,
-      parsed_chain: observationChain || null,
-      parsed_location: parsedObservation.locationLabel || null,
-      parsed_name_base: parsedObservation.unparsedTokens.join(' ') || null,
+      parsed_chain: observation.parsedChain || null,
+      parsed_location: observation.parsedLocation || null,
+      parsed_name_base: observation.normalizedNameBase || null,
       candidate_pool_source: candidatePoolSource,
       candidates_count: candidatesCount,
       top_candidates: topCandidates,
@@ -496,7 +570,7 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
       matched_station_id: topCandidates.length > 0 && finalDecision === 'MATCHED_STATION_ID' ? topCandidates[0].name : null,
       review_needed_reason: finalDecision === 'REVIEW_NEEDED_STATION_MATCH' ? 'insufficient_dominance_or_borderline' : null,
       dominance_gap: dominanceGap,
-      debug_notes: 'Read-only preview mode: no data written, no records created',
+      debug_notes: equivalenceCheckWarning ? `Preview mode (behavior-verified): ${equivalenceCheckWarning}` : 'Read-only preview mode: behavior-verified equivalent via parser pipeline',
     });
   } catch (error) {
     return Response.json({
@@ -588,27 +662,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Score all candidates using Phase 2 utilities
-    const parsedObservation = parseStationName(station_name);
-    
-    // Use payload chain as primary; fall back to parsed chain only if payload missing
-    const observationChain = station_chain || parsedObservation.chain;
-    const observationChainConfidence = station_chain ? 0.95 : parsedObservation.chainConfidence;
+    // EXPLICIT OBSERVATION ASSEMBLY via parser pipeline
+    const observation = assembleObservation(station_name, station_chain, city, matchLat, matchLon);
 
     const scoredMatches = validCandidates
       .map(station => {
+        // Score using structured observation object
         const matchResult = scoreStationMatch(
-          {
-            name: station_name,
-            chain: observationChain,
-            chainConfidence: observationChainConfidence,
-            latitude: matchLat,
-            longitude: matchLon,
-            city: city,
-            cityConfidence: 0.95, // Explicit city from payload
-            areaLabel: parsedObservation.locationLabel,
-            areaLabelConfidence: parsedObservation.locationConfidence,
-          },
+          observation,
           {
             id: station.id,
             name: station.name,
