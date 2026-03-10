@@ -12,7 +12,7 @@ const baseNavLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
   { label: "Statistikk", page: "Statistics", icon: BarChart2 },
   { label: "Logg pris", page: "LogPrice", icon: Plus },
-  { label: "Prisvarsler", page: "PriceAlerts", icon: Bell },
+  { label: "Områdevarsler", page: "PriceAlerts", icon: Bell },
   { label: "Varsler", page: "Notifications", icon: Bell },
 ];
 
