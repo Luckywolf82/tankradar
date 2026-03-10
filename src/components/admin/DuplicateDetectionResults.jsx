@@ -30,10 +30,21 @@ export default function DuplicateDetectionResults({ results }) {
   const hasNoDuplicates = !duplicate_groups || duplicate_groups.length === 0;
 
   // Apply filters and sorting
+  const search = searchTerm.toLowerCase().trim();
   let filtered = duplicate_groups.filter(g => {
     const classMatch = selectedClassifications[g.classification];
     const confMatch = confidenceFilter === "all" || g.confidence === confidenceFilter;
-    return classMatch && confMatch;
+    if (!classMatch || !confMatch) return false;
+    if (!search) return true;
+    const inClassification = (g.classification || "").toLowerCase().includes(search);
+    const inExplanation = (g.explanation || "").toLowerCase().includes(search);
+    const inStations = (g.stations || []).some(s =>
+      (s.name || "").toLowerCase().includes(search) ||
+      (s.chain || "").toLowerCase().includes(search) ||
+      (s.address || "").toLowerCase().includes(search) ||
+      (s.sourceName || "").toLowerCase().includes(search)
+    );
+    return inClassification || inExplanation || inStations;
   });
 
   filtered.sort((a, b) => {
