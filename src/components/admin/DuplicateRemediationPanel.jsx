@@ -88,6 +88,11 @@ const MERGE_ACTION_MAP = [
   { action: "Re-point FuelPrice records", station: "All duplicate-linked prices → canonical station", style: "text-blue-700 bg-blue-50 border border-blue-200" },
 ];
 
+// ─── GOVERNANCE FEATURE FLAG ──────────────────────────────────────────────────
+// Phase 4C execution hardening: live merge execution must be explicitly enabled
+// in code before curators can execute merges. Dry-run preview remains available.
+const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = false;
+
 // ─── MOCK IDs FOR PHASE 4C DEMO — replace with real IDs from duplicate scan ──
 // These are placeholder values only. In production, these come from the
 // DuplicateDetectionScanner result passed as props.
@@ -517,24 +522,38 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 7. Execute Merge — Phase 4C live section ─────────────────────── */}
-      <Card className="border border-orange-200 bg-orange-50">
+      {/* ── 7. Execute Merge — Phase 4C live section (governance-controlled) ──── */}
+      <Card className={ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? "border border-orange-200 bg-orange-50" : "border border-slate-200 bg-slate-50"}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-orange-800 flex items-center gap-2">
-            <AlertTriangle size={14} className="text-orange-500" />
+          <CardTitle className="text-sm font-semibold flex items-center gap-2" style={ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? { color: '#92400e' } : { color: '#64748b' }}>
+            <AlertTriangle size={14} />
             Execute Merge
-            <span className="text-xs font-normal bg-orange-100 text-orange-600 border border-orange-200 rounded px-2 py-0.5">Phase 4C — live</span>
+            <span className={`text-xs font-normal border rounded px-2 py-0.5 ${
+              ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION 
+                ? 'bg-orange-100 text-orange-600 border-orange-200' 
+                : 'bg-slate-100 text-slate-500 border-slate-200'
+            }`}>
+              Phase 4C — {ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? 'live' : 'disabled'}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-3 text-xs text-orange-900 bg-orange-100 border border-orange-200 rounded px-3 py-2">
-            This section connects to the real <code className="font-mono">executeDuplicateMerge</code> backend.
-            Execution will re-point FuelPrice records and soft-archive duplicate stations.
-            No hard deletes. Audit log is mandatory.
-          </div>
+          {!ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? (
+            <div className="text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded px-3 py-3 space-y-2">
+              <p className="font-semibold">Live merge execution is disabled.</p>
+              <p>Dry-run preview remains fully available above.</p>
+              <p className="text-slate-500">Execution requires explicit governance enablement via feature flag in component code.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-3 text-xs text-orange-900 bg-orange-100 border border-orange-200 rounded px-3 py-2">
+                This section connects to the real <code className="font-mono">executeDuplicateMerge</code> backend.
+                Execution will re-point FuelPrice records and soft-archive duplicate stations.
+                No hard deletes. Audit log is mandatory.
+              </div>
 
-          {/* Pre-execution preview summary */}
-          {!result && (
+              {/* Pre-execution preview summary */}
+              {!result && (
             <div className="mb-4 border border-slate-200 rounded overflow-hidden">
               <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
                 Pre-execution summary (demo values)
@@ -560,8 +579,8 @@ export default function DuplicateRemediationPanel() {
             </div>
           )}
 
-          {/* Curator confirmation checkbox */}
-          {!result && (
+              {/* Curator confirmation checkbox */}
+              {!result && (
             <label className="flex items-start gap-2 mb-4 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -576,8 +595,8 @@ export default function DuplicateRemediationPanel() {
             </label>
           )}
 
-          {/* Execute button */}
-          {!result && (
+              {/* Execute button */}
+              {!result && (
             <button
               onClick={handleExecuteMerge}
               disabled={!confirmed || loading}
@@ -598,15 +617,15 @@ export default function DuplicateRemediationPanel() {
             </button>
           )}
 
-          {/* Error state */}
-          {error && (
+              {/* Error state */}
+              {error && (
             <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
               <strong>Error:</strong> {error}
             </div>
           )}
 
-          {/* Post-execution result summary */}
-          {result && (
+              {/* Post-execution result summary */}
+              {result && (
             <div className="mt-2">
               <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mb-3 font-semibold">
                 ✓ Merge executed successfully
@@ -636,6 +655,8 @@ export default function DuplicateRemediationPanel() {
                 Audit log entry written to StationMergeLog.
               </p>
             </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

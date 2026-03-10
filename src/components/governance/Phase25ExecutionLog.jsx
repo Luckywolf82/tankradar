@@ -4,6 +4,94 @@
 
 ---
 
+## 2026-03-10 — Entry 23 (Phase 4C Governance Hardening — Live Execute Merge UI Hidden Behind Feature Flag)
+
+### Task
+Harden governance for Phase 4C by hiding the live Execute Merge UI section behind an explicit feature flag. Dry-run preview (previewDuplicateMerge) remains fully available. Execution logic disabled until flag is explicitly set to true in component code.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with Section 8 (Live dry-run preview) + Section 7 (Execute Merge Phase 4C — live)
+- functions/previewDuplicateMerge.js confirmed read-only (Entry 20–22)
+- functions/mergeDuplicateStations.ts confirmed present and untouched (Entry 18)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added governance feature flag at top of DuplicateRemediationPanel (line 91):
+   - `const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = false;`
+   - Clear comment explaining this is governance hardening
+2. Wrapped Section 7 (Execute Merge card) with conditional rendering:
+   - If flag is false: shows slate-50 neutral card with disabled message ("Live merge execution is disabled", "Dry-run preview remains available", "Execution requires explicit governance enablement")
+   - If flag is true: shows orange Card with original full execution UI (unchanged logic)
+3. Conditional styling:
+   - Disabled state: slate-50 background, slate-500 text, "disabled" badge
+   - Enabled state: orange-50 background, orange-800 text, "live" badge (original)
+4. All pre-execution, checkbox, execute button, error, and result sections indented under conditional block
+5. Section 8 (Live dry-run preview) completely untouched — fully available regardless of flag
+
+### What was NOT implemented
+- No removal of mergeDuplicateStations backend function
+- No removal of executeDuplicateMerge backend function
+- No schema changes
+- No data writes
+- No changes to previewDuplicateMerge
+- No changes to matching engine
+- No changes to Phase 2 locked files
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx (feature flag + conditional render)
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/previewDuplicateMerge.js (read-only, fully available)
+- functions/mergeDuplicateStations.ts (present, untouched)
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+
+### Diff-style summary
++ Added `const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = false;` (line 91)
++ Wrapped Section 7 (Execute Merge) with conditional based on flag
++ If disabled: show slate governance message ("execution is disabled", "dry-run available", "requires governance enablement")
++ If enabled: show orange original UI (unchanged)
++ Section 8 (Live dry-run preview) untouched — always available
++ All internal sections (pre-exec summary, checkbox, button, error, result) moved under conditional wrapper
++ Conditional styling: disabled=slate, enabled=orange
+
+### How to enable execution (when governance approval granted)
+Change line 91 to:
+```javascript
+const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = true;
+```
+This requires explicit code change + re-deployment. No UI bypass possible.
+
+### Governance safety guarantees
+1. Dry-run preview (previewDuplicateMerge) is always available regardless of flag
+2. Live execution is completely hidden from UI when flag is false
+3. No automatic backdoor to execution
+4. Requires explicit code modification + deployment to enable
+5. Audit trail: change to flag is in git history
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 22 (Phase 2.5 Verification Step — previewDuplicateMerge Read-Only Confirmation)
 
 ### Task
