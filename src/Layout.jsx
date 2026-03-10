@@ -13,7 +13,6 @@ const baseNavLinks = [
   { label: "Statistikk", page: "Statistics", icon: BarChart2 },
   { label: "Logg pris", page: "LogPrice", icon: Plus },
   { label: "Områdevarsler", page: "PriceAlerts", icon: Bell },
-  { label: "Varsler", page: "Notifications", icon: Bell },
 ];
 
 export default function Layout({ children, currentPageName }) {
