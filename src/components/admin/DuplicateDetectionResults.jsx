@@ -180,6 +180,19 @@ export default function DuplicateDetectionResults({ results }) {
         <CardContent className="pt-4">
           <div className="space-y-3">
             <div>
+              <label className="text-xs font-semibold text-slate-900 block mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search names, chains, addresses, or explanation"
+                className="w-full text-sm px-2 py-1.5 border border-slate-300 rounded-lg bg-white placeholder:text-slate-400"
+              />
+            </div>
+
+            <div>
               <p className="text-xs font-semibold text-slate-900 mb-2">Filter by Classification</p>
               <div className="flex flex-wrap gap-3">
                 {['exact_coordinate_duplicate', 'exact_name_chain_duplicate', 'possible_near_duplicate'].map(cls => (
