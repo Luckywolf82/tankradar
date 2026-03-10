@@ -67,7 +67,11 @@ export default function DuplicateDetectionResults({ results }) {
   const [sortBy, setSortBy] = useState("confidence");
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  // Section expand/collapse is managed per ClassificationSection instance
+  const [sectionExpanded, setSectionExpanded] = useState({
+    exact_coordinate_duplicate: true,
+    exact_name_chain_duplicate: true,
+    possible_near_duplicate: true,
+  });
   // Reset filters: isFiltered + handleResetFilters implemented (Entry 5 — re-committed 2026-03-10)
 
   const isFiltered =
