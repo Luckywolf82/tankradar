@@ -4,6 +4,67 @@
 
 ---
 
+## 2026-03-10 — Entry 10 (Expand All / Collapse All — Implemented)
+
+### Task
+Add a compact "Expand all / Collapse all" control for the three classification sections in DuplicateDetectionResults to improve curator usability on large scans.
+
+### What was verified before change
+- File read in full (lines 1–445)
+- Confirmed present: text search, grouped classification sections, filtered summary strip, reset filters (isFiltered + handleResetFilters)
+- ClassificationSection previously used local useState for expanded — incompatible with parent-driven expand/collapse
+
+### What was implemented
+1. Refactored ClassificationSection from uncontrolled (local useState) to controlled component:
+   - Removed `const [expanded, setExpanded] = useState(groups.length > 0)` from ClassificationSection
+   - Added `expanded` and `onToggle` props
+2. Added `sectionExpanded` state in parent (DuplicateDetectionResults):
+   - Default: all three keys = true (matches prior default behavior)
+3. Added "Expand all / Collapse all" button row above the results list:
+   - Expand all: sets all three keys to true
+   - Collapse all: sets all three keys to false
+   - Visually secondary: text-xs underline, same style as Reset filters
+   - Only rendered when results exist (inside the non-empty branch)
+4. onToggle per section: toggles individual key in sectionExpanded without affecting others
+
+### What was NOT changed
+- Filter logic unchanged
+- Search logic unchanged
+- Sort logic unchanged
+- Copy summary unchanged
+- Summary strip unchanged
+- Reset filters unchanged
+- Preview banner unchanged
+- All existing behavior preserved
+
+### Files actually modified
+- src/components/admin/DuplicateDetectionResults.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 9 (Fourth Verification — Live File Read, Feature Confirmed, GitHub Sync Lag Identified as Root Cause)
 
 ### Task
