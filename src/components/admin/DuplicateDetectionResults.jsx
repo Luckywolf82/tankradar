@@ -361,6 +361,19 @@ export default function DuplicateDetectionResults({ results }) {
         </CardContent>
       </Card>
 
+      {/* Filtered summary strip */}
+      {!hasNoDuplicates && duplicate_groups.length > 0 && (
+        <div className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 items-center">
+          <span className="font-semibold text-slate-800">{filtered.length} group{filtered.length !== 1 ? "s" : ""} visible</span>
+          <span>🔴 {filtered.filter(g => g.classification === "exact_coordinate_duplicate").length} exact</span>
+          <span>🟠 {filtered.filter(g => g.classification === "exact_name_chain_duplicate").length} same-loc</span>
+          <span>🟡 {filtered.filter(g => g.classification === "possible_near_duplicate").length} near</span>
+          {confidenceFilter !== "all" && <span className="text-slate-500">Confidence: <strong>{confidenceFilter}</strong></span>}
+          <span className="text-slate-500">Sort: <strong>{sortBy}</strong></span>
+          {searchTerm && <span className="text-slate-500">Search: <strong>"{searchTerm}"</strong></span>}
+        </div>
+      )}
+
       {/* Results by classification */}
       {hasNoDuplicates ? (
         <Card className="bg-green-50 border border-green-200">
