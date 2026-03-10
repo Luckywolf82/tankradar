@@ -8,17 +8,17 @@
 //
 // Why this change?
 // The previous single-file model grew unsustainably large. The chunked architecture
-// preserves all 47 historical entries in full while enabling scalable future growth.
+// preserves all execution log entries in full while enabling scalable future growth.
 //
 // How to use:
 // 1. Start at: src/components/governance/Phase25ExecutionLogIndex.jsx
-// 2. Find the active chunk: Phase25ExecutionLog_005.jsx (entries 41–48)
+// 2. Find the active chunk: Phase25ExecutionLog_005.jsx (current active chunk for appends)
 // 3. Append new entry to that file following the established format
 // 4. Update Index.jsx with new entry metadata if chunk boundary is crossed
 //
 // Historical content:
-// All 47 entries from this file have been migrated to chunks 001–005.
-// See Index.jsx for chunk mapping and entry ranges.
+// All execution log entries are now stored in chunk files 001–005.
+// See Phase25ExecutionLogIndex.jsx for authoritative chunk mapping and entry ranges.
 //
 // Migration completed: 2026-03-10 (Entry 48)
 
