@@ -73,6 +73,73 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 11: Adapter Identity Governance Note (Documentation Only)
+**Date/Time:** 2026-03-10 UTC+1  
+**Workstream:** Governance Documentation (Adapter Identity Rules — Append-Only)
+
+**Files Modified:**
+- `components/governance/ProjectControlPanel` — This entry (governance note, documentation only)
+
+**Summary:**
+Approved governance-first design note formally establishing that source adapters must not own station identity decisions. Documentation-only entry. No code behavior changes, no schema changes, no function changes.
+
+---
+
+#### GOVERNANCE NOTE: SOURCE ADAPTERS MUST NOT OWN STATION IDENTITY DECISIONS
+
+**Rule 1: Architecture Principle**  
+Source adapters (GooglePlaces, OpenStreetMap, FuelFinder, etc.) deliver *candidate data only*. Station identity ownership belongs exclusively to the master Station entity, curator StationReview workflow, and explicit governance decisions.
+
+**Rule 2: Explicit Governance Rule for Adapter Behavior**  
+No adapter is permitted to:
+- Create or modify Station records directly
+- Decide that external records should consolidate
+- Bypass StationCandidate to propose matches
+- Assert semantic authority over station identity ("this record *is* that station")
+
+**Rule 3: Explicit Rule for Station Creation**  
+Station records are created *only* by:
+1. Curator approval of StationCandidate (review_type = `approved`)
+2. Explicit governance decision (manual merge workflow, formally approved)
+3. Seed import with documented curator sign-off
+
+Sources propose candidates; curators approve stations.
+
+**Rule 4: Explicit Rule for StationCandidate Flow**  
+Every external station record must flow through StationCandidate before any Station linkage:
+- Adapter → StationCandidate (status = `pending`)
+- Curator reviews → StationCandidate (status = `approved` | `rejected` | `duplicate`)
+- Approval only → Station creation or linkage
+
+This is the mandatory separation-of-concerns firewall between source adapters and the Station master catalog.
+
+**Rule 5: Explicit Rule Separating Duplicate Remediation from Matching Validation**  
+Duplicate *detection* (identifying apparent duplicates) is independent from duplicate *remediation* (deciding what to consolidate). Phase 2 matching scores candidates; it does NOT dictate catalog cleanup. Catalog cleanup is a curator and governance decision, not an algorithmic outcome. Duplicate remediation must never be used to justify changes to matching thresholds, distance bands, or dominance gap logic.
+
+---
+
+**Key Constraints (MAINTAINED):**
+- ✅ No code behavior changes
+- ✅ No schema changes
+- ✅ No function changes
+- ✅ No matching logic changes
+- ✅ No remediation/apply/delete/merge behavior introduced
+- ✅ No UI changes
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ Zero locked component modifications
+- ✅ All previous governance entries unchanged (append-only)
+
+**Locked Components Verified Unchanged:**
+- ✅ `functions/matchStationForUserReportedPrice` — Unchanged
+- ✅ `functions/auditPhase2DominanceGap` — Unchanged
+- ✅ `functions/getNearbyStationCandidates` — Unchanged
+- ✅ `functions/validateDistanceBands` — Unchanged
+- ✅ All six frozen files — Unchanged
+
+**Status:** ✅ IMPLEMENTED (documentation-only governance note, governance-safe)
+
+---
+
 ### Entry 10: Difference Summary for Duplicate Groups (Read-Only Curator Comparison)
 **Date/Time:** 2026-03-09 21:30 UTC+1  
 **Workstream:** Catalog Duplicate Remediation (Curator Comparison Support — Preview-Only)
