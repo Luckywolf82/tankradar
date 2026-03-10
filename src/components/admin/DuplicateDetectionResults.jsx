@@ -68,6 +68,7 @@ export default function DuplicateDetectionResults({ results }) {
   const [sortBy, setSortBy] = useState("confidence");
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  // Section expand/collapse is managed per ClassificationSection instance
 
   if (!results || results.status === 'no_stations_found') {
     return (
