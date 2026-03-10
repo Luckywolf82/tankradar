@@ -4,6 +4,71 @@
 
 ---
 
+## 2026-03-10 — Entry 17 (Phase 4A Final Safe Step — Curator Confirmation Preview Added to DuplicateRemediationPanel)
+
+### Task
+Add a static read-only "Curator confirmation preview" section to DuplicateRemediationPanel. Shows mock confirmation checklist, confirmation summary card, and a disabled locked-action footer. No data mutation, no backend calls, no schema changes.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with: placeholder banner, safety checklist, process overview, canonical station preview, merge impact preview
+- src/components/governance/Phase3RemediationPlan.jsx confirmed present
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 16 present)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added "Curator confirmation preview" Card section (6th card in panel):
+   - Warning strip: "Preview only — no confirmation can be submitted. No merge can be executed from this panel."
+   - Mock confirmation checklist (5 items): Canonical station reviewed, Duplicate stations reviewed, Merge impact reviewed, FuelPrice re-point count reviewed, Audit logging requirement acknowledged
+   - Mock confirmation summary grid (4 tiles): Curator confirmation required: Yes, Second review required: No, Execution allowed: No, Current mode: Preview only
+   - Locked-action footer with disabled button: "Confirm and execute merge — disabled"
+   - Footer note: "No merge can be executed from this panel. Activation requires governance approval."
+2. All content is fully static mock data — no state, no backend calls, no writes
+
+### What was NOT implemented
+- No merge execution logic
+- No confirmation submission logic
+- No backend calls
+- No schema changes
+- No data writes
+- No state changes
+- No routing changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+
+### Diff-style summary
++ Added "Curator confirmation preview" Card section (6th card in panel)
++ Mock confirmation checklist: 5 read-only items with disabled checkmarks
++ Mock confirmation summary: 4 tiles (curator confirmation, second review, execution allowed, current mode)
++ Locked-action footer with disabled button and governance note
++ All content is static mock data — no new imports, no state, no logic
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 16 (Phase 4A — Force Rewrite to Confirm GitHub Sync of Merge Impact Preview)
 
 ### Task

@@ -207,6 +207,8 @@ export default function DuplicateRemediationPanel() {
       </Card>
 
       {/* ── 5. Merge impact preview ───────────────────────────────────────── */}
+      {/* (section already present below) */}
+      {/* ── CURATOR CONFIRMATION PREVIEW IS SECTION 6 — see below ──────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -243,6 +245,76 @@ export default function DuplicateRemediationPanel() {
                   <span className="text-xs text-slate-600">{station}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── 6. Curator confirmation preview ──────────────────────────────── */}
+      <Card className="border border-slate-200 bg-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            Curator confirmation preview
+            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Read-only</span>
+            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Not active yet</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+            Preview only — no confirmation can be submitted from this panel. No merge can be executed from this panel.
+          </div>
+          <p className="text-xs text-slate-400 mb-3">Example curator checklist — static mock data only</p>
+
+          {/* Mock confirmation checklist */}
+          <div className="space-y-2 mb-4">
+            {[
+              "Canonical station reviewed",
+              "Duplicate stations reviewed",
+              "Merge impact reviewed",
+              "FuelPrice re-point count reviewed",
+              "Audit logging requirement acknowledged",
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs text-slate-600">
+                <div className="w-4 h-4 rounded border border-slate-300 bg-slate-100 flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={11} className="text-slate-300" />
+                </div>
+                <span>{item}</span>
+                <span className="ml-auto text-slate-400 italic">Preview only</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Mock confirmation summary */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {[
+              { label: "Curator confirmation required", value: "Yes" },
+              { label: "Second review required", value: "No" },
+              { label: "Execution allowed from this panel", value: "No" },
+              { label: "Current mode", value: "Preview only" },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-slate-50 border border-slate-200 rounded p-2">
+                <p className="text-xs text-slate-400">{label}</p>
+                <p className={`text-xs font-semibold mt-0.5 ${value === "No" || value === "Preview only" ? "text-amber-700" : "text-slate-700"}`}>{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Locked-action footer */}
+          <div className="border border-slate-200 rounded overflow-hidden">
+            <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500 flex items-center gap-2">
+              <ShieldAlert size={13} className="text-slate-400" />
+              Confirmation disabled in preview mode
+            </div>
+            <div className="px-3 py-3 bg-slate-50">
+              <button
+                disabled
+                className="w-full py-2 px-4 text-xs font-medium rounded border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+              >
+                Confirm and execute merge — disabled
+              </button>
+              <p className="text-xs text-slate-400 text-center mt-2">
+                No merge can be executed from this panel. Activation requires governance approval.
+              </p>
             </div>
           </div>
         </CardContent>
