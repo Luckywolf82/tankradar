@@ -7,7 +7,6 @@ import { base44 } from "@/api/base44Client";
 
 export default function PriceAlertsPage() {
   const [alerts, setAlerts] = useState([]);
-  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,12 +24,8 @@ export default function PriceAlertsPage() {
   const loadAlertsAndEvents = async () => {
     try {
       setLoading(true);
-      const [alertsList, eventsList] = await Promise.all([
-        base44.entities.PriceAlert.list("-created_date"),
-        base44.entities.PriceAlertEvent.list("-detectedAt", 100),
-      ]);
+      const alertsList = await base44.entities.PriceAlert.list("-created_date");
       setAlerts(alertsList || []);
-      setEvents(eventsList || []);
     } catch (err) {
       console.error("Failed to load alerts:", err);
     } finally {
