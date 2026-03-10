@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, TrendingDown } from 'lucide-react';
+import { Bell, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { nb } from 'date-fns/locale';
 
-const fuelTypeLabel = {
-  gasoline_95: 'Bensin 95',
-  gasoline_98: 'Bensin 98',
-  diesel: 'Diesel',
-  bensin_95: 'Bensin 95',
-  bensin_98: 'Bensin 98',
-  diesel_premium: 'Diesel+',
-  other: 'Annet',
-};
-
 export default function NotificationBell() {
   const [isAuth, setIsAuth] = useState(false);
-  const [unreadAlerts, setUnreadAlerts] = useState([]);
-  const [stationNames, setStationNames] = useState({});
+  const [unreadNotifications, setUnreadNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef(null);
 
@@ -49,37 +40,15 @@ export default function NotificationBell() {
     try {
       const u = await base44.auth.me();
       if (!u) return;
-      const all = await base44.entities.UserPriceAlert.filter({ created_by: u.email, isActive: true });
-      const unread = all.filter(a => a.isUnread && a.lastTriggeredAt);
-      setUnreadAlerts(unread);
-
-      const ids = [...new Set(unread.map(a => a.station).filter(Boolean))];
-      const names = {};
-      await Promise.all(
-        ids.map(async id => {
-          const s = await base44.entities.Station.get(id);
-          if (s) names[id] = s.name;
-        })
-      );
-      setStationNames(names);
+      const all = await base44.entities.UserNotification.filter({ userId: u.email, read: false });
+      setUnreadNotifications(all || []);
     } catch (e) {
       // stille feil — varsler er ikke kritisk
     }
   };
 
-  const handleOpen = async () => {
-    const wasOpen = open;
-    setOpen(!wasOpen);
-    if (!wasOpen && unreadAlerts.length > 0) {
-      try {
-        await Promise.all(
-          unreadAlerts.map(a =>
-            base44.entities.UserPriceAlert.update(a.id, { isUnread: false })
-          )
-        );
-        setUnreadAlerts([]);
-      } catch (e) {}
-    }
+  const handleOpen = () => {
+    setOpen(!open);
   };
 
   if (!isAuth) return null;
@@ -89,12 +58,12 @@ export default function NotificationBell() {
       <button
         onClick={handleOpen}
         className="relative p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-        aria-label="Prisvarsler"
+        aria-label="Varsler"
       >
         <Bell size={18} />
-        {unreadAlerts.length > 0 && (
+        {unreadNotifications.length > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
-            {unreadAlerts.length > 9 ? '9+' : unreadAlerts.length}
+            {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
           </span>
         )}
       </button>
@@ -102,58 +71,46 @@ export default function NotificationBell() {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100">
-            <p className="text-sm font-semibold text-slate-800">Prisvarsler</p>
+            <p className="text-sm font-semibold text-slate-800">Varsler</p>
           </div>
 
-          {unreadAlerts.length === 0 ? (
+          {unreadNotifications.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <Bell size={24} className="mx-auto text-slate-300 mb-2" />
-              <p className="text-sm text-slate-400">Ingen nye prisvarsler</p>
+              <p className="text-sm text-slate-400">Ingen nye varsler</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-              {unreadAlerts.map(alert => {
-                const drop =
-                  alert.previousPriceNok != null && alert.triggeredPriceNok != null
-                    ? (alert.previousPriceNok - alert.triggeredPriceNok).toFixed(2)
-                    : null;
-                const timeAgo = alert.lastTriggeredAt
-                  ? formatDistanceToNow(new Date(alert.lastTriggeredAt), { addSuffix: true, locale: nb })
-                  : null;
+              {unreadNotifications.slice(0, 5).map(notif => {
+                const timeAgo = formatDistanceToNow(new Date(notif.created_date), { 
+                  addSuffix: true, 
+                  locale: nb 
+                });
 
                 return (
-                  <div key={alert.id} className="px-4 py-3 bg-green-50">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-800 truncate">
-                          {stationNames[alert.station] || 'Stasjon'}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {fuelTypeLabel[alert.fuelType] || alert.fuelType}
-                        </p>
-                        {timeAgo && (
-                          <p className="text-xs text-slate-400 mt-0.5">{timeAgo}</p>
-                        )}
-                      </div>
-                      {alert.triggeredPriceNok != null && (
-                        <div className="text-right shrink-0">
-                          <p className="text-base font-bold text-green-600">
-                            {alert.triggeredPriceNok.toFixed(2)} kr/l
-                          </p>
-                          {drop && (
-                            <p className="text-xs text-green-600 flex items-center justify-end gap-0.5 mt-0.5">
-                              <TrendingDown size={11} />
-                              ↓ {drop} kr
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                  <div key={notif.id} className="px-4 py-3 bg-blue-50">
+                    <p className="text-sm font-semibold text-slate-800 truncate">
+                      {notif.title}
+                    </p>
+                    <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">
+                      {notif.message}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">{timeAgo}</p>
                   </div>
                 );
               })}
             </div>
           )}
+
+          <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
+            <Link
+              to={createPageUrl('Notifications')}
+              className="flex items-center justify-between text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              <span>Open all notifications</span>
+              <ChevronRight size={14} />
+            </Link>
+          </div>
         </div>
       )}
     </div>
