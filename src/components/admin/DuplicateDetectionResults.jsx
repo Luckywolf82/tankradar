@@ -370,14 +370,6 @@ export default function DuplicateDetectionResults({ results }) {
             <p className="text-sm text-slate-600">Catalog appears clean for {city}.</p>
           </CardContent>
         </Card>
-      ) : hasNoDuplicates ? (
-        <Card className="bg-green-50 border border-green-200">
-          <CardContent className="pt-6 text-center">
-            <Info size={20} className="mx-auto text-green-600 mb-2" />
-            <p className="text-slate-700 font-medium">No duplicates detected</p>
-            <p className="text-sm text-slate-600">Catalog appears clean for {city}.</p>
-          </CardContent>
-        </Card>
       ) : filtered.length === 0 ? (
         <Card className="bg-blue-50 border border-blue-200">
           <CardContent className="pt-6 text-center">
@@ -386,10 +378,20 @@ export default function DuplicateDetectionResults({ results }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {filtered.map((group, idx) => (
-            <DuplicateStationGroup key={`${group.classification}-${idx}`} group={group} index={idx} />
-          ))}
+        <div className="space-y-3">
+          {CLASSIFICATION_CONFIG.map((config, i) => {
+            const sectionGroups = filtered.filter(g => g.classification === config.key);
+            // Hide section entirely only if classification toggle is off and count is 0
+            if (sectionGroups.length === 0 && !selectedClassifications[config.key]) return null;
+            return (
+              <ClassificationSection
+                key={config.key}
+                config={config}
+                groups={sectionGroups}
+                index={i}
+              />
+            );
+          })}
         </div>
       )}
     </div>
