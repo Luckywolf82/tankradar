@@ -4,6 +4,91 @@
 
 ---
 
+## 2026-03-10 — Entry 25 (Phase 2.5 Cleanup — Temporary Verification Debug Logging Removed)
+
+### Task
+Remove temporary browser console debug logging and UI debug notes added in Entry 22 for dry-run preview verification. Logging was used to confirm wiring was working correctly during development — now that it's confirmed in repository, remove for production cleanup.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with all sections intact
+- Temporary verification logging found at:
+  - lines 153–158: console.log for request payload
+  - lines 164–167: console.log for response payload + safe_to_merge + blockers
+  - lines 505–510: UI debug note "[Debug — See browser console for full payload]"
+- All three logs/notes tagged with "PHASE 2.5 VERIFICATION" comment
+- functions/previewDuplicateMerge confirmed read-only (verified Entry 20–22)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Removed three console.log statements from handleRunDryRunPreview function:
+   - Removed: console.log("[PHASE 2.5 VERIFICATION] previewDuplicateMerge request payload:", requestPayload)
+   - Removed: console.log("[PHASE 2.5 VERIFICATION] previewDuplicateMerge response payload:", res.data)
+   - Removed: console.log("[PHASE 2.5 VERIFICATION] safe_to_merge:", res.data.safe_to_merge)
+   - Removed: console.log("[PHASE 2.5 VERIFICATION] blockers:", res.data.blockers)
+2. Removed temporary "PHASE 2.5 VERIFICATION — Log request payload" comment block
+3. Removed temporary "PHASE 2.5 VERIFICATION — Log response payload" comment block
+4. Removed UI debug output section from result card (lines 505–510):
+   - Removed: div with "[Debug — See browser console for full payload]" note
+   - Removed: "PHASE 2.5 VERIFICATION — Debug output" comment
+
+### What was NOT changed
+- Live dry-run preview functionality remains fully working
+- All preview fields remain intact
+- All blockers display remains intact
+- Feature flag hard-disabling execute merge remains unchanged
+- Merge audit history section remains unchanged
+- All Phase 2 locked files remain untouched
+- No changes to backend functions
+- No schema changes
+- No logic changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx (removed verification logging)
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/previewDuplicateMerge.js (read-only, unchanged)
+- functions/mergeDuplicateStations.ts (unchanged)
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+
+### Diff-style summary
+- Removed: 3 console.log statements in handleRunDryRunPreview (lines 158, 165–167)
+- Removed: "PHASE 2.5 VERIFICATION — Log request payload" comment
+- Removed: "PHASE 2.5 VERIFICATION — Log response payload" comment
+- Removed: div block with "[Debug — See browser console for full payload]" (lines 505–510)
+- Removed: "PHASE 2.5 VERIFICATION — Debug output" comment
+- No functional changes to dry-run preview
+- Result card still displays all 7 preview fields + safe_to_merge header + blockers
+
+### Why this cleanup was needed
+Entry 22 added verification-only logging to confirm that dry-run preview wiring was working correctly with live backend calls. This logging and debug UI note were temporary development aids — not needed in production once the feature is confirmed working in the repository.
+
+### Commit hash
+unavailable in current Base44 context
+
+### GitHub visibility confirmation
+Not yet verified in GitHub after publish.
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 24 (Phase 4C Audit Trail — Read-Only Merge History Section Added)
 
 ### Task
