@@ -713,3 +713,72 @@ All 10 frozen Phase 2 files remain UNTOUCHED ✓
 
 **GitHub visibility status:**
 Not yet verified in GitHub after publish. Index sync complete.
+
+---
+
+## 2026-03-10 — Entry 55
+
+### Task requested
+Stabilize notification pipeline to ensure all price alert notifications use canonical service layer:
+PriceAlert → Notification → NotificationBell → notificationService
+
+### Files modified
+1. **components/shared/NotificationBell.jsx** — Import path updated
+2. **components/services/notificationServiceClient.js** — NEW frontend SDK wrapper
+
+### Implementation details
+
+**components/services/notificationServiceClient.js (NEW):**
+- Canonical frontend SDK wrapper for notification operations
+- Exports `fetchUnreadNotifications(userId, options)` — Get unread notifications with filtering
+- Exports `fetchAllNotifications(userId, options)` — Get all notifications
+- Exports `createNotification(payload)` — Create new notification with validation
+- Exports `markNotificationRead(notificationId)` — Mark single notification as read
+- Exports `markAllNotificationsRead(userId)` — Bulk mark operation
+- All functions route through functions/notificationService.js backend
+- Proper error handling and logging throughout
+
+**components/shared/NotificationBell.jsx (MODIFIED):**
+- Updated import: `from '@/components/services/notificationService'` → `from '@/components/services/notificationServiceClient'`
+- loadUnread() now calls canonical service helper via correct path
+- Fallback to UserNotification entity still intact for backward compatibility
+
+### Architecture alignment
+
+**Canonical pipeline confirmed:**
+1. PriceAlert (user creates via PriceAlerts.jsx)
+2. External trigger system detects matching price (via checkPriceAlerts function)
+3. Notification created via notificationService.js (backend)
+4. NotificationBell reads via notificationServiceClient.js (frontend wrapper)
+5. User views in Notifications.jsx
+
+**No direct entity mutations from UI:**
+- ✓ PriceAlerts.jsx creates only PriceAlert records
+- ✓ NotificationBell.jsx reads only (via service)
+- ✓ Notifications.jsx reads and updates read status (via service)
+- ✓ All writes go through canonical service layer
+
+### Verification
+
+✓ notificationServiceClient.js is single frontend entry point for all notification operations
+✓ NotificationBell imports from correct path (notificationServiceClient)
+✓ PriceAlerts.jsx has NO notification creation code (only PriceAlert entity)
+✓ Notification entity schema confirmed (entities/Notification.json)
+✓ NotificationTypes validation confirmed (components/governance/NotificationTypes.jsx)
+✓ All 10 locked Phase 2 files confirmed UNTOUCHED
+✓ No duplicate notification pipelines (single canonical service)
+
+### Phase 2 file verification
+✓ functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+✓ functions/auditPhase2DominanceGap.ts — UNTOUCHED
+✓ functions/getNearbyStationCandidates.ts — UNTOUCHED
+✓ functions/validateDistanceBands.ts — UNTOUCHED
+✓ functions/classifyStationsRuleEngine.ts — UNTOUCHED
+✓ functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+✓ functions/classifyPricePlausibility.ts — UNTOUCHED
+✓ functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+✓ functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+✓ functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Not yet verified in GitHub after publish. Notification pipeline stabilization complete.
