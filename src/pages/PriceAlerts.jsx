@@ -100,31 +100,22 @@ export default function PriceAlertsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-4">
-      {/* ── Phase 6A Alert System Clarification ────────────────────────────── */}
+      {/* ── Områdevarsler (Geographic Alerts) ────────────────────────────── */}
       <Card className="bg-blue-50 border-l-4 border-blue-600">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-blue-900">
-            Phase 6A: Geographic Price Alerts (Active)
+            Områdevarsler
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-xs space-y-1 text-blue-900">
+        <CardContent className="text-xs space-y-2 text-blue-900">
           <p>
-            <span className="font-medium">Model:</span> Location-based alerts matched by geolocation (latitude/longitude + radius).
+            Områdevarsler varsler deg når drivstoff under valgt makspris oppdages innenfor valgt radius.
           </p>
-          <p>
-            <span className="font-medium">Station Matching:</span> Geographic radius-based, not tied to pre-existing stations.
+          <p className="text-blue-800 italic text-[11px]">
+            Søker etter ny pris innenfor en geografisk region, ikke knyttet til en bestemt stasjon. Perfekt for å overvåke flere stasjoner i nærheten.
           </p>
-          <p>
-            <span className="font-medium">Notifications:</span> Triggered alerts stored as events only — no push notifications sent yet.
-          </p>
-          <p>
-            <span className="font-medium">Premium Gating:</span> Not currently enforced. All users can create alerts.
-          </p>
-          <p>
-            <span className="font-medium">Triggers:</span> When a FuelPrice matching your fuel type is detected with price ≤ maxPrice, within search radius.
-          </p>
-          <p className="text-blue-800 italic">
-            Note: A separate UserPriceAlert system (station-specific, premium-only) exists but is not active in this UI.
+          <p className="text-blue-800 text-[11px] border-t border-blue-200 pt-2 mt-2">
+            💡 Du kan også bruke <span className="font-medium">Stasjonsvarsler</span> for å følge en spesifikk stasjon og få varsler ved prisfall eller prisrekorder.
           </p>
         </CardContent>
       </Card>
@@ -135,7 +126,7 @@ export default function PriceAlertsPage() {
           <div className="flex justify-between items-center">
             <CardTitle className="text-base flex items-center gap-2">
               <Bell size={18} className="text-blue-600" />
-              My Alerts
+              Mine områdevarsler
             </CardTitle>
             <Button
               size="sm"
@@ -143,13 +134,13 @@ export default function PriceAlertsPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus size={14} className="mr-1" />
-              New Alert
+              Nytt varsling
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <p className="text-xs text-slate-500">No alerts created yet.</p>
+            <p className="text-xs text-slate-500">Ingen områdevarsler opprettet ennå.</p>
           ) : (
             <div className="space-y-2">
               {alerts.map((alert) => (
@@ -206,10 +197,10 @@ export default function PriceAlertsPage() {
 
       {/* Create Alert Form */}
       {showCreateForm && (
-        <Card className="bg-blue-50 border border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Create New Alert</CardTitle>
-          </CardHeader>
+       <Card className="bg-blue-50 border border-blue-200">
+         <CardHeader className="pb-2">
+           <CardTitle className="text-sm">Nytt områdevarsel</CardTitle>
+         </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateAlert} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">

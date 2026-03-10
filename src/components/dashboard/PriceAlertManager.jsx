@@ -85,8 +85,9 @@ export default function PriceAlertManager({ stationId, onRefresh }) {
   return (
     <Card className="shadow-sm mb-6">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold text-slate-900">Prisvarslinger</CardTitle>
-        <p className="text-xs text-slate-500 mt-1">Premium-funksjon</p>
+        <CardTitle className="text-sm font-semibold text-slate-900">Stasjonsvarsler</CardTitle>
+        <p className="text-xs text-slate-600 mt-1">Følg en bestemt stasjon og få varsler ved prisfall, målpris eller nye prisrekorder.</p>
+        <p className="text-xs text-slate-500 mt-1">💡 Bruk <span className="font-medium">Områdevarsler</span> for å søke i hele områder med en enkelt innstilling.</p>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -127,7 +128,7 @@ export default function PriceAlertManager({ stationId, onRefresh }) {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-slate-600">Ingen prisvarslinger opprettet ennå</p>
+          <p className="text-xs text-slate-600">Ingen stasjonsvarsler opprettet ennå</p>
         )}
 
         {/* Create alert form */}
@@ -138,7 +139,7 @@ export default function PriceAlertManager({ stationId, onRefresh }) {
             size="sm"
             className="text-blue-600 border-blue-200"
           >
-            + Opprett nytt varsling
+            + Opprett stasjonsvarsling
           </Button>
         ) : (
           <form onSubmit={handleCreateAlert} className="border-t border-slate-200 pt-4 space-y-3">
