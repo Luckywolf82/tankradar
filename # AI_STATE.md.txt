@@ -1,0 +1,190 @@
+# AI_STATE.md
+
+## Project
+TankRadar
+
+## Status
+Active development
+
+## Current Phase
+Phase 2.5 — Governance Controlled Development
+
+## Current Workstream
+Repository stabilization and feature continuation after governance consolidation.
+
+Focus areas:
+- price alerts
+- notification system
+- station matching reliability
+- repository synchronization
+
+## Source of Truth
+GitHub repository is the canonical source of truth.
+
+If editor state and repository state differ:
+
+repository state wins.
+
+## Repository
+https://github.com/Luckywolf82/tankradar
+
+## Repository Verification Rule
+Before proposing or implementing changes, AI must verify:
+
+1. repository state
+2. execution log index
+3. active execution log chunk
+4. last execution entry
+5. locked files
+
+AI must never answer repository-state questions from memory or assumption.
+
+## Execution Log System
+
+Canonical entry point:
+
+src/components/governance/Phase25ExecutionLogIndex.jsx
+
+Structure:
+
+Index  
+→ chunk files  
+→ append-only execution entries
+
+Historical chunks are sealed.
+
+Active chunk grows until next chunk is created.
+
+## Active Execution Log Chunk
+
+Phase25ExecutionLog_005.jsx
+
+Entry range:
+
+41+
+
+## Last Verified Entry
+
+Entry 54 — Governance Cleanup
+
+Summary:
+
+- duplicate governance instruction files removed
+- BASE44_PROJECT_INSTRUCTIONS established as canonical governance rule file
+- execution log chunk system verified
+- locked Phase 2 files confirmed untouched
+
+## Governance File
+
+Canonical governance file:
+
+src/components/governance/BASE44_PROJECT_INSTRUCTIONS.md
+
+This file defines:
+
+- AI development protocol
+- repository verification rules
+- execution log requirements
+- locked file protection
+
+No additional governance files may be created.
+
+## Locked Phase 2 Files
+
+These files must **never be modified** without explicit approval.
+
+functions/matchStationForUserReportedPrice.ts  
+functions/auditPhase2DominanceGap.ts  
+functions/getNearbyStationCandidates.ts  
+functions/validateDistanceBands.ts  
+functions/classifyStationsRuleEngine.ts  
+functions/classifyGooglePlacesConfidence.ts  
+functions/classifyPricePlausibility.ts  
+functions/deleteAllGooglePlacesPrices.ts  
+functions/deleteGooglePlacesPricesForReclassification.ts  
+functions/verifyGooglePlacesPriceNormalization.ts  
+
+## Critical System Surfaces
+
+AI must not introduce alternative logic in these systems:
+
+- station identity mastering
+- station matching pipeline
+- fuel price linkage
+- duplicate station remediation
+- alert triggering
+- notification system
+
+Changes must extend existing logic rather than creating parallel systems.
+
+## Allowed Operations
+
+AI may:
+
+- verify repository state
+- propose minimal safe change
+- implement isolated improvements
+- append execution log entries
+- publish and verify repository visibility
+
+## Forbidden Operations
+
+AI must not:
+
+- assume repository state
+- modify locked files
+- create duplicate governance systems
+- create workaround files for failed sync
+- create parallel pipelines
+- perform large speculative refactors
+- mark tasks complete before GitHub matches
+
+## Completion Gate
+
+A task is only complete when:
+
+1. editor/runtime reflects change
+2. editor state is published
+3. GitHub repository shows same change
+4. execution log entry is appended
+5. locked files confirmed untouched
+
+## Standard Development Loop
+
+verify  
+→ propose  
+→ implement  
+→ publish  
+→ verify
+
+## Next Safe Step Policy
+
+AI must propose **exactly one safe next step at a time**.
+
+Each step must include:
+
+- files affected
+- reason for change
+- governance compliance
+- locked file safety confirmation
+
+## If Repository Cannot Be Verified
+
+AI must stop and report:
+
+"Repository state cannot be verified."
+
+No implementation should proceed until verification is restored.
+
+## Notes
+
+TankRadar now uses:
+
+- chunked execution logs
+- single canonical governance file
+- GitHub as source of truth
+- locked Phase 2 matching system
+
+The system is currently stable after governance cleanup (Entry 54).
+
+Next development should focus on incremental features rather than structural refactors.
