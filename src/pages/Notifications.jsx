@@ -122,6 +122,11 @@ export default function NotificationsPage() {
                       <div className="flex items-start gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                              {deriveTriggerReason(notif.title, notif.message)}
+                            </span>
+                          </div>
                           <p className="font-semibold text-slate-900">{notif.title}</p>
                           <p className="text-sm text-slate-700 mt-1">{notif.message}</p>
                           {extractSavings(notif.message) && (
