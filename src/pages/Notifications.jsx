@@ -118,16 +118,26 @@ export default function NotificationsPage() {
                               💰 Sparer ~{extractSavings(notif.message)} kr/liter
                             </p>
                           )}
-                          <div className="flex items-center justify-between mt-3">
-                            <span className="text-xs text-slate-500">
-                              {formatTime(notif.created_date)}
-                            </span>
-                            <button
-                              onClick={() => markAsRead(notif.id)}
-                              className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                            >
-                              Merk som lest
-                            </button>
+                          <div className="mt-3 pt-2 border-t border-blue-100">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-slate-500">
+                                {formatTime(notif.created_date)}
+                              </span>
+                              <div className="flex gap-2">
+                                <a
+                                  href={createPageUrl('PriceAlerts')}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                                >
+                                  Se varsler
+                                </a>
+                                <button
+                                  onClick={() => markAsRead(notif.id)}
+                                  className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                                >
+                                  ✓ Lest
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
