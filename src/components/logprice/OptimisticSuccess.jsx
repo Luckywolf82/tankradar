@@ -54,8 +54,9 @@ export function OptimisticSuccess({
                 >
                   <CheckCircle className="mx-auto text-green-500" size={56} />
                 </motion.div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Takk for bidraget!</h2>
-                <p className="text-slate-500 mb-6">Prisene er lagret og hjelper andre norske bilister.</p>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Pris registrert ✔</h2>
+                <p className="text-slate-600 font-medium mb-2">Du sparer bilister i området estimert penger</p>
+                <p className="text-slate-500 text-sm mb-6">Takk for bidraget ditt!</p>
                 {isLoading && (
                   <p className="text-xs text-slate-400 mb-4">Sender data...</p>
                 )}
