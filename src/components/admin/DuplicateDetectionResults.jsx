@@ -69,6 +69,7 @@ export default function DuplicateDetectionResults({ results }) {
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   // Section expand/collapse is managed per ClassificationSection instance
+  // Reset filters: isFiltered + handleResetFilters implemented (Entry 5 — re-committed 2026-03-10)
 
   const isFiltered =
     !selectedClassifications.exact_coordinate_duplicate ||
