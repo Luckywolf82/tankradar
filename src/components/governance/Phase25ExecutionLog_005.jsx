@@ -599,3 +599,81 @@ setUnreadNotifications(all || []);
 
 ### GitHub visibility status
 Not yet verified in GitHub after publish. Final alert UI and notification service wiring complete.
+
+---
+
+## 2026-03-10 — Entry 54
+
+### Task requested
+Clean up all extra AI/governance/instruction files and retain only ONE canonical instruction file: BASE44_PROJECT_INSTRUCTIONS (in components/governance/).
+
+User intent: Remove duplicate governance documents, consolidate into single source of truth, simplify project structure.
+
+### Files discovered and handled
+
+**Deleted (duplicate/outdated governance files):**
+1. `functions/PROJECT_INSTRUCTIONS_v1` — Deleted
+2. `functions/AI_PROJECT_INSTRUCTIONS_v1` — Deleted
+3. `functions/AI_PROJECT_INSTRUCTIONS` — Deleted
+4. `components/governance/AI_PROJECT_INSTRUCTIONS` — Deleted
+
+**Created (canonical replacement):**
+1. `components/governance/BASE44_PROJECT_INSTRUCTIONS` — NEW canonical governance file
+
+**Preserved (not modified):**
+- `components/governance/Phase25ExecutionLogIndex.jsx` — Active
+- `components/governance/Phase25ExecutionLog_005.jsx` — Active chunk (this file)
+- All Phase25ExecutionLog chunk files (001–004) — Sealed historical
+- All 10 locked Phase 2 functions — Untouched
+- All app entities, pages, components — Untouched
+
+### Implementation details
+
+**Deleted 4 redundant files:**
+- functions/PROJECT_INSTRUCTIONS_v1 (JavaScript governance document)
+- functions/AI_PROJECT_INSTRUCTIONS_v1 (JavaScript governance document)
+- functions/AI_PROJECT_INSTRUCTIONS (JavaScript governance document)
+- components/governance/AI_PROJECT_INSTRUCTIONS (JavaScript governance document)
+
+**Created single canonical file:**
+- components/governance/BASE44_PROJECT_INSTRUCTIONS (Markdown governance document)
+  - Version: 1.4
+  - Status: Active
+  - Contents: 15 sections covering execution log, system structure, data integrity, source validation, AI agent rules, frozen files, test validity, plausibility, repository verification, change scope limits, critical surfaces, execution log format, forbidden patterns, version history
+
+**Decision criteria:**
+- Kept most recent/comprehensive governance doc (AI_PROJECT_INSTRUCTIONS in functions)
+- Consolidated all previous versions into single Markdown file
+- Placed in components/governance for logical co-location with execution logs
+- Simplified naming convention: BASE44_PROJECT_INSTRUCTIONS (no version suffix)
+- Markdown format (.md) more accessible than JavaScript comments
+
+### Verification
+
+✓ Single canonical instruction file exists (BASE44_PROJECT_INSTRUCTIONS)
+✓ No duplicate active governance files remain
+✓ No forbidden governance patterns present (no *_INSTRUCTIONS* files outside canonical)
+✓ All app logic untouched (pages, components, entities, functions)
+✓ All 10 locked Phase 2 files confirmed UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.* — UNTOUCHED
+  - functions/auditPhase2DominanceGap.* — UNTOUCHED
+  - functions/getNearbyStationCandidates.* — UNTOUCHED
+  - functions/validateDistanceBands.* — UNTOUCHED
+  - functions/classifyStationsRuleEngine.* — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.* — UNTOUCHED
+  - functions/classifyPricePlausibility.* — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.* — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.* — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.* — UNTOUCHED
+
+### Acceptance criteria met
+
+✓ BASE44_PROJECT_INSTRUCTIONS.md (in components/governance/) exists
+✓ All other extra governance/instruction files deleted (4 files removed)
+✓ No multi-file governance architecture remains
+✓ No application logic changed
+✓ Locked files untouched
+✓ Single active governance file confirmed
+
+### GitHub visibility status
+Not yet verified in GitHub after publish. Governance cleanup complete.
