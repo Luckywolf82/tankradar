@@ -83,7 +83,7 @@ export default function NotificationsPage() {
           <Bell size={24} className="text-slate-600" />
           <h1 className="text-3xl font-bold text-slate-900">Varsler</h1>
         </div>
-        <p className="text-slate-600">In-app notification center for price alerts</p>
+        <p className="text-slate-600">Prisvarsler med estimert spareøkonomi</p>
       </div>
 
       {unreadNotifs.length === 0 && readNotifs.length === 0 ? (
