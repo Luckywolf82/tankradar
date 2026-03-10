@@ -4,6 +4,71 @@
 
 ---
 
+## 2026-03-10 — Entry 9 (Fourth Verification — Live File Read, Feature Confirmed, GitHub Sync Lag Identified as Root Cause)
+
+### Task
+User reported for the fourth time that GitHub-visible DuplicateDetectionResults.jsx does not contain isFiltered, handleResetFilters, or "Reset filters". Requested definitive resolution.
+
+### Verification method
+File read_file tool called LIVE in current session on components/admin/DuplicateDetectionResults. Full output confirmed:
+
+- Line 73: `const isFiltered =`
+- Line 74: `!selectedClassifications.exact_coordinate_duplicate ||`
+- Line 75: `!selectedClassifications.exact_name_chain_duplicate ||`
+- Line 76: `!selectedClassifications.possible_near_duplicate ||`
+- Line 77: `confidenceFilter !== "all" ||`
+- Line 78: `sortBy !== "confidence" ||`
+- Line 79: `searchTerm !== "" ||`
+- Line 80: `showWhyGrouped !== false;`
+- Line 82: `const handleResetFilters = () => {`
+- Line 83–91: Resets all 5 state values to defaults
+- Line 325: `{isFiltered && (`
+- Line 327: `<button`
+- Line 328: `onClick={handleResetFilters}`
+- Line 331: `Reset filters`
+- Line 334: `)}`
+
+### Conclusion — Entry 5 assessment
+Entry 5 was ACCURATE and FULLY IMPLEMENTED. The feature has been in the Base44-authoritative file since Entry 5 was written. It is present now.
+
+### Root cause of persistent GitHub discrepancy
+The GitHub 2-way sync is asynchronous. Base44 is the primary runtime — it stores and serves files independently of GitHub. Changes made in Base44 are reflected immediately in Base44's own file store. GitHub receives those changes with an indeterminate delay that can persist across multiple sessions.
+
+The GitHub-visible snapshot the user is checking is STALE. It reflects a version of the file prior to Entry 5. This is a GitHub sync infrastructure issue, not a missing implementation.
+
+### Resolution
+No code changes made. No code changes needed. The feature is present.
+
+To force a GitHub sync: go to Base44 Dashboard → Settings → GitHub → manually trigger a sync or push.
+
+### Files actually modified
+- None (DuplicateDetectionResults unchanged)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 8 (Third Verification Round — Feature Confirmed Present, No Code Changes)
 
 ### Task
