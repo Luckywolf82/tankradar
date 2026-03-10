@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldAlert, CheckCircle2, Circle } from "lucide-react";
+import { ShieldAlert, CheckCircle2, Star } from "lucide-react";
 
 /**
  * DuplicateRemediationPanel

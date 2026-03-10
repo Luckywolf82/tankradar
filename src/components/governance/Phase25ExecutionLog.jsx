@@ -4,6 +4,73 @@
 
 ---
 
+## 2026-03-10 — Entry 14 (Phase 4A — Canonical Station Preview Section Added to DuplicateRemediationPanel)
+
+### Task
+Add a static read-only "Canonical station preview" section to DuplicateRemediationPanel showing a mock duplicate group with 3 candidate cards. No data mutation, no backend calls, no schema changes.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present (read-only, safety checklist + process overview from Entry 13)
+- src/components/governance/Phase3RemediationPlan.jsx confirmed present
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 13 present)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added MOCK_CANDIDATES static array (3 entries: Circle K Moholt, Uno-X Heimdal, Esso Heimdal)
+   - Each entry has: name, chain, address, sourceCount, priceCount, confidenceBadge, isCanonicalExample
+2. Added "Canonical station preview" Card section below the process overview:
+   - Warning strip: "This does not select or save a canonical station. No remediation action is performed from this panel."
+   - Three candidate cards in a responsive grid
+   - Canonical example card highlighted with green border and "Example canonical choice" badge
+   - Other cards neutral slate styling with "Preview only" badge
+   - Star icon on canonical example card
+   - Static fields shown: name, chain, address, source count, price record count, confidence badge
+3. Added Star to lucide-react import, removed unused Circle
+
+### What was NOT implemented
+- No canonical selection logic
+- No merge logic
+- No backend calls
+- No schema changes
+- No data writes
+- No state changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Diff-style summary
++ Added MOCK_CANDIDATES constant (3 static entries)
++ Added "Canonical station preview" Card section (4th card in panel)
++ Warning strip: "This does not select or save a canonical station"
++ Candidate cards: green border + Star + "Example canonical choice" for isCanonicalExample, slate + "Preview only" for others
++ Added Star to lucide-react import
+- Removed unused Circle from lucide-react import
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 13 (Phase 3 Preview Enrichment — Safety Checklist + Process Overview Added)
 
 ### Task
