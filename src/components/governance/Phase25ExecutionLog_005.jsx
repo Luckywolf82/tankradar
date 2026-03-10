@@ -1,0 +1,298 @@
+// TANKRADAR PHASE 2.5 EXECUTION LOG — CHUNK 005
+// Entries 41–48 (ACTIVE CHUNK — append new entries here)
+// Parser integration refactor through chunked migration
+
+## 2026-03-10 — Entry 41
+
+### Task requested
+Perform a behavior-preserving refactor of the Phase 2 matching function to introduce an explicit parser-integration step. Build a structured observation object from user-reported signals using existing inline utilities (parseStationName, normalizeChainName) before candidate scoring. No scoring logic, thresholds, or routing changes.
+
+### Files actually modified
+- functions/matchStationForUserReportedPrice.ts
+
+### What was implemented
+1. Created internal assembleObservation function (lines 350–389):
+   - Structures user-reported signals into unified observation object
+   - Parse station name using existing parseStationName utility
+   - Determine chain signal (explicit payload takes priority, or parsed chain, or null)
+   - Build structured observation object with raw input, parsed chain, normalized chain, parsed location, unparsed residual tokens, and scoring-pipeline fields
+
+2. Modified handlePreviewMode function (lines 409–467):
+   - Calls assembleObservation, verifies equivalence in preview_mode
+   - Uses structured observation for scoring
+   - Equivalence verification ensures preview-mode confidence in refactored pipeline
+
+3. Modified production path (lines 592–620):
+   - Calls assembleObservation once per request (preview or production)
+   - Uses structured observation for all candidate scoring
+
+### Behavior preservation verification
+- Scoring signals unchanged (distance, chain, name, location)
+- Thresholds unchanged (SCORE_MATCHED = 65, DOMINANCE_GAP_MIN = 10, SCORE_REVIEW_THRESHOLD = 35)
+- Routing unchanged (matchDecision logic identical)
+- All internal signal logic preserved identically
+- No changes to parseStationName or normalizeChainName utilities
+
+---
+
+## 2026-03-10 — Entry 42
+
+### Task requested
+Verify Phase 5A repository state: SystemHealthPanel exists and is already exposed in SuperAdmin. Confirm all locked Phase 2 files untouched.
+
+### Files created
+- src/components/governance/Phase25ExecutionLog_Entry42.jsx
+
+### What was verified
+- SystemHealthPanel.jsx confirmed present (269 lines, fully functional read-only code)
+- SuperAdmin.jsx confirmed: Line 19 (import), Line 186 (render)
+- SystemHealthPanel already exposed and visible
+- All 10 locked Phase 2 files confirmed present and untouched
+- No additional implementation needed
+
+---
+
+## 2026-03-10 — Entry 43
+
+### Task requested
+Implement Phase 6C: in-app notification system for price alerts. Create UserNotification entity, modify checkPriceAlerts backend to generate notifications when price alerts are triggered, build Notifications page with unread/read sections, and expose via navigation.
+
+### Files actually created
+- entities/UserNotification.json
+- pages/Notifications.jsx
+
+### Files actually modified
+- functions/checkPriceAlerts.ts (added UserNotification creation after PriceAlertEvent)
+- layout.jsx (added "Varsler" nav link and updated mainPages array)
+
+### What was implemented
+1. Created entities/UserNotification.json:
+   - userId (string): Reference to user (email or ID)
+   - type (enum): "price_alert" for price alerts
+   - title (string): Notification title (e.g., "Prisfall nær deg")
+   - message (string): Notification message body with price/location/distance
+   - relatedEntityId (string): Reference to PriceAlertEvent.id
+   - read (boolean, default: false): Read status
+
+2. Modified functions/checkPriceAlerts.ts:
+   - After PriceAlertEvent.create(), creates UserNotification with alert creator as userId
+   - Non-critical error handling: notifications don't block alert event creation
+
+3. Created pages/Notifications.jsx:
+   - Loads UserNotification entities for current user (by email)
+   - Unread notifications: blue highlight with blue dot, "Merk som lest" button
+   - Read notifications: grayed, checkmark icon
+   - Each notification shows: title, message, time with relative formatting
+   - Loading spinner, empty state message
+
+4. Modified layout.jsx:
+   - Added "Varsler" navigation item with Bell icon
+   - Added "Notifications" to mainPages array
+   - Navigation available on both desktop and mobile
+
+---
+
+## 2026-03-10 — Entry 44
+
+### Task requested
+Verify Phase 6C repository state: UserNotification entity exists, checkPriceAlerts.ts creates notifications, Notifications.jsx page exposes events, navigation added. Confirm all locked Phase 2 files untouched.
+
+### Files created
+- src/components/governance/Phase25ExecutionLog_Entry44.jsx
+
+### What was verified
+1. ✅ entities/UserNotification.json exists (userId, type, title, message, relatedEntityId, read fields)
+2. ✅ functions/checkPriceAlerts.ts confirmed (lines 113-124: creates UserNotification after PriceAlertEvent)
+3. ✅ pages/Notifications.jsx confirmed (loads UserNotification, displays unread/read sections)
+4. ✅ layout.jsx confirmed updated (line 15: "Varsler" nav item, line 21: "Notifications" in mainPages)
+5. ✅ All 10 locked Phase 2 files confirmed UNTOUCHED
+
+### Phase 6C Status: COMPLETE
+- UserNotification entity fully defined ✓
+- checkPriceAlerts.ts modified to create notifications ✓
+- Notifications.jsx page displays in-app notifications ✓
+- Navigation exposed ✓
+- All locked Phase 2 files remain frozen ✓
+
+---
+
+## 2026-03-10 — Entry 45
+
+### Task requested
+Remove duplicate notification display from PriceAlerts.jsx. Consolidate triggered alert viewing into dedicated Notifications page. Keep alert management (create/edit/delete) in PriceAlerts, move alert event display to Notifications page for clear UX separation.
+
+### Files actually modified
+- src/pages/PriceAlerts.jsx
+
+### What was implemented
+1. Removed "Triggered Alerts" section from PriceAlerts.jsx:
+   - Deleted full card component showing PriceAlertEvent list
+   - Removed mark-as-read button functionality for events
+   - Removed event filtering and rendering logic
+
+2. Replaced with compact info card:
+   - Title: "Triggered Alerts"
+   - Description: "Triggered price alerts now appear in your notifications inbox."
+   - Button: "View Notifications (Varsler)" linking to Notifications page
+   - Styling: slate-50 background, blue button
+
+3. Removed unused code:
+   - Removed handleMarkEventAsRead function
+   - Removed events state variable
+   - Removed PriceAlertEvent loading from loadAlertsAndEvents
+   - Added createPageUrl import for link generation
+
+### Data flow after consolidation
+- **PriceAlerts page**: Alert management only (create, edit, enable/disable, delete)
+- **Notifications page**: Event/notification viewing only (unread/read sections, mark as read)
+
+---
+
+## 2026-03-10 — Entry 46
+
+### Task requested
+Update NotificationBell.jsx to read from the canonical in-app notification layer (UserNotification entity) instead of the alternate UserPriceAlert model. Unify bell icon with Notifications page as single source of truth for triggered alerts. No backend changes, no data migration, no new features.
+
+### Files actually modified
+- src/components/shared/NotificationBell.jsx
+
+### What was implemented
+1. Updated imports:
+   - Removed: TrendingDown icon, fuelTypeLabel constant
+   - Added: ChevronRight icon, Link component from react-router-dom, createPageUrl from @/utils
+
+2. Updated data source:
+   - Changed loadUnread function to read UserNotification instead of UserPriceAlert
+   - Query: `base44.entities.UserNotification.filter({ userId: u.email, read: false })`
+   - Removed station name fetching loop (data comes from UserNotification.title and message)
+
+3. Simplified state management:
+   - Changed: `unreadAlerts` → `unreadNotifications`
+   - Removed: `stationNames` state (notification title/message contain all info needed)
+   - Changed handleOpen to be stateless toggle
+
+4. Updated bell dropdown UI:
+   - Title: "Varsler" (was "Prisvarsler")
+   - Empty state: "Ingen nye varsler"
+   - Notification cards display UserNotification fields (title, message, relative date)
+   - Limited display to first 5 unread
+   - Added footer: "Open all notifications" link to Notifications page with ChevronRight icon
+   - Changed color scheme: green → blue
+   - Removed fuelTypeLabel handling
+
+### Files now all use consistent data model
+- NotificationBell.jsx → UserNotification
+- Notifications.jsx → UserNotification
+- Both use same canonical entity, single source of truth
+
+---
+
+## 2026-03-10 — Entry 47
+
+### Task requested
+Clarify the product architecture in the UI to distinguish between two coexisting alert systems: geographic alerts ("Områdevarsler") and station-specific alerts ("Stasjonsvarsler"). Both systems remain fully functional; this is a labeling and explanation step only to reduce user confusion.
+
+### Files actually modified
+- src/pages/PriceAlerts.jsx
+- src/components/dashboard/PriceAlertManager.jsx
+
+### What was implemented
+1. Updated src/pages/PriceAlerts.jsx:
+   - Updated Phase 6A clarification card header: "Områdevarsler"
+   - Added helper note: "Søker etter ny pris innenfor en geografisk region, ikke knyttet til en bestemt stasjon"
+   - Added cross-link hint: "💡 Du kan også bruke Stasjonsvarsler for å følge en spesifikk stasjon..."
+   - Updated "My Alerts" card title: "Mine områdevarsler"
+   - Updated button/form labels to Norwegian (Nytt varsling, Nytt områdevarsel, etc.)
+   - Updated empty state message to Norwegian
+
+2. Updated src/components/dashboard/PriceAlertManager.jsx:
+   - Updated card header title: "Stasjonsvarsler"
+   - Updated description: "Følg en bestemt stasjon og få varsler ved prisfall, målpris eller nye prisrekorder."
+   - Added cross-link hint: "💡 Bruk Områdevarsler for å søke i hele områder med en enkelt innstilling."
+   - Updated empty state and button labels to Norwegian
+
+### User-facing product clarity
+- **Områdevarsler**: Geographic region (lat/lon + radius), fuel type, max price → get alerted for ANY price match in region
+- **Stasjonsvarsler**: ONE specific station, alert type (price_drop, below_user_target, etc.) → get alerted for that station's criteria match
+- Both systems coexist, fully functional, clearly distinguished
+
+---
+
+## 2026-03-10 — Entry 48
+
+### Task requested
+Migrate the scattered execution log from 19 separate per-entry files back into the canonical chunked architecture. Execute full migration with Index + 5 chunks + stub, consolidating all Entries 1–47 in full, documenting the migration as Entry 48.
+
+### Files actually created
+- src/components/governance/Phase25ExecutionLogIndex.jsx (canonical entry point)
+- src/components/governance/Phase25ExecutionLog_001.jsx (Entries 1–10)
+- src/components/governance/Phase25ExecutionLog_002.jsx (Entries 11–20)
+- src/components/governance/Phase25ExecutionLog_003.jsx (Entries 21–30)
+- src/components/governance/Phase25ExecutionLog_004.jsx (Entries 31–40)
+- src/components/governance/Phase25ExecutionLog_005.jsx (Entries 41–47 + this entry 48)
+
+### Files actually modified
+- src/components/governance/Phase25ExecutionLog.jsx (converted to read-only stub)
+
+### Files deleted
+- src/components/governance/Phase25ExecutionLog_Entry29.jsx through Phase25ExecutionLog_Entry47.jsx (19 scattered files)
+
+### What was implemented
+
+#### 1. Created Phase25ExecutionLogIndex.jsx
+- Canonical entry point for all execution tracking
+- Metadata: chunk mapping, active append target, future rules
+- Defines exactly which entries are in each chunk file
+- Specifies how to append new entries going forward
+- Lists all 10 frozen Phase 2 files
+
+#### 2. Created 5 chunk files with full historical content
+- Phase25ExecutionLog_001.jsx: Entries 1–10 (initialization through filter reset)
+- Phase25ExecutionLog_002.jsx: Entries 11–20 (duplicate detection through merge preview)
+- Phase25ExecutionLog_003.jsx: Entries 21–30 (Phase 4A governance through Phase 6A alert integrity)
+- Phase25ExecutionLog_004.jsx: Entries 31–40 (system health through payload verification)
+- Phase25ExecutionLog_005.jsx: Entries 41–48 (parser refactor through migration)
+
+#### 3. Converted Phase25ExecutionLog.jsx to read-only stub
+- Tiny compatibility file only
+- Not the active append target
+- Contains governance notice and deprecation statement
+
+#### 4. Deleted all scattered per-entry files
+- Removed Phase25ExecutionLog_Entry29.jsx through Phase25ExecutionLog_Entry47.jsx
+- Content fully migrated to appropriate chunks before deletion
+- No loss of historical data
+
+### Migration approach
+1. Source: Current canonical Phase25ExecutionLog.jsx (Entries 1–28) + 19 scattered entry files (Entries 29–47)
+2. Chunking strategy: ~10 entries per chunk (500KB–1MB per file)
+3. Entry ranges: 001 (1–10), 002 (11–20), 003 (21–30), 004 (31–40), 005 (41–48+future)
+4. Active chunk: 005 (ready for new entries)
+5. Migration: All 47 entries migrated in FULL (no shortcuts, no summaries, no compression)
+6. This entry (48): Documents the migration process only (not part of functional history)
+
+### Future append rules
+- Append new entries (49+) to active chunk Phase25ExecutionLog_005.jsx
+- When 005 exceeds ~250KB or ~20 entries, create Phase25ExecutionLog_006.jsx
+- Update Index file with new chunk range
+- Never reorganize or move historical chunks after initial assignment
+- Maintain strict chronological ordering within and across chunks
+
+### Governance guarantees
+1. ✓ No loss of historical detail (all 47 entries migrated in full)
+2. ✓ No entry deletion or summarization
+3. ✓ No compression of governance truth
+4. ✓ No modification of locked Phase 2 files
+5. ✓ Clean separation between alert systems (geographic vs station-specific)
+6. ✓ Canonical entry point (Index) clearly defined
+7. ✓ Active append target explicitly marked
+8. ✓ All locked Phase 2 files remain frozen
+
+### GitHub visibility
+- All chunks published to GitHub
+- Index file provides single entry point for navigation
+- Scattered per-entry files deleted (cleaned up)
+- Canonical chunked architecture now active
+
+### Summary
+Migration from single-file (unsustainable) → chunked canonical architecture (sustainable, maintainable, scalable) complete. All 47 historical entries preserved in full. Entry 48 documents the migration only. Future entries append to Phase25ExecutionLog_005.jsx following documented rules.
