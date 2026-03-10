@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
 
         // 8. Create PriceAlertEvent (with canonical station integrity guard)
         try {
-          await base44.asServiceRole.entities.PriceAlertEvent.create({
+          const event = await base44.asServiceRole.entities.PriceAlertEvent.create({
             priceAlertId: alert.id,
             stationId: price.stationId,
             canonicalStationId: canonicalStationId, // Phase 6B: always references canonical or original if no merge
@@ -109,6 +109,19 @@ Deno.serve(async (req) => {
             lastTriggeredAt: new Date().toISOString(),
             lastTriggeredPrice: price.priceNok,
           });
+
+          // 9. Create UserNotification for in-app alerts (Phase 6C)
+          try {
+            await base44.asServiceRole.entities.UserNotification.create({
+              userId: alert.created_by || "system",
+              type: "price_alert",
+              title: "Prisfall nær deg",
+              message: `${price.fuelType.replace("_", " ")} ${price.priceNok.toFixed(2)} på ${station.name} (${(Math.round(distance * 10) / 10).toFixed(1)} km)`,
+              relatedEntityId: event.id,
+            });
+          } catch (notifErr) {
+            console.error(`Failed to create UserNotification for alert ${alert.id}:`, notifErr);
+          }
 
           eventsCreated++;
         } catch (err) {

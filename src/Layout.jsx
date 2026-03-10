@@ -13,12 +13,13 @@ const baseNavLinks = [
   { label: "Statistikk", page: "Statistics", icon: BarChart2 },
   { label: "Logg pris", page: "LogPrice", icon: Plus },
   { label: "Prisvarsler", page: "PriceAlerts", icon: Bell },
+  { label: "Varsler", page: "Notifications", icon: Bell },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const { user, role } = useCurrentUser();
 
-  const mainPages = ["Dashboard", "Statistics", "LogPrice", "PriceAlerts"];
+  const mainPages = ["Dashboard", "Statistics", "LogPrice", "PriceAlerts", "Notifications"];
   const isMainPage = mainPages.includes(currentPageName);
 
   // Build role-specific extra nav items

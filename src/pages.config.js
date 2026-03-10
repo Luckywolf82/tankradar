@@ -82,6 +82,7 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import ValidateStationData from './pages/ValidateStationData';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
+import Notifications from './pages/Notifications';
 import __Layout from './Layout.jsx';
 
 
@@ -121,6 +122,7 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "ValidateStationData": ValidateStationData,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
+    "Notifications": Notifications,
 }
 
 export const pagesConfig = {
