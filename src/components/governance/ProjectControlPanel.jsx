@@ -852,8 +852,38 @@ Before ANY code modification:
 
 ---
 
+---
+
+## AI CHANGE CONTROL RULE
+
+AI-assisted agents operating on this repository must follow a strict change-control protocol.
+
+**Rule 1 — No Autonomous Repository Changes**  
+AI agents must never modify repository files without explicit human confirmation.
+
+**Rule 2 — Proposal First**  
+All proposed changes must be presented as a proposal before any file modifications occur.
+
+**Rule 3 — Human Approval Required**  
+Changes may only be applied after the user explicitly approves the modification.
+
+**Rule 4 — Locked Architecture Areas**  
+The following areas must never be modified without explicit architectural approval:
+
+- Phase 2 matching engine
+- scoring thresholds
+- dominance gap logic
+- distance band scoring
+- station identity governance
+- adapter behavior rules
+
+**Rule 5 — Documentation vs Implementation**  
+AI may freely propose documentation improvements, but implementation changes must always be approved first.
+
+---
+
 **Project Control Panel maintained by:** AI-assisted development workflow  
 **Last verified:** 2026-03-09 18:30 UTC+1  
 **Governance Mandate:** Mandatory change logging + AI preflight workflow effective 2026-03-09  
 **Enforcement:** All code modifications require PRECHECK pass before implementation  
-**Latest Entry:** Governance Control Files Synchronized to Verified Phase-2 Reality (repository verification + control file sync)
+**Latest Entry:** AI Change Control Rule added (2026-03-10)
