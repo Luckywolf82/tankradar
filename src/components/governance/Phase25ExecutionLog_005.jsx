@@ -990,3 +990,71 @@ Implement one minimal UX improvement to the Notifications page: add a lightweigh
 
 ### GitHub visibility status
 Ready for publish. Single minimal keyword-based label derivation with full governance compliance. Requires GitHub verification after publish.
+
+---
+
+## 2026-03-10 — Entry 59
+
+### Task requested
+Improve savings messaging in NotificationBell dropdown by surfacing the same savings value extraction already present on Notifications page.
+
+### Files actually modified
+- components/shared/NotificationBell.jsx
+
+### What was implemented
+
+1. Added `extractSavings()` helper function (new, lines ~57–61):
+   - Reuses identical regex pattern from Notifications.jsx
+   - Extracts savings amount from notification message text
+   - Returns amount string (e.g., "1.50") or null if no savings found
+   - No backend calls, pure text parsing
+
+2. Enhanced dropdown notification items (lines ~98–110):
+   - Moved savings extraction inline to each dropdown item render
+   - Display savings badge only if extraction succeeds: `💰 Sparer ~{savings} kr/liter`
+   - Green text styling (text-green-600) for positive value signal
+   - Positioned between message and timestamp for visibility
+   - Falls back gracefully if no savings in message (no badge shown)
+
+### Design rationale
+
+**Why this improves UX:**
+- Dropdown preview now shows value immediately (savings highlighted)
+- Users see "💰 Sparer ~X kr/liter" before clicking "Åpne alle varsler"
+- Reinforces actionability without clutter (only shown when data exists)
+- Consistent with Notifications page display (same extraction logic)
+- Low-friction improvement (no navigation needed to see value)
+
+### Why this is governance-safe
+
+✓ **UI-only enhancement** — Zero backend changes
+✓ **No notification logic modified** — Display-time extraction only
+✓ **No entity schema changes** — Uses existing message field
+✓ **Single file modified** — NotificationBell.jsx only
+✓ **Code reuse pattern** — Same extraction logic as Notifications page
+✓ **Graceful fallback** — No badge if savings not found
+✓ **No locked files touched** — All 10 Phase 2 files remain UNTOUCHED
+✓ **Zero performance impact** — Minimal regex on ~5 dropdown items max
+
+### Verification
+
+✓ Index updated: entryCount 58 → 59, chunk 005 entries 41–58 → 41–59
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+✓ No notification pipeline changes
+✓ No alert triggering logic modified
+✓ No NotificationBell service logic altered
+✓ User-facing value visibility improved
+
+### GitHub visibility status
+Ready for publish. Single minimal savings display improvement with full governance compliance. Requires GitHub verification after publish.
