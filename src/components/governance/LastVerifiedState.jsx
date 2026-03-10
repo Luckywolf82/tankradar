@@ -1,7 +1,7 @@
 # LAST VERIFIED STATE — TankRadar
 ## Confirmed Test Results & Verified Outcomes Only
 
-**Last Updated:** 2026-03-09 17:15 UTC+1  
+**Last Updated: 2026-03-10 UTC+1  
 **Verification Method:** Live function testing against production station catalog  
 **Caveat:** This file contains only test-confirmed behavior, not proposed features or assumptions
 
@@ -167,7 +167,46 @@
 **Status:** ✅ VERIFIED (UI controls only, local state, non-persistent, curator-focused, governance-safe)
 
 ---
+--- 
 
+## ADAPTER IDENTITY GOVERNANCE — VERIFIED STATE (2026-03-10)
+
+### Governance Alignment with Approved Adapter Identity Rule
+**Source of approval:** `ProjectControlPanel.jsx` — Entry 11: Adapter Identity Governance Note (Documentation Only)  
+**Status:** ✅ VERIFIED GOVERNANCE STATE (documentation alignment only)
+
+**Verified Governance Position:**
+- ✅ Source adapters do **not** own station identity decisions
+- ✅ Source adapters provide candidate data only
+- ✅ Station creation remains governance/curator controlled
+- ✅ StationCandidate remains the required intake path for external station records
+- ✅ Duplicate remediation remains separate from Phase 2 matching validation
+
+**Explicit Verified Rules:**
+1. **Architecture Principle**  
+   Shared station identity belongs to the master catalog and governance workflow, not to source adapters.
+
+2. **Adapter Behavior Rule**  
+   Adapters must not directly decide that an external record is an existing Station, a new Station, or a catalog consolidation outcome.
+
+3. **Station Creation Rule**  
+   Station records are created only through curator/governance-controlled approval paths, not by adapter assertion.
+
+4. **StationCandidate Flow Rule**  
+   External source records must enter through StationCandidate before any Station creation or Station linkage decision.
+
+5. **Duplicate Remediation Separation Rule**  
+   Duplicate detection and catalog cleanup are governance/curation concerns and must not be treated as evidence that Phase 2 matching thresholds or routing should change.
+
+**Confirmed Non-Modification:**
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ No function changes
+- ✅ No schema changes
+- ✅ No UI behavior changes
+- ✅ No remediation/apply/delete/merge behavior introduced
+- ✅ No locked component modifications
+
+**Status:** ✅ DOCUMENTATION SYNCHRONIZED (governance-state only)
 ## PERFORMANCE OPTIMIZATION LAYER — VERIFIED (2026-03-09)
 
 ### Station Proximity Pre-Filter
