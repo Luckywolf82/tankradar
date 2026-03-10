@@ -427,20 +427,38 @@ export default function DuplicateDetectionResults({ results }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
-          {CLASSIFICATION_CONFIG.map((config, i) => {
-            const sectionGroups = filtered.filter(g => g.classification === config.key);
-            // Hide section entirely only if classification toggle is off and count is 0
-            if (sectionGroups.length === 0 && !selectedClassifications[config.key]) return null;
-            return (
-              <ClassificationSection
-                key={config.key}
-                config={config}
-                groups={sectionGroups}
-                index={i}
-              />
-            );
-          })}
+        <div>
+          {/* Expand / Collapse all control */}
+          <div className="flex justify-end gap-3 mb-2">
+            <button
+              onClick={() => setSectionExpanded({ exact_coordinate_duplicate: true, exact_name_chain_duplicate: true, possible_near_duplicate: true })}
+              className="text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2 transition-colors"
+            >
+              Expand all
+            </button>
+            <button
+              onClick={() => setSectionExpanded({ exact_coordinate_duplicate: false, exact_name_chain_duplicate: false, possible_near_duplicate: false })}
+              className="text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2 transition-colors"
+            >
+              Collapse all
+            </button>
+          </div>
+          <div className="space-y-3">
+            {CLASSIFICATION_CONFIG.map((config, i) => {
+              const sectionGroups = filtered.filter(g => g.classification === config.key);
+              if (sectionGroups.length === 0 && !selectedClassifications[config.key]) return null;
+              return (
+                <ClassificationSection
+                  key={config.key}
+                  config={config}
+                  groups={sectionGroups}
+                  index={i}
+                  expanded={sectionExpanded[config.key]}
+                  onToggle={() => setSectionExpanded(p => ({ ...p, [config.key]: !p[config.key] }))}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
