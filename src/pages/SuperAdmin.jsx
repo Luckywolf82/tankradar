@@ -200,6 +200,18 @@ export default function SuperAdmin() {
         )}
       </div>
 
+      {/* Phase 3 — Duplicate Remediation (read-only preview) */}
+      <div className="mt-6 mb-6 border-t pt-6">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Duplikatretting — Phase 3</p>
+          <span className="text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Preview only</span>
+        </div>
+        <div className="mb-3 text-xs text-slate-500">
+          No merge or delete actions are enabled. Canonical station decisions are not active yet.
+        </div>
+        <DuplicateRemediationPanel />
+      </div>
+
       {/* Aktive driftssider */}
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 mt-2">Driftssider</p>
       {activeSections.map(section => (
