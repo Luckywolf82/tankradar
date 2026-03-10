@@ -20,6 +20,7 @@ import SystemHealthPanel from "../components/admin/SystemHealthPanel";
 import DuplicateDetectionScanner from "../components/admin/DuplicateDetectionScanner";
 import DuplicateDetectionResults from "../components/admin/DuplicateDetectionResults";
 import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
+import Phase2MatchingPreviewPanel from "../components/admin/Phase2MatchingPreviewPanel";
 
 const activeSections = [
   {
@@ -201,6 +202,18 @@ export default function SuperAdmin() {
         {duplicateResults && (
           <DuplicateDetectionResults results={duplicateResults} />
         )}
+      </div>
+
+      {/* Phase 2 — Matching Preview (read-only verification) */}
+      <div className="mt-6 mb-6 border-t pt-6">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Station Matching — Phase 2 (Preview)</p>
+          <span className="text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200 rounded px-2 py-0.5">Read-only</span>
+        </div>
+        <div className="mb-3 text-xs text-slate-500">
+          Verification tool for existing Phase 2 parser and matching logic. No data is written or modified.
+        </div>
+        <Phase2MatchingPreviewPanel />
       </div>
 
       {/* Phase 3 — Duplicate Remediation (read-only preview) */}

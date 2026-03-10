@@ -65,6 +65,7 @@ import ImportSystemReport from './pages/ImportSystemReport';
 import LogPrice from './pages/LogPrice';
 import MobileImplementationReport from './pages/MobileImplementationReport';
 import MobileUXEnhancementReport from './pages/MobileUXEnhancementReport';
+import PriceAlerts from './pages/PriceAlerts';
 import ProductionModelLockdown from './pages/ProductionModelLockdown';
 import Profile from './pages/Profile';
 import ReviewQueue from './pages/ReviewQueue';
@@ -81,7 +82,6 @@ import UserReportedScanOperations from './pages/UserReportedScanOperations';
 import UserReportedSystemIntegrationReport from './pages/UserReportedSystemIntegrationReport';
 import ValidateStationData from './pages/ValidateStationData';
 import verificationreportUserreportedenhancements from './pages/VerificationReport_UserReportedEnhancements';
-import PriceAlerts from './pages/PriceAlerts';
 import __Layout from './Layout.jsx';
 
 
@@ -104,6 +104,7 @@ export const PAGES = {
     "LogPrice": LogPrice,
     "MobileImplementationReport": MobileImplementationReport,
     "MobileUXEnhancementReport": MobileUXEnhancementReport,
+    "PriceAlerts": PriceAlerts,
     "ProductionModelLockdown": ProductionModelLockdown,
     "Profile": Profile,
     "ReviewQueue": ReviewQueue,
@@ -120,7 +121,6 @@ export const PAGES = {
     "UserReportedSystemIntegrationReport": UserReportedSystemIntegrationReport,
     "ValidateStationData": ValidateStationData,
     "VerificationReport_UserReportedEnhancements": verificationreportUserreportedenhancements,
-    "PriceAlerts": PriceAlerts,
 }
 
 export const pagesConfig = {
