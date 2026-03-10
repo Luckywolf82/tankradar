@@ -29,7 +29,7 @@ export default function Phase2MatchingPreviewPanel() {
         {
           preview_mode: true,
           station_name: stationName,
-          chain: chain || null,
+          station_chain: chain || null,
           city: city || null,
           latitude: latitude ? parseFloat(latitude) : null,
           longitude: longitude ? parseFloat(longitude) : null,
