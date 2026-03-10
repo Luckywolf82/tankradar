@@ -850,3 +850,72 @@ Implement minimal actionable UX improvement to price alert notifications: displa
 
 ### GitHub visibility status
 Ready for publish. Changes are minimal, safe, and UI-only. Requires GitHub verification after publish.
+
+---
+
+## 2026-03-10 — Entry 57
+
+### Task requested
+Implement one minimal UX improvement to the Notifications page: add actionable context to unread notifications by displaying a "Se varsler" CTA link + timestamp footer to make alerts feel more actionable.
+
+### Files actually modified
+- pages/Notifications.jsx
+
+### What was implemented
+
+1. Enhanced unread notification footer (lines 121–137):
+   - Added border-top separator (blue-100) for visual section division
+   - Replaced single "Merk som lest" button with two-action footer
+   - **New primary action:** "Se varsler" link (blue text, underline hover) → navigates to PriceAlerts page
+   - **Secondary action:** "✓ Lest" button (slate text, subtle) → marks notification as read
+   - Timestamp remains on left, actions on right with gap-2 spacing
+   - Actions now grouped in action bar for clarity
+
+### Design rationale
+
+**Why this improves actionability:**
+- User sees trigger alert immediately ("Se varsler" CTA)
+- Clear navigation path: Notification → PriceAlerts → manage/view alert
+- Two-step actions: either take action on alert or dismiss notification
+- Subtle visual hierarchy: primary action (blue), secondary action (slate)
+- Matches Norwegian terminology: "Se varsler" = "View alerts"
+
+### Why this is governance-safe
+
+✓ **UI-only change** — Zero backend modifications
+✓ **No notification logic touched** — Display enhancement only
+✓ **No entity schema changes** — Uses existing fields
+✓ **No locked files modified** — Single file change (Notifications.jsx)
+✓ **Graceful behavior** — Works with all notification types
+✓ **No user data changes** — Read status unchanged
+✓ **Consistent pattern** — Uses existing createPageUrl navigation
+
+### Verification
+
+✓ Index updated: entryCount 54 → 57, chunk 005 entries 41+ → 41–57
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+✓ No notification pipeline changes
+✓ No alert triggering logic modified
+✓ No entity creation/routing altered
+✓ User-facing clarity improved
+
+### GitHub visibility status
+Ready for publish. Single minimal UI change with full governance compliance. Requires GitHub verification after publish.
+
+---
+
+**Summary of Entries 55–57 (Latest work):**
+- Entry 55: Stabilized notification pipeline (notificationServiceClient)
+- Entry 56: Added savings amount display (estimated kr/liter)
+- Entry 57: Enhanced unread notification actionability ("Se varsler" CTA)
