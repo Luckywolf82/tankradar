@@ -4,6 +4,51 @@
 
 ---
 
+## 2026-03-10 — Entry 6 (Path Correction — No Code Changes)
+
+### Task
+Correct GitHub repo-relative paths used in all previous execution log entries.
+
+### Files actually modified
+- src/components/governance/Phase25ExecutionLog.jsx (this file — path correction note appended only)
+
+### Files created
+- None
+
+### Correction
+All previous entries in this log referenced files using Base44-internal paths (e.g. `components/admin/DuplicateDetectionResults`). The confirmed GitHub repo-relative paths are:
+
+| Base44-internal path | GitHub repo-relative path |
+|---|---|
+| components/admin/DuplicateDetectionResults | src/components/admin/DuplicateDetectionResults.jsx |
+| components/governance/Phase25ExecutionLog | src/components/governance/Phase25ExecutionLog.jsx |
+| components/admin/DuplicateStationGroup | src/components/admin/DuplicateStationGroup.jsx |
+| components/admin/DuplicateDetectionScanner | src/components/admin/DuplicateDetectionScanner.jsx |
+
+Source of truth for path confirmation: https://github.com/Luckywolf82/tankradar/blob/main/src%2Fcomponents%2Fgovernance%2FPhase25ExecutionLog.jsx
+
+Note: Base44 tools (read_file, find_replace, write_file) always use paths WITHOUT src/ prefix. GitHub repo always has src/ as root for app source files. These are the same files — different path contexts only.
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 5
 
 ### Task requested
