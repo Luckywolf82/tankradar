@@ -782,3 +782,71 @@ PriceAlert → Notification → NotificationBell → notificationService
 
 ### GitHub visibility status
 Not yet verified in GitHub after publish. Notification pipeline stabilization complete.
+
+---
+
+## 2026-03-10 — Entry 56
+
+### Task requested
+Implement minimal actionable UX improvement to price alert notifications: display estimated savings amount to give users immediate value perception of triggered alerts.
+
+### Files actually modified
+- pages/Notifications.jsx
+
+### What was implemented
+
+1. Added `extractSavings()` helper function:
+   - Parses notification message for savings amount pattern
+   - Format: "sparer ~X kr/liter" or similar
+   - Returns extracted amount or null
+
+2. Updated subtitle text (line 79):
+   - "In-app notification center for price alerts" → "Prisvarsler med estimert spareøkonomi"
+   - Now localized to Norwegian, explains savings focus
+
+3. Enhanced unread notification display (lines 104–125):
+   - Added savings highlight: "💰 Sparer ~X kr/liter" in green badge
+   - Shows only if savings amount found in message
+   - Positioned above timestamp for visibility
+   - Green background (green-50) for positive value signal
+
+4. Enhanced read notification display (lines 140–147):
+   - Added savings text in green: "💰 Sparte ~X kr/liter" 
+   - Shows only if savings amount found in message
+   - Positioned above timestamp
+   - Smaller text (text-xs) to match read state styling
+
+### Why this is safe
+
+✓ UI-only change (no logic/matching modifications)
+✓ No locked Phase 2 files touched
+✓ No thresholds or gates altered
+✓ No backend changes needed
+✓ Works with existing notification structure
+✓ Graceful degradation (only shows if savings data exists)
+✓ Zero impact on notification pipeline
+✓ Improves perceived value without changing data
+
+### Verification
+
+✓ All 10 locked Phase 2 files remain UNTOUCHED
+✓ No notification creation/routing logic changed
+✓ No entity schema modifications
+✓ No backend function changes
+✓ User-facing improvement only
+✓ Actionability enhanced (users see value immediately)
+
+### Phase 2 file verification
+✓ functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+✓ functions/auditPhase2DominanceGap.ts — UNTOUCHED
+✓ functions/getNearbyStationCandidates.ts — UNTOUCHED
+✓ functions/validateDistanceBands.ts — UNTOUCHED
+✓ functions/classifyStationsRuleEngine.ts — UNTOUCHED
+✓ functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+✓ functions/classifyPricePlausibility.ts — UNTOUCHED
+✓ functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+✓ functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+✓ functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Ready for publish. Changes are minimal, safe, and UI-only. Requires GitHub verification after publish.
