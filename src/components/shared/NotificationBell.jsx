@@ -54,6 +54,12 @@ export default function NotificationBell() {
     }
   };
 
+  const extractSavings = (message) => {
+    // Reuse savings extraction from Notifications page
+    const savingsMatch = message.match(/sparer[^0-9]*([0-9.,]+)\s*kr/i);
+    return savingsMatch ? savingsMatch[1] : null;
+  };
+
   const handleOpen = () => {
     setOpen(!open);
   };
@@ -94,6 +100,7 @@ export default function NotificationBell() {
                   locale: nb 
                 });
 
+                const savings = extractSavings(notif.message);
                 return (
                   <div key={notif.id} className="px-4 py-3 bg-blue-50">
                     <p className="text-sm font-semibold text-slate-800 truncate">
@@ -102,6 +109,11 @@ export default function NotificationBell() {
                     <p className="text-xs text-slate-600 mt-0.5 line-clamp-2">
                       {notif.message}
                     </p>
+                    {savings && (
+                      <p className="text-xs font-medium text-green-600 mt-1">
+                        💰 Sparer ~{savings} kr/liter
+                      </p>
+                    )}
                     <p className="text-xs text-slate-400 mt-1">{timeAgo}</p>
                   </div>
                 );
