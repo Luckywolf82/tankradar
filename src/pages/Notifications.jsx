@@ -58,6 +58,13 @@ export default function NotificationsPage() {
     return new Date(date).toLocaleDateString("no-NO");
   };
 
+  const extractSavings = (message) => {
+    // Extract savings amount if message contains price/savings data
+    // Format: "... sparer ~X kr/liter" or similar
+    const savingsMatch = message.match(/sparer[^0-9]*([0-9.,]+)\s*kr/i);
+    return savingsMatch ? savingsMatch[1] : null;
+  };
+
   const unreadNotifs = notifications.filter((n) => !n.read);
   const readNotifs = notifications.filter((n) => n.read);
 
