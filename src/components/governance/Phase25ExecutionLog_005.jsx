@@ -218,6 +218,68 @@ Clarify the product architecture in the UI to distinguish between two coexisting
 
 ---
 
+## 2026-03-10 — Entry 49
+
+### Task requested
+Introduce Notification Governance Layer for TankRadar. Create canonical Notification entity and routing structure so all system alerts, moderation events, and price alerts use the same notification infrastructure. Do NOT modify existing alert logic yet, do NOT change UI behavior. Infrastructure only.
+
+### Files actually created
+- entities/Notification.json
+- src/governance/NotificationTypes.js
+- src/services/notificationService.js
+
+### Files actually modified
+- components/shared/NotificationBell.jsx (added notificationService import and fallback logic)
+
+### What was implemented
+1. Created entities/Notification.json:
+   - userId (string): User email or ID
+   - type (enum): price_alert, review_required, system_notice, data_source_failure, station_review_assignment
+   - title (string): Notification title
+   - message (string): Notification message
+   - relatedEntityType (enum): FuelPrice, Station, StationCandidate, StationReview, Alert, System
+   - relatedEntityId (string): ID of related entity
+   - isRead (boolean, default: false): Read status
+   - All fields except isRead are required
+
+2. Created src/governance/NotificationTypes.js:
+   - NOTIFICATION_TYPES: canonical type definitions
+   - RELATED_ENTITY_TYPES: canonical related entity types
+   - Validation helpers: isValidNotificationType, isValidRelatedEntityType
+   - UI labels: NOTIFICATION_TYPE_LABELS for display text
+
+3. Created src/services/notificationService.js:
+   - createNotification(userId, type, title, message, relatedEntityType, relatedEntityId)
+   - markNotificationRead(notificationId)
+   - markNotificationsRead(notificationIds[])
+   - fetchUserNotifications(userId, options)
+   - fetchUnreadNotifications(userId, limit)
+   - deleteOldNotifications(userId, daysOld)
+   - All functions include input validation and error handling
+
+4. Updated components/shared/NotificationBell.jsx:
+   - Added import: fetchUnreadNotifications from notificationService
+   - Updated loadUnread function to use notificationService first
+   - Added fallback to UserNotification entity for backward compatibility
+   - No UI changes, no visual behavior changes
+
+### Design decisions
+1. Infrastructure only — no existing alert logic modified
+2. Notification entity is canonical, notificationService is canonical routing layer
+3. NotificationBell uses service with fallback for transitional period
+4. All locked Phase 2 files remain untouched
+5. Governance compliance: explicit type validation, error handling, documentation
+
+### Phase 2 file verification
+✓ All 10 locked Phase 2 files confirmed UNTOUCHED
+✓ No schema changes to frozen entities
+✓ No modifications to frozen functions
+
+### GitHub visibility status
+Not yet verified in GitHub after publish.
+
+---
+
 ## 2026-03-10 — Entry 48
 
 ### Task requested

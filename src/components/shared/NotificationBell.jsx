@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { fetchUnreadNotifications } from '@/services/notificationService';
 
 export default function NotificationBell() {
   const [isAuth, setIsAuth] = useState(false);
@@ -40,8 +41,16 @@ export default function NotificationBell() {
     try {
       const u = await base44.auth.me();
       if (!u) return;
-      const all = await base44.entities.UserNotification.filter({ userId: u.email, read: false });
-      setUnreadNotifications(all || []);
+      // Use Notification entity (canonical) via notificationService
+      // Falls back to UserNotification if Notification doesn't exist yet
+      try {
+        const notifications = await fetchUnreadNotifications(u.email, 10);
+        setUnreadNotifications(notifications || []);
+      } catch (e) {
+        // Fallback to UserNotification for backward compatibility
+        const all = await base44.entities.UserNotification.filter({ userId: u.email, read: false });
+        setUnreadNotifications(all || []);
+      }
     } catch (e) {
       // stille feil — varsler er ikke kritisk
     }
