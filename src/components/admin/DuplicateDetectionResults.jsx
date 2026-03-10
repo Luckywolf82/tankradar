@@ -76,7 +76,7 @@ export default function DuplicateDetectionResults({ results }) {
     summary += `==============================\n\n`;
     summary += `City: ${city}\n`;
     summary += `Scan Date: ${now}\n`;
-    summary += `Filter State: Classifications=${Object.keys(selectedClassifications).filter(k => selectedClassifications[k]).join(', ') || 'none'}, Confidence=${confidenceFilter}, Sort=${sortBy}\n\n`;
+    summary += `Filter State: Classifications=${Object.keys(selectedClassifications).filter(k => selectedClassifications[k]).join(', ') || 'none'}, Confidence=${confidenceFilter}, Sort=${sortBy}, Search="${searchTerm || ''}"\n\n`;
     summary += `RESULTS\n`;
     summary += `-------\n`;
     summary += `Total Groups (after filtering): ${filtered.length}\n`;
