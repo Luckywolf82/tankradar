@@ -111,6 +111,35 @@ export default function PriceAlertsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-4">
+      {/* ── Phase 6A Alert System Clarification ────────────────────────────── */}
+      <Card className="bg-blue-50 border-l-4 border-blue-600">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-blue-900">
+            Phase 6A: Geographic Price Alerts (Active)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs space-y-1 text-blue-900">
+          <p>
+            <span className="font-medium">Model:</span> Location-based alerts matched by geolocation (latitude/longitude + radius).
+          </p>
+          <p>
+            <span className="font-medium">Station Matching:</span> Geographic radius-based, not tied to pre-existing stations.
+          </p>
+          <p>
+            <span className="font-medium">Notifications:</span> Triggered alerts stored as events only — no push notifications sent yet.
+          </p>
+          <p>
+            <span className="font-medium">Premium Gating:</span> Not currently enforced. All users can create alerts.
+          </p>
+          <p>
+            <span className="font-medium">Triggers:</span> When a FuelPrice matching your fuel type is detected with price ≤ maxPrice, within search radius.
+          </p>
+          <p className="text-blue-800 italic">
+            Note: A separate UserPriceAlert system (station-specific, premium-only) exists but is not active in this UI.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* My Alerts Section */}
       <Card>
         <CardHeader className="pb-2">
