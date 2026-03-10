@@ -91,11 +91,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // 8. Create PriceAlertEvent
+        // 8. Create PriceAlertEvent (with canonical station integrity guard)
         try {
           await base44.asServiceRole.entities.PriceAlertEvent.create({
             priceAlertId: alert.id,
             stationId: price.stationId,
+            canonicalStationId: canonicalStationId, // Phase 6B: always references canonical or original if no merge
             stationName: station.name,
             fuelType: price.fuelType,
             priceNok: price.priceNok,
