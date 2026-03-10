@@ -4,6 +4,80 @@
 
 ---
 
+## 2026-03-10 — Entry 20 (Phase 4B Safe Step — previewDuplicateMerge Read-Only Dry-Run Function Created)
+
+### Task
+Create functions/previewDuplicateMerge as a fully read-only dry-run preview of merge impact from live data. No writes, no mutations, no StationMergeLog, no UI wiring.
+
+### What was verified before change
+- functions/mergeDuplicateStations confirmed present (Entry 18)
+- functions/executeDuplicateMerge confirmed present (Entry 19)
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+Created functions/previewDuplicateMerge with:
+- Auth: curator or admin role required
+- Input: canonical_station_id, duplicate_station_ids[]
+- Step 1: Payload validation
+- Step 2: canonical_in_duplicate_list check (blocker)
+- Step 3: Canonical station fetch (read-only) — checks exists + archived status
+- Step 4: Duplicate station fetches (read-only) — identifies missing IDs + already-archived dups
+- Step 5: FuelPrice count per valid duplicate (read-only .filter, no writes)
+- Step 6: safe_to_merge = blockers.length === 0
+- Output: canonical_station_exists, canonical_already_archived, duplicate_stations_found, duplicate_station_ids_missing, canonical_in_duplicate_list, fuelprice_records_would_be_repointed, duplicate_stations_would_be_archived, safe_to_merge, blockers[]
+
+### What was NOT implemented
+- No writes of any kind
+- No StationMergeLog entry
+- No FuelPrice mutations
+- No Station.status changes
+- No call to mergeDuplicateStations or executeDuplicateMerge
+- No frontend changes
+- No UI wiring
+- No routing changes
+- No schema changes
+
+### Files actually modified
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- src/functions/previewDuplicateMerge.js
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+- src/components/admin/DuplicateRemediationPanel.jsx (unchanged)
+
+### Diff-style summary
++ Created functions/previewDuplicateMerge (new file, read-only)
++ Auth gate: curator or admin
++ Canonical existence + archived check
++ Duplicate existence + already-archived detection
++ FuelPrice count per valid duplicate via .filter (read-only)
++ safe_to_merge derived from blockers array
++ Zero writes, zero mutations
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 19 (Phase 4C — executeDuplicateMerge Created, DuplicateRemediationPanel Wired)
 
 ### Task
