@@ -40,9 +40,9 @@ export const EXECUTION_LOG_METADATA = {
     },
     {
       fileName: "Phase25ExecutionLog_005.jsx",
-      entries: "41–54",
+      entries: "41+",
       status: "ACTIVE (append new entries here)",
-      description: "Parser integration refactor through governance cleanup (Entries 48–54)"
+      description: "Parser integration refactor through governance cleanup"
     }
   ],
 
