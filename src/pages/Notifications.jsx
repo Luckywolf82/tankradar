@@ -64,6 +64,18 @@ export default function NotificationsPage() {
     return savingsMatch ? savingsMatch[1] : null;
   };
 
+  const deriveTriggerReason = (title, message) => {
+    // Lightweight UI-only label derivation from title/message keywords
+    const combined = `${title} ${message}`.toLowerCase();
+    
+    if (combined.includes("prisfall")) return "Prisfall detektert";
+    if (combined.includes("målpris") || combined.includes("måpris")) return "Nådd målpris";
+    if (combined.includes("nytt lav") || combined.includes("ny lav")) return "Nytt lavt punkt";
+    if (combined.includes("nær deg")) return "Pris nær deg";
+    
+    return "Prisvarsel";
+  };
+
   const unreadNotifs = notifications.filter((n) => !n.read);
   const readNotifs = notifications.filter((n) => n.read);
 
