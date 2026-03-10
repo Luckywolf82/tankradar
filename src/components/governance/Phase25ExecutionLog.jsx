@@ -4,6 +4,64 @@
 
 ---
 
+## 2026-03-10 — Entry 12 (Phase 3 UI Exposure — DuplicateRemediationPanel Added to SuperAdmin)
+
+### Task
+Expose the Phase 3 remediation placeholder in the admin UI as a read-only preview section inside SuperAdmin, without any data mutation or remediation logic.
+
+### What was verified before change
+- src/components/governance/Phase3RemediationPlan.jsx confirmed present
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present (read-only placeholder)
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 11 present)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Imported DuplicateRemediationPanel into pages/SuperAdmin.jsx
+2. Added a new read-only section below the Duplicate Detection block in SuperAdmin:
+   - Section header: "Duplikatretting — Phase 3 (preview)"
+   - "Preview only" status badge
+   - Explicit copy: "No merge or delete actions are enabled" and "Canonical station decisions are not active yet"
+   - Renders DuplicateRemediationPanel (read-only placeholder)
+
+### What was NOT implemented
+- No merge logic
+- No canonical station assignment
+- No backend calls
+- No schema changes
+- No data writes
+
+### Files actually modified
+- src/pages/SuperAdmin.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Diff-style summary
++ import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
++ Phase 3 read-only section block added after duplicate detection section in SuperAdmin render
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 11 (Phase 3 Initialization — Governance File + Placeholder Component Created)
 
 ### Task

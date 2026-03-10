@@ -18,6 +18,7 @@ import ReviewQueueSummary from "../components/admin/ReviewQueueSummary";
 import StationDiscoveryQueue from "../components/admin/StationDiscoveryQueue";
 import DuplicateDetectionScanner from "../components/admin/DuplicateDetectionScanner";
 import DuplicateDetectionResults from "../components/admin/DuplicateDetectionResults";
+import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
 
 const activeSections = [
   {
