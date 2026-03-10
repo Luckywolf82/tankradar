@@ -24,14 +24,13 @@ const CLASSIFICATION_CONFIG = [
   },
 ];
 
-function ClassificationSection({ config, groups, index }) {
-  const [expanded, setExpanded] = useState(groups.length > 0);
+function ClassificationSection({ config, groups, expanded, onToggle }) {
   const count = groups.length;
 
   return (
     <div className="border border-slate-200 rounded-lg overflow-hidden">
       <button
-        onClick={() => setExpanded(e => !e)}
+        onClick={onToggle}
         className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:brightness-95 ${config.headerColor} border-b border-slate-200`}
       >
         <div className="flex items-center gap-2">
