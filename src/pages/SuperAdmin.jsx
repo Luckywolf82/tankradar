@@ -16,6 +16,7 @@ import { base44 } from "@/api/base44Client";
 import DataSourceStatus from "../components/admin/DataSourceStatus";
 import ReviewQueueSummary from "../components/admin/ReviewQueueSummary";
 import StationDiscoveryQueue from "../components/admin/StationDiscoveryQueue";
+import SystemHealthPanel from "../components/admin/SystemHealthPanel";
 import DuplicateDetectionScanner from "../components/admin/DuplicateDetectionScanner";
 import DuplicateDetectionResults from "../components/admin/DuplicateDetectionResults";
 import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
@@ -179,6 +180,8 @@ export default function SuperAdmin() {
 
       {/* Operativ oversikt */}
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Operativ oversikt</p>
+      <SystemHealthPanel />
+      <div className="mt-6 mb-6" />
       <DataSourceStatus />
       <ReviewQueueSummary />
       <StationDiscoveryQueue />
