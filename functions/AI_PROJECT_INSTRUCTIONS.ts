@@ -1,275 +1,419 @@
-/**
- * AI PROJECT INSTRUCTIONS — TANKRADAR v1.0
- * 
- * Datert: 2026-03-09
- * Status: LOCKED IN PRODUCTION
- * 
- * Dette dokumentet formaliserer systemstruktur, datagovernance, og AI-agentrammer for TankRadar.
- * Det fungerer som:
- *   • Master prompt for Base44 AI-agent
- *   • Intern governance-dokument
- *   • Onboarding for nye utviklerchatter
- * 
- * ENDRINGER krever eksplisitt oppdatering av versjonsnummer og merknader.
- * 
- * ============================================================================
- * DEL 1: SYSTEMSTRUKTUR
- * ============================================================================
- */
+# AI PROJECT INSTRUCTIONS — TANKRADAR
+v1.4 (Chunked Governance + Repository Verification + Safety Guards + Base44 Integration)
 
-// Station
-// → Masterdata (sannhetskilde)
-// → AI oppretter ALDRI direkte
-// → Opprettelse skjer via StationReview + manuell kurering
-// → Felt: name, chain, address, city, region, latitude, longitude, stationType
+Datert: 2026-03-10  
+Status: Production Governance Document
 
-// FuelPrice
-// → Prisdata fra kilder
-// → Knyttet til Station via stationId (station_level) eller locationLabel (national_average)
-// → reportedByUserId: settes når pris rapporteres av innlogget bruker; ellers null
+Dette dokumentet formaliserer systemstruktur, datagovernance, AI-agentrammer og utviklerprotokoll for TankRadar.
 
-// StationCandidate
-// → Potensielle nye stasjoner fra eksterne kilder
-// → Venter på matching/deduplisering
+Endringer i dette dokumentet krever eksplisitt versjonsoppdatering.
 
-// StationReview
-// → Review-/kurateringskø for station-mastering, klassifiseringsavvik, og manuelle
-//   avklaringer innen eksisterende governance-typer.
-// → IKKE en generell oppgave-bøtte for all mulig innhold
-// → KRITISK REGEL: Nye review-typer skal ikke innføres uten eksplisitt
-//   oppdatering av governance-dokumentene.
+---
 
-// ============================================================================
-// DEL 2: DATAINTEGRITET
-// ============================================================================
+## 0. Repository Access
 
-// REGEL 1: IKKE BLAND DATATYPER
-// Systemet skiller alltid mellom:
-//   • national_average, regional_average, station_level, station, user_reported
-// Disse skal ALDRI presenteres som hadde samme granularitet.
+AI-agenter har eksplisitt tilgang til:
 
-// REGEL 2: INGEN STILLE FALLBACK
-// Hvis en kilde feiler, skal det forklares eksplisitt som **KOMPROMISS:**
-//   • Hva som feilet
-//   • Hva som ble valgt i stedet
-//   • Påvirkning på datakvalitet, granularitet, oppdateringsfrekvens
+```
+https://raw.githubusercontent.com/Luckywolf82/tankradar
+```
 
-// REGEL 3: INGEN ANTAKELSER SOM FAKTA
-// Ukjente verdier settes til null eller "unknown", ikke "beste gjett".
+Repository:
 
-// REGEL 4: TOMTILSTAND > MISVISENDE DATA
-// Hvis station_level-data mangler, vis tydelig tomtilstand.
-// national_average skal ALDRI brukes som skjult erstatning.
+```
+https://github.com/Luckywolf82/tankradar
+```
 
-// ============================================================================
-// DEL 3: PERSONVERN OG IDENTITET
-// ============================================================================
+AI må alltid verifisere repository-tilstand før forslag til nye endringer.
 
-// ALIAS OG DISPLAY NAME:
-//   • User.displayName lagres (hvis satt)
-//   • Alias vises IKKE offentlig i MVP
+---
 
-// USER_REPORTED SPORBARHET:
-//   • FuelPrice.reportedByUserId settes når pris rapporteres av innlogget bruker;
-//     ellers null
-//   • Brukes ALDRI til offentlig visning i MVP
-//   • Grunnlag for fremtidig gamification (ikke implementert ennå)
+## 1. Execution Log (Canonical Governance Record)
 
-// DELING:
-//   • All offentlig deling av prisdata er anonym
-//   • Bruker-identitet eksponeres ALDRI
+TankRadar bruker et chunked execution log system.
 
-// ============================================================================
-// DEL 4: KILDEVALIDERING
-// ============================================================================
+Canonical entry point:
 
-// GYLDIGE INTEGRATIONSTATUS:
-//   • planned, testing, parser_validated, live, blocked, deprecated
+```
+src/components/governance/Phase25ExecutionLogIndex.jsx
+```
 
-// KRITISK: Parser-validert ≠ Live
-// En kilde merkes **live** BARE når ekte ekstern henting er bekreftet fra runtime.
+Dette dokumentet definerer:
 
-// GYLDIGE DATAGRANULARITY:
-//   • national_average, regional_average, station_level, station, user_reported, unknown
+* hvilke chunk-filer som finnes
+* hvilke entries som ligger i hver chunk
+* hvilken chunk som er aktiv append-target
 
-// FEILLAG SKAL IDENTIFISERES FØR LØSNING:
-// dns_error, network_error, auth_error, http_error, parsing_error, mapping_error,
-// persistence_error, dashboard_error, rendering_error
+### Execution Log Structure:
 
-// ============================================================================
-// DEL 5: AI-AGENTRAMMER
-// ============================================================================
+```
+src/components/governance/
 
-// REGEL 1: ÉN KRITISK ENDRING OM GANGEN
-// Rekkefølge: 1. Datamodell 2. Kjent kilde 3. Dashboard 4. Ny kilde
-// 5. Automations 6. Confidence-merging 7. Crowdsourcing
+Phase25ExecutionLogIndex.jsx
+Phase25ExecutionLog_001.jsx
+Phase25ExecutionLog_002.jsx
+Phase25ExecutionLog_003.jsx
+Phase25ExecutionLog_004.jsx
+Phase25ExecutionLog_005.jsx ← ACTIVE
+Phase25ExecutionLog.jsx ← deprecated stub
+```
 
-// REGEL 2: BE OM PREVIEW FØR APPLY (KRITISK)
-// Når endring påvirker mange records eller sentrale pipelines:
-//   • Be om preview/plan før apply
-//   • Vis eksempler på hva som endres
-//   • Få eksplisitt godkjenning før implementering
-// Gjelder: bulk-klassifisering, matching-endringer, datamigrering, parser-config
+### Append Rule:
 
-// REGEL 3: RAPPORTERING ETTER HVERT STEG
-// Etter hver større endring: hva fungerer, hva ikke, bekreftet felt, kompromisser, neste steg
+Nye entries skal aldri skrives til stub-filen.
 
-// ============================================================================
-// DEL 6: STATIONREVIEW-GOVERNANCE (KRITISK)
-// ============================================================================
+AI må:
 
-// STATIONREVIEW BRUKES TIL:
-//   • Station-mastering (navn, chain, duplikat-slåing)
-//   • Klassifiseringsavvik (innen eksisterende governance-typer)
-//   • Manuelle avklaringer
+1. lese Phase25ExecutionLogIndex.jsx
+2. identifisere aktiv chunk
+3. append ny entry til aktiv chunk
 
-// STATIONREVIEW BRUKES IKKE TIL:
-//   • Generelle oppgaver
-//   • Prisdata-problemer
-//   • Bruker-relaterte oppgaver
-//   • NYE WORKFLOW-TYPER UTEN GOVERNANCE-OPPDATERING
+---
 
-// ┌─────────────────────────────────────────────────────────────────┐
-// │ KRITISK REGEL: NYE REVIEW-TYPER KREVER EKSPLISITT            │
-// │ GOVERNANCE-OPPDATERING                                         │
-// │                                                                 │
-// │ Hvis ny review_type skal legges til:                          │
-// │   1. Definer governance-regler for den                        │
-// │   2. Oppdater AI_PROJECT_INSTRUCTIONS.js                      │
-// │   3. Oppdater entity-schemat (StationReview.review_type enum)  │
-// │   4. Implementer logikk                                        │
-// │   5. Test med representativt datasett                         │
-// │   6. Dokumenter resultat                                      │
-// └─────────────────────────────────────────────────────────────────┘
+## 2. Forbidden Log Patterns
 
-// ============================================================================
-// DEL 7: FROSSEN FILES (IKKE RØR DISSE)
-// ============================================================================
+Følgende filtyper er permanent forbudt:
 
-// Sannhetskilde-filer:
-//   • functions/classifyStationsRuleEngine.js
-//   • functions/classifyGooglePlacesConfidence.js
-//   • functions/classifyPricePlausibility.js
+```
+Phase25ExecutionLog_EntryXX.jsx
+Phase25ExecutionLog_Summary.jsx
+Phase25ExecutionLog_Incident.jsx
+```
 
-// Datamigrasjon/sletting:
-//   • functions/deleteAllGooglePlacesPrices.js
-//   • functions/deleteGooglePlacesPricesForReclassification.js
-//   • functions/verifyGooglePlacesPriceNormalization.js
+Execution log skal kun bestå av:
 
-// Hvis bug oppstår: dokumenter, lag test-case, spør Base44 før endring.
+* Index
+* Chunk files
+* Stub file
 
-// ============================================================================
-// DEL 8: TESTVALIDITET
-// ============================================================================
+---
 
-// REGEL 1: FIXTURES ≠ PRODUKSJON
-// Fixtures brukes for parser, lagring, relasjoner, teknisk integrasjon.
-// Match-rate/coverage evalueres ALDRI basert på fixtures.
+## 3. Systemstruktur
 
-// REGEL 2: TEST ≠ PRODUKSJON
-// Eksplisitt rapporter: live kilder vs fixtures vs mockdata.
-// Dekningstall fra blandede kilder presenteres ALDRI som reell ytelse.
+Sentral modell:
 
-// REGEL 3: FØR MATCHING-LOGIKK JUSTERES
-// Bekreft: OSM-katalog representativ, kilder live, realistisk variasjon.
-// Ellers: classifiser som test_environment_limited.
+```
+Station
+FuelPrice
+StationCandidate
+StationReview
+SourceRegistry
+```
 
-// ============================================================================
-// DEL 9: PLAUSIBILITY OG DATAKVALITET
-// ============================================================================
+### Prinsipp:
 
-// ALLE PRISKILDER SKAL PASSERE PLAUSIBILITY CHECK
-// Hvis pris utenfor realistisk intervall for Norge:
-//   • Klassifiser som suspect
-//   • Behandl IKKE som gyldig uten eksplisitt begrunnelse
+Different source adapters → Shared mastering core
 
-// Realistisk intervall (2026):
-//   • Bensin 95: 16 — 25 NOK/L
-//   • Diesel: 15 — 24 NOK/L
+Adapters håndterer kun ingest.
 
-// ============================================================================
-// DEL 10: REPOSITORY VERIFICATION
-// ============================================================================
+Matching, station identity og review governance skjer i felles kjerne.
 
-// AI-agenter er eksplisitt tillatt å inspisere repository-tilstanden for å verifisere
-// systemets faktiske kode.
-//
-// Verifikasjon skal inkludere:
-//   • Repository-struktur
-//   • Nylige commits
-//   • File diffs
-//   • Faktisk filinnhold
-//   • Governance-kontrollfiler
-//
-// Kontrolldokumenter som:
-//   • ProjectControlPanel
-//   • LastVerifiedState
-// må behandles som operasjonelle logger, IKKE som absolutt sannhet.
-//
-// Hvis repository-kode og governance-filer er uenige:
-// Dette må rapporteres før videre arbeid fortsetter.
-//
-// Verifikasjonsprioritet:
-//   1. Git-commit-historie
-//   2. File-diff-analyse
-//   3. Faktisk filinnhold
-//   4. Governance-kontrollfiler
-//
-// Repository-kode er alltid den endelige sannhetskilden.
+---
 
-// ============================================================================
-// DEL 11: LOCKED PHASE-2 MATCHING ENGINE
-// ============================================================================
+## 4. Dataintegritet
 
-// Følgende systemkomponenter betraktes som kritiske for Phase-2 matching-motoren
-// og må IKKE endres uten eksplisitt godkjenning:
-//
-//   • station matching scoring logic
-//   • distance band scoring logic
-//   • dominance gap logic
-//   • review routing logic
-//
-// Typiske implementasjonssteder:
-//   • functions/matchStationForUserReportedPrice
-//   • functions/stationMatchingEngine
-//   • functions/stationDistanceScoring
-//   • functions/reviewRouting
-//
-// Hvis endringer oppdages i disse komponentene:
-//
-//   1. Modifikasjonen må rapporteres
-//   2. Difffen må analyseres
-//   3. Endringen må evalueres mot governance-regler
-//   4. Ingen videre implementering skal fortsette før avklart
+### Regler:
 
-// ============================================================================
-// VERSJONHISTORIE
-// ============================================================================
+* ikke bland datatyper
+* ingen stille fallback
+* ingen antakelser som fakta
+* mockdata må merkes
+* tomtilstand er bedre enn feil data
 
-// v1.1 (2026-03-09) — GOVERNANCE PATCH
-//   • Repository verification rules added
-//   • Locked Phase-2 matching engine components defined
-//   • Workflow for "fortsett" standardized
-//   • Governance control files reclassified as operational logs
+### Matching outcomes er pipeline-states:
 
-// v1.0 (2026-03-09) — INITIAL RELEASE
-//   • Formalisert systemstruktur
-//   • Fire mini-patches per feedback:
-//     1. Nye review-typer krever eksplisitt governance-oppdatering
-//     2. StationReview er for station-mastering/klassifiseringsavvik innen eksisterende typer
-//     3. reportedByUserId settes når pris rapporteres av innlogget bruker; ellers null
-//     4. AI skal be om preview/plan før apply når endringer påvirker mange records
-//   • Konsistente filreferanser (.js)
-//   • Låst for produksjon
+```
+matched_station_id
+review_needed_station_match
+no_safe_station_match
+```
 
-export const AI_PROJECT_INSTRUCTIONS = {
-  version: "1.1",
-  dated: "2026-03-09",
-  status: "LOCKED IN PRODUCTION",
-  documentType: "AI GOVERNANCE + PROJECT INSTRUCTIONS",
-  purpose: [
-    "Master prompt for Base44 AI-agent",
-    "Intern governance-dokument",
-    "Onboarding for nye utviklerchatter"
-  ]
-};
+---
+
+## 5. Personvern
+
+* alias vises ikke offentlig
+* reportedByUserId brukes kun internt
+* prisdata anonymiseres i MVP
+
+---
+
+## 6. Kildevalidering
+
+SourceRegistry er sannhetskilde for:
+
+* integrationStatus
+* dataGranularity
+* updateFrequency
+* failureReason
+
+parser_validated betyr ikke live.
+
+---
+
+## 7. AI Agent Rules
+
+AI må følge disse prinsippene:
+
+* én kritisk endring om gangen
+* preview før apply
+* rapportering etter hvert steg
+* ingen antagelser i datamodell
+* foreslå nøyaktig ett trygt neste steg
+
+---
+
+## 8. StationReview Governance
+
+StationReview brukes kun til:
+
+* station mastering
+* klassifiseringsavvik
+* manuelle avklaringer
+
+Nye review_types krever governance-oppdatering.
+
+---
+
+## 9. Frozen Files
+
+Følgende filer er låst:
+
+```
+functions/classifyStationsRuleEngine.*
+functions/classifyGooglePlacesConfidence.*
+functions/classifyPricePlausibility.*
+functions/deleteAllGooglePlacesPrices.*
+functions/deleteGooglePlacesPricesForReclassification.*
+functions/verifyGooglePlacesPriceNormalization.*
+functions/matchStationForUserReportedPrice.*
+functions/auditPhase2DominanceGap.*
+functions/getNearbyStationCandidates.*
+functions/validateDistanceBands.*
+```
+
+Endringer krever:
+
+1. rapport
+2. diff-analyse
+3. governance-vurdering
+4. eksplisitt godkjenning
+
+---
+
+## 10. Locked Phase-2 Matching Engine
+
+Kritiske komponenter:
+
+```
+functions/matchStationForUserReportedPrice.*
+functions/stationMatchingEngine*
+functions/stationDistanceScoring*
+functions/reviewRouting*
+```
+
+### Hardlåste regler:
+
+```
+SCORE_MATCHED = 65
+SCORE_REVIEW_THRESHOLD = 35
+DOMINANCE_GAP_MIN = 10
+```
+
+Hvis endring oppdages:
+
+1. rapporter
+2. analyser diff
+3. stopp implementering
+
+---
+
+## 11. Repository Verification Protocol
+
+GitHub er eneste sannhetskilde.
+
+Base44 runtime er ikke tilstrekkelig.
+
+AI må verifisere:
+
+1. commit history
+2. diff
+3. faktisk filinnhold
+4. governance-filer
+
+Hvis repo-kode og governance-logger er uenige:
+
+**repository-kode vinner.**
+
+---
+
+## 12. Execution Log Entry Requirements
+
+Hver entry må inneholde:
+
+* Task requested
+* Files created
+* Files modified
+* Diff summary
+* Commit hash (eller "unavailable in current Base44 context")
+* Locked file verification
+* GitHub visibility confirmation
+
+GitHub visibility må være enten:
+
+```
+Confirmed visible in GitHub after publish
+```
+
+eller
+
+```
+Not yet visible in GitHub after publish
+```
+
+---
+
+## 13. Repository Completion Rule
+
+En oppgave er kun ferdig når:
+
+1. Endringen finnes i repository
+2. Endringen er logget i execution log
+3. Locked files er bekreftet urørt
+
+Hvis endringen ikke er synlig i GitHub:
+
+**oppgaven er ikke ferdig.**
+
+---
+
+## 14. Development Loop
+
+Standard loop:
+
+```
+verify → propose → implement → publish → verify
+```
+
+AI må alltid:
+
+1. verifisere repository
+2. lese execution log index
+3. identifisere siste entry
+4. foreslå ett trygt neste steg
+
+---
+
+## 15. "Fortsett" Command
+
+Når brukeren skriver fortsett, skal AI:
+
+1. verifisere repository
+2. lese execution log index
+3. identifisere aktiv chunk
+4. lese siste entry
+5. sjekke locked filer
+6. identifisere neste minimale steg
+7. generere én Base44-prompt
+
+---
+
+## 16. Repository State Guard
+
+Før AI foreslår nye endringer må følgende verifiseres:
+
+1. Phase25ExecutionLogIndex.jsx må kunne leses fra GitHub.
+2. Aktiv chunk må identifiseres.
+3. Siste entry i aktiv chunk må identifiseres.
+4. AI må eksplisitt referere siste entry før nytt forslag.
+
+Hvis siste execution entry ikke kan verifiseres i repository:
+
+AI må stoppe og rapportere:
+
+```
+Repository state cannot be verified.
+```
+
+Ingen nye endringer skal foreslås før repository state er bekreftet.
+
+---
+
+## 17. Critical Surface Guard
+
+Følgende systemflater anses som kritiske:
+
+1. Station identity / station mastering
+2. Station matching pipeline
+3. FuelPrice → Station linkage
+4. Duplicate remediation logic
+5. Alert triggering logic
+6. Notification generation pipeline
+
+AI-agenter har ikke lov til å:
+
+* introdusere alternative pipelines
+* introdusere parallelle matching engines
+* lage nye entities som dupliserer eksisterende systemlogikk
+* omgå eksisterende governance-flows
+
+Hvis en oppgave krever ny logikk innenfor en kritisk systemflate:
+
+AI må stoppe og foreslå en design-endring først.
+
+Ingen implementering skal skje før eksplisitt godkjenning.
+
+---
+
+## 18. Change Scope Limit
+
+AI-agenter må begrense endringer per implementeringssteg.
+
+### Standardgrenser:
+
+* Maks 3 filer endret per steg
+* Maks 1 ny entity per steg
+* Maks 1 ny backend function per steg
+* Maks 1 UI-komponent per steg
+
+Hvis en oppgave krever større endring:
+
+AI må først foreslå en plan som deler arbeidet i flere steg.
+
+Ingen implementering før stegene er eksplisitt godkjent.
+
+Execution log entries må reflektere ett klart, isolert steg.
+
+---
+
+## 19. Base44 Platform Integration
+
+### Base44 Editor State Protocol
+
+* Base44 editor state = aktuell utvikling
+* GitHub repository = kanonisk offentlig tilstand
+* Diskrepanser løses ved: **GitHub vinner**
+
+### When Changes Sync to GitHub:
+
+* Base44 publishes changes through its version control integration
+* Developer or AI can request force sync if configured
+* Verification requires checking actual GitHub repository, not Base44 state alone
+
+### Entry Visibility Status:
+
+When appending execution log entries, always specify:
+
+```
+GitHub visibility status: [Confirmed visible | Not yet visible | Awaiting sync]
+```
+
+---
+
+## 20. Versjonshistorie
+
+* v1.0 – initial governance
+* v1.1 – repo verification + locked matching rules
+* v1.2 – GitHub visibility protocol
+* v1.3 – chunked execution log + governance safety guards
+* v1.4 – Base44 integration + repo-sync clarity + frozen file updates
