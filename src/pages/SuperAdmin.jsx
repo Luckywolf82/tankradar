@@ -21,6 +21,7 @@ import DuplicateDetectionScanner from "../components/admin/DuplicateDetectionSca
 import DuplicateDetectionResults from "../components/admin/DuplicateDetectionResults";
 import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
 import Phase2MatchingPreviewPanel from "../components/admin/Phase2MatchingPreviewPanel";
+import Phase2MatchingAuditPanel from "../components/admin/Phase2MatchingAuditPanel";
 
 const activeSections = [
   {
@@ -214,6 +215,18 @@ export default function SuperAdmin() {
           Verification tool for existing Phase 2 parser and matching logic. No data is written or modified.
         </div>
         <Phase2MatchingPreviewPanel />
+      </div>
+
+      {/* Phase 2 — Matching Audit (read-only governance verification) */}
+      <div className="mt-6 mb-6 border-t pt-6">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Station Matching — Phase 2 (Audit)</p>
+          <span className="text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Governance locks</span>
+        </div>
+        <div className="mb-3 text-xs text-slate-500">
+          Audit surface showing frozen governance rules, validation status, and manual test checklist for Phase 2 verification.
+        </div>
+        <Phase2MatchingAuditPanel />
       </div>
 
       {/* Phase 3 — Duplicate Remediation (read-only preview) */}
