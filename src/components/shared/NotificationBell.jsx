@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { fetchUnreadNotifications } from '@/components/services/notificationService';
 
 export default function NotificationBell() {
   const [isAuth, setIsAuth] = useState(false);
@@ -40,7 +41,13 @@ export default function NotificationBell() {
     try {
       const u = await base44.auth.me();
       if (!u) return;
-      const all = await base44.entities.UserNotification.filter({ userId: u.email, read: false });
+      // Try canonical service first, fallback to UserNotification
+      let all;
+      try {
+        all = await fetchUnreadNotifications(u.email, { limit: 50 });
+      } catch (e) {
+        all = await base44.entities.UserNotification.filter({ userId: u.email, read: false });
+      }
       setUnreadNotifications(all || []);
     } catch (e) {
       // stille feil — varsler er ikke kritisk
@@ -107,7 +114,7 @@ export default function NotificationBell() {
               to={createPageUrl('Notifications')}
               className="flex items-center justify-between text-sm font-medium text-blue-600 hover:text-blue-700"
             >
-              <span>Open all notifications</span>
+              <span>Åpne alle varsler</span>
               <ChevronRight size={14} />
             </Link>
           </div>

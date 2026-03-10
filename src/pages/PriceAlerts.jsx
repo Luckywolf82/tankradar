@@ -68,7 +68,7 @@ export default function PriceAlertsPage() {
   };
 
   const handleDeleteAlert = async (alertId) => {
-    if (!confirm("Are you sure you want to delete this alert?")) return;
+    if (!confirm("Er du sikker på at du vil slette dette varslet?")) return;
     try {
       await base44.entities.PriceAlert.delete(alertId);
       loadAlertsAndEvents();
@@ -93,7 +93,7 @@ export default function PriceAlertsPage() {
     return (
       <div className="p-6 text-center">
         <Loader2 className="animate-spin mx-auto mb-2" size={24} />
-        <p className="text-xs text-slate-500">Loading alerts…</p>
+        <p className="text-xs text-slate-500">Laster varsler…</p>
       </div>
     );
   }
@@ -160,11 +160,11 @@ export default function PriceAlertsPage() {
                          </div>
                     <div className="flex items-center gap-1 text-slate-600">
                       <MapPin size={12} />
-                      {alert.radiusKm} km from ({alert.latitude.toFixed(2)}, {alert.longitude.toFixed(2)})
+                      {alert.radiusKm} km fra ({alert.latitude.toFixed(2)}, {alert.longitude.toFixed(2)})
                     </div>
                     {alert.lastTriggeredAt && (
                       <div className="text-slate-500">
-                        Last triggered: {new Date(alert.lastTriggeredAt).toLocaleString("no-NO")} @ {alert.lastTriggeredPrice} NOK
+                        Sist utløst: {new Date(alert.lastTriggeredAt).toLocaleString("no-NO")} @ {alert.lastTriggeredPrice} NOK
                       </div>
                     )}
                   </div>
@@ -172,7 +172,7 @@ export default function PriceAlertsPage() {
                     <button
                       onClick={() => handleToggleAlert(alert.id, alert.enabled)}
                       className="p-1 hover:bg-slate-200 rounded"
-                      title={alert.enabled ? "Disable" : "Enable"}
+                      title={alert.enabled ? "Deaktiver" : "Aktiver"}
                     >
                       {alert.enabled ? (
                         <Eye size={14} className="text-slate-600" />
@@ -183,7 +183,7 @@ export default function PriceAlertsPage() {
                     <button
                       onClick={() => handleDeleteAlert(alert.id)}
                       className="p-1 hover:bg-red-100 rounded"
-                      title="Delete"
+                      title="Slett"
                     >
                       <Trash2 size={14} className="text-red-600" />
                     </button>
