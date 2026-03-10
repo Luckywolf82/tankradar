@@ -321,6 +321,17 @@ export default function DuplicateDetectionResults({ results }) {
                 </select>
               </div>
             </div>
+
+            {isFiltered && (
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleResetFilters}
+                  className="text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2 transition-colors"
+                >
+                  Reset filters
+                </button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
