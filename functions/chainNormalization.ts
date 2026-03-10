@@ -1,6 +1,7 @@
 /**
  * Chain Normalization Utility
  * 
+ * Pure utility function (no HTTP endpoint).
  * Normalizes inconsistent chain name variations to canonical forms.
  * Used for station identity mastering and matching.
  * 
@@ -74,6 +75,8 @@ function normalizeChainName(rawName) {
     confidence: 0,
   };
 }
+
+export { normalizeChainName };
 
 /**
  * ============================================================================
