@@ -4,6 +4,104 @@
 
 ---
 
+## 2026-03-10 — Entry 24 (Phase 4C Audit Trail — Read-Only Merge History Section Added)
+
+### Task
+Add a read-only "Merge audit history" section to DuplicateRemediationPanel so curators can inspect StationMergeLog records of all executed merges. No new merge behavior, no writes, no execute buttons.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with all existing sections intact
+- entities/StationMergeLog confirmed exists (schema present)
+- functions/mergeDuplicateStations confirmed writes to StationMergeLog (verified Entry 18)
+- functions/previewDuplicateMerge confirmed read-only (verified Entry 20–22)
+- Phase 2 locked files confirmed untouched (verified Entry 21–23)
+
+### What was implemented
+1. Added useEffect hook to load StationMergeLog on component mount
+   - Calls base44.entities.StationMergeLog.list() (read-only)
+   - Stores results in auditHistory state
+   - Handles empty state gracefully
+2. Added History icon to lucide-react imports
+3. Added Section 9: "Merge audit history" Card (green styling, clearly labelled Read-only + Audit trail)
+4. Three audit states:
+   - Loading: spinner + "Loading audit history…" message
+   - Empty: "No merge actions have been executed yet" friendly message
+   - Populated: compact card list showing:
+     - Merge index number + timestamp (locale-formatted)
+     - Green "✓ Executed" badge
+     - Canonical station ID
+     - Number of duplicates merged
+     - FuelPrice records moved count
+     - Curator ID (who executed)
+     - Merged station IDs (comma-separated)
+     - Notes (if present)
+   - Scrollable container (max-h-96 overflow-y-auto) for large audit trails
+5. All fields read-only, no input fields, no action buttons
+
+### What was NOT implemented
+- No new write operations
+- No schema changes to StationMergeLog
+- No calls to mergeDuplicateStations
+- No execute buttons
+- No auto-refresh background polling
+- No filtering/search (simple list order as returned from DB)
+- No modification to existing dry-run or preview sections
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx (added useEffect + Section 9)
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/previewDuplicateMerge.js (read-only, unchanged)
+- functions/mergeDuplicateStations.ts (unchanged, still writes to StationMergeLog)
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+- entities/StationMergeLog (unchanged, already existed)
+
+### Diff-style summary
++ Added useEffect hook to load StationMergeLog on mount
++ Added History icon to lucide-react import
++ Added Section 9: "Merge audit history" Card with green styling
++ Loading state: spinner + message
++ Empty state: "No merge actions have been executed yet"
++ Populated state: compact card list per merge with canonical ID, duplicates count, prices moved, curator, merged IDs, notes
++ All read-only, no inputs, no buttons
+
+### Data source
+- Entity: StationMergeLog (pre-existing)
+- Read method: base44.entities.StationMergeLog.list()
+- No filtering, sorting, or pagination (simple list as returned from DB)
+- Loaded on component mount, not auto-refreshing
+
+### Governance safety guarantees
+1. Audit history is read-only — no curator can modify or delete log entries
+2. All merge execution still requires explicit curator_confirmation: true in mergeDuplicateStations
+3. Dry-run preview and feature flag remain unchanged
+4. Section 9 is purely informational, no state mutations possible from UI
+5. Log entries created by mergeDuplicateStations backend are immutable after creation
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 23 (Phase 4C Governance Hardening — Live Execute Merge UI Hidden Behind Feature Flag)
 
 ### Task

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldAlert, CheckCircle2, Star, AlertTriangle, Loader2 } from "lucide-react";
+import { ShieldAlert, CheckCircle2, Star, AlertTriangle, Loader2, History } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 /**
@@ -113,6 +113,26 @@ export default function DuplicateRemediationPanel() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewResult, setPreviewResult] = useState(null);
   const [previewError, setPreviewError] = useState(null);
+
+  // Phase 4C — audit history state
+  const [auditHistory, setAuditHistory] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(true);
+
+  // Load audit history on mount
+  useEffect(() => {
+    const loadAuditHistory = async () => {
+      try {
+        const logs = await base44.entities.StationMergeLog.list();
+        setAuditHistory(logs || []);
+      } catch (err) {
+        console.error('Failed to load audit history:', err);
+        setAuditHistory([]);
+      } finally {
+        setAuditLoading(false);
+      }
+    };
+    loadAuditHistory();
+  }, []);
 
   const handleRunDryRunPreview = async () => {
     const canonicalId = previewCanonicalId.trim();
@@ -657,6 +677,83 @@ export default function DuplicateRemediationPanel() {
             </div>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── 9. Merge Audit History — Phase 4C read-only ──────────────────── */}
+      <Card className="border border-green-200 bg-green-50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-green-800 flex items-center gap-2">
+            <History size={14} className="text-green-600" />
+            Merge audit history
+            <span className="text-xs font-normal bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Read-only</span>
+            <span className="text-xs font-normal bg-slate-100 text-slate-600 border border-slate-200 rounded px-2 py-0.5">Audit trail</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-3 text-xs text-green-900 bg-green-100 border border-green-200 rounded px-3 py-2">
+            Complete audit trail of all executed station merges. No actions can be triggered from this section.
+          </div>
+
+          {auditLoading ? (
+            <div className="text-center py-6">
+              <Loader2 size={16} className="animate-spin inline text-slate-400 mb-2" />
+              <p className="text-xs text-slate-500">Loading audit history…</p>
+            </div>
+          ) : auditHistory.length === 0 ? (
+            <div className="text-center py-6 bg-white rounded border border-slate-200">
+              <p className="text-xs text-slate-500">No merge actions have been executed yet.</p>
+              <p className="text-xs text-slate-400 mt-1">Executed merges will appear here with full curator audit trail.</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {auditHistory.map((log, idx) => (
+                <div key={log.id || idx} className="border border-slate-200 rounded p-3 bg-white text-xs space-y-1.5">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <p className="font-semibold text-slate-800">Merge #{idx + 1}</p>
+                      <p className="text-slate-500">{new Date(log.timestamp).toLocaleString('no-NO')}</p>
+                    </div>
+                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium shrink-0">
+                      ✓ Executed
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 py-1.5 border-t border-slate-100 pt-1.5">
+                    <div>
+                      <span className="text-slate-500">Canonical ID</span>
+                      <p className="font-mono text-slate-700 text-xs break-all">{log.canonical_station_id}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Duplicates merged</span>
+                      <p className="font-mono text-slate-700 text-xs">{log.merged_station_ids?.length || 0}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Prices re-pointed</span>
+                      <p className="font-mono text-slate-700 text-xs">{log.fuelprice_records_moved}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Curator</span>
+                      <p className="font-mono text-slate-700 text-xs break-all">{log.curator_id}</p>
+                    </div>
+                  </div>
+                  {log.merged_station_ids && log.merged_station_ids.length > 0 && (
+                    <div className="py-1.5 border-t border-slate-100 pt-1.5">
+                      <span className="text-slate-500">Merged IDs</span>
+                      <p className="font-mono text-slate-700 text-xs mt-0.5 break-all">
+                        {log.merged_station_ids.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  {log.notes && (
+                    <div className="py-1.5 border-t border-slate-100 pt-1.5">
+                      <span className="text-slate-500">Notes</span>
+                      <p className="text-slate-700 text-xs mt-0.5">{log.notes}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
