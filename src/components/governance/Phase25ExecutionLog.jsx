@@ -4,6 +4,77 @@
 
 ---
 
+## 2026-03-10 — Entry 21 (Phase 4B UI Wiring — Live Dry-Run Preview Section Added to DuplicateRemediationPanel)
+
+### Task
+Wire DuplicateRemediationPanel to the existing read-only previewDuplicateMerge backend. Add a live "dry-run preview" section allowing curators to enter a canonical station ID and duplicate IDs and receive a real preview response with zero data mutation.
+
+### What was verified before change
+- functions/previewDuplicateMerge confirmed present (Entry 20)
+- functions/mergeDuplicateStations confirmed present (Entry 18)
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with all static sections intact
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+Added to src/components/admin/DuplicateRemediationPanel.jsx:
+- 3 new state fields: previewCanonicalId, previewDuplicateIds, previewLoading, previewResult, previewError
+- handleRunDryRunPreview() function: parses comma-separated IDs, calls previewDuplicateMerge via base44.functions.invoke, handles result + error
+- Section 8: "Live dry-run merge preview" card (blue styling, clearly labelled Read-only + Dry-run only)
+  - Safety notice: "No merge is executed. No records are changed. No StationMergeLog entry is written."
+  - Input: canonical_station_id text field
+  - Input: duplicate_station_ids comma-separated text field
+  - Button: "Run dry-run preview" (calls previewDuplicateMerge only)
+  - Result display: all 7 preview fields + safe_to_merge header + blockers list
+- All existing sections (1–7) left completely untouched
+
+### What was NOT implemented
+- No call to mergeDuplicateStations
+- No call to executeDuplicateMerge
+- No execute button
+- No StationMergeLog entry
+- No data writes
+- No schema changes
+- No routing changes
+- No Phase 2 locked file modifications
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+- functions/mergeDuplicateStations.ts
+
+### Diff-style summary
++ Added previewCanonicalId, previewDuplicateIds, previewLoading, previewResult, previewError state
++ Added handleRunDryRunPreview() calling previewDuplicateMerge (read-only only)
++ Added section 8: Live dry-run preview card with inputs, button, result table, blockers list
++ All existing sections 1–7 untouched
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 20 (Phase 4B Safe Step — previewDuplicateMerge Read-Only Dry-Run Function Created)
 
 ### Task
