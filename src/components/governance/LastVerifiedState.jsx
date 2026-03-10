@@ -455,6 +455,29 @@ The >300m band (signal 0) follows deterministic rule logic and is not operationa
 
 ---
 
+## ADAPTER IDENTITY GOVERNANCE — VERIFIED STATE (2026-03-10)
+
+**Source:** `ProjectControlPanel Entry 11` (approved 2026-03-10)  
+**Status:** ✅ GOVERNANCE RULE DOCUMENTED (documentation-only, no code behavior change)
+
+**Verified Governance Rules:**
+- ✅ Source adapters do NOT own station identity decisions — confirmed in governance note
+- ✅ Station creation is curator/governance-controlled only (StationCandidate → approval → Station)
+- ✅ StationCandidate is the required intake path for all external station records
+- ✅ Duplicate remediation is explicitly separated from Phase 2 matching validation
+- ✅ Phase 2 matching scores candidates; it does NOT dictate catalog cleanup decisions
+
+**Governance Boundaries (Confirmed):**
+- ✅ No adapter may create or modify Station records directly
+- ✅ No adapter may bypass StationCandidate flow
+- ✅ Duplicate consolidation requires explicit governance approval (independent of matching logic)
+- ✅ Matching thresholds, distance bands, and dominance gap logic are NOT affected by catalog cleanup decisions
+
+**Governance Document:** `components/governance/ProjectControlPanel` — Entry 11  
+**Scope:** Documentation-only. No implementation, no schema changes, no function changes.
+
+---
+
 ## WHAT IS NOT VERIFIED
 
 **Explicitly NOT tested or confirmed:**

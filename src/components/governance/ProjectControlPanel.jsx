@@ -73,6 +73,27 @@ These components are frozen pending explicit governance approval or failing test
 
 ## CHANGE LOG (Reverse Chronological)
 
+### Entry 12: LastVerifiedState Sync — Adapter Identity Governance Note
+**Date/Time:** 2026-03-10 UTC+1  
+**Workstream:** Governance Documentation (Sync — Append-Only)
+
+**Files Modified:**
+- `components/governance/LastVerifiedState` — Added adapter identity verified-state section
+- `components/governance/ProjectControlPanel` — This entry (sync log)
+
+**Summary:**
+Synchronized LastVerifiedState to reflect the approved adapter identity governance rules from Entry 11. Added concise status-oriented section confirming: adapters do not own identity decisions, StationCandidate is mandatory intake path, Station creation is curator-controlled, duplicate remediation is separate from matching validation.
+
+**Key Constraints (MAINTAINED):**
+- ✅ Documentation-only — no code, schema, function, or UI changes
+- ✅ No locked component modifications
+- ✅ Phase 2 matching logic UNCHANGED
+- ✅ Append-only (no previous entries modified)
+
+**Status:** ✅ IMPLEMENTED (documentation sync, governance-safe)
+
+---
+
 ### Entry 11: Adapter Identity Governance Note (Documentation Only)
 **Date/Time:** 2026-03-10 UTC+1  
 **Workstream:** Governance Documentation (Adapter Identity Rules — Append-Only)
