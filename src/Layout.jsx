@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { BarChart2, Plus, Home, Settings, User, ClipboardList, ShieldCheck } from "lucide-react";
+import { BarChart2, Plus, Home, Settings, User, ClipboardList, ShieldCheck, Bell } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
 import { useCurrentUser } from "./components/auth/useCurrentUser";
@@ -12,12 +12,13 @@ const baseNavLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
   { label: "Statistikk", page: "Statistics", icon: BarChart2 },
   { label: "Logg pris", page: "LogPrice", icon: Plus },
+  { label: "Prisvarsler", page: "PriceAlerts", icon: Bell },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const { user, role } = useCurrentUser();
 
-  const mainPages = ["Dashboard", "Statistics", "LogPrice"];
+  const mainPages = ["Dashboard", "Statistics", "LogPrice", "PriceAlerts"];
   const isMainPage = mainPages.includes(currentPageName);
 
   // Build role-specific extra nav items
