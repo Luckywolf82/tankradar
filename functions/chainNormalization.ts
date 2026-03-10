@@ -1,7 +1,6 @@
 /**
  * Chain Normalization Utility
  * 
- * Pure utility function (no HTTP endpoint).
  * Normalizes inconsistent chain name variations to canonical forms.
  * Used for station identity mastering and matching.
  * 
@@ -76,7 +75,19 @@ function normalizeChainName(rawName) {
   };
 }
 
-export { normalizeChainName };
+Deno.serve(async (req) => {
+  if (req.method !== "POST") {
+    return Response.json({ error: "POST only" }, { status: 405 });
+  }
+
+  try {
+    const { chainName } = await req.json();
+    const result = normalizeChainName(chainName);
+    return Response.json(result);
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 400 });
+  }
+});
 
 /**
  * ============================================================================
