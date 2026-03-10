@@ -4,6 +4,81 @@
 
 ---
 
+## 2026-03-10 — Entry 19 (Phase 4C — executeDuplicateMerge Created, DuplicateRemediationPanel Wired)
+
+### Task
+Create functions/executeDuplicateMerge as a validation wrapper around mergeDuplicateStations. Wire DuplicateRemediationPanel section 7 with a live Execute Merge button, pre-execution preview, curator confirmation checkbox, and post-execution result display.
+
+### What was verified before change
+- functions/mergeDuplicateStations confirmed present (Entry 18)
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with sections 1–6 all read-only
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Created functions/executeDuplicateMerge:
+   - Auth: curator or admin role required
+   - Payload validation: curator_confirmation must be true
+   - Delegates to mergeDuplicateStations via base44.functions.invoke
+   - Validates result: spot-checks archived stations have status = archived_duplicate
+   - Returns structured merge summary with validation object
+
+2. Updated src/components/admin/DuplicateRemediationPanel.jsx:
+   - Added useState (confirmed, loading, result, error)
+   - Added base44 import
+   - Added AlertTriangle, Loader2 to lucide imports
+   - Added DEMO_CANONICAL_ID / DEMO_DUPLICATE_IDS placeholder constants
+   - Added handleExecuteMerge async function
+   - Added section 7: "Execute Merge (Phase 4C — live)"
+     - Pre-execution summary table (canonical ID, duplicates count, hard deletes: None, audit log: Required)
+     - Curator confirmation checkbox (must be checked to enable button)
+     - Execute Merge button (disabled until confirmed, shows spinner while loading)
+     - Error display on failure
+     - Post-execution result summary with all merge stats and validation flags
+
+### What was NOT implemented
+- No auto-execution (checkbox + button required)
+- No routing changes
+- No schema changes
+- No matching engine changes
+- No Phase 2 locked file modifications
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- src/functions/executeDuplicateMerge.js
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+
+### Diff-style summary
++ Created functions/executeDuplicateMerge (validation wrapper + result structuring)
++ Added useState, base44 import, AlertTriangle, Loader2 to DuplicateRemediationPanel
++ Added DEMO_CANONICAL_ID / DEMO_DUPLICATE_IDS placeholder constants
++ Added handleExecuteMerge async function
++ Added section 7: Execute Merge with pre-exec preview, checkbox, button, error state, result display
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 18 (Phase 4B — mergeDuplicateStations Backend Function Created)
 
 ### Task

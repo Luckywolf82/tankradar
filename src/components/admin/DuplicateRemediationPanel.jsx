@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldAlert, CheckCircle2, Star } from "lucide-react";
+import { ShieldAlert, CheckCircle2, Star, AlertTriangle, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 /**
  * DuplicateRemediationPanel
@@ -14,6 +15,11 @@ import { ShieldAlert, CheckCircle2, Star } from "lucide-react";
  * Phase 4A additions (read-only preview only):
  * - Canonical station preview (Entry 14)
  * - Merge impact preview (Entry 15)
+ *
+ * Phase 4C additions:
+ * - Live Execute Merge section wired to executeDuplicateMerge backend
+ * - Requires explicit curator confirmation checkbox before button is enabled
+ * - Shows pre-execution preview summary and post-execution result
  */
 
 // ─── STATIC DATA ─────────────────────────────────────────────────────────────
@@ -82,9 +88,39 @@ const MERGE_ACTION_MAP = [
   { action: "Re-point FuelPrice records", station: "All duplicate-linked prices → canonical station", style: "text-blue-700 bg-blue-50 border border-blue-200" },
 ];
 
+// ─── MOCK IDs FOR PHASE 4C DEMO — replace with real IDs from duplicate scan ──
+// These are placeholder values only. In production, these come from the
+// DuplicateDetectionScanner result passed as props.
+const DEMO_CANONICAL_ID = "CANONICAL_STATION_ID_HERE";
+const DEMO_DUPLICATE_IDS = ["DUPLICATE_ID_1", "DUPLICATE_ID_2"];
+
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 export default function DuplicateRemediationPanel() {
+  const [confirmed, setConfirmed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleExecuteMerge = async () => {
+    if (!confirmed) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    const res = await base44.functions.invoke("executeDuplicateMerge", {
+      canonical_station_id: DEMO_CANONICAL_ID,
+      duplicate_station_ids: DEMO_DUPLICATE_IDS,
+      curator_confirmation: true,
+      notes: "Executed via DuplicateRemediationPanel Phase 4C",
+    });
+    setLoading(false);
+    if (res.data && res.data.success) {
+      setResult(res.data);
+    } else {
+      setError(res.data?.error ?? "Unknown error from executeDuplicateMerge");
+    }
+  };
+
   return (
     <div className="space-y-4">
 
@@ -315,6 +351,129 @@ export default function DuplicateRemediationPanel() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── 7. Execute Merge — Phase 4C live section ─────────────────────── */}
+      <Card className="border border-orange-200 bg-orange-50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-orange-800 flex items-center gap-2">
+            <AlertTriangle size={14} className="text-orange-500" />
+            Execute Merge
+            <span className="text-xs font-normal bg-orange-100 text-orange-600 border border-orange-200 rounded px-2 py-0.5">Phase 4C — live</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-3 text-xs text-orange-900 bg-orange-100 border border-orange-200 rounded px-3 py-2">
+            This section connects to the real <code className="font-mono">executeDuplicateMerge</code> backend.
+            Execution will re-point FuelPrice records and soft-archive duplicate stations.
+            No hard deletes. Audit log is mandatory.
+          </div>
+
+          {/* Pre-execution preview summary */}
+          {!result && (
+            <div className="mb-4 border border-slate-200 rounded overflow-hidden">
+              <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                Pre-execution summary (demo values)
+              </div>
+              <div className="divide-y divide-slate-100">
+                <div className="flex justify-between px-3 py-2 text-xs">
+                  <span className="text-slate-500">Canonical station ID</span>
+                  <span className="font-mono text-slate-700">{DEMO_CANONICAL_ID}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2 text-xs">
+                  <span className="text-slate-500">Duplicates to archive</span>
+                  <span className="font-mono text-slate-700">{DEMO_DUPLICATE_IDS.length}</span>
+                </div>
+                <div className="flex justify-between px-3 py-2 text-xs">
+                  <span className="text-slate-500">Hard deletes</span>
+                  <span className="text-green-700 font-semibold">None</span>
+                </div>
+                <div className="flex justify-between px-3 py-2 text-xs">
+                  <span className="text-slate-500">Audit log</span>
+                  <span className="text-green-700 font-semibold">Required — always written</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Curator confirmation checkbox */}
+          {!result && (
+            <label className="flex items-start gap-2 mb-4 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                className="mt-0.5 accent-orange-600"
+              />
+              <span className="text-xs text-orange-900">
+                I have reviewed the canonical station, the duplicates, and the merge impact.
+                I authorise this merge operation. I understand this cannot be automatically undone.
+              </span>
+            </label>
+          )}
+
+          {/* Execute button */}
+          {!result && (
+            <button
+              onClick={handleExecuteMerge}
+              disabled={!confirmed || loading}
+              className={`w-full py-2 px-4 text-xs font-semibold rounded border transition-colors ${
+                confirmed && !loading
+                  ? "bg-orange-600 text-white border-orange-700 hover:bg-orange-700 cursor-pointer"
+                  : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={12} className="animate-spin" />
+                  Executing merge…
+                </span>
+              ) : (
+                "Execute Merge"
+              )}
+            </button>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+
+          {/* Post-execution result summary */}
+          {result && (
+            <div className="mt-2">
+              <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mb-3 font-semibold">
+                ✓ Merge executed successfully
+              </div>
+              <div className="border border-slate-200 rounded overflow-hidden">
+                <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                  Execution result
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {[
+                    ["Canonical station ID", result.canonical_station_id],
+                    ["Duplicates archived", result.duplicates_archived],
+                    ["FuelPrice records moved", result.fuelprice_records_moved],
+                    ["Archive confirmed", result.validation?.duplicates_archived_confirmed ? "Yes" : "Not confirmed"],
+                    ["FuelPrice move confirmed", result.validation?.fuelprice_moved_confirmed ? "Yes" : "Not confirmed"],
+                    ["Curator", result.curator_id],
+                    ["Timestamp", result.timestamp],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex justify-between px-3 py-2 text-xs">
+                      <span className="text-slate-500">{label}</span>
+                      <span className="font-mono text-slate-700 text-right max-w-[55%] break-all">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mt-2 text-center">
+                Audit log entry written to StationMergeLog.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
