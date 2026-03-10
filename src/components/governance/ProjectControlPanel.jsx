@@ -827,6 +827,7 @@ Before ANY code modification:
 | 2026-03-09 18:30 | Governance control files synchronized to verified state | Implemented | ProjectControlPanel Entry 5 |
 | 2026-03-09 19:45 | Curator review-only controls (duplicate catalog) | Implemented | ProjectControlPanel Entry 6 |
 | 2026-03-09 19:50 | Curator review controls documentation verification & sync | Implemented | ProjectControlPanel Entry 7 |
+| 2026-03-10 | Adapter Identity Governance Note (documentation only) | Implemented | ProjectControlPanel Entry 11 |
 
 ---
 
