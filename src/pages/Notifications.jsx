@@ -153,6 +153,9 @@ export default function NotificationsPage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-slate-700">{notif.title}</p>
                           <p className="text-sm text-slate-600 mt-1">{notif.message}</p>
+                          {extractSavings(notif.message) && (
+                            <p className="text-xs text-green-600 mt-2">💰 Sparte ~{extractSavings(notif.message)} kr/liter</p>
+                          )}
                           <span className="text-xs text-slate-500 mt-2 block">
                             {formatTime(notif.created_date)}
                           </span>
