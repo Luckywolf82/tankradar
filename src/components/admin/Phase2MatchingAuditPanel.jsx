@@ -174,14 +174,37 @@ export default function Phase2MatchingAuditPanel() {
         </CardContent>
       </Card>
 
+      {/* Section 4: GitHub Visibility */}
+      <Card className="bg-green-50 border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-green-600" />
+            GitHub Visibility
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xs text-slate-700 space-y-2">
+            <p>
+              <strong>Execution Log Status:</strong> Entries 26–28 (Phase 25 implementation history) are now visible in GitHub after publication. Prior entries in the log that stated "Not yet verified in GitHub after publish" have been confirmed accessible.
+            </p>
+            <p className="text-slate-600">
+              This Phase 2 Matching Audit panel (Entry 34) and governance-sync clarification (Entry 35) are also scheduled for GitHub publication.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Footer Notes */}
       <Card className="bg-slate-50 border-slate-200">
         <CardContent className="pt-4 text-xs text-slate-600">
           <p className="mb-2">
-            <strong>Audit Purpose:</strong> Verify that the existing Phase 2 parser and matching engine behaves consistently with locked governance rules.
+            <strong>Audit Purpose:</strong> Verify that the existing Phase 2 parser and matching engine behaves consistently with locked governance rules. All matching logic is parser-validated against fixtures and locked against production changes.
+          </p>
+          <p className="mb-2">
+            <strong>Validation Status:</strong> Parser behavior is validated. Live source validation (GooglePlaces real-world data) is pending.
           </p>
           <p>
-            <strong>Next Step:</strong> After manual verification on representative samples, live validation can proceed with GooglePlaces data.
+            <strong>Next Step:</strong> After manual verification on representative samples using the Preview panel, live validation can proceed with representative GooglePlaces data.
           </p>
         </CardContent>
       </Card>
