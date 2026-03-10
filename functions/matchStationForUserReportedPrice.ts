@@ -347,6 +347,166 @@ function levenshteinDistance(s1, s2) {
   return dp[len1][len2];
 }
 
+/**
+ * PREVIEW MODE HANDLER
+ * 
+ * Read-only observability surface for Phase 2 parser + matcher.
+ * Returns metadata only: parsed chain, location, candidates, scores, decision.
+ * No FuelPrice writes, no Station creation, no review routing.
+ * Exits before any write path.
+ */
+async function handlePreviewMode(stationName, stationChain, city, latitude, longitude, base44) {
+  try {
+    // Validate required fields for preview
+    if (!stationName) {
+      return Response.json({ error: 'preview_mode requires station_name' }, { status: 400 });
+    }
+
+    const matchLat = latitude !== undefined ? latitude : null;
+    const matchLon = longitude !== undefined ? longitude : null;
+    const matchCity = city || null;
+
+    // Parse station name using existing Phase 2 parser
+    const parsedObservation = parseStationName(stationName);
+    const observationChain = stationChain || parsedObservation.chain;
+    const observationChainConfidence = stationChain ? 0.95 : parsedObservation.chainConfidence;
+
+    // Fetch candidate pool if city + coordinates provided
+    let candidates = [];
+    let candidatePoolSource = 'none';
+    let candidatesCount = 0;
+
+    if (matchCity && matchLat !== null && matchLon !== null) {
+      try {
+        const preFilterResult = await base44.functions.invoke('getNearbyStationCandidates', {
+          gps_lat: matchLat,
+          gps_lon: matchLon,
+          city: matchCity,
+          radius_meters: 3000,
+          max_candidates: 20,
+        });
+
+        if (preFilterResult.data.candidates && preFilterResult.data.candidates.length > 0) {
+          candidates = preFilterResult.data.candidates;
+          candidatePoolSource = 'proximity_filter';
+        } else if (preFilterResult.data.fallback_used) {
+          candidates = preFilterResult.data.candidates;
+          candidatePoolSource = 'fallback_full_catalog';
+        }
+      } catch (error) {
+        // Fallback to full city catalog
+        try {
+          candidates = await base44.entities.Station.filter({ city: matchCity });
+          candidatePoolSource = 'fallback_full_catalog_error';
+        } catch {
+          // No candidates available
+          candidatePoolSource = 'none';
+        }
+      }
+
+      candidatesCount = candidates.length;
+    }
+
+    // Score candidates using existing Phase 2 scorer
+    let topCandidates = [];
+    let finalDecision = null;
+    let dominanceGap = null;
+
+    if (candidates.length > 0) {
+      const validCandidates = candidates.filter(
+        (s) => s.latitude !== undefined && s.latitude !== null && s.longitude !== undefined && s.longitude !== null
+      );
+
+      if (validCandidates.length > 0) {
+        const scoredMatches = validCandidates
+          .map(station => {
+            const matchResult = scoreStationMatch(
+              {
+                name: stationName,
+                chain: observationChain,
+                chainConfidence: observationChainConfidence,
+                latitude: matchLat,
+                longitude: matchLon,
+                city: matchCity,
+                cityConfidence: 0.95,
+                areaLabel: parsedObservation.locationLabel,
+                areaLabelConfidence: parsedObservation.locationConfidence,
+              },
+              {
+                id: station.id,
+                name: station.name,
+                chain: station.chain,
+                city: station.city,
+                latitude: station.latitude,
+                longitude: station.longitude,
+                areaLabel: station.areaLabel,
+              }
+            );
+
+            const distance = matchLat !== null && matchLon !== null
+              ? haversineDistance(matchLat, matchLon, station.latitude, station.longitude)
+              : 0;
+
+            return {
+              station,
+              score: matchResult.score,
+              stationId: station.id,
+              signals: matchResult.signals,
+              gateFailures: matchResult.gateFailures,
+              scoreBreakdown: matchResult.rawSignalBreakdown,
+              distance_km: distance / 1000,
+            };
+          })
+          .filter(m => m.score > 0)
+          .sort((a, b) => b.score - a.score);
+
+        // Top 5 candidates for preview
+        topCandidates = scoredMatches.slice(0, 5).map(m => ({
+          name: m.station.name,
+          chain: m.station.chain,
+          city: m.station.city,
+          final_score: m.score,
+          distance_km: m.distance_km,
+          score_breakdown: m.scoreBreakdown,
+        }));
+
+        // Apply decision logic to determine final outcome
+        const decision = matchDecision(scoredMatches);
+        finalDecision = decision.outcome;
+
+        // Calculate dominance gap for display
+        if (scoredMatches.length > 1) {
+          dominanceGap = scoredMatches[0].score - scoredMatches[1].score;
+        } else if (scoredMatches.length === 1) {
+          dominanceGap = null; // N/A for single candidate
+        }
+      }
+    }
+
+    // Return read-only preview response (no writes, no mutations)
+    return Response.json({
+      preview_mode: true,
+      parsed_chain: observationChain || null,
+      parsed_location: parsedObservation.locationLabel || null,
+      parsed_name_base: parsedObservation.unparsedTokens.join(' ') || null,
+      candidate_pool_source: candidatePoolSource,
+      candidates_count: candidatesCount,
+      top_candidates: topCandidates,
+      final_decision: finalDecision || 'NO_SAFE_STATION_MATCH',
+      matched_station_id: topCandidates.length > 0 && finalDecision === 'MATCHED_STATION_ID' ? topCandidates[0].name : null,
+      review_needed_reason: finalDecision === 'REVIEW_NEEDED_STATION_MATCH' ? 'insufficient_dominance_or_borderline' : null,
+      dominance_gap: dominanceGap,
+      debug_notes: 'Read-only preview mode: no data written, no records created',
+    });
+  } catch (error) {
+    return Response.json({
+      preview_mode: true,
+      error: error.message,
+      debug_notes: 'Preview mode error — no data written',
+    }, { status: 500 });
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
