@@ -22,6 +22,7 @@ import DuplicateDetectionResults from "../components/admin/DuplicateDetectionRes
 import DuplicateRemediationPanel from "../components/admin/DuplicateRemediationPanel";
 import Phase2MatchingPreviewPanel from "../components/admin/Phase2MatchingPreviewPanel";
 import Phase2MatchingAuditPanel from "../components/admin/Phase2MatchingAuditPanel";
+import Phase2MatchingTestHarness from "../components/admin/Phase2MatchingTestHarness";
 
 const activeSections = [
   {
@@ -227,6 +228,18 @@ export default function SuperAdmin() {
           Audit surface showing frozen governance rules, validation status, and manual test checklist for Phase 2 verification.
         </div>
         <Phase2MatchingAuditPanel />
+      </div>
+
+      {/* Phase 2 — Matching Test Harness (batch validation) */}
+      <div className="mt-6 mb-6 border-t pt-6">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Station Matching — Phase 2 (Test Harness)</p>
+          <span className="text-xs font-medium bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Batch validation</span>
+        </div>
+        <div className="mb-3 text-xs text-slate-500">
+          Batch testing tool for manual verification of the Phase 2 matching engine. Run multiple test cases and inspect outcomes.
+        </div>
+        <Phase2MatchingTestHarness />
       </div>
 
       {/* Phase 3 — Duplicate Remediation (read-only preview) */}
