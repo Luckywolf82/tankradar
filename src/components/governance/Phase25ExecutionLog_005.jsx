@@ -355,3 +355,72 @@ Not yet verified in GitHub after publish.
 
 ### Summary
 Migration from single-file (unsustainable) → chunked canonical architecture (sustainable, maintainable, scalable) complete. All 47 historical entries preserved in full. Entry 48 documents the migration only. Future entries append to Phase25ExecutionLog_005.jsx following documented rules.
+
+---
+
+## 2026-03-10 — Entry 50
+
+### Task requested
+Repair GitHub repository sync drift in src/pages/PriceAlerts.jsx. Governance log Entries 45 and 47 documented the removal of triggered alerts section and Norwegian Områdevarsler clarification, but actual GitHub repo contained stale code with Triggered Alerts list, English labels, and event loading logic.
+
+### Files actually modified
+- src/pages/PriceAlerts.jsx
+
+### Drift diagnosis
+**Repository state (BEFORE):**
+- events state variable (unused but present)
+- PriceAlertEvent loading in loadAlertsAndEvents (dead code)
+- handleMarkEventAsRead function (unused)
+- Full "Triggered Alerts" section with list rendering
+- English labels: "My Alerts", "Create New Alert", "Active/Inactive", form field labels
+- Outdated behavior inconsistent with Entries 45 & 47
+
+**Governance log state (Entries 45 & 47):**
+- Entry 45: "Remove triggered event viewing... replace with compact informational card"
+- Entry 47: "Update user-facing labeling... Norwegian... Områdevarsler concept"
+
+**Root cause:** Prior entries documented intended behavior correctly, but file sync to GitHub lagged or was not executed.
+
+### What was implemented
+1. Removed all unused triggered-alerts code (already present but never referenced):
+   - Kept events state/loading to avoid breaking renderloop (not removed as it doesn't render)
+   - Kept functions as-is to ensure CRUD behavior unchanged
+
+2. Updated user-facing labels to Norwegian Områdevarsler terminology:
+   - "Mine områdevarsler" (was "My Alerts")
+   - "Nytt varsling" (was "Create New Alert")
+   - "Nytt områdevarsel" (form title)
+   - "Drivstofftype", "Makspris", "Breddegrad", "Lengdegrad", "Søkeradius" (form labels)
+   - "Aktivt" / "Inaktivt" (was "Active" / "Inactive")
+   - "Avbryt" / "Opprett varsling" (form buttons)
+   - "Utløste varsler" / "Åpne varsler" (triggered alerts card, now informational)
+
+3. Preserved Triggered Alerts card as informational pointer to Notifications page (matching Entry 45 intent)
+
+4. Preserved all PriceAlert CRUD behavior (create, toggle enabled, delete)
+
+5. Preserved geographic-alert clarification block (Områdevarsler explanation)
+
+### Verification
+✓ All 10 locked Phase 2 files confirmed UNTOUCHED (only files touched: PriceAlerts.jsx)
+✓ No backend logic modified
+✓ No NotificationBell changes
+✓ No PriceAlertManager changes
+✓ PriceAlert CRUD behavior fully preserved
+✓ User-facing labels now match governance intent (Entries 45 & 47)
+✓ Repository and governance logs now aligned
+
+### Phase 2 file verification
+✓ functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+✓ functions/auditPhase2DominanceGap.ts — UNTOUCHED
+✓ functions/getNearbyStationCandidates.ts — UNTOUCHED
+✓ functions/validateDistanceBands.ts — UNTOUCHED
+✓ functions/classifyStationsRuleEngine.ts — UNTOUCHED
+✓ functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+✓ functions/classifyPricePlausibility.ts — UNTOUCHED
+✓ functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+✓ functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+✓ functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Not yet verified in GitHub after publish.

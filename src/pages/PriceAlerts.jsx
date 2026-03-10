@@ -150,14 +150,14 @@ export default function PriceAlertsPage() {
                 >
                   <div className="flex-1 text-xs space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-800">
-                        {fuelTypeLabels[alert.fuelType] || alert.fuelType}
-                      </span>
-                      <span className="text-slate-500">&le; {alert.maxPrice} NOK</span>
-                      <span className={alert.enabled ? "text-green-600" : "text-slate-400"}>
-                        {alert.enabled ? "Active" : "Inactive"}
-                      </span>
-                    </div>
+                           <span className="font-semibold text-slate-800">
+                             {fuelTypeLabels[alert.fuelType] || alert.fuelType}
+                           </span>
+                           <span className="text-slate-500">&le; {alert.maxPrice} NOK</span>
+                           <span className={alert.enabled ? "text-green-600" : "text-slate-400"}>
+                             {alert.enabled ? "Aktivt" : "Inaktivt"}
+                           </span>
+                         </div>
                     <div className="flex items-center gap-1 text-slate-600">
                       <MapPin size={12} />
                       {alert.radiusKm} km from ({alert.latitude.toFixed(2)}, {alert.longitude.toFixed(2)})
@@ -206,7 +206,7 @@ export default function PriceAlertsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Fuel Type
+                    Drivstofftype
                   </label>
                   <select
                     value={formData.fuelType}
@@ -221,7 +221,7 @@ export default function PriceAlertsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Max Price (NOK)
+                    Makspris (NOK)
                   </label>
                   <input
                     type="number"
@@ -233,7 +233,7 @@ export default function PriceAlertsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Latitude
+                    Breddegrad
                   </label>
                   <input
                     type="number"
@@ -245,7 +245,7 @@ export default function PriceAlertsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Longitude
+                    Lengdegrad
                   </label>
                   <input
                     type="number"
@@ -256,9 +256,9 @@ export default function PriceAlertsPage() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Search Radius (km)
-                  </label>
+                   <label className="text-xs font-medium text-slate-700 block mb-1">
+                     Søkeradius (km)
+                   </label>
                   <input
                     type="number"
                     step="0.5"
@@ -275,16 +275,16 @@ export default function PriceAlertsPage() {
                   size="sm"
                   onClick={() => setShowCreateForm(false)}
                   className="text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
+                  >
+                  Avbryt
+                  </Button>
+                  <Button
                   type="submit"
                   size="sm"
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
-                >
-                  Create Alert
-                </Button>
+                  >
+                  Opprett varsling
+                  </Button>
               </div>
             </form>
           </CardContent>
@@ -296,16 +296,16 @@ export default function PriceAlertsPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Bell size={18} className="text-slate-600" />
-            Triggered Alerts
+            Utløste varsler
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-slate-700">
-          <p className="mb-3">Triggered price alerts now appear in your notifications inbox.</p>
+          <p className="mb-3">Utløste prisvarsler vises nå i varslingsinboksen din.</p>
           <a
             href={createPageUrl("Notifications")}
             className="inline-block px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
           >
-            View Notifications (Varsler)
+            Åpne varsler
           </a>
         </CardContent>
       </Card>
