@@ -4,6 +4,132 @@
 
 ---
 
+## 2026-03-10 — Entry 27 (Phase 6A — Price Alerts System Implemented)
+
+### Task
+Implement Phase 6A: fuel price alert system allowing users to create alerts based on fuel type, max price, and geographic radius. Alerts are matched against new FuelPrice records asynchronously. When a match is detected, a PriceAlertEvent is created (no push notifications yet). Users can view alerts, triggered events, and manage alert settings via UI.
+
+### What was verified before change
+- Repository state checked: Phase 6A files do NOT exist in Base44 runtime (no PriceAlerts.jsx, PriceAlert entity, PriceAlertEvent entity, checkPriceAlerts function)
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 26 present)
+- All locked Phase 2 files confirmed present and untouched
+
+### What was implemented
+1. Created entities/PriceAlert.json:
+   - fuelType (enum: gasoline_95, gasoline_98, diesel, etc.)
+   - maxPrice (number, NOK per liter)
+   - radiusKm (number, search radius)
+   - latitude, longitude (search center point)
+   - enabled (boolean, default true)
+   - lastTriggeredAt, lastTriggeredPrice (tracking)
+
+2. Created entities/PriceAlertEvent.json:
+   - priceAlertId (reference to PriceAlert)
+   - stationId (station where price was detected)
+   - stationName (snapshot of station name)
+   - fuelType, priceNok (price details at detection)
+   - detectedAt (when alert triggered)
+   - distance (calculated from alert center to station)
+   - isRead (boolean, default false)
+
+3. Created functions/checkPriceAlerts.js:
+   - Service-role background function
+   - Fetches all enabled PriceAlerts
+   - Iterates recent FuelPrice records (last 1000)
+   - For each alert:
+     - Matches fuelType
+     - Checks priceNok <= maxPrice
+     - Calculates distance via Haversine formula
+     - Creates PriceAlertEvent if match found
+     - Updates alert's lastTriggeredAt and lastTriggeredPrice
+   - No duplicate event creation (checks existing events)
+   - Returns success count
+
+4. Created pages/PriceAlerts.jsx:
+   - User-facing alert management page
+   - Three main sections:
+     a) My Alerts: lists all active/inactive alerts with enable/disable/delete controls
+     b) Create Alert: form to add new alerts (collapsed by default, toggles visible)
+     c) Triggered Alerts: displays PriceAlertEvent records in reverse chronological order, shows unread count
+   - Fuel type labels in Norwegian
+   - Distance display with lat/lon
+   - Last triggered price and timestamp
+   - Mark as read button for events
+   - Loading state with spinner
+   - Form validation and error handling
+   - Responsive grid layout
+
+### What was NOT implemented
+- No push notifications (events stored only)
+- No email notifications
+- No SMS alerts
+- No automated alert deletion
+- No alert scheduling (runs on background check)
+- No matching engine changes
+- No station identity changes
+
+### Files actually created
+- src/entities/PriceAlert.json
+- src/entities/PriceAlertEvent.json
+- src/functions/checkPriceAlerts.js
+- src/pages/PriceAlerts.jsx
+
+### Files actually modified
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files explicitly confirmed untouched
+- functions/classifyStationsRuleEngine.ts (frozen)
+- functions/classifyGooglePlacesConfidence.ts (frozen)
+- functions/classifyPricePlausibility.ts (frozen)
+- functions/deleteAllGooglePlacesPrices.ts (frozen)
+- functions/deleteGooglePlacesPricesForReclassification.ts (frozen)
+- functions/verifyGooglePlacesPriceNormalization.ts (frozen)
+- functions/previewDuplicateMerge.js (unchanged)
+- functions/mergeDuplicateStations.ts (unchanged)
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+
+### Diff-style summary
++ Created PriceAlert entity with 7 fields (fuel type, max price, search radius, lat/lon, enabled flag, trigger tracking)
++ Created PriceAlertEvent entity with 8 fields (alert ref, station details, price, detection time, distance, read flag)
++ Created checkPriceAlerts backend function (service-role, Haversine distance calc, no duplicates, updates trigger metadata)
++ Created PriceAlerts.jsx page with 3 sections: My Alerts (enable/disable/delete), Create Alert (form), Triggered Alerts (event list)
++ All data flows read-only for display; write operations only for alert CRUD and event creation
++ Responsive design with loading states and error handling
+
+### Data sources
+- Entity: PriceAlert (user-created alerts, CRUD via UI)
+- Entity: PriceAlertEvent (created by checkPriceAlerts function)
+- Entity: Station (fetched during distance check, read-only)
+- Entity: FuelPrice (matched against alerts, read-only)
+- All queries use service-role for background function
+
+### Governance safety guarantees
+1. No modifications to matching engine or station identity logic
+2. No changes to duplicate remediation
+3. Distance calculation is deterministic (Haversine formula, standard implementation)
+4. Events are immutable after creation (no delete, only read/mark-as-read)
+5. Background function is read-only except for alert metadata updates
+
+### Automation integration (future)
+Phase 6A is wired for background execution. To activate:
+- Create scheduled automation with checkPriceAlerts function
+- Recommend: repeat_interval=5, repeat_unit="minutes" (or configurable)
+- Will run in background and create PriceAlertEvent records
+
+### Commit hash
+unavailable in current Base44 context
+
+### GitHub visibility confirmation
+Not yet verified in GitHub after publish.
+
+### Locked-component safety confirmation
+Confirmed: all six frozen Phase 2 files remain untouched. No code modification attempted on: classifyStationsRuleEngine, classifyGooglePlacesConfidence, classifyPricePlausibility, deleteAllGooglePlacesPrices, deleteGooglePlacesPricesForReclassification, verifyGooglePlacesPriceNormalization.
+
+---
+
 ## 2026-03-10 — Entry 26 (Phase 5A — System Health Dashboard Panel Created)
 
 ### Task
