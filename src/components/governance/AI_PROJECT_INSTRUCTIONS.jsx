@@ -1,37 +1,12 @@
-# DEPRECATED: AI_PROJECT_INSTRUCTIONS.md
-
-**This file has been deprecated and is archived for historical reference only.**
-
----
-
-## Migration Notice
-
-Content from this file has been split into four canonical governance documents:
-
-1. **PROJECT_GOVERNANCE.md** — Master governance rules
-2. **CHATGPT_PROJECT_INSTRUCTIONS.md** — AI agent behavioral rules
-3. **BASE44_PROJECT_INSTRUCTIONS.md** — Platform-specific rules
-4. **AI_BOOTSTRAP.md** — Agent startup protocol
-
-All AI instructions should be read from the canonical files above.
-
-**Do not add new governance rules to this file.**
-
----
-
-## Archive: Old Content
-
-The original v1.4 content is retained below for historical reference only.
-
----
-
-# [ARCHIVED] AI PROJECT INSTRUCTIONS — TANKRADAR
+# AI PROJECT INSTRUCTIONS — TANKRADAR
 v1.4 (Chunked Governance + Repository Verification + Safety Guards + Base44 Integration)
 
 Datert: 2026-03-10  
-Status: Archived (use canonical files instead)
+Status: Production Governance Document
 
-[Rest of old content would follow...]
+Dette dokumentet formaliserer systemstruktur, datagovernance, AI-agentrammer og utviklerprotokoll for TankRadar.
+
+Endringer i dette dokumentet krever eksplisitt versjonsoppdatering.
 
 ---
 
