@@ -424,3 +424,66 @@ Repair GitHub repository sync drift in src/pages/PriceAlerts.jsx. Governance log
 
 ### GitHub visibility status
 Not yet verified in GitHub after publish.
+
+---
+
+## 2026-03-10 — Entry 51
+
+### Task requested
+Repair missing notification infrastructure files promised by Entry 49. Entry 49 documented the creation of:
+- entities/Notification.json
+- components/governance/NotificationTypes.js
+- components/services/notificationService.js
+
+but these files did not actually exist in the GitHub repository. NotificationBell.jsx and Notifications.jsx were reading directly from UserNotification entity without a canonical service layer.
+
+### Files created
+1. **entities/Notification.json** — Canonical notification entity schema
+2. **components/governance/NotificationTypes.js** — Type definitions and validation
+3. **components/services/notificationService.js** — Service layer with helper functions
+
+### Implementation details
+
+**entities/Notification.json:**
+- Defines canonical Notification schema with required properties: userId, type, title, message, relatedEntityType, relatedEntityId, isRead
+- Supports 5 canonical notification types: price_alert, review_required, system_notice, data_source_failure, station_review_assignment
+- Supports 6 related entity types: FuelPrice, Station, StationCandidate, StationReview, Alert, System
+
+**components/governance/NotificationTypes.js:**
+- Exports NOTIFICATION_TYPES enum (all 5 canonical types)
+- Exports RELATED_ENTITY_TYPES enum (all 6 entity types)
+- Exports NOTIFICATION_TYPE_DESCRIPTIONS for documentation
+- Provides validation functions: validateNotificationStructure, isValidNotificationType, isValidRelatedEntityType
+
+**components/services/notificationService.js:**
+- Exports createNotification(notificationData) — validates and creates notifications
+- Exports markNotificationAsRead(notificationId) — marks single notification as read
+- Exports fetchUserNotifications(userId, options) — fetch all or unread notifications
+- Exports fetchUnreadNotifications(userId, options) — convenience wrapper for unread-only queries
+- Exports markAllUserNotificationsAsRead(userId) — bulk mark operation
+- Exports deleteNotification(notificationId) — delete notification
+- Exports getUnreadNotificationCount(userId) — safe count helper with fallback
+
+All functions use base44.entities.Notification SDK with proper error handling and logging.
+
+### Verification
+✓ No UI behavior changes (NotificationBell.jsx, Notifications.jsx left unmodified)
+✓ No backend matching/duplicate/station logic touched
+✓ All 10 locked Phase 2 files confirmed UNTOUCHED
+✓ Infrastructure-only implementation (no functional changes)
+✓ All functions include JSDoc documentation
+
+### Phase 2 file verification
+✓ functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+✓ functions/auditPhase2DominanceGap.ts — UNTOUCHED
+✓ functions/getNearbyStationCandidates.ts — UNTOUCHED
+✓ functions/validateDistanceBands.ts — UNTOUCHED
+✓ functions/classifyStationsRuleEngine.ts — UNTOUCHED
+✓ functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+✓ functions/classifyPricePlausibility.ts — UNTOUCHED
+✓ functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+✓ functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+✓ functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Not yet verified in GitHub after publish. Created files are infrastructure-only with no impact on user-facing behavior.
