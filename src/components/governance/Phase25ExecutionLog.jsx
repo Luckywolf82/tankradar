@@ -4,6 +4,115 @@
 
 ---
 
+## 2026-03-10 — Entry 22 (Phase 2.5 Verification Step — previewDuplicateMerge Read-Only Confirmation)
+
+### Task
+Verify that previewDuplicateMerge is fully operational, read-only, and correctly wired to the DuplicateRemediationPanel UI. Add debug logging to capture request/response payloads.
+
+### What was verified before change
+- functions/previewDuplicateMerge confirmed present and fully read-only (Entry 20)
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with live dry-run section (Entry 21)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added console.log statements to handleRunDryRunPreview in DuplicateRemediationPanel:
+   - Logs request payload: canonical_station_id, duplicate_station_ids
+   - Logs full response payload from previewDuplicateMerge
+   - Logs safe_to_merge boolean and blockers array
+   - All logs prefixed with [PHASE 2.5 VERIFICATION] for easy filtering
+2. Added temporary debug output section in result card:
+   - Text note: "[Debug — See browser console for full payload]"
+   - Visually subtle (slate-50 background, small text)
+3. No backend changes, no schema changes, no data mutations
+
+### What was NOT implemented
+- No merge execution logic
+- No writes of any kind
+- No new backend endpoints
+- No modification of previewDuplicateMerge logic
+- No modification of Phase 2 matching engine files
+
+### Database write confirmation
+By design, previewDuplicateMerge:
+- Reads only: Station.get(), FuelPrice.filter() — no writes
+- Returns: preview impact without mutation
+- Does NOT call mergeDuplicateStations or executeDuplicateMerge
+- Does NOT create StationMergeLog entries
+- Does NOT update Station.status
+- Does NOT re-point FuelPrice records
+
+Verification method:
+- Browser console logs show exact payloads sent and received
+- No database operations occur during preview
+- All operations are read-only .get() and .filter() queries
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx (added logging)
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/previewDuplicateMerge.js (unchanged)
+- functions/mergeDuplicateStations.ts (unchanged)
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+
+### Diff-style summary
++ Added console.log for request payload (canonical_station_id, duplicate_station_ids)
++ Added console.log for response payload (full response data)
++ Added console.log for safe_to_merge boolean
++ Added console.log for blockers array
++ Added temporary debug note in result card (references browser console)
++ All logging is verification-only, does not affect logic
++ Prefixed all logs with [PHASE 2.5 VERIFICATION] for easy filtering in browser console
+
+### Verification output format
+When curator enters canonical_station_id and duplicate_station_ids and clicks "Run dry-run preview":
+
+Browser console shows:
+```
+[PHASE 2.5 VERIFICATION] previewDuplicateMerge request payload: {
+  canonical_station_id: "...",
+  duplicate_station_ids: [...]
+}
+[PHASE 2.5 VERIFICATION] previewDuplicateMerge response payload: {
+  canonical_station_exists: boolean,
+  canonical_already_archived: boolean,
+  duplicate_stations_found: number,
+  duplicate_station_ids_missing: [...],
+  canonical_in_duplicate_list: boolean,
+  fuelprice_records_would_be_repointed: number,
+  duplicate_stations_would_be_archived: number,
+  safe_to_merge: boolean,
+  blockers: [...]
+}
+[PHASE 2.5 VERIFICATION] safe_to_merge: true/false
+[PHASE 2.5 VERIFICATION] blockers: [...]
+```
+
+UI shows result table with all 7 fields + safe_to_merge header + blockers list. No database mutations occur.
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 21 (Phase 4B UI Wiring — Live Dry-Run Preview Section Added to DuplicateRemediationPanel)
 
 ### Task

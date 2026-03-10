@@ -125,13 +125,21 @@ export default function DuplicateRemediationPanel() {
     setPreviewError(null);
     setPreviewResult(null);
 
-    const res = await base44.functions.invoke("previewDuplicateMerge", {
+    // PHASE 2.5 VERIFICATION — Log request payload
+    const requestPayload = {
       canonical_station_id: canonicalId,
       duplicate_station_ids: dupIds,
-    });
+    };
+    console.log("[PHASE 2.5 VERIFICATION] previewDuplicateMerge request payload:", requestPayload);
+
+    const res = await base44.functions.invoke("previewDuplicateMerge", requestPayload);
 
     setPreviewLoading(false);
     if (res.data && res.data.safe_to_merge !== undefined) {
+      // PHASE 2.5 VERIFICATION — Log response payload
+      console.log("[PHASE 2.5 VERIFICATION] previewDuplicateMerge response payload:", res.data);
+      console.log("[PHASE 2.5 VERIFICATION] safe_to_merge:", res.data.safe_to_merge);
+      console.log("[PHASE 2.5 VERIFICATION] blockers:", res.data.blockers);
       setPreviewResult(res.data);
     } else {
       setPreviewError(res.data?.error ?? "Unknown error from previewDuplicateMerge");
@@ -468,6 +476,12 @@ export default function DuplicateRemediationPanel() {
                 previewResult.safe_to_merge ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
               }`}>
                 {previewResult.safe_to_merge ? "✓ safe_to_merge: true" : "✗ safe_to_merge: false"}
+              </div>
+              {/* PHASE 2.5 VERIFICATION — Debug output */}
+              <div className="px-3 py-2 bg-slate-50 border-t border-slate-100">
+                <p className="text-xs text-slate-500 font-mono mb-1">
+                  [Debug — See browser console for full payload]
+                </p>
               </div>
               <div className="divide-y divide-slate-100">
                 {[
