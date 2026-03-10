@@ -327,7 +327,7 @@ export default function DuplicateDetectionResults({ results }) {
         <Card className="bg-blue-50 border border-blue-200">
           <CardContent className="pt-6 text-center">
             <Info size={20} className="mx-auto text-blue-600 mb-2" />
-            <p className="text-slate-700">No duplicates match current filters.</p>
+            <p className="text-slate-700">No duplicates match current filters{search ? ` or search "${searchTerm}"` : ""}.</p>
           </CardContent>
         </Card>
       ) : (
