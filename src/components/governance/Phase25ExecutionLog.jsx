@@ -4,6 +4,76 @@
 
 ---
 
+## 2026-03-10 — Entry 13 (Phase 3 Preview Enrichment — Safety Checklist + Process Overview Added)
+
+### Task
+Upgrade DuplicateRemediationPanel from a minimal placeholder to a richer read-only preview panel with a static safety checklist and a static process overview. No data mutation, no backend calls, no schema changes.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present (read-only placeholder)
+- src/components/governance/Phase3RemediationPlan.jsx confirmed present
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 12 present)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added SAFETY_CHECKLIST static array (6 items):
+   - Preview only — no merge actions enabled
+   - Canonical station selection not active
+   - No record deletion enabled
+   - No automatic remediation enabled
+   - Curator confirmation workflow required before activation
+   - Audit logging required for future remediation actions
+2. Added PROCESS_OVERVIEW static array (6 steps):
+   - Detect duplicates → Curator triage → Non-destructive preview → Curator acknowledgement → Atomic execution → Audit log entry
+3. Replaced single Card layout with three-card layout:
+   - Card 1: existing placeholder banner (text preserved)
+   - Card 2: Safety checklist (amber styling, read-only)
+   - Card 3: Process overview (white/slate, numbered steps, read-only)
+4. Added CheckCircle2 and Circle to lucide-react imports
+
+### What was NOT implemented
+- No merge logic
+- No canonical station assignment
+- No backend calls
+- No schema changes
+- No data writes
+- No state changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Diff-style summary
++ Added SAFETY_CHECKLIST constant (6 static items)
++ Added PROCESS_OVERVIEW constant (6 static steps)
++ Expanded single-card layout to three-card layout
++ Added CheckCircle2 to lucide-react import
+- No existing placeholder text removed (preserved verbatim)
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 12 (Phase 3 UI Exposure — DuplicateRemediationPanel Added to SuperAdmin)
 
 ### Task
