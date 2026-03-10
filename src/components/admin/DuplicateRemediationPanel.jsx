@@ -207,8 +207,6 @@ export default function DuplicateRemediationPanel() {
       </Card>
 
       {/* ── 5. Merge impact preview ───────────────────────────────────────── */}
-      {/* (section already present below) */}
-      {/* ── CURATOR CONFIRMATION PREVIEW IS SECTION 6 — see below ──────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
