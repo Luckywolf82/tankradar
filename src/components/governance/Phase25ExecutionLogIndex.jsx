@@ -10,7 +10,7 @@ export const EXECUTION_LOG_METADATA = {
   purpose: "Governance audit trail for TankRadar station matching and duplicate remediation",
   status: "active",
   lastUpdated: "2026-03-10",
-  entryCount: 54,
+  entryCount: 51,
   
   // Chunk mapping: exact entry ranges in each file
   chunks: [
@@ -40,9 +40,9 @@ export const EXECUTION_LOG_METADATA = {
     },
     {
       fileName: "Phase25ExecutionLog_005.jsx",
-      entries: "41–54",
+      entries: "41–51",
       status: "ACTIVE (append new entries here)",
-      description: "Parser integration refactor through governance consolidation (Entries 41–54)"
+      description: "Parser integration refactor through repo-sync repairs (Entries 48–51)"
     }
   ],
 
@@ -51,7 +51,7 @@ export const EXECUTION_LOG_METADATA = {
     activeChunk: "Phase25ExecutionLog_005.jsx",
     whenToCreateNewChunk: "When active chunk exceeds 250KB or contains ~20 entries",
     nextChunkName: "Phase25ExecutionLog_006.jsx",
-    entryRangeForNextChunk: "55–74",
+    entryRangeForNextChunk: "52–71",
     updateProcedure: [
       "1. Append new entry to active chunk file (e.g., Phase25ExecutionLog_005.jsx)",
       "2. If chunk size limit reached, create next numbered chunk",
