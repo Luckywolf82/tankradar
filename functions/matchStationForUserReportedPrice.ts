@@ -357,7 +357,12 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude } = payload;
+    const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude, preview_mode } = payload;
+
+    // EARLY EXIT: Preview mode — return read-only metadata only
+    if (preview_mode === true) {
+      return handlePreviewMode(station_name, station_chain, city, latitude, longitude, base44);
+    }
 
     // Use selected station coordinates if available, otherwise fall back to GPS
     const matchLat = latitude !== undefined ? latitude : gps_lat;
