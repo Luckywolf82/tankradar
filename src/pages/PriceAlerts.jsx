@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, Trash2, Eye, EyeOff, Plus, Loader2, MapPin } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 
 export default function PriceAlertsPage() {
@@ -81,14 +82,7 @@ export default function PriceAlertsPage() {
     }
   };
 
-  const handleMarkEventAsRead = async (eventId) => {
-    try {
-      await base44.entities.PriceAlertEvent.update(eventId, { isRead: true });
-      loadAlertsAndEvents();
-    } catch (err) {
-      console.error("Failed to mark event as read:", err);
-    }
-  };
+
 
   const fuelTypeLabels = {
     gasoline_95: "Bensin 95",
@@ -311,59 +305,22 @@ export default function PriceAlertsPage() {
         </Card>
       )}
 
-      {/* Triggered Alerts Section */}
-      <Card>
+      {/* Triggered Alerts — Consolidated to Notifications */}
+      <Card className="bg-slate-50 border border-slate-200">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Bell size={18} className="text-green-600" />
-            Triggered Alerts ({events.filter((e) => !e.isRead).length} unread)
+            <Bell size={18} className="text-slate-600" />
+            Triggered Alerts
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {events.length === 0 ? (
-            <p className="text-xs text-slate-500">No triggered alerts yet.</p>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className={`p-3 border rounded flex items-start justify-between gap-3 ${
-                    event.isRead
-                      ? "bg-slate-50 border-slate-200"
-                      : "bg-green-50 border-green-200"
-                  }`}
-                >
-                  <div className="flex-1 text-xs space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-800">{event.stationName}</span>
-                      <span className="text-slate-500">{fuelTypeLabels[event.fuelType]}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-700 font-mono font-semibold">
-                        {event.priceNok} NOK
-                      </span>
-                      <span className="text-slate-500">·</span>
-                      <span className="text-slate-500">
-                        {event.distance ? `${event.distance} km away` : "Distance unknown"}
-                      </span>
-                    </div>
-                    <div className="text-slate-500">
-                      {new Date(event.detectedAt).toLocaleString("no-NO")}
-                    </div>
-                  </div>
-                  {!event.isRead && (
-                    <button
-                      onClick={() => handleMarkEventAsRead(event.id)}
-                      className="p-1 hover:bg-green-200 rounded shrink-0"
-                      title="Mark as read"
-                    >
-                      <Eye size={14} className="text-green-600" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        <CardContent className="text-sm text-slate-700">
+          <p className="mb-3">Triggered price alerts now appear in your notifications inbox.</p>
+          <a
+            href={createPageUrl("Notifications")}
+            className="inline-block px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+          >
+            View Notifications (Varsler)
+          </a>
         </CardContent>
       </Card>
     </div>
