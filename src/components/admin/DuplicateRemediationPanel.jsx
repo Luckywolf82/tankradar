@@ -30,6 +30,36 @@ const PROCESS_OVERVIEW = [
   { step: 6, label: "Audit log entry", desc: "Full audit trail written to StationMergeLog" },
 ];
 
+const MOCK_CANDIDATES = [
+  {
+    name: "Circle K Moholt",
+    chain: "Circle K",
+    address: "Moholt allé 57, Trondheim",
+    sourceCount: 3,
+    priceCount: 14,
+    confidenceBadge: "High",
+    isCanonicalExample: true,
+  },
+  {
+    name: "Circle K Moholt Senter",
+    chain: "Circle K",
+    address: "Moholt allé 55, Trondheim",
+    sourceCount: 1,
+    priceCount: 2,
+    confidenceBadge: "Low",
+    isCanonicalExample: false,
+  },
+  {
+    name: "Moholt Bensinstasjon",
+    chain: null,
+    address: "Moholt allé, Trondheim",
+    sourceCount: 1,
+    priceCount: 1,
+    confidenceBadge: "Low",
+    isCanonicalExample: false,
+  },
+];
+
 export default function DuplicateRemediationPanel() {
   return (
     <div className="space-y-4">
