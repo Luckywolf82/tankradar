@@ -4,6 +4,78 @@
 
 ---
 
+## 2026-03-10 — Entry 18 (Phase 4B — mergeDuplicateStations Backend Function Created)
+
+### Task
+Create safe merge execution engine as functions/mergeDuplicateStations. Implements: station existence validation, FuelPrice re-pointing, soft-archival of duplicates, mandatory StationMergeLog audit entry. No automatic execution — requires curator_confirmation: true.
+
+### What was verified before change
+- functions/mergeDuplicateStation (singular) confirmed present and reviewed
+- Phase 2 locked files confirmed untouched
+- No existing mergeDuplicateStations (plural) file present
+
+### What was implemented
+1. Created functions/mergeDuplicateStations with:
+   - Auth gate: curator or admin role required
+   - Payload validation: canonical_station_id, duplicate_station_ids[], curator_confirmation must be literally true
+   - Safety check: canonical must not appear in duplicate list
+   - Station existence check via asServiceRole.entities.Station.get for all IDs
+   - Canonical must not already be archived_duplicate
+   - FuelPrice re-point loop: all prices referencing any dupId → canonical_station_id
+   - Soft-archive: Station.status = "archived_duplicate" for all duplicates (no hard deletes)
+   - Mandatory audit log: StationMergeLog.create with full metadata
+   - Returns: success, canonical_station_id, duplicate_station_ids, fuelprice_records_moved, duplicates_archived, curator_id, timestamp
+
+### What was NOT implemented
+- No automatic execution
+- No merge without curator_confirmation: true
+- No hard deletes
+- No matching engine changes
+- No scoring logic changes
+- No Phase 2 locked file modifications
+- No frontend wiring (frontend preview panel remains read-only)
+
+### Files actually modified
+- src/components/governance/Phase25ExecutionLog.jsx (this entry)
+
+### Files created
+- src/functions/mergeDuplicateStations.js
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+- functions/AI_PROJECT_INSTRUCTIONS.ts
+- src/components/admin/DuplicateRemediationPanel.jsx (remains fully read-only)
+
+### Diff-style summary
++ Created functions/mergeDuplicateStations (new file)
++ Auth: role check (admin or curator)
++ Validation: canonical_station_id, duplicate_station_ids[], curator_confirmation === true
++ Station existence: Promise.all get + missing ID check
++ Canonical archived check
++ FuelPrice re-point loop (sequential per dupId, counts moved records)
++ Soft-archive: parallel Station.update status = archived_duplicate
++ Audit: StationMergeLog.create with full metadata
++ Return: success confirmation JSON
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 17 (Phase 4A Final Safe Step — Curator Confirmation Preview Added to DuplicateRemediationPanel)
 
 ### Task
