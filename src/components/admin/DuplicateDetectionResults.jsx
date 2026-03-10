@@ -1,7 +1,61 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Info, ChevronDown, Copy, Check } from "lucide-react";
+import { AlertTriangle, Info, ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
 import DuplicateStationGroup from "./DuplicateStationGroup";
+
+const CLASSIFICATION_CONFIG = [
+  {
+    key: "exact_coordinate_duplicate",
+    label: "🔴 Exact Coordinate Duplicates",
+    badgeColor: "text-red-700 bg-red-50 border-red-200",
+    headerColor: "bg-red-50 border-red-200",
+  },
+  {
+    key: "exact_name_chain_duplicate",
+    label: "🟠 Same Location, Different Names/Chains",
+    badgeColor: "text-orange-700 bg-orange-50 border-orange-200",
+    headerColor: "bg-orange-50 border-orange-200",
+  },
+  {
+    key: "possible_near_duplicate",
+    label: "🟡 Possible Near-Duplicates",
+    badgeColor: "text-yellow-700 bg-yellow-50 border-yellow-200",
+    headerColor: "bg-yellow-50 border-yellow-200",
+  },
+];
+
+function ClassificationSection({ config, groups, index }) {
+  const [expanded, setExpanded] = useState(groups.length > 0);
+  const count = groups.length;
+
+  return (
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:brightness-95 ${config.headerColor} border-b border-slate-200`}
+      >
+        <div className="flex items-center gap-2">
+          {expanded ? <ChevronDown size={16} className="text-slate-600 flex-shrink-0" /> : <ChevronRight size={16} className="text-slate-600 flex-shrink-0" />}
+          <span className="text-sm font-semibold text-slate-900">{config.label}</span>
+        </div>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded border ${config.badgeColor}`}>
+          {count} group{count !== 1 ? "s" : ""}
+        </span>
+      </button>
+      {expanded && (
+        <div className={`p-4 space-y-4 bg-white ${count === 0 ? "text-center py-6" : ""}`}>
+          {count === 0 ? (
+            <p className="text-sm text-slate-500">No groups match current filters.</p>
+          ) : (
+            groups.map((group, idx) => (
+              <DuplicateStationGroup key={`${group.classification}-${index}-${idx}`} group={group} index={idx} />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function DuplicateDetectionResults({ results }) {
   const [showWhyGrouped, setShowWhyGrouped] = useState(false);
