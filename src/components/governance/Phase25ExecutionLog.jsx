@@ -4,6 +4,68 @@
 
 ---
 
+## 2026-03-10 — Entry 5
+
+### Task requested
+Add a compact client-side "Reset filters" control to DuplicateDetectionResults so curators can quickly return to the default preview state. Button should only appear when current state differs from defaults.
+
+### Git / revision reference
+- Commit hash: unavailable in current Base44 context
+
+### Files actually modified
+- components/admin/DuplicateDetectionResults
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+
+### What was actually implemented
+1. Added `isFiltered` boolean derived from current state — true when any of the following differ from defaults: selectedClassifications (any false), confidenceFilter !== "all", sortBy !== "confidence", searchTerm !== "", showWhyGrouped !== false.
+2. Added `handleResetFilters` function that resets all five state values to their defaults in one call.
+3. Added a conditionally rendered "Reset filters" button at the bottom-right of the Review Controls card — only visible when `isFiltered` is true. Styled as subtle underlined text link (text-xs, text-slate-500, hover:text-slate-800) to keep it visually secondary.
+4. Reset immediately updates filtered array, summary strip, and copy-summary output (all are derived from state with no additional side effects needed).
+
+### What was NOT implemented
+- No new state added (isFiltered is a derived boolean, not useState)
+- No persistence
+- No backend changes
+- No schema changes
+- No new actions beyond resetting existing state
+
+### Verification notes
+- Repository file read and confirmed before change: search, grouped sections, summary strip all already present
+- Scope limited to allowed Phase 2.5 area
+- No backend changes
+- No schema changes
+- No persistence added
+- Matching behavior unchanged
+- Station identity logic unchanged
+
+### Locked-component safety confirmation
+Confirmed: locked Phase 2 production matching components were not modified.
+
+### Diff-style summary
+- Added `isFiltered` derived boolean (checks 5 state values against defaults)
+- Added `handleResetFilters` function (resets all 5 state values to defaults)
+- Added conditional "Reset filters" button inside Review Controls card, bottom-right, only shown when `isFiltered` is true
+- No imports added/removed
+- No existing behavior changed
+# Operational handoff log for ChatGPT verification
+# Append-only. Do not delete previous entries.
+
+---
+
 ## 2026-03-10 — Entry 4 (No-op)
 
 ### Task requested
