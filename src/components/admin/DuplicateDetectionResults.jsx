@@ -70,6 +70,27 @@ export default function DuplicateDetectionResults({ results }) {
   const [searchTerm, setSearchTerm] = useState("");
   // Section expand/collapse is managed per ClassificationSection instance
 
+  const isFiltered =
+    !selectedClassifications.exact_coordinate_duplicate ||
+    !selectedClassifications.exact_name_chain_duplicate ||
+    !selectedClassifications.possible_near_duplicate ||
+    confidenceFilter !== "all" ||
+    sortBy !== "confidence" ||
+    searchTerm !== "" ||
+    showWhyGrouped !== false;
+
+  const handleResetFilters = () => {
+    setSelectedClassifications({
+      exact_coordinate_duplicate: true,
+      exact_name_chain_duplicate: true,
+      possible_near_duplicate: true,
+    });
+    setConfidenceFilter("all");
+    setSortBy("confidence");
+    setSearchTerm("");
+    setShowWhyGrouped(false);
+  };
+
   if (!results || results.status === 'no_stations_found') {
     return (
       <Card className="bg-blue-50 border border-blue-200">
