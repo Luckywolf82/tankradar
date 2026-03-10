@@ -919,3 +919,74 @@ Ready for publish. Single minimal UI change with full governance compliance. Req
 - Entry 55: Stabilized notification pipeline (notificationServiceClient)
 - Entry 56: Added savings amount display (estimated kr/liter)
 - Entry 57: Enhanced unread notification actionability ("Se varsler" CTA)
+
+---
+
+## 2026-03-10 — Entry 58
+
+### Task requested
+Implement one minimal UX improvement to the Notifications page: add a lightweight trigger-reason label above each unread notification title so users see *why* the alert fired at a glance.
+
+### Files actually modified
+- pages/Notifications.jsx
+
+### What was implemented
+
+1. Added `deriveTriggerReason()` helper function (new, lines ~72–85):
+   - Lightweight UI-only keyword detection from notification title + message
+   - Derives trigger reason in Norwegian based on content patterns:
+     - "prisfall" → "Prisfall detektert"
+     - "målpris" / "måpris" → "Nådd målpris"
+     - "nytt lav" / "ny lav" → "Nytt lavt punkt"
+     - "nær deg" → "Pris nær deg"
+     - Fallback: "Prisvarsel"
+   - No backend calls, no logic changes
+   - Pure display-time derivation
+
+2. Enhanced unread notification display (lines ~116–121):
+   - Added trigger-reason label badge above title
+   - Label styling: `text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded`
+   - Positioned in flexbox with gap-2 for visual hierarchy
+   - Creates visual context: "Why is this showing?" → title → message → actions
+
+### Design rationale
+
+**Why this improves actionability:**
+- Users see the trigger reason immediately ("Prisfall detektert")
+- Makes each notification feel intentional, not mysterious
+- Low visual noise (small badge above title)
+- No deep logic required (keyword matching only)
+- Complements existing savings badge + CTA
+
+### Why this is governance-safe
+
+✓ **UI-only enhancement** — Zero backend changes
+✓ **No notification logic modified** — Display-time derivation only
+✓ **No entity schema changes** — Uses existing title/message fields
+✓ **No locked files touched** — Single file (Notifications.jsx)
+✓ **Keyword-based only** — Conservative pattern matching (no AI/scoring)
+✓ **Graceful fallback** — Default "Prisvarsel" if no pattern matches
+✓ **Zero performance impact** — Runs on display, not pipeline
+
+### Verification
+
+✓ Index updated: entryCount 57 → 58, chunk 005 entries 41–57 → 41–58
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+✓ No notification creation/triggering logic changed
+✓ No alert system modified
+✓ No user data model changes
+✓ User-facing clarity enhanced with minimal code
+
+### GitHub visibility status
+Ready for publish. Single minimal keyword-based label derivation with full governance compliance. Requires GitHub verification after publish.
