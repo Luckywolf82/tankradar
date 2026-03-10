@@ -13,6 +13,7 @@ export default function DuplicateDetectionResults({ results }) {
   const [confidenceFilter, setConfidenceFilter] = useState("all");
   const [sortBy, setSortBy] = useState("confidence");
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   if (!results || results.status === 'no_stations_found') {
     return (
