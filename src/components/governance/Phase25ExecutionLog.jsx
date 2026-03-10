@@ -4,6 +4,74 @@
 
 ---
 
+## 2026-03-10 — Entry 16 (Phase 4A — Force Rewrite to Confirm GitHub Sync of Merge Impact Preview)
+
+### Task
+GitHub-visible repo showed DuplicateRemediationPanel.jsx without "Merge impact preview" section and Phase25ExecutionLog.jsx without Entry 15, despite both being confirmed present in Base44 runtime. Performed a full atomic rewrite of DuplicateRemediationPanel.jsx to force a new GitHub sync event.
+
+### Root cause
+GitHub 2-way sync is asynchronous. Previous incremental edits (Entries 14–15) were applied to Base44 runtime immediately but did not trigger a visible push to GitHub within the expected timeframe. Full rewrite forces a new file-level change event that GitHub sync must process.
+
+### What was verified before this change
+- Base44 runtime read of DuplicateRemediationPanel.jsx (lines 178–233) confirmed "Merge impact preview" section fully present
+- Base44 runtime read of Phase25ExecutionLog.jsx (lines 7–66) confirmed Entry 15 fully present
+- GitHub-visible versions of both files were stale (missing Entry 15 and Merge impact preview)
+
+### What was implemented
+Full atomic rewrite of src/components/admin/DuplicateRemediationPanel.jsx containing all 5 sections:
+1. Placeholder banner
+2. Safety checklist (SAFETY_CHECKLIST static array, 6 items)
+3. Process overview (PROCESS_OVERVIEW static array, 6 steps)
+4. Canonical station preview (MOCK_CANDIDATES static array, 3 cards)
+5. Merge impact preview (MERGE_SUMMARY_STATS + MERGE_ACTION_MAP static arrays)
+   - Warning: "Preview only — no merge is executed. No records are changed from this panel."
+   - Summary stats: Canonical kept: 1, Duplicates soft-archived: 2, FuelPrice records re-pointed: 16, Curator confirmation: Required, Audit log: Required, Hard deletes: None
+   - Action mapping: Keep canonical → Circle K Moholt, Archive × 2, Re-point FuelPrice records
+
+### What was NOT implemented
+- No merge execution logic
+- No canonical selection logic
+- No backend calls
+- No schema changes
+- No data writes
+- No state changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx (full rewrite)
+- src/components/governance/Phase25ExecutionLog.jsx (this entry appended)
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Diff-style summary
++ Full rewrite of DuplicateRemediationPanel.jsx (all 5 sections present in single atomic write)
++ MERGE_SUMMARY_STATS constant (6 tiles)
++ MERGE_ACTION_MAP constant (4 rows: Keep canonical, Archive ×2, Re-point FuelPrice records)
++ Warning strip: "Preview only — no merge is executed. No records are changed from this panel."
++ Entry 16 appended to Phase25ExecutionLog.jsx
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 15 (Phase 4A — Merge Impact Preview Section Added to DuplicateRemediationPanel)
 
 ### Task
