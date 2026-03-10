@@ -9,379 +9,341 @@ It must never contain:
 
 All entries must be derived from confirmed tests or observed production behavior.
 
+---
 
-LAST VERIFIED STATE — TankRadar
-Confirmed Test Results & Verified Outcomes Only
+# LAST VERIFIED STATE — TankRadar
+## Confirmed Test Results & Verified Outcomes Only
 
-Last Updated: 2026-03-10 UTC+1
-Verification Method: Live function testing against production station catalog
-Caveat: This file contains only test-confirmed behavior, not proposed features or assumptions
+**Last Updated:** 2026-03-10 UTC+1  
+**Verification Method:** Live function testing against production station catalog  
+**Caveat:** This file contains only test-confirmed behavior, not proposed features or assumptions
 
-DUPLICATE CATALOG WORKSTREAM — VERIFIED (2026-03-09)
-Detector Output Structure (Enhanced)
+---
 
-File: functions/detectStationDuplicates
-Status: ✅ ENHANCED (output structure improved, logic conservative unchanged)
+## DUPLICATE CATALOG WORKSTREAM — VERIFIED (2026-03-09)
 
-Verified Changes:
+### Detector Output Structure (Enhanced)
 
-✅ Classification values updated to exact_coordinate_duplicate, exact_name_chain_duplicate, possible_near_duplicate
+**File:** `functions/detectStationDuplicates`  
+**Status:** ✅ ENHANCED (output structure improved, logic conservative unchanged)
 
-✅ explanation field added per group (human-readable summary)
+**Verified Changes:**
 
-✅ reason, review_action fields removed (cleaner preview-only output)
+- ✅ Classification values updated to `exact_coordinate_duplicate`, `exact_name_chain_duplicate`, `possible_near_duplicate`
+- ✅ `explanation` field added per group (human-readable summary)
+- ✅ `reason`, `review_action` fields removed (cleaner preview-only output)
+- ✅ Summary keys updated to match new classifications
+- ✅ Sort order improved: confidence → group size
+- ✅ No auto-action suggestions in output
+- ✅ Conservative classification logic UNCHANGED
 
-✅ Summary keys updated to match new classifications
+**Confirmed Non-Modification:**
 
-✅ Sort order improved: confidence → group size
+- ✅ Haversine distance calculation UNCHANGED
+- ✅ Duplicate detection logic UNCHANGED (same thresholds: >1m, <50m for near-duplicates)
+- ✅ Confidence assignment UNCHANGED (HIGH for exact, MEDIUM for near)
+- ✅ No matching-engine interference
 
-✅ No auto-action suggestions in output
+---
 
-✅ Conservative classification logic UNCHANGED
+## ADMIN DUPLICATE REVIEW UI — IMPLEMENTED (2026-03-09)
 
-Confirmed Non-Modification:
+### Duplicate Detection Scanner & Results Display
 
-✅ Haversine distance calculation UNCHANGED
+**Files:**
 
-✅ Duplicate detection logic UNCHANGED (same thresholds: >1m, <50m for near-duplicates)
+- `components/admin/DuplicateDetectionScanner.jsx`
+- `components/admin/DuplicateStationGroup.jsx`
+- `components/admin/DuplicateDetectionResults.jsx`
+- `pages/SuperAdmin.jsx`
 
-✅ Confidence assignment UNCHANGED (HIGH for exact, MEDIUM for near)
+**Status:** ✅ IMPLEMENTED (preview-only)
 
-✅ No matching-engine interference
+**Verified Behavior:**
 
-ADMIN DUPLICATE REVIEW UI — IMPLEMENTED (2026-03-09)
-Duplicate Detection Scanner & Results Display
+- ✅ Admin can input city name and trigger scan
+- ✅ Loading state displayed during scan
+- ✅ Results grouped by classification
+- ✅ Station cards show full station metadata
+- ✅ Preview-only warning banner displayed
+- ✅ Summary statistics generated
+- ✅ Empty state handled
+- ✅ Error state handled
+- ✅ No write actions implemented
+- ✅ No StationReview creation
+- ✅ No merge/delete buttons
 
-Files
+**Confirmed Non-Modification:**
 
-components/admin/DuplicateDetectionScanner.jsx
+- ✅ Phase 2 matching logic unchanged
+- ✅ detectStationDuplicates function unchanged
+- ✅ No schema changes
+- ✅ No governance changes
 
-components/admin/DuplicateStationGroup.jsx
+---
 
-components/admin/DuplicateDetectionResults.jsx
+## CURATOR REVIEW CONTROLS — VERIFIED (2026-03-09)
 
-pages/SuperAdmin.jsx
+**File:** `components/admin/DuplicateDetectionResults.jsx`  
+**Status:** ✅ VERIFIED (UI-only controls)
 
-Status: ✅ IMPLEMENTED (preview-only)
+**Verified Implementation:**
 
-Verified Behavior
+- ✅ Classification filter
+- ✅ Confidence filter
+- ✅ Sort order controls
+- ✅ "Why Grouped" collapsible explanation
+- ✅ Filtered results dynamically updated
+- ✅ Empty state handled
 
-✅ Admin can input city name and trigger scan
+**State Management:**
 
-✅ Loading state displayed during scan
+- Component-local only
+- Resets on page reload
+- No persistence
+- No DB writes
+- No local storage
 
-✅ Results grouped by classification
+**Sorting Logic:**
 
-✅ Station cards show full station metadata
+- Default sort by confidence
+- Optional sort by group size
+- Optional sort by distance
 
-✅ Preview-only warning banner displayed
+**Confirmed Non-Modification:**
 
-✅ Summary statistics generated
+- No matching engine changes
+- No schema changes
+- No StationReview generation
+- No merge workflow
+- No auto actions
 
-✅ Empty state handled
+---
 
-✅ Error state handled
+## ADAPTER IDENTITY GOVERNANCE — VERIFIED STATE (2026-03-10)
 
-✅ No write actions implemented
+### Governance Alignment with Approved Adapter Identity Rule
 
-✅ No StationReview creation
+**Source of approval:** `ProjectControlPanel.jsx` — Entry 11  
+**Status:** ✅ VERIFIED GOVERNANCE STATE (documentation alignment)
 
-✅ No merge/delete buttons
+**Verified Governance Position:**
 
-Confirmed Non-Modification
+- ✅ Source adapters do not own station identity decisions
+- ✅ Source adapters provide candidate data only
+- ✅ Station creation remains governance/curator controlled
+- ✅ StationCandidate remains required intake path
+- ✅ Duplicate remediation remains separate from Phase 2 matching validation
 
-✅ Phase 2 matching logic unchanged
+**Explicit Verified Rules:**
 
-✅ detectStationDuplicates function unchanged
-
-✅ No schema changes
-
-✅ No governance changes
-
-CURATOR REVIEW CONTROLS — VERIFIED (2026-03-09)
-
-File: components/admin/DuplicateDetectionResults.jsx
-Status: ✅ VERIFIED (UI-only controls)
-
-Verified Implementation
-
-✅ Classification filter
-
-✅ Confidence filter
-
-✅ Sort order controls
-
-✅ “Why Grouped” collapsible explanation
-
-✅ Filtered results dynamically updated
-
-✅ Empty state handled
-
-State Management
-
-Component-local only
-
-Resets on page reload
-
-No persistence
-
-No DB writes
-
-No local storage
-
-Sorting Logic
-
-Default sort by confidence
-
-Optional sort by group size
-
-Optional sort by distance
-
-Confirmed Non-Modification
-
-No matching engine changes
-
-No schema changes
-
-No StationReview generation
-
-No merge workflow
-
-No auto actions
-
-ADAPTER IDENTITY GOVERNANCE — VERIFIED STATE (2026-03-10)
-Governance Alignment with Approved Adapter Identity Rule
-
-Source of approval: ProjectControlPanel.jsx — Entry 11
-Status: ✅ VERIFIED GOVERNANCE STATE (documentation alignment)
-
-Verified Governance Position
-
-Source adapters do not own station identity decisions
-
-Source adapters provide candidate data only
-
-Station creation remains governance/curator controlled
-
-StationCandidate remains required intake path
-
-Duplicate remediation remains separate from Phase 2 matching validation
-
-Explicit Verified Rules
-
-Architecture Principle
+**Architecture Principle**  
 Shared station identity belongs to the master catalog and governance workflow.
 
-Adapter Behavior Rule
+**Adapter Behavior Rule**  
 Adapters must not directly decide if an external record equals an existing Station.
 
-Station Creation Rule
+**Station Creation Rule**  
 Stations are created only via governance-controlled approval paths.
 
-StationCandidate Flow Rule
+**StationCandidate Flow Rule**  
 External records must enter via StationCandidate before station linkage.
 
-Duplicate Remediation Separation Rule
+**Duplicate Remediation Separation Rule**  
 Catalog cleanup must not influence Phase 2 matching thresholds.
 
-Confirmed Non-Modification
+**Confirmed Non-Modification:**
 
-Phase 2 matching unchanged
+- ✅ Phase 2 matching unchanged
+- ✅ No function changes
+- ✅ No schema changes
+- ✅ No UI behavior changes
 
-No function changes
+---
 
-No schema changes
+## PERFORMANCE OPTIMIZATION LAYER — VERIFIED (2026-03-09)
 
-No UI behavior changes
+### Station Proximity Pre-Filter
 
-PERFORMANCE OPTIMIZATION LAYER — VERIFIED (2026-03-09)
-Station Proximity Pre-Filter
+**File:** `functions/getNearbyStationCandidates`  
+**Integration:** `matchStationForUserReportedPrice`  
+**Status:** ✅ VERIFIED NON-MODIFYING
 
-File: functions/getNearbyStationCandidates
-Integration: matchStationForUserReportedPrice
+**Verification:**
 
-Status: ✅ VERIFIED NON-MODIFYING
+- Read-only utility
+- Admin-gated
+- Haversine distance correct
+- Returns stations within configurable radius
+- Fallback to city catalog
+- Max 20 candidates returned
 
-Verification
+**Confirmed Non-Modification:**
 
-Read-only utility
+- Distance scoring unchanged
+- Chain scoring unchanged
+- Name similarity unchanged
+- Dual gate logic unchanged
+- Only candidate pool reduced
 
-Admin-gated
+**Expected Behavior:**
 
-Haversine distance correct
+- User submits GPS price report
+- Nearby stations fetched
+- Phase 2 matching scores subset
+- Matching decision unchanged
 
-Returns stations within configurable radius
+---
 
-Fallback to city catalog
+## PHASE 2 MATCHING ENGINE — VERIFIED OUTCOMES
 
-Max 20 candidates returned
+### Test 1 — Exact Match
 
-Confirmed Non-Modification
+**Function:** `auditPhase2DominanceGap`
 
-Distance scoring unchanged
+**Result:**
 
-Chain scoring unchanged
+- Distance: 15m
+- Distance signal: 30
+- Chain signal: 25
+- Name signal: 30
+- Score: 85
+- Gap: 55
+- Decision: `matched_station_id`
+- Gate result: PASS
 
-Name similarity unchanged
+### Test 2 — Distance Band Validation
 
-Dual gate logic unchanged
+- Distance tested: ~100m
+- Signal returned: 10
+- Band validation: PASS
 
-Only candidate pool reduced
+### Test 3 — Ambiguous Generic Input
 
-Expected Behavior
+**Function:** `auditCircleKMultiCandidateAmbiguity`
 
-User submits GPS price report
+**Result:**
 
-Nearby stations fetched
+- Multiple Circle K candidates
+- Dominance gap below threshold
+- Correct routing to `review_needed`
 
-Phase 2 matching scores subset
+---
 
-Matching decision unchanged
+## DISTANCE BAND VALIDATION
 
-PHASE 2 MATCHING ENGINE — VERIFIED OUTCOMES
-Test 1 — Exact Match
+| Band | Signal | Status |
+|------|--------|--------|
+| 0–30m | 30 | CONFIRMED |
+| 31–75m | 20 | CONFIRMED |
+| 76–150m | 10 | CONFIRMED |
+| 151–300m | 5 | CONFIRMED |
+| >300m | 0 | Expected |
 
-Function: auditPhase2DominanceGap
+---
 
-Result:
+## DUAL-GATE MATCH LOGIC
 
-Distance: 15m
-
-Distance signal: 30
-
-Chain signal: 25
-
-Name signal: 30
-
-Score: 85
-
-Gap: 55
-
-Decision:
-
-matched_station_id
-
-Gate result: PASS
-
-Test 2 — Distance Band Validation
-
-Distance tested: ~100m
-
-Signal returned: 10
-
-Band validation: PASS
-
-Test 3 — Ambiguous Generic Input
-
-Function: auditCircleKMultiCandidateAmbiguity
-
-Result:
-
-Multiple Circle K candidates
-
-Dominance gap below threshold
-
-Correct routing to review_needed
-
-DISTANCE BAND VALIDATION
-Band	Signal	Status
-0–30m	30	CONFIRMED
-31–75m	20	CONFIRMED
-76–150m	10	CONFIRMED
-151–300m	5	CONFIRMED
->300m	0	Expected
-DUAL-GATE MATCH LOGIC
-
-Gate 1: Score ≥ 65
-Gate 2: Dominance gap ≥ 10
+- Gate 1: Score ≥ 65
+- Gate 2: Dominance gap ≥ 10
 
 Both required.
 
-Status: ✅ Confirmed
+**Status:** ✅ Confirmed
 
-CHAIN NORMALIZATION — VERIFIED
+---
 
-Examples:
+## CHAIN NORMALIZATION — VERIFIED
 
-shell → Shell
+**Examples:**
 
-circle_k → Circle K
+- `shell` → Shell
+- `circle_k` → Circle K
 
-Status: ✅ Confirmed
+**Status:** ✅ Confirmed
 
-NAME SIMILARITY — VERIFIED
+---
 
-Exact match:
+## NAME SIMILARITY — VERIFIED
 
-Similarity: 1.0
+**Exact match:**
 
-Signal: 30
+- Similarity: 1.0
+- Signal: 30
 
-Status: ✅ Confirmed
+**Status:** ✅ Confirmed
 
-CATALOG STATE — TRONDHEIM
+---
 
-Stations: ~142
+## CATALOG STATE — TRONDHEIM
 
-Detected duplicates
+**Stations:** ~142
+
+**Detected duplicates:**
 
 Exact coordinate duplicate:
-
-Coop Midt-Norge SA
+- Coop Midt-Norge SA
 
 Possible near duplicate:
+- Uno-X Ladetorget (~233m)
 
-Uno-X Ladetorget (~233m)
+**Classification:** Data quality issue  
+**Matching engine unaffected**
 
-Classification: Data quality issue
-Matching engine unaffected
+---
 
-FUNCTION STATE — VERIFIED
-Function	Status
-matchStationForUserReportedPrice	✅ Working
-getNearbyStationCandidates	✅ Working
-auditPhase2DominanceGap	✅ Working
-detectStationDuplicates	✅ Working
-WHAT IS NOT VERIFIED
+## FUNCTION STATE — VERIFIED
 
-Not tested:
+| Function | Status |
+|----------|--------|
+| `matchStationForUserReportedPrice` | ✅ Working |
+| `getNearbyStationCandidates` | ✅ Working |
+| `auditPhase2DominanceGap` | ✅ Working |
+| `detectStationDuplicates` | ✅ Working |
 
-production traffic
+---
 
-multi-region matching
+## WHAT IS NOT VERIFIED
 
-GooglePlaces ingestion
+**Not tested:**
 
-295-305m edge band
+- production traffic
+- multi-region matching
+- GooglePlaces ingestion
+- 295-305m edge band
+- duplicate consolidation workflow
 
-duplicate consolidation workflow
+---
 
-CONFIDENCE LEVEL
-Component	Confidence
-Distance scoring	HIGH
-Auto-match gates	HIGH
-Chain normalization	HIGH
-Conservative routing	HIGH
-Duplicate detection	HIGH
-NEXT VERIFICATION POINTS
+## CONFIDENCE LEVEL
 
-Required before production:
+| Component | Confidence |
+|-----------|-----------|
+| Distance scoring | HIGH |
+| Auto-match gates | HIGH |
+| Chain normalization | HIGH |
+| Conservative routing | HIGH |
+| Duplicate detection | HIGH |
 
-Real user reports
+---
 
-Multi-city validation
+## NEXT VERIFICATION POINTS
 
-FuelPrice audit logging
+**Required before production:**
 
-Optional:
+- Real user reports
+- Multi-city validation
+- FuelPrice audit logging
 
-Edge distance bands
+**Optional:**
 
-Large candidate pools
+- Edge distance bands
+- Large candidate pools
+- Post-cleanup catalog verification
 
-Post-cleanup catalog verification
+---
 
-Verification Authority: Audit functions
-Test Environment: Trondheim station catalog
-Last Updated: 2026-03-10 UTC+1
-Synchronization Status: Phase 2 verified, governance synchronized.
+**Verification Authority:** Audit functions  
+**Test Environment:** Trondheim station catalog  
+**Last Updated:** 2026-03-10 UTC+1  
+**Synchronization Status:** Phase 2 verified, governance synchronized.
