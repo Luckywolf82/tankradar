@@ -4,6 +4,68 @@
 
 ---
 
+## 2026-03-10 — Entry 15 (Phase 4A — Merge Impact Preview Section Added to DuplicateRemediationPanel)
+
+### Task
+Add a static read-only "Merge impact preview" section to DuplicateRemediationPanel showing example before/after summary stats and a planned action mapping table. No data mutation, no backend calls, no schema changes.
+
+### What was verified before change
+- src/components/admin/DuplicateRemediationPanel.jsx confirmed present with: placeholder banner, safety checklist, process overview, canonical station preview
+- src/components/governance/Phase3RemediationPlan.jsx confirmed present
+- src/components/governance/Phase25ExecutionLog.jsx confirmed present (Entry 14 present)
+- Phase 2 locked files confirmed untouched
+
+### What was implemented
+1. Added "Merge impact preview" Card section (5th card in panel):
+   - Warning strip: "Preview only — no merge is executed. No records are changed from this panel."
+   - Summary stats grid (6 tiles): canonical kept, duplicates archived, prices re-pointed, curator confirmation, audit log, hard deletes
+   - Action mapping table with 4 rows: Keep canonical, Archive ×2, Re-point FuelPrice records
+   - Each action row has a colour-coded badge (green/amber/blue) matching action type
+2. All content is fully static mock data — no state, no backend calls, no writes
+
+### What was NOT implemented
+- No merge execution logic
+- No canonical selection logic
+- No backend calls
+- No schema changes
+- No data writes
+- No state changes
+
+### Files actually modified
+- src/components/admin/DuplicateRemediationPanel.jsx
+
+### Files created
+- None
+
+### Files explicitly confirmed untouched
+- functions/matchStationForUserReportedPrice.ts
+- functions/auditPhase2DominanceGap.ts
+- functions/getNearbyStationCandidates.ts
+- functions/validateDistanceBands.ts
+- functions/classifyStationsRuleEngine.ts
+- functions/classifyGooglePlacesConfidence.ts
+- functions/classifyPricePlausibility.ts
+- functions/deleteAllGooglePlacesPrices.ts
+- functions/deleteGooglePlacesPricesForReclassification.ts
+- functions/verifyGooglePlacesPriceNormalization.ts
+- components/governance/ProjectControlPanel
+- components/governance/LastVerifiedState
+
+### Diff-style summary
++ Added "Merge impact preview" Card section (5th card in panel)
++ Warning strip: "Preview only — no merge is executed. No records are changed from this panel."
++ Summary stats grid: 6 tiles (canonical kept, archives, prices re-pointed, curator confirmation, audit log, hard deletes)
++ Action mapping table: 4 rows with colour-coded action badges
++ All content is static mock data — no imports added, no state, no logic
+
+### Commit hash
+unavailable in current Base44 context
+
+### Locked-component safety confirmation
+Confirmed: no locked or frozen files were modified.
+
+---
+
 ## 2026-03-10 — Entry 14 (Phase 4A — Canonical Station Preview Section Added to DuplicateRemediationPanel)
 
 ### Task
