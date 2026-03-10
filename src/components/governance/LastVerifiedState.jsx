@@ -1,3 +1,14 @@
+# SYSTEM ROLE
+
+This document records only VERIFIED runtime behavior.
+
+It must never contain:
+- proposed architecture
+- planned features
+- speculative explanations
+
+All entries must be derived from confirmed tests or observed production behavior.
+
 LAST VERIFIED STATE — TankRadar
 Confirmed Test Results & Verified Outcomes Only
 
