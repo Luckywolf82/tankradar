@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { nb } from 'date-fns/locale';
-import { fetchUnreadNotifications } from '@/components/services/notificationService';
+import { fetchUnreadNotifications } from '@/components/services/notificationServiceClient';
 
 export default function NotificationBell() {
   const [isAuth, setIsAuth] = useState(false);
