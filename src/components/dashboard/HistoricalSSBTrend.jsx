@@ -69,7 +69,7 @@ export default function HistoricalSSBTrend({ ssbData, selectedFuel, loading }) {
             />
           </LineChart>
         </ResponsiveContainer>
-        <p className="text-xs text-slate-500 mt-4 text-center">Siste 12 måneder fra SSB</p>
+
       </CardContent>
     </Card>
   );

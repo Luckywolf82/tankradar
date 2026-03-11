@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
 
 export default function RegionalStats({ observedPrices, stations = [], ssbData, selectedFuel }) {
   const stats = useMemo(() => {
@@ -102,7 +101,7 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Statistikk per by</CardTitle>
-        <p className="text-xs text-slate-400">Topp 6 byer etter antall observasjoner (basert på locationLabel fra observerte priser)</p>
+        <p className="text-xs text-slate-400">Topp 6 byer med flest observasjoner</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -122,10 +121,7 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
                     </div>
                   </div>
                   {city.isWeakSample && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-amber-700 bg-white px-2 py-1 rounded w-fit border border-amber-200">
-                      <AlertCircle size={14} />
-                      <span><strong>Svakt grunnlag</strong> – Kun {city.count} obs.</span>
-                    </div>
+                    <p className="text-xs text-slate-400 mt-1">Lavt grunnlag ({city.count} obs.)</p>
                   )}
                 </div>
                 <div className="text-right">

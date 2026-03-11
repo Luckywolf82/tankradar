@@ -77,21 +77,15 @@ export default function Statistics() {
           ))}
         </div>
 
-        {/* SECTION 1: Historical Trend */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Historisk trend (SSB)</h2>
+        <div className="mb-6">
           <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
         </div>
 
-        {/* SECTION 2: Price Distribution */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Prisfordeling</h2>
+        <div className="mb-6">
           <PriceDistribution observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
-        {/* SECTION 3: Regional Analysis */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Regional analyse</h2>
+        <div className="mb-6">
           <RegionalStats observedPrices={prices} stations={stations} ssbData={ssbData} selectedFuel={selectedFuel} />
         </div>
 
