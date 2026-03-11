@@ -106,7 +106,7 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
       <CardContent>
         <div className="space-y-3">
           {stats.results.map((city, idx) => (
-            <div key={idx} className={`rounded-lg p-3 border ${city.isWeakSample ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200"}`}>
+            <div key={idx} className="rounded-lg p-3 border bg-slate-50 border-slate-200">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="font-semibold text-slate-800 text-sm">{city.city}</p>
