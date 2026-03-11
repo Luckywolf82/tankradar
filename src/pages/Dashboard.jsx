@@ -56,6 +56,9 @@ export default function Dashboard() {
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
         <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
+        {/* Pump Mode — activates when user is ≤150m from a station */}
+        <PumpModeCard />
+
         {/* Quick Report — nearest station shortcut */}
         <QuickReportCard />
 
