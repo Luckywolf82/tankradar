@@ -1506,3 +1506,52 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. UI-only across 5 files. Requires GitHub verification after publish.
+
+---
+
+## Entry 68 — 2026-03-11
+
+### Action
+Navigation and page responsibility cleanup — reduced mobile bottom nav from up to 8 items to 4–5, removed logout/settings from primary nav, absorbed them into Profil page, cleaned Statistics header and internal label leaks.
+
+### Files modified
+- `Layout.js`
+- `components/mobile/MobileHeader.jsx`
+- `pages/Profile.jsx`
+- `pages/Statistics.jsx`
+
+### Changes applied
+
+**Layout.js**
+- Mobile bottom nav restructured: max 4–5 items (Oversikt · Statistikk · Logg pris · [Admin/Review for elevated roles] · Profil)
+- Removed: hardcoded "Innstillinger" nav item, "Logg ut" / "Logg inn" nav buttons, "Områdevarsler" from primary nav
+- Desktop nav same cleanup applied
+- `base44` import removed (no longer needed in Layout)
+
+**MobileHeader.jsx**
+- Added "Profile" to `mainPages` so the Profil tab shows the logo header, not a back button
+
+**Profile.jsx**
+- Added unauthenticated state with login prompt (was previously returning `null` — blank screen)
+- Added "App" section: Områdevarsler link + Innstillinger link + Logg ut button
+- Admin shortcuts card header size reduced to `text-sm`
+- Page h1 reduced to `text-xl` to match Statistics
+
+**Statistics.jsx**
+- Removed oversized `text-3xl` hero header + `ArrowLeft` back button
+- Header replaced with `text-xl font-bold` title matching dashboard style
+- Section label `"Prisfordeling (live observed)"` → `"Prisfordeling"` (removed internal `live observed` pipeline term)
+- "Om dataene" card: `"Live observed"` → `"Google Places"`, `"realistic_price only"` → plain Norwegian, `"Sample size"` → `"Datagrunnlag"`
+
+### Why this is governance-safe
+✓ Zero backend changes
+✓ Zero entity changes
+✓ Zero matching logic changes
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ All existing pages and functionality preserved — only navigation structure and presentation changed
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. UI-only changes across 4 files. Requires GitHub verification after publish.

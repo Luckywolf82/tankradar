@@ -1,24 +1,16 @@
 // NEXT SAFE STEP — TankRadar canonical implementation queue
 // This file defines the single approved next development step.
 // AI agents MUST read this file before proposing any new implementation.
-//
-// GOVERNANCE RULE (authoritative):
-// Before proposing any implementation, AI must:
-//   1. Read Phase25ExecutionLogIndex.jsx
-//   2. Read the active execution log chunk listed there
-//   3. Read this file (NextSafeStep.js)
-//
-// If NEXT_SAFE_STEP is defined here, it OVERRIDES any guess derived
-// from scanning execution log previews or AI_STATE alone.
-// User must explicitly override NEXT_SAFE_STEP to propose a different step.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_68",
+  id: "phase25_step_69",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "Entry 67 (dashboard UI simplification pass) is the last pre-authorized improvement. " +
+    "Entry 68 (navigation and page responsibility cleanup) is the last pre-authorized improvement. " +
+    "The primary nav is now clean (4–5 items), Profile absorbs logout/settings/Områdevarsler, " +
+    "Statistics header is simplified, and internal enum labels are removed from UI. " +
     "No further implementation step has been approved. " +
     "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
@@ -45,13 +37,12 @@ export const NEXT_SAFE_STEP = {
       "If NEXT_SAFE_STEP is defined here, AI must implement it before proposing any other step " +
       "unless the user explicitly overrides it in the conversation.",
     conflictResolution:
-      "Phase25ExecutionLogIndex.jsx + active chunk are authoritative over AI_STATE.md. " +
-      "If they disagree, trust the execution log."
+      "Phase25ExecutionLogIndex.jsx + active chunk are authoritative over AI_STATE.md."
   },
 
   status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62, 63, 64, 65, 66, 67]
+  linkedEntries: [61, 62, 63, 64, 65, 66, 67, 68]
 };
 
 export default NEXT_SAFE_STEP;
