@@ -281,7 +281,7 @@ export default function LogPrice() {
     setStep("station");
     setImageUrl(null);
     setDetectedPrices(emptyPrices());
-    setStationInfo(s => ({ ...s, station_id: null, station_chain: "", station_name: "", city: "", region: "", latitude: null, longitude: null, google_place_id: null }));
+    setStationInfo(s => ({ ...s, station_id: null, station_chain: "", station_name: "", city: "", region: "", latitude: null, longitude: null, google_place_id: null, selectedGooglePlaceId: null, selectedSource: null, selectedCandidateDistanceM: null, secondCandidateDistanceM: null, distanceGapM: null, userConfirmedSuggestedStation: null, userCorrectedChain: null, userClarificationReason: null }));
     setShowSuccess(false);
     setSubmitError(null);
   };
