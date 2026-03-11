@@ -33,7 +33,8 @@ Phase25ExecutionLog_001.jsx         ← Entries 1–10 (sealed)
 Phase25ExecutionLog_002.jsx         ← Entries 11–20 (sealed)
 Phase25ExecutionLog_003.jsx         ← Entries 21–30 (sealed)
 Phase25ExecutionLog_004.jsx         ← Entries 31–40 (sealed)
-Phase25ExecutionLog_005.jsx         ← Entries 41+ (sealed)
+Phase25ExecutionLog_005.jsx         ← Entries 41–76 (sealed)
+Phase25ExecutionLog_006.jsx         ← Entries 77+ (ACTIVE — append new entries here)
 Phase25ExecutionLog.jsx             ← Deprecated stub only
 ```
 
