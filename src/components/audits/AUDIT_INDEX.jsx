@@ -55,12 +55,14 @@ export const AUDIT_INDEX = {
     {
       id: "ui_audit",
       title: "UI/UX Audit",
+      category: "ui",
       location: "src/components/audits/ui/ui-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Dashboard layout, visual consistency, component organization, data transparency",
       relatesTo: "UI Clarity (Pass A recommended)",
       focusArea: "Data source labeling, component redundancy, loading states",
-      status: "complete"
+      status: "complete",
+      canonicalFor: "Visual consistency and component clarity"
     },
 
     {
