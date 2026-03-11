@@ -52,18 +52,41 @@ export const EXECUTION_LOG_METADATA = {
     }
   ],
 
-  // Future append rules
+  // Future append rules — GENERIC for any chunk rollover
   futureRules: {
     activeChunk: "Phase25ExecutionLog_006.jsx",
     whenToCreateNewChunk: "When active chunk exceeds 250KB or contains ~20 entries",
     nextChunkName: "Phase25ExecutionLog_007.jsx",
     entryRangeForNextChunk: "97+",
+    rolloverChecklist: [
+      "□ Create new chunk file with next sequential number",
+      "□ Move activeChunk pointer to new chunk",
+      "□ Update chunks[] array: seal previous chunk, mark new chunk ACTIVE",
+      "□ Update nextChunkName for planning",
+      "□ Update entryRangeForNextChunk (currentEntryCount + 1 onwards)",
+      "□ Search this file (Index) for hardcoded references to old active chunk",
+      "□ Replace all 'Phase25ExecutionLog_XXX' mentions in currentWork/howToRead/requiredReadOrder with new chunk",
+      "□ Remove stale example text that points to old chunk as append target",
+      "□ Append entry to new chunk documenting rollover changes to Index",
+      "□ Verify no stale example code remains that mentions old active chunk"
+    ],
     updateProcedure: [
-      "1. Append new entry to active chunk file (e.g., Phase25ExecutionLog_005.jsx)",
-      "2. If chunk size limit reached, create next numbered chunk",
-      "3. Update EXECUTION_LOG_METADATA.chunks array in this Index file",
-      "4. Update activeChunk pointer",
-      "5. Never split or reorganize historical chunks after initial assignment"
+      "APPENDING ENTRIES (routine):",
+      "  1. Append new entry to the active chunk file referenced in activeChunk",
+      "  2. Increment entryCount at top of Index",
+      "  3. Update lastUpdated timestamp",
+      "",
+      "ROLLOVER TO NEW CHUNK (when active chunk exceeds 250KB or ~20 entries):",
+      "  1. Create new chunk file (e.g., Phase25ExecutionLog_007.jsx) with next sequential number",
+      "  2. Update chunks[] array: mark previous active chunk as sealed, add new chunk as ACTIVE",
+      "  3. Update activeChunk pointer to new chunk filename",
+      "  4. Update nextChunkName field (if planning ahead)",
+      "  5. Update entryRangeForNextChunk (start from lastEntry+1)",
+      "  6. Scan currentWork/howToRead/requiredReadOrder text for hardcoded chunk references",
+      "  7. Replace any mention of previous active chunk with new active chunk number",
+      "  8. Remove any stale example text mentioning old chunk as append target",
+      "  9. Append rollover entry to new chunk documenting all Index changes",
+      "  10. Never split or reorganize sealed historical chunks after initial assignment"
     ]
   },
 
@@ -87,7 +110,7 @@ export const EXECUTION_LOG_METADATA = {
     structure: "Index → chunk files listed above",
     chronological: "Read chunks in numerical order (001 → 006+)",
     withinChunk: "Read entries in document order (top to bottom)",
-    currentWork: "Check activeChunk for latest entries (currently Phase25ExecutionLog_006.jsx)",
+    currentWork: "Check activeChunk field above for latest entries. Always read activeChunk to find append target.",
     deprecated: "Phase25ExecutionLog.jsx is a read-only stub. Do not append to it."
   },
 
