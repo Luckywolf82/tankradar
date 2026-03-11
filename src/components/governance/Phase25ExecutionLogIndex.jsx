@@ -121,14 +121,14 @@ export const EXECUTION_LOG_METADATA = {
     requiredReadOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx (this file)",
       "2. Read the active execution log chunk marked ACTIVE in chunks[] array above",
-      "3. Read components/governance/NextSafeStep.js"
+      "3. Read components/governance/NextSafeStep.jsx"
     ],
     conflictResolution:
-      "If AI_STATE.md conflicts with Phase25ExecutionLogIndex.jsx or the active chunk, " +
+      "If AI_STATE.jsx conflicts with Phase25ExecutionLogIndex.jsx or the active chunk, " +
       "the execution log (Index + active chunk) is authoritative. " +
-      "AI_STATE.md is a summary pointer only — it does not override execution log state.",
+      "AI_STATE.jsx is a summary pointer only — it does not override execution log state.",
     nextSafeStep:
-      "components/governance/NextSafeStep.js contains the canonical approved next step. " +
+      "components/governance/NextSafeStep.jsx contains the canonical approved next step. " +
       "AI must not propose alternatives without explicit user override in conversation.",
     forbidden: [
       "Do not guess next step from execution log entry titles alone",

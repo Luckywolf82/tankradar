@@ -8,7 +8,7 @@ This file is a **summary pointer only**. It does NOT override the execution log 
 The **authoritative source of truth** is:
 1. `components/governance/Phase25ExecutionLogIndex.jsx` (Index file)
 2. The active chunk referenced in Index.chunks[].status === "ACTIVE (append new entries here)"
-3. `components/governance/NextSafeStep.js` (approved next step)
+3. `components/governance/NextSafeStep.jsx` (approved next step)
 
 ## Current State (Derived from Phase25ExecutionLogIndex.jsx)
 
@@ -48,11 +48,11 @@ The **authoritative source of truth** is:
 
 ## Key Rules
 
-1. **Chunk Rollover:** When rolling 006 → 007, update Index chunks[], activeChunk, and nextChunkName. Refer to `CHUNK_ROLLOVER_RUNBOOK.md` for procedure.
+1. **Chunk Rollover:** When rolling 006 → 007, update Index chunks[], activeChunk, and nextChunkName. Refer to `CHUNK_ROLLOVER_RUNBOOK.jsx` for procedure.
 
 2. **No Hardcoded Chunk References:** Generic language only. Never say "append to Phase25ExecutionLog_007.jsx" — say "append to the active chunk file referenced in activeChunk."
 
-3. **NextSafeStep.js:** Check this file for the current pre-approved next step before proposing anything new.
+3. **NextSafeStep.jsx:** Check this file for the current pre-approved next step before proposing anything new.
 
 4. **Locked Files:** Phase 2 matcher functions are frozen. Do not modify:
    - functions/deleteAllGooglePlacesPrices
@@ -72,4 +72,4 @@ After major governance changes (e.g., chunk rollover, phase transition):
 
 ---
 
-**Next:** Read `components/governance/NextSafeStep.js` for approved next development step.
+**Next:** Read `components/governance/NextSafeStep.jsx` for approved next development step.

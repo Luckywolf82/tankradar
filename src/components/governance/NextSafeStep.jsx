@@ -31,7 +31,7 @@ export const NEXT_SAFE_STEP = {
     preflightOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx",
       "2. Read the active execution log chunk (check chunks[] for ACTIVE status)",
-      "3. Read NextSafeStep.js (this file)"
+      "3. Read NextSafeStep.jsx (this file)"
     ],
     priority:
       "If NEXT_SAFE_STEP is defined here, AI must implement it before proposing any other step " +

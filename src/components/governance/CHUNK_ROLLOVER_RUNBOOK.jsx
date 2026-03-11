@@ -115,9 +115,9 @@ grep -n "Phase25ExecutionLog_006" components/governance/Phase25ExecutionLogIndex
 
 ---
 
-### Step 4: Update NextSafeStep.js (if needed)
+### Step 4: Update NextSafeStep.jsx (if needed)
 
-If `NextSafeStep.js` contains hardcoded references to the old active chunk, update:
+If `NextSafeStep.jsx` contains hardcoded references to the old active chunk, update:
 
 ```javascript
 preflightOrder: [
