@@ -3,7 +3,7 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_77",
+  id: "phase25_step_76",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
