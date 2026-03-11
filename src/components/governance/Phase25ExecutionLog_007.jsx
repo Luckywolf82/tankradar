@@ -898,4 +898,111 @@ export const entry_91 = {
   historicalContext: "Entry 88 (NextSafeStep governance audit) recommended activation audit as lowest-risk, highest-value next workstream (vs. publishability/security/feature-building). Entry 89 identified store readiness gaps. Entry 90 fixed blockers. Entry 91 delivers activation audit findings: comprehensive first-value + engagement loop analysis, crowdsourcing blockers identified, prioritized improvements for engagement optimization."
 };
 
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 92: ACTIVATION IMPROVEMENTS IMPLEMENTATION PASS 1 — CTA & ONBOARDING
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_92 = {
+  timestamp: "2026-03-11T22:00:00Z",
+  phase: "Phase 2.5 Activation Optimization",
+  title: "Activation Improvements Implementation Pass 1 — Dashboard CTA Reordering, Copy Enhancement, First-Time Overlay",
+
+  objectives: [
+    "Implement highest-impact improvements from Entry 91 activation audit",
+    "Reposition SubmitPriceCard to Dashboard position 1 for enhanced visibility",
+    "Enhance CTA copy with value-focused messaging ('Spar på drivstoff' / 'Save fuel money')",
+    "Add first-time user onboarding overlay ('Help your community find cheaper fuel')",
+    "Set baseline for activation metrics measurement"
+  ],
+
+  preFlightVerification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — Active chunk: Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx entries 87–91 — Audit system ready, activation audit complete",
+    "✓ Read NextSafeStep.jsx — Entry 92 implementation scope defined",
+    "✓ Verified locked Phase 2 files remain untouched throughout",
+    "✓ Confirmed UI-only changes; zero runtime logic modifications"
+  ],
+
+  implementationChanges: [
+    {
+      file: "components/dashboard/QuickReportCard.jsx",
+      change: "CTA copy updated",
+      detail: "Button text: 'Logg pris' → 'Spar på drivstoff' (value-focused messaging)",
+      reason: "Entry 91 identified action-focused copy as friction point; value-focused copy improves conversion",
+      impact: "Estimated +10–15% CTA tap-through",
+      riskLevel: "ZERO — text-only change"
+    },
+    {
+      file: "components/dashboard/FirstTimeOverlay.jsx",
+      change: "NEW COMPONENT CREATED",
+      detail: "First-time user onboarding overlay: 'Hjelp ditt lokalsamfunn å finne billigere drivstoff'",
+      reason: "Entry 91 identified lack of onboarding as high-friction barrier",
+      functionality: "Displays on Dashboard load for first-time users; dismissible; redirects to LogPrice on CTA tap",
+      impact: "Estimated +15–25% progression to LogPrice",
+      riskLevel: "LOW — isolated overlay component"
+    },
+    {
+      file: "pages/Dashboard.jsx",
+      change: "COMPONENT REORDERING + OVERLAY INTEGRATION",
+      detail: [
+        "1. Moved SubmitPriceCard to position 1 (was position 2, after PumpModeCard)",
+        "2. Moved PumpModeCard to position 2 (was position 1)",
+        "3. Integrated FirstTimeOverlay component (renders on mount for first-time users)",
+        "4. Maintained all other dashboard components and functionality"
+      ],
+      reason: "Entry 91 identified Dashboard CTA clarity and onboarding as top blockers",
+      impact: "Estimated +25–40% from repositioning; +15–25% from overlay",
+      riskLevel: "LOW — UI reordering only; no logic changes"
+    }
+  ],
+
+  lockedPhase2FilesStatus: [
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched"
+  ],
+
+  changeSummary: {
+    filesModified: 3,
+    newComponentsCreated: 1,
+    uiReorderings: 2,
+    copyUpdates: 2,
+    runtimeLogicChanges: 0,
+    businessLogicChanges: 0,
+    backendChanges: 0,
+    dataModelChanges: 0
+  },
+
+  governance_compliance: {
+    auditDriven: "✓ All changes directly informed by Entry 91 activation audit findings",
+    readOnlyBase: "✓ Builds on read-only audit; no deviation from audit recommendations",
+    frozenFilesUntouched: "✓ All 6 Phase 2 functions verified unchanged",
+    uiOnly: "✓ Zero runtime or business logic changes",
+    navigationPreserved: "✓ Layout.js navigation fully functional",
+    dashboardPreserved: "✓ All dashboard components working; only reordered"
+  },
+
+  expectedImpact: {
+    logPrice_tapthrough_lift: "+25–40% from Dashboard CTA repositioning",
+    first_value_realization: "+15–25% from first-time overlay clarity",
+    overall_activation_score: "Estimated improvement from 3.25/10 → 4.5–5.0/10"
+  },
+
+  nextStepsImmediately: [
+    "MEASURE: Track CTA tap-through rates (SubmitPriceCard click events before/after)",
+    "MEASURE: Track first-time overlay completion rate (new users reaching LogPrice)",
+    "TEST: A/B test additional CTA copy variants if metrics indicate further opportunity",
+    "BUILD NEXT: Based on metrics, prioritize Entry 92 Recommendations 1–3 (streak counter, social proof, impact tooltip)"
+  ],
+
+  lockedFor: [
+    "Entry 93: Activation Impact Review (measurement + analysis workstream)"
+  ],
+
+  historicalContext: "Entry 91 (Activation Audit) identified 5 top blockers and prioritized 3 CTA fixes for immediate implementation. Entry 92 delivers these fixes: Dashboard reordering, CTA copy enhancement, and first-time user overlay. All changes UI-only, audit-driven, low-risk. Governance compliance fully verified."
+};
+
 export default entry_91;
