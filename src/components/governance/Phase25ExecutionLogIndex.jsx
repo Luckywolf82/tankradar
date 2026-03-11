@@ -97,7 +97,7 @@ export const EXECUTION_LOG_METADATA = {
       "AI agents must execute these steps IN ORDER before proposing or implementing anything",
     requiredReadOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx (this file)",
-      "2. Read the active execution log chunk listed in chunks[] above (currently Phase25ExecutionLog_006.jsx)",
+      "2. Read the active execution log chunk listed in chunks[] above (currently Phase25ExecutionLog_006.jsx) ← ACTIVE",
       "3. Read components/governance/NextSafeStep.js"
     ],
     conflictResolution:
