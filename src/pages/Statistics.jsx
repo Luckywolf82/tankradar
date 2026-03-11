@@ -56,21 +56,9 @@ export default function Statistics() {
         <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Link to={createPageUrl("Dashboard")}>
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <ArrowLeft size={18} />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-                <BarChart3 className="text-blue-600" size={32} />
-                Drivstoffpris Analyse
-              </h1>
-              <p className="text-slate-500 mt-1">Detaljert statistikk og trender</p>
-            </div>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-slate-800">Statistikk</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Prisanalyse og historiske trender</p>
         </div>
 
         {/* Fuel type selector */}

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Mail, ShieldCheck, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, Mail, ShieldCheck, ExternalLink, Bell, Settings, LogOut, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import PrivacySettings from "../components/profile/PrivacySettings";
