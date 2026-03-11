@@ -16,7 +16,7 @@ import NotificationBell from "@/components/shared/NotificationBell";
  */
 export function MobileHeader({ currentPageName, showBack = false }) {
   const navigate = useNavigate();
-  const mainPages = ["Dashboard", "Statistics", "LogPrice"];
+  const mainPages = ["Dashboard", "Statistics", "LogPrice", "Profile"];
   const isMainPage = mainPages.includes(currentPageName);
 
   const handleBack = () => {
