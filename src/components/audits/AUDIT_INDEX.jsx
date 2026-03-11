@@ -94,12 +94,14 @@ export const AUDIT_INDEX = {
     {
       id: "ui_function_value_audit",
       title: "UI Function Value Audit — MVP Prioritization",
+      category: "product",
       location: "src/components/audits/ui/ui-function-value-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Value-based scoring matrix for all user-facing functions; MVP prioritization classification (Core/Keep/Defer/Remove)",
       relatesTo: "MVP Launch Planning (Entry 84)",
       focusArea: "Function value scoring (USER_VALUE, DATA_SUPPORT, UI_MATURITY, MVP_RELEVANCE), decision table, tier classification",
-      status: "complete"
+      status: "complete",
+      canonicalFor: "MVP value-based prioritization"
     },
 
     {
