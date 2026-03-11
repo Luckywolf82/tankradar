@@ -85,7 +85,7 @@ export default function PumpModeCard({ onActivate }) {
         }
         setPrices(prefill);
       },
-      () => setStep("hidden"),
+      () => { setStep("hidden"); onActivate?.(false); },
       { timeout: 8000, maximumAge: 60000 }
     );
   }, []);
