@@ -1688,3 +1688,36 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. New component + 2-line Dashboard import. Requires GitHub verification after publish.
+
+---
+
+## Entry 72 — 2026-03-11
+
+### Action
+Added `ContributionImpactCard` to Dashboard — shows user's personal reporting stats with estimated social impact.
+
+### Files created
+- `components/dashboard/ContributionImpactCard.jsx`
+
+### Files modified
+- `pages/Dashboard.jsx` — import + placed between QuickReportCard and primary CTA
+
+### Display logic
+- Fetches current user's `user_reported` FuelPrice records (filtered by `reportedByUserId = user.email`)
+- Hidden if user has 0 reports or is unauthenticated
+- Estimates: driversHelped = reportCount × 285, estimatedSaved = reportCount × 21.5 kr
+- Estimation constants are intentionally rough (motivational, not actuarial)
+
+### Why this is governance-safe
+✓ UI-only, read-only FuelPrice query
+✓ No locked Phase 2 files touched
+✓ No entity schema changes
+✓ No backend changes
+✓ No matching logic changes
+✓ Component is hidden for unauthenticated users and zero-report users
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. New component + 2-line Dashboard change. Requires GitHub verification after publish.
