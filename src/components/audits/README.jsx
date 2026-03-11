@@ -15,26 +15,26 @@ This directory (`src/components/audits/`) is the **canonical location** for all 
 ```
 src/components/audits/
 ├── README.md                    (this file — overview)
-├── AuditIndex.jsx               (navigation guide)
+├── AUDIT_INDEX.jsx              (canonical index registry)
 │
 ├── ui/
 │   ├── README.md                (UI audit guidelines)
-│   └── ui-audit-YYYY-MM-DD.md   (individual UI audits)
+│   └── {topic}-ui-audit-YYYY-MM-DD.jsx   (individual UI audits)
 │
 ├── architecture/
 │   ├── README.md                (architecture audit guidelines)
-│   └── {type}-architecture-audit-YYYY-MM-DD.md  (individual audits)
+│   └── {topic}-architecture-audit-YYYY-MM-DD.jsx  (individual audits)
 │
 └── governance/
     ├── README.md                (governance audit guidelines)
-    └── {type}-governance-audit-YYYY-MM-DD.md   (individual audits)
+    └── {topic}-governance-audit-YYYY-MM-DD.jsx   (individual audits)
 ```
 
 ---
 
 ## 📝 Audit Format
 
-**Standard format:** Markdown (`.md`)
+**Standard format:** JSX (`.jsx`)
 
 Each audit file must contain these sections in order:
 
@@ -132,18 +132,19 @@ Each audit file must contain these sections in order:
 
 ## 📄 File Naming Convention
 
-**Format:** `{descriptor}-{category}-audit-YYYY-MM-DD.md`
+**Format:** `{descriptor}-{category}-audit-YYYY-MM-DD.jsx`
 
 **Examples:**
-- `ui-audit-2026-03-11.md` — General UI audit
-- `routing-architecture-audit-2026-03-11.md` — Routing structure audit
-- `phase-lock-governance-audit-2026-03-11.md` — Phase lock verification
+- `ui/ui-audit-2026-03-11.jsx` — General UI audit
+- `architecture/routing-architecture-audit-2026-03-11.jsx` — Routing structure audit
+- `governance/phase-lock-governance-audit-2026-03-11.jsx` — Phase lock verification
 
 **Rules:**
 - Use lowercase with hyphens
 - Always include date in YYYY-MM-DD format
 - Place in correct category folder
 - Use descriptive but concise names
+- File format: JSX (not Markdown)
 
 ---
 
@@ -152,7 +153,7 @@ Each audit file must contain these sections in order:
 Before saving an audit:
 
 - [ ] File is in the correct category folder (`ui/`, `architecture/`, or `governance/`)
-- [ ] Filename follows convention: `{type}-audit-YYYY-MM-DD.md`
+- [ ] Filename follows convention: `{type}-audit-YYYY-MM-DD.jsx`
 - [ ] Audit includes all 7 required sections
 - [ ] Issues are prioritized by severity
 - [ ] Multiple cleanup options provided (at least 2)
@@ -166,7 +167,7 @@ Before saving an audit:
 ## 🔍 Finding Audits
 
 **For users/reviewers:**
-- Start with `AuditIndex.jsx` for navigation
+- Start with `AUDIT_INDEX.jsx` for navigation
 - Choose category based on your question
 - Read category README for context
 - Review specific audit files in that folder
@@ -195,17 +196,17 @@ Before saving an audit:
 **Scenario 1:** Dashboard layout is confusing  
 → Create **UI audit** identifying spacing, navigation, clarity issues  
 → Propose 3 cleanup passes (quick fix, partial refactor, full redesign)  
-→ Save to `ui/dashboard-ui-audit-2026-03-11.md`
+→ Save to `ui/dashboard-ui-audit-2026-03-11.jsx`
 
 **Scenario 2:** Routing structure is unclear  
 → Create **Architecture audit** examining router initialization, page registration  
 → Propose cleanup options (restructure, rename, document)  
-→ Save to `architecture/routing-architecture-audit-2026-03-11.md`
+→ Save to `architecture/routing-architecture-audit-2026-03-11.jsx`
 
 **Scenario 3:** Need to verify Phase locks are still in place  
 → Create **Governance audit** checking frozen files and execution logs  
 → Confirm compliance with HOVEDINSTRUKS  
-→ Save to `governance/phase-lock-governance-audit-2026-03-11.md`
+→ Save to `governance/phase-lock-governance-audit-2026-03-11.jsx`
 
 ---
 

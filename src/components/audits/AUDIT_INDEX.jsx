@@ -27,7 +27,7 @@ export const AUDIT_INDEX = {
     {
       id: "routing_architecture_audit",
       title: "Routing Architecture Audit",
-      location: "src/components/audits/architecture/routing-architecture-audit-2026-03-11.md",
+      location: "src/components/audits/architecture/routing-architecture-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Deep analysis of dual router configuration and nested router conflict",
       relatesTo: "Phase 1 Architecture (Pass 1 Correction)",
@@ -38,7 +38,7 @@ export const AUDIT_INDEX = {
     {
       id: "ui_audit",
       title: "UI/UX Audit",
-      location: "src/components/audits/ui/ui-audit-2026-03-11.md",
+      location: "src/components/audits/ui/ui-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Dashboard layout, visual consistency, component organization, data transparency",
       relatesTo: "UI Clarity (Pass A recommended)",
