@@ -1187,3 +1187,38 @@ Support safer future user clarification UX when station selection is uncertain. 
 
 ### GitHub visibility status
 Ready for publish. Metadata-only addition, zero pipeline changes. Requires GitHub verification after publish.
+
+---
+
+## Entry 62 — 2026-03-11
+
+### Action
+Added "Logg en til på samme stasjon" repeat-submission CTA to OptimisticSuccess overlay.
+
+### Purpose
+Increase repeat price submissions by allowing users to immediately log another price for the same already-selected station without restarting the full flow from StationPicker.
+
+### Files modified
+- `components/logprice/OptimisticSuccess.jsx` — added `stationName`, `onRepeatSameStation` props; new primary green CTA button; existing "Logg en til" renamed to "Ny stasjon"
+- `pages/LogPrice.jsx` — added `resetForRepeat()` function (keeps stationInfo, resets only prices/image, skips to step="photo"); passes `stationName` and `onRepeatSameStation` to OptimisticSuccess
+
+### Exact change
+`resetForRepeat()`:
+- `setStep("photo")` — skips StationPicker entirely
+- `setImageUrl(null)` — clears previous photo
+- `setDetectedPrices(emptyPrices())` — clears AI-detected prices
+- `setShowSuccess(false)` — closes overlay
+- `setSubmitError(null)` — clears any error state
+- All stationInfo fields (including all 8 clarification metadata fields from Entry 61) remain UNTOUCHED
+
+### Why this is governance-safe
+✓ No locked Phase 2 files touched
+✓ No matching logic changed — matchStationForUserReportedPrice runs unchanged on next submit
+✓ No new entities, no entity schema changes
+✓ No new backend functions
+✓ No threshold changes
+✓ Station selection metadata fully preserved across repeat submissions
+✓ Full reset ("Ny stasjon") still available for users who want to change station
+
+### GitHub visibility status
+Ready for publish. UI-only CTA addition. Requires GitHub verification after publish.
