@@ -37,7 +37,7 @@ Phase25ExecutionLog_005.jsx         ← Entries 41+ (sealed)
 Phase25ExecutionLog.jsx             ← Deprecated stub only
 ```
 
-**Append rule:** New entries always go to the active chunk (currently 005), never to the stub.
+**Append rule:** New entries always go to the active chunk, never to the stub.
 
 ---
 
