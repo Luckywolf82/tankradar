@@ -3,12 +3,12 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_76",
+  id: "phase25_step_77",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "Entry 75 (Statistics UI cleanup pass) is the last pre-authorized improvement. " +
+    "Entry 76 (Dashboard Card Priority Pass) is the last pre-authorized improvement. " +
     "Statistics page is now calmer: flat bg, divider-row regional table, lighter footnote, " +
     "shortened chart subtitle. All data intact. " +
     "No further implementation step has been approved. " +
