@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [ssbData, setSsbData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
+  const [pumpModeActive, setPumpModeActive] = useState(false);
   const { scrollRef, restoreScroll } = useTabState("Dashboard");
 
   useEffect(() => {
