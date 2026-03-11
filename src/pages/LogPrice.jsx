@@ -10,6 +10,7 @@ import PhotoCapture from "../components/logprice/PhotoCapture.jsx";
 import ConfirmPrice from "../components/logprice/ConfirmPrice.jsx";
 import StationPicker from "../components/logprice/StationPicker.jsx";
 import { OptimisticSuccess } from "../components/logprice/OptimisticSuccess";
+import ProximityConfirmBanner from "../components/logprice/ProximityConfirmBanner";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
 const FUEL_TYPES = ["bensin_95", "bensin_98", "diesel", "diesel_premium"];
