@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-11T21:30:00Z",
+  lastUpdated: "2026-03-12T00:30:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -176,20 +176,33 @@ export const AUDIT_INDEX = {
       focusArea: "Root file analysis, build pipeline verification, ChatGPT workflow alignment, Base44 platform compatibility, missing documentation assessment",
       status: "complete",
       canonicalFor: "Root configuration verification, workflow consistency confirmation"
+    },
+    {
+      id: "governance_workflow_coherence_audit",
+      title: "Governance + Workflow Coherence Audit — Comprehensive System Review",
+      category: "governance",
+      type: "workflow-coherence-audit",
+      location: "src/components/audits/governance/governance-workflow-coherence-audit-2026-03-11-final.jsx",
+      dateCreated: "2026-03-12",
+      description: "Comprehensive audit of all governance, workflow, root-config, and audit-system files. Verifies canonical sources, detects overlaps/contradictions, confirms ChatGPT↔Base44↔GitHub loop protection, enforces repo sync discipline. CRITICAL FINDING: BASE44_PROJECT_INSTRUCTIONS claims sole authority but AI_PROJECT_INSTRUCTIONS still exists — requires human decision.",
+      relatesTo: "Root Workflow Consistency (Entry 96); Governance Coherence (Entry 96); Phase25ExecutionLogIndex; AUDIT_SYSTEM_GUIDE",
+      focusArea: "Authority conflict resolution, canonical sources mapping, workflow handoff protection, repo sync enforcement, ChatGPT↔Base44↔GitHub loop integrity, overlaps analysis, sync verification, root-level alignment",
+      status: "complete",
+      canonicalFor: "Governance system integrity, workflow coherence validation, sync enforcement confirmation, ChatGPT↔Base44↔GitHub workflow protection"
     }
   ],
 
   categoryBreakdown: {
     architecture: 4,
     ui: 3,
-    governance: 1,
+    governance: 2,
     product: 3,
     activation: 3,
     data: 0,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 15
+    total: 16
   },
 
   governanceRules: {
@@ -264,7 +277,7 @@ export const AUDIT_INDEX = {
   relatedFiles: {
     executionLog: "src/components/governance/Phase25ExecutionLog_*.jsx",
     auditSystemGuide: "src/components/audits/AUDIT_SYSTEM_GUIDE.jsx",
-    projectInstructions: "src/components/governance/AI_PROJECT_INSTRUCTIONS.jsx"
+    projectInstructions: "src/components/governance/BASE44_PROJECT_INSTRUCTIONS.jsx"
   }
 };
 
