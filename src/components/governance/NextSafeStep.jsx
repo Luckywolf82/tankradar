@@ -42,7 +42,7 @@ export const NEXT_SAFE_STEP = {
 
   status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
+  linkedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76]
 };
 
 export default NEXT_SAFE_STEP;
