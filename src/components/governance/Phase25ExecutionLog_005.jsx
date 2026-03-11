@@ -1292,3 +1292,85 @@ NEXT_SAFE_STEP = {
 
 ### GitHub visibility status
 Ready for publish. Governance-metadata only. Requires GitHub verification after publish.
+
+---
+
+## Entry 64 — 2026-03-11
+
+### Action
+Implemented proximity station confirmation banner (`ProximityConfirmBanner.jsx`) using Entry 61 metadata fields.
+
+### Purpose
+When multiple stations are very close together (distanceGapM < 300m), show a lightweight "Er dette riktig stasjon?" prompt before submission, allowing users to confirm, correct chain, or go back to pick a different station. Reduces incorrect station-to-price associations.
+
+### Files created
+- `components/logprice/ProximityConfirmBanner.jsx` — new component, ~165 lines
+
+### Files modified
+- `pages/LogPrice.jsx` — import added; banner injected above ConfirmPrice in `step === "confirm"` branch
+
+### Exact trigger condition
+```
+shouldShowProximityBanner(stationInfo):
+  - stationInfo.userConfirmedSuggestedStation === null (not yet answered)
+  - stationInfo.secondCandidateDistanceM != null
+  - stationInfo.distanceGapM != null
+  - stationInfo.distanceGapM < 300  ← ambiguity threshold: 300m
+```
+The banner is hidden for single-station results, distant alternatives, or after the user has already answered.
+
+### Exact UI added
+**Trigger state:** amber banner shows
+- Station name + chain
+- `selectedCandidateDistanceM` in meters
+- `secondCandidateDistanceM` + `distanceGapM` ("Nærmeste alternativ: X m (Y m gap)")
+- "Ja, riktig stasjon" (green) / "Nei" (amber outline)
+
+**If "Nei":**
+- Chain dropdown (Circle K, Uno-X, Esso, Shell, YX, Best, Annet)
+- "Bekreft korrigering" → sets `userCorrectedChain` + `userClarificationReason = "user_corrected_chain"`
+- "Velg annen stasjon" → sets `userClarificationReason = "user_changed_station"`, navigates to step="station"
+
+**Post-confirmation states:**
+- "Ja" → quiet green badge "Stasjon bekreftet: <name>"
+- Corrected chain → quiet amber badge "Kjede korrigert til <chain>"
+
+### How Entry 61 metadata is reused (read-only)
+| Field | Used for |
+|---|---|
+| `secondCandidateDistanceM` | Trigger condition + display |
+| `distanceGapM` | Trigger condition (< 300m) + display |
+| `selectedCandidateDistanceM` | Distance display |
+| `station_name` / `station_chain` | Display in banner |
+| `userConfirmedSuggestedStation` | Written: true/false; prevents re-trigger |
+| `userCorrectedChain` | Written: chain string from dropdown |
+| `userClarificationReason` | Written: "user_corrected_chain" or "user_changed_station" |
+
+All written values are already serialized into `rawPayloadSnippet` at submit time by LogPrice.jsx (existing Entry 61 code, untouched).
+
+### Why this is governance-safe
+✓ No locked Phase 2 files touched — all 10 remain UNTOUCHED
+✓ No matching logic changed — matchStationForUserReportedPrice runs unchanged
+✓ No entity schema changes — uses existing rawPayloadSnippet serialization
+✓ No new backend functions
+✓ No threshold changes in matching engine — 300m display threshold is UI-only
+✓ No Station records created automatically
+✓ User can always proceed without answering (banner disappears after confirm/deny)
+✓ "Velg annen stasjon" returns to existing step="station" flow
+✓ All metadata already defined in Entry 61 — this entry only activates the UI layer
+
+### Verification
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Ready for publish. UI-only new component + 2-line LogPrice change. Requires GitHub verification after publish.

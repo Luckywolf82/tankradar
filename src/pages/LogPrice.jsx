@@ -320,16 +320,23 @@ export default function LogPrice() {
         )}
 
         {step === "confirm" && (
-          <ConfirmPrice
-            detectedPrices={detectedPrices}
-            setDetectedPrices={setDetectedPrices}
-            stationInfo={stationInfo}
-            setStationInfo={setStationInfo}
-            imageUrl={imageUrl}
-            onSubmit={handleSubmit}
-            loading={submitting}
-            locationLoading={locationLoading}
-          />
+          <>
+            <ProximityConfirmBanner
+              stationInfo={stationInfo}
+              setStationInfo={setStationInfo}
+              onChangeStation={() => setStep("station")}
+            />
+            <ConfirmPrice
+              detectedPrices={detectedPrices}
+              setDetectedPrices={setDetectedPrices}
+              stationInfo={stationInfo}
+              setStationInfo={setStationInfo}
+              imageUrl={imageUrl}
+              onSubmit={handleSubmit}
+              loading={submitting}
+              locationLoading={locationLoading}
+            />
+          </>
         )}
         
         {/* Optimistic Success Feedback */}
