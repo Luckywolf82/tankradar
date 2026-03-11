@@ -11,6 +11,8 @@ export const PROJECT_STRUCTURE_AUDIT = {
   auditType: "Architecture & Routing Structure",
   createdDate: "2026-03-11",
   phase: "Phase 1 — Route Protection Verification",
+  status: "BASELINE / PRELIMINARY",
+  statusNote: "Router entry-point assumption (pages/App.jsx as root) requires verification. Treat as preliminary until confirmed by root runtime bootstrap code inspection.",
 
   // ============================================================================
   // CONTEXT

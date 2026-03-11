@@ -56,7 +56,7 @@ export const AUDIT_INDEX = {
 
   howToUseThisIndex: {
     step1: "Find relevant audit by topic or date",
-    step2: "Read full audit file (jsx or md format)",
+    step2: "Read full audit file (jsx format)",
     step3: "Reference findings in execution log when proposing changes",
     step4: "Create new audit before major refactoring",
     step5: "Link audit findings to HAUPTINSTRUKS rules"
@@ -64,7 +64,7 @@ export const AUDIT_INDEX = {
 
   relatedFiles: {
     executionLog: "src/components/governance/Phase25ExecutionLog_*.jsx",
-    auditSystemGuide: "src/components/audits/AUDIT_SYSTEM_GUIDE.txt",
+    auditSystemGuide: "src/components/audits/AUDIT_SYSTEM_GUIDE.jsx",
     projectInstructions: "src/components/governance/AI_PROJECT_INSTRUCTIONS.jsx"
   }
 };
