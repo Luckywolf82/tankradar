@@ -1721,3 +1721,39 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. New component + 2-line Dashboard change. Requires GitHub verification after publish.
+
+---
+
+## Entry 73 — 2026-03-11
+
+### Action
+Added `RouteSavingsCard` to Dashboard — shows cheapest alternative station vs nearest, with estimated per-tank savings and Google Maps navigation link.
+
+### Files created
+- `components/dashboard/RouteSavingsCard.jsx`
+
+### Files modified
+- `pages/Dashboard.jsx` — import + placed below ContributionImpactCard
+
+### Display logic
+- GPS acquired → fetches active Stations + recent FuelPrices for selected fuel type
+- Nearest station with a known price = "Vanlig stopp"
+- Cheapest OTHER station within 15 km = "Billigere på ruten"
+- Savings = (nearestPrice - cheaperPrice) × 50L estimated tank
+- Hidden if savings < 5 kr, no GPS, fewer than 2 priced stations nearby, or any error
+- "Naviger dit" → Google Maps driving directions to cheaper station
+
+### Why this is governance-safe
+✓ UI-only, read-only queries on Station + FuelPrice entities
+✓ No locked Phase 2 files touched
+✓ No entity schema changes
+✓ No backend changes
+✓ No matching logic changes
+✓ selectedFuel prop passed from Dashboard — respects user's current fuel selection
+✓ Component silently hides on GPS denial, empty data, or insufficient savings
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. New component + 3-line Dashboard change. Requires GitHub verification after publish.
