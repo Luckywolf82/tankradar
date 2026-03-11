@@ -223,7 +223,19 @@ export default function LogPrice() {
             entry.station_chain = stationInfo.station_chain || null;
             entry.station_match_notes = `No safe match found. GPS [${window.__gpsLat}, ${window.__gpsLon}], name "${stationInfo.station_name}", chain "${stationInfo.station_chain}"`;
           }
-          
+
+          // Attach clarification metadata if available (read-only signal, never used for matching)
+          entry.rawPayloadSnippet = [
+            entry.rawPayloadSnippet,
+            stationInfo.selectedSource ? `source=${stationInfo.selectedSource}` : null,
+            stationInfo.selectedCandidateDistanceM != null ? `distM=${stationInfo.selectedCandidateDistanceM}` : null,
+            stationInfo.secondCandidateDistanceM != null ? `2ndDistM=${stationInfo.secondCandidateDistanceM}` : null,
+            stationInfo.distanceGapM != null ? `gapM=${stationInfo.distanceGapM}` : null,
+            stationInfo.userConfirmedSuggestedStation != null ? `confirmed=${stationInfo.userConfirmedSuggestedStation}` : null,
+            stationInfo.userCorrectedChain ? `correctedChain=${stationInfo.userCorrectedChain}` : null,
+            stationInfo.userClarificationReason ? `clarification=${stationInfo.userClarificationReason}` : null,
+          ].filter(Boolean).join(' | ');
+
           return entry;
         });
       
