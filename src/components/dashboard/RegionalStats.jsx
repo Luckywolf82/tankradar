@@ -113,9 +113,8 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
                   <p className="font-semibold text-slate-800 text-sm truncate">{city.city}</p>
-                  <span className="text-xs text-slate-400 shrink-0">
-                    {city.isWeakSample ? `${city.count} obs.` : `${city.count} obs.`}
-                    {city.isWeakSample && " · lavt"}
+                  <span className={`text-xs shrink-0 ${city.isWeakSample ? 'text-amber-600 font-medium' : 'text-slate-400'}`}>
+                    {city.count} obs.{city.isWeakSample && " · ⚠ Lavt datagrunnlag"}
                   </span>
                 </div>
               </div>

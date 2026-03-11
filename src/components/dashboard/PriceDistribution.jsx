@@ -53,7 +53,7 @@ export default function PriceDistribution({ observedPrices, selectedFuel }) {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Prisfordeling</CardTitle>
-        <p className="text-xs text-slate-400">Antall observasjoner per priskategori</p>
+        <p className="text-xs text-slate-400">GooglePlaces-observasjoner · {chartData.length} priser</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>

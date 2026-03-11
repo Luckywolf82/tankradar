@@ -49,7 +49,7 @@ export default function HistoricalSSBTrend({ ssbData, selectedFuel, loading }) {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Historisk trend (SSB)</CardTitle>
-        <p className="text-xs text-slate-400">Kilde: SSB · siste 12 måneder</p>
+        <p className="text-xs text-slate-400">Nasjonalt snitt (SSB) · siste 12 måneder</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={240}>
