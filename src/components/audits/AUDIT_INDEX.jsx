@@ -81,12 +81,14 @@ export const AUDIT_INDEX = {
     {
       id: "ui_function_utilization_audit",
       title: "UI Function Utilization Audit",
+      category: "ui",
       location: "src/components/audits/ui/ui-function-utilization-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Comprehensive inventory of user-facing functions, navigation reachability, feature completeness, and optimization opportunities",
       relatesTo: "UI Optimization Pass (Entry 83)",
       focusArea: "Function visibility in primary vs. secondary nav, feature support classification, redundancy detection, hidden/incomplete features",
-      status: "complete"
+      status: "complete",
+      canonicalFor: "User-facing feature inventory"
     },
 
     {
