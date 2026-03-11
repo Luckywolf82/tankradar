@@ -30,7 +30,7 @@ export const NEXT_SAFE_STEP = {
   governanceRule: {
     preflightOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx",
-      "2. Read the active execution log chunk (check chunks[] for ACTIVE status — currently Phase25ExecutionLog_006.jsx)",
+      "2. Read the active execution log chunk (check chunks[] for ACTIVE status)",
       "3. Read NextSafeStep.js (this file)"
     ],
     priority:
