@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-11",
+  lastUpdated: "2026-03-11T17:30:00Z",
 
   audits: [
     {
@@ -55,6 +55,17 @@ export const AUDIT_INDEX = {
       relatesTo: "Phase 1 Architecture Verification (router entrypoint unknown)",
       focusArea: "Root app bootstrap, multiple router layers, page registration mechanism, nested router risks",
       status: "critical_unknowns_identified"
+    },
+
+    {
+      id: "ui_function_utilization_audit",
+      title: "UI Function Utilization Audit",
+      location: "src/components/audits/ui/ui-function-utilization-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Comprehensive inventory of user-facing functions, navigation reachability, feature completeness, and optimization opportunities",
+      relatesTo: "UI Optimization Pass (Entry 83)",
+      focusArea: "Function visibility in primary vs. secondary nav, feature support classification, redundancy detection, hidden/incomplete features",
+      status: "complete"
     }
   ],
 
