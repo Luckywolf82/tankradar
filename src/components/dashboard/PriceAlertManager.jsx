@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { Loader2, MapPin } from 'lucide-react';
 
-// CANONICAL ALERT MODEL
-// PriceAlert is the only active alert model.
-// UserPriceAlert exists only for historical reference and must not be used.
+// ─── PriceAlertManager ─────────────────────────────────────────────────
+// DEPRECATED COMPONENT — Use pages/PriceAlerts.jsx instead
+// 
+// This component was part of earlier UI structure (MyFuelDashboard).
+// All alert management is now consolidated in the dedicated PriceAlerts page.
+// 
+// Alert Model: PriceAlert = geographic region alerts (ACTIVE)
+// ────────────────────────────────────────────────────────────────────────
 
 export default function PriceAlertManager() {
   const [alerts, setAlerts] = useState([]);

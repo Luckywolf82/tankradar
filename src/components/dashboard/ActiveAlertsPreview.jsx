@@ -6,7 +6,11 @@ import { Bell, Loader2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
 
-// ActiveAlertsPreview — quick overview of active price alerts
+// ─── ActiveAlertsPreview ───────────────────────────────────────────────
+// Quick dashboard preview of user's active geographic price alerts.
+// Links to full alert management at pages/PriceAlerts.jsx.
+// Shows only enabled alerts; displays total count.
+// ────────────────────────────────────────────────────────────────────────
 export default function ActiveAlertsPreview() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);

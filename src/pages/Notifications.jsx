@@ -3,12 +3,13 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Loader2, CheckCircle2 } from "lucide-react";
 import { createPageUrl } from "@/utils";
+import { useNavigate } from "react-router-dom";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+  useNavigate();
 
   useEffect(() => {
     const loadData = async () => {

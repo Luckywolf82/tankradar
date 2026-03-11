@@ -5,9 +5,20 @@ import { Bell, Trash2, Eye, EyeOff, Plus, Loader2, MapPin } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 
-// CANONICAL ALERT MODEL
-// PriceAlert is the only active alert model.
-// UserPriceAlert exists only for historical reference and must not be used.
+// ─── ALERT ARCHITECTURE CLARIFICATION ──────────────────────────────────
+// 
+// PriceAlert (ACTIVE) — geographic area alerts
+//   • User sets a geographic region (lat/long + radius) and price threshold
+//   • System triggers when ANY station in that region offers fuel ≤ threshold
+//   • No tie to a specific station — monitors entire region
+//   • Ideal for route planning, comparison shopping across local market
+//
+// UserPriceAlert (HISTORICAL — DO NOT USE)
+//   • Deprecated model; kept only for backward compatibility reference
+//   • Was intended for station-specific alerts
+//   • All new development uses PriceAlert exclusively
+// 
+// ────────────────────────────────────────────────────────────────────────
 
 export default function PriceAlertsPage() {
   const [alerts, setAlerts] = useState([]);

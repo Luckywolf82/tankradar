@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2 } from 'lucide-react';
 import FavoriteStationCard from './FavoriteStationCard';
-import PriceAlertManager from './PriceAlertManager';
 import FreemiumBanner from './FreemiumBanner';
 import AddFavoriteForm from './AddFavoriteForm';
 
@@ -96,10 +95,8 @@ export default function MyFuelDashboard() {
         </button>
       )}
 
-      {/* Premium price alerts section */}
-      {canCreateAlerts && (
-        <PriceAlertManager stationId={favorites[0]?.stationId} onRefresh={loadData} />
-      )}
+      {/* DEPRECATED: PriceAlertManager moved to pages/PriceAlerts */}
+       {/* All alert management now consolidated in dedicated page */}
 
       {/* Single consolidated premium upsell — only if both limits reached and alerts locked */}
       {!canCreateAlerts && favorites.length >= maxFavorites && (
