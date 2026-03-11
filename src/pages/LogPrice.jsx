@@ -335,6 +335,7 @@ export default function LogPrice() {
               onSubmit={handleSubmit}
               loading={submitting}
               locationLoading={locationLoading}
+              onChangeStation={() => setStep("station")}
             />
           </>
         )}

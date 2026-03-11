@@ -40,7 +40,7 @@ function PriceRow({ fuelType, price, aiDetected, onChange }) {
   );
 }
 
-export default function ConfirmPrice({ detectedPrices, setDetectedPrices, stationInfo, setStationInfo, imageUrl, onSubmit, loading, locationLoading }) {
+export default function ConfirmPrice({ detectedPrices, setDetectedPrices, stationInfo, setStationInfo, imageUrl, onSubmit, loading, locationLoading, onChangeStation }) {
   const setStation = (field, value) => setStationInfo(prev => ({ ...prev, [field]: value }));
 
   const activePrices = Object.entries(detectedPrices).filter(([, v]) => v.enabled);
@@ -119,15 +119,27 @@ export default function ConfirmPrice({ detectedPrices, setDetectedPrices, statio
           </div>
 
           {/* Station info — display station that was pre-selected */}
-           {stationInfo.station_id && (
-             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-               <p className="text-xs font-medium text-blue-600 mb-1">Stasjon</p>
-               <p className="font-semibold text-slate-900">{stationInfo.station_name}</p>
-               {stationInfo.station_chain && (
-                 <p className="text-xs text-slate-600">{stationInfo.station_chain}</p>
-               )}
-               {stationInfo.city && (
-                 <p className="text-xs text-slate-600">{stationInfo.city}</p>
+           {(stationInfo.station_id || stationInfo.station_name) && (
+             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start justify-between gap-2">
+               <div className="min-w-0">
+                 <p className="text-xs font-medium text-blue-600 mb-1 flex items-center gap-1">
+                   <MapPin size={11} /> Valgt stasjon
+                 </p>
+                 <p className="font-semibold text-slate-900 truncate">{stationInfo.station_name}</p>
+                 {(stationInfo.station_chain || stationInfo.city) && (
+                   <p className="text-xs text-slate-500 mt-0.5">
+                     {[stationInfo.station_chain, stationInfo.city].filter(Boolean).join(" · ")}
+                   </p>
+                 )}
+               </div>
+               {onChangeStation && (
+                 <button
+                   type="button"
+                   onClick={onChangeStation}
+                   className="flex-shrink-0 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium mt-0.5 whitespace-nowrap"
+                 >
+                   <ArrowLeftRight size={12} /> Bytt stasjon
+                 </button>
                )}
              </div>
            )}
