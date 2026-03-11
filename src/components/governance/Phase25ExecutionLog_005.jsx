@@ -1555,3 +1555,46 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. UI-only changes across 4 files. Requires GitHub verification after publish.
+
+---
+
+## Entry 69 — 2026-03-11
+
+### Action
+Dashboard quick-action pass — removed analytics widgets, replaced with compact "Se full analyse →" link card.
+
+### Files modified
+- `pages/Dashboard.jsx`
+
+### Changes applied
+
+**Removed from Dashboard:**
+- `LiveMarketStats` (market stats grid)
+- `PriceChangeIndicator` (price change delta widget)
+- `HistoricalSSBTrend` (embedded SSB chart with clipped height)
+- Their imports removed
+
+**Kept on Dashboard:**
+- Fuel type selector
+- "Logg pris" primary CTA
+- `SmartFillIndicator` (action-oriented: good/normal/wait signal)
+- `NearbyPrices` ("Billigste nær deg")
+- `RecentPricesFeed` (siste rapporterte priser)
+- `MyFuelDashboard` (mine stasjoner)
+- `ssbData` fetch retained (still needed by SmartFillIndicator)
+
+**Added:**
+- Compact blue card: "Se full analyse → Historisk trend, regional fordeling og prisstatistikk" linking to Statistics page
+
+### Why this is governance-safe
+✓ Zero backend changes
+✓ Zero entity changes
+✓ Zero matching logic changes
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ Only Dashboard.jsx modified — UI-only component removal
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. UI-only, single file change. Requires GitHub verification after publish.
