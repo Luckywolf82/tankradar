@@ -157,6 +157,81 @@
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *
+ * CATEGORY-SPECIFIC AUDIT GUIDANCE
+ *
+ * ARCHITECTURE audits analyze:
+ *   → Routing and entry points
+ *   → Dependency direction and circular references
+ *   → Page registration and component wiring
+ *   → Data flow between layers
+ *   → Module structure and separation of concerns
+ *   NOT: UI appearance, business logic optimization, feature prioritization
+ *
+ * UI audits analyze:
+ *   → Visible navigation and page organization
+ *   → CTA placement, discoverability of features
+ *   → Visual consistency and design patterns
+ *   → Responsive layout and accessibility
+ *   → Component hierarchy and reusability
+ *   NOT: Data integrity, routing mechanics, business logic
+ *
+ * GOVERNANCE audits analyze:
+ *   → Locked Phase 2 files and modification restrictions
+ *   → Execution log integrity and compliance
+ *   → Phase boundaries and task sequencing
+ *   → Frozen file dependencies
+ *   NOT: Feature implementation, user behavior, data quality
+ *
+ * PRODUCT audits analyze:
+ *   → Feature usefulness and user value scoring
+ *   → Crowdsourcing participation incentives
+ *   → User retention and engagement hooks
+ *   → CTA effectiveness and conversion flows
+ *   → Feature prioritization (BUILD/IMPROVE/DEFER/REMOVE)
+ *   NOT: Technical implementation details, code quality
+ *
+ * ACTIVATION audits analyze:
+ *   → User onboarding friction and first-time UX
+ *   → First-value experience and time-to-first-contribution
+ *   → Contribution loops and engagement mechanics
+ *   → Early retention and drop-off points
+ *   → Feature discovery by new users
+ *   NOT: Visual design, data quality, security
+ *
+ * DATA audits analyze:
+ *   → Station matching integrity and accuracy
+ *   → Price plausibility and anomaly detection
+ *   → Data source reliability and metadata completeness
+ *   → Field validation and missing value handling
+ *   → Confidence scoring and uncertainty quantification
+ *   NOT: UI presentation, user behavior, performance
+ *
+ * PERFORMANCE audits analyze:
+ *   → Page load times and time-to-interactive
+ *   → Expensive database queries and N+1 problems
+ *   → Rendering inefficiencies and component re-renders
+ *   → Network request batching and caching strategies
+ *   → Memory usage and bundle size
+ *   NOT: User experience design, business logic
+ *
+ * SECURITY audits analyze:
+ *   → Input validation and sanitization
+ *   → Admin access controls and authorization
+ *   → Authentication boundaries and session management
+ *   → Abuse vectors and rate limiting
+ *   → Data exposure and privacy controls
+ *   NOT: Feature design, data modeling
+ *
+ * PUBLISHABILITY audits analyze:
+ *   → Google Play Store readiness and compliance
+ *   → Apple App Store readiness and compliance
+ *   → Platform-specific metadata and submission requirements
+ *   → WebView wrapper risks and native integration
+ *   → Version numbering and release notes requirements
+ *   NOT: Feature implementation, user acquisition
+ *
+ * ————————————————————————————————————————————————————————————————————————————————
+ *
  * RELATED FILES
  *
  * AUDIT_INDEX.jsx                    — Registry of all audits
