@@ -61,6 +61,9 @@ export default function Dashboard() {
         {/* Contribution impact */}
         <ContributionImpactCard />
 
+        {/* Route savings */}
+        <RouteSavingsCard selectedFuel={selectedFuel} />
+
         {/* Primary CTA */}
         <div className="mb-5">
           <Link to={createPageUrl("LogPrice")} className="block sm:inline-block">
