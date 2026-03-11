@@ -1800,4 +1800,46 @@ Added `PumpModeCard` to Dashboard — activates when user is ≤150m from a stat
 All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
-Ready for publish. New component + 3-line Dashboard change. Requires GitHub verification after publish.
+Ready for publish. Requires GitHub verification after publish.
+
+---
+
+## Entry 75 — 2026-03-11
+
+### Action
+Statistics UI cleanup pass — reduced visual clutter, flattened regional rows, lighter footnote.
+
+### Files modified
+- `components/dashboard/RegionalStats.jsx` — replaced bordered bg-slate-50 inner boxes with divide-y separator rows; removed repeated label stacks; avg + vs-SSB inline; obs count + "lavt" inline with city name; SSB reference surfaced in card subtitle
+- `components/dashboard/HistoricalSSBTrend.jsx` — shortened subtitle from full sentence to `Kilde: SSB · siste 12 måneder`
+- `pages/Statistics.jsx` — removed bg-gradient (→ flat bg-slate-50); replaced heavy "Om dataene" Card (CardHeader + CardContent) with single `<p>` footnote; fixed indentation; removed unused `BarChart3` import
+
+### No files created
+
+### UI changes made
+1. RegionalStats rows: `card-in-card` → clean divider rows — eliminates 3 levels of nesting per row
+2. Per-row label clutter reduced: "Gjennomsnitt" / "Median" / "OBSERVASJONER" / "vs nasjonalt" → single `avg kr` + `vs SSB` badge
+3. Weak-sample notice: moved inline (`· lavt`) instead of separate `<p>` per row
+4. SSB reference price surfaced once in card subtitle instead of per-row
+5. Background: gradient removed → flat `bg-slate-50` — less visual weight
+6. "Om dataene" footnote: full Card → single centered `<p className="text-xs text-slate-400">`
+7. HistoricalSSBTrend subtitle: 9 words → `Kilde: SSB · siste 12 måneder`
+
+### Data integrity
+✓ All calculations preserved — avg, median, deviation, isWeakSample, count, ssbReference unchanged
+✓ All filtering logic unchanged (plausibilityStatus, priceType, fuelAliases)
+✓ All chart data unchanged (HistoricalSSBTrend, PriceDistribution untouched data-side)
+
+### Why this is governance-safe
+✓ UI-only — zero backend, entity, or matching changes
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ Dashboard not touched
+✓ PriceDistribution not touched (already lean)
+✓ All analytics data flows preserved
+✓ No new dependencies added
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. Requires GitHub verification after publish.
