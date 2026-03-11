@@ -70,6 +70,15 @@ export default function LogPrice() {
     longitude: null,
     google_place_id: null,
     date_observed: format(new Date(), "yyyy-MM-dd"),
+    // Clarification metadata — captured at selection, passed through to FuelPrice
+    selectedGooglePlaceId: null,
+    selectedSource: null,
+    selectedCandidateDistanceM: null,
+    secondCandidateDistanceM: null,
+    distanceGapM: null,
+    userConfirmedSuggestedStation: null,
+    userCorrectedChain: null,
+    userClarificationReason: null,
   });
 
   const handleSelectStation = (selectedStation) => {
