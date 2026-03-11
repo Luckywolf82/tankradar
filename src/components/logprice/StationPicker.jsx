@@ -126,6 +126,13 @@ export default function StationPicker({ onSelectStation, onSkip }) {
     const isFromGooglePlaces = station._source === 'google_places';
     const googlePlaceId = isFromGooglePlaces ? (station.place_id || null) : null;
 
+    // Proximity metadata: distance to selected and next-best candidate (in meters)
+    const selectedDistanceM = station.distance != null ? Math.round(station.distance * 1000) : null;
+    const otherCandidates = stations.filter(s => (s.id || s.place_id) !== (station.id || station.place_id));
+    const secondCandidate = otherCandidates.length > 0 ? otherCandidates[0] : null;
+    const secondDistanceM = secondCandidate?.distance != null ? Math.round(secondCandidate.distance * 1000) : null;
+    const distanceGapM = (selectedDistanceM != null && secondDistanceM != null) ? (secondDistanceM - selectedDistanceM) : null;
+
     onSelectStation({
       station_id: station.id || null, // null if from Google Places (no Station.id yet)
       station_name: station.name || "",
@@ -135,6 +142,12 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       latitude: station.latitude || userLocation.latitude,
       longitude: station.longitude || userLocation.longitude,
       google_place_id: googlePlaceId, // Populated only for unknown Google Places selections
+      // Clarification metadata fields
+      selectedGooglePlaceId: googlePlaceId,
+      selectedSource: station._source || null,
+      selectedCandidateDistanceM: selectedDistanceM,
+      secondCandidateDistanceM: secondDistanceM,
+      distanceGapM: distanceGapM,
     });
   };
 
