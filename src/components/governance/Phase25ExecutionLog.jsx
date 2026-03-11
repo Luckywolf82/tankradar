@@ -23,9 +23,8 @@
 // Migration completed: 2026-03-10 (Entry 48)
 
 export const DEPRECATED_NOTICE = {
-  message: "This file is deprecated. See Phase25ExecutionLogIndex.jsx",
+  message: "Deprecated. Execution log is now managed via Phase25ExecutionLogIndex.jsx",
   status: "read-only stub",
-  activeChunkFile: "Phase25ExecutionLog_005.jsx",
   indexFile: "Phase25ExecutionLogIndex.jsx"
 };
 
