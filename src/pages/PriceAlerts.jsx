@@ -127,11 +127,8 @@ export default function PriceAlertsPage() {
             Områdevarsler varsler deg når drivstoff under valgt makspris oppdages innenfor valgt radius.
           </p>
           <p className="text-blue-800 italic text-[11px]">
-            Søker etter ny pris innenfor en geografisk region, ikke knyttet til en bestemt stasjon. Perfekt for å overvåke flere stasjoner i nærheten.
-          </p>
-          <p className="text-blue-800 text-[11px] border-t border-blue-200 pt-2 mt-2">
-            💡 Du kan også bruke <span className="font-medium">Stasjonsvarsler</span> for å følge en spesifikk stasjon og få varsler ved prisfall eller prisrekorder.
-          </p>
+             Søker etter ny pris innenfor en geografisk region, ikke knyttet til en bestemt stasjon. Perfekt for å overvåke flere stasjoner i nærheten.
+           </p>
         </CardContent>
       </Card>
 
