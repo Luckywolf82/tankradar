@@ -77,6 +77,17 @@ export const AUDIT_INDEX = {
       relatesTo: "MVP Launch Planning (Entry 84)",
       focusArea: "Function value scoring (USER_VALUE, DATA_SUPPORT, UI_MATURITY, MVP_RELEVANCE), decision table, tier classification",
       status: "complete"
+    },
+
+    {
+      id: "mvp_function_prioritization_audit",
+      title: "MVP Function Prioritization Audit",
+      location: "src/components/audits/ui/mvp-function-prioritization-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Tier classification (CORE/SECONDARY/SUPPORT/HIDE/REMOVE) for all user-facing functions; recommended 3-screen MVP structure; nav optimization",
+      relatesTo: "MVP Launch Readiness (Entry 85)",
+      focusArea: "Tier assignments, 3-screen MVP foundation (Dashboard/LogPrice/Statistics/Profile), navigation optimization, broken UI identification",
+      status: "complete"
     }
   ],
 
