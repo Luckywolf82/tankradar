@@ -324,4 +324,231 @@ export const entry_88 = {
   ]
 };
 
-export default entry_88;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 89: STORE PUBLISHABILITY AUDIT — GOOGLE PLAY & APPLE APP STORE READINESS
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_89 = {
+  timestamp: "2026-03-11T19:45:00Z",
+  phase: "Phase 2.5 Product Maturity & Long-term Planning",
+  title: "Store Publishability Audit — Google Play & Apple App Store Readiness Assessment",
+
+  objectives: [
+    "Evaluate TankRadar mobile app architecture, UX, and feature completeness for store submission readiness",
+    "Identify blocking issues that would cause store rejection",
+    "Assess WebView wrapper risk and app value differentiation",
+    "Document privacy, metadata, and platform compliance gaps",
+    "Provide actionable roadmap for store submission"
+  ],
+
+  preFlightVerification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx, NextSafeStep.jsx, governance files",
+    "✓ Inspected Layout.js, Dashboard.jsx, LogPrice.jsx, Statistics.jsx, Profile.jsx, PriceAlerts.jsx, Notifications.jsx, Settings.jsx",
+    "✓ Verified locked Phase 2 files remain untouched throughout audit",
+    "✓ Confirmed read-only audit methodology per AUDIT_SYSTEM_GUIDE"
+  ],
+
+  auditFindings_summary: {
+    webviewRisk: {
+      score: 0.2,
+      outOf: 3,
+      assessment: "LOW RISK — App has sufficient native functionality (matching, alerts, gamification); not a thin wrapper"
+    },
+
+    appValueClarity: {
+      score: 2.8,
+      outOf: 3,
+      assessment: "VERY STRONG — Purpose (fuel price intelligence + crowdsourcing), value, and user journey immediately clear"
+    },
+
+    navigationQuality: {
+      score: 2.7,
+      outOf: 3,
+      assessment: "EXCELLENT — Standard mobile patterns, clear hierarchy, no dead-end screens"
+    },
+
+    featureCompleteness: {
+      score: 1.8,
+      outOf: 3,
+      assessment: "INCOMPLETE — 6 of 8 screens fully functional; Settings account deletion is broken stub"
+    },
+
+    privacyReadiness: {
+      score: 0.5,
+      outOf: 3,
+      assessment: "NOT READY — Privacy policy, consent flows, support contact missing"
+    },
+
+    storeListingReadiness: {
+      score: 0.3,
+      outOf: 3,
+      assessment: "NOT READY — Metadata (descriptions, screenshots, keywords) not created"
+    },
+
+    overallPublishabilityScore: {
+      score: 1.5,
+      outOf: 3,
+      assessment: "REQUIRES WORK — App architecture is sound, but store submission needs blocking items resolved"
+    }
+  },
+
+  blockingIssues: [
+    {
+      rank: 1,
+      risk: "Settings account deletion is broken stub (handleConfirmDeletion TODO line 25)",
+      likelihood: "VERY HIGH — Stores test all buttons; broken UI = automatic rejection",
+      mitigation: "Remove Settings from v1.0 OR fully implement deletion backend OR hide button"
+    },
+    {
+      rank: 2,
+      risk: "Missing privacy policy and consent flows",
+      likelihood: "VERY HIGH — Google Play + Apple App Store REQUIRE privacy policy",
+      mitigation: "Create comprehensive policy; implement runtime location permission requests"
+    },
+    {
+      rank: 3,
+      risk: "No support contact information",
+      likelihood: "HIGH — Stores require support email for review + user communication",
+      mitigation: "Add support email to Settings or Profile; include in store metadata"
+    },
+    {
+      rank: 4,
+      risk: "No store listing metadata (descriptions, screenshots, release notes)",
+      likelihood: "HIGH — Incomplete metadata delays submission or causes rejection",
+      mitigation: "Create full store listing (description, 5+ screenshots, keywords, release notes)"
+    },
+    {
+      rank: 5,
+      risk: "UI mentions unimplemented features (Stasjonsvarsler / station alerts)",
+      likelihood: "MEDIUM — Confusing to users and reviewers",
+      mitigation: "Remove mentions of unimplemented features from v1.0 UI"
+    }
+  ],
+
+  improvementPriorities: [
+    {
+      rank: 1,
+      improvement: "Implement explicit location permission request (runtime)",
+      impact: "Enables PumpModeCard functionality with proper consent; required for store",
+      effort: "LOW"
+    },
+    {
+      rank: 2,
+      improvement: "Create comprehensive privacy policy document",
+      impact: "Mandatory for both stores; builds user trust",
+      effort: "MEDIUM (30–60 min)"
+    },
+    {
+      rank: 3,
+      improvement: "Remove Settings from v1.0 (or fully implement account deletion)",
+      impact: "Eliminates broken UI risk; stores reject non-functional buttons",
+      effort: "LOW (remove) OR HIGH (implement)"
+    },
+    {
+      rank: 4,
+      improvement: "Create store listing materials (descriptions, screenshots, keywords)",
+      impact: "Enables submission; improves discoverability",
+      effort: "MEDIUM (2–4 hours)"
+    },
+    {
+      rank: 5,
+      improvement: "Add version number display in app (Settings page)",
+      impact: "Supports future updates; stores track versions",
+      effort: "LOW (15 min)"
+    }
+  ],
+
+  googlePlayStoreConcerns: [
+    "REQUIRED: Privacy Policy URL + Data Safety Section (permissions, data types, retention, sharing)",
+    "REQUIRED: Support email address",
+    "REQUIRED: App icon (512x512 PNG) + screenshots (2–8)",
+    "REQUIRED: App description (4000 char max) + short description (80 char max)",
+    "✓ NOT adult content, gambling, illegal activity (safe)",
+    "✓ NOT thin wrapper (has real functionality)",
+    "⚠ Location permission needs explicit disclosure + user consent",
+    "⚠ Crowdsourcing needs clear terms for user-contributed data"
+  ],
+
+  appleAppStoreConcerns: [
+    "REQUIRED: Privacy Policy URL + Privacy Nutrition Label (App Privacy Report)",
+    "REQUIRED: Support URL or email",
+    "REQUIRED: App icon (1024x1024 PNG) + screenshots (2–5 per device type)",
+    "✓ NOT deceptive functionality; app does what it claims",
+    "⚠ Location permission MUST have clear disclosure + consent",
+    "⚠ WebView-based apps face closer scrutiny; TankRadar's real features likely sufficient to pass",
+    "NOTE: Apps must function on older devices (performance test)"
+  ],
+
+  estimatedTimelineBeforeSubmission: {
+    critical: "1–2 weeks (privacy policy + Settings fix + metadata)",
+    high: "2–3 days (permission impl + screenshots)",
+    total: "2–3 weeks from audit to store submission readiness"
+  },
+
+  auditArtifact: {
+    fileCreated: "src/components/audits/publishability/store-publishability-audit-2026-03-11.jsx",
+    sections: [
+      "context (purpose, triggers, scope)",
+      "filesInspected (Layout, 8 main pages)",
+      "observedBehavior (navigation, features, value clarity, permissions, completeness)",
+      "confirmedFacts (architecture, implementation status, value, mobile expectations)",
+      "structuralRisks (3 risk levels: blocking, medium, low)",
+      "unknowns (architecture, permissions, performance, regulatory questions)",
+      "recommendations (before submission: critical, high, medium; post-launch roadmap)",
+      "publishabilityScores (6 dimensions scored 0–3)",
+      "top5RejectionRisks (detailed blocking issues)",
+      "top5Improvements (prioritized enhancement roadmap)",
+      "platformSpecificConcerns (Google Play vs. Apple App Store requirements)"
+    ],
+    registryUpdated: "src/components/audits/AUDIT_INDEX.jsx (new entry + categoryBreakdown updated to 11 audits, 1 publishability)"
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched"
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 0,
+    businessLogicChanges: 0,
+    auditFilesCreated: 1,
+    governanceFilesModified: 1
+  },
+
+  governance_compliance: {
+    readOnlyAudit: "✓ Pure analysis; no implementation code",
+    frozenFilesUntouched: "✓ All 6 Phase 2 functions verified unchanged",
+    auditSystemCompliance: "✓ Follows AUDIT_SYSTEM_GUIDE requirements",
+    evidenceLevels: "code-observed (navigation, features), reasoned-inference (WebView risk, policies), requires-telemetry (performance, offline), user-experience-hypothesis (store reviewer expectations)"
+  },
+
+  nextSteps: {
+    preSubmission_blocking: [
+      "1. CRITICAL: Fix or remove Settings account deletion",
+      "2. CRITICAL: Create and publish privacy policy",
+      "3. CRITICAL: Add support contact information"
+    ],
+    preSubmission_high: [
+      "4. HIGH: Prepare store metadata (descriptions, screenshots, keywords)",
+      "5. HIGH: Implement explicit location permission request"
+    ],
+    preSubmission_medium: [
+      "6. MEDIUM: Remove UI mentions of unimplemented features",
+      "7. MEDIUM: Add app version number display"
+    ],
+    postLaunch: [
+      "Implement station-specific alerts",
+      "Add offline capability",
+      "Implement push notifications",
+      "Add leaderboards + gamification (from Entry 86)"
+    ]
+  },
+
+  historicalContext: "Entry 88 (NextSafeStep governance audit) identified publishability as important long-term workstream. Entry 89 provides comprehensive store submission readiness assessment: blocking issues, improvement roadmap, and platform-specific compliance requirements. Audit is read-only analysis only; implementation tracked in execution log."
+};
+
+export default entry_89;
