@@ -60,11 +60,13 @@ export default function PumpModeCard({ onActivate }) {
 
         if (nearby.length === 0) {
           setStep("hidden");
+          onActivate?.(false);
           return;
         }
 
         const nearest = nearby[0];
         setStation(nearest);
+        onActivate?.(true);
         setDistKm(nearest._distKm);
 
         // Prefill latest known prices for this station
