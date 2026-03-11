@@ -1517,4 +1517,346 @@ export const entry_85 = {
   historical_context: "Follows Phase 2.5 MVP analysis pattern (Entry 83: inventory, Entry 84: value, Entry 85: tier classification + structure). Provides clear tier hierarchy and 3-screen foundation for MVP launch. All three audits are permanent records; findings ready to inform product decision-making."
 };
 
-export default entry_85;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 86: PRODUCT UTILITY & CROWDSOURCING AUDIT — FEATURE SCORING + CTA STRATEGY
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_86 = {
+  timestamp: "2026-03-11T18:15:00Z",
+  phase: "Phase 2.5 Product & Engagement Strategy",
+  title: "Product Utility & Crowdsourcing Audit — 5-Dimension Scoring, Feature Classification, Dashboard CTA Strategy",
+  
+  objectives: [
+    "Score all user-facing functions on 5 dimensions: USER_VALUE, EASE_OF_USE, CROWDSOURCING_IMPACT, ENGAGEMENT, DEVELOPMENT_EFFORT",
+    "Classify functions into BUILD_NOW, IMPROVE_EXISTING, DEFER, REMOVE",
+    "Identify top 5 features that maximize crowdsourcing participation + daily usage + perceived usefulness",
+    "Develop Dashboard CTA strategy to drive crowdsourcing participation"
+  ],
+
+  preFlight_verification: [
+    "✓ Relationship to Entries 83–85: (83 = inventory, 84 = value, 85 = tier, 86 = product utility)",
+    "✓ Verified locked Phase 2 files — All 10 frozen functions remain untouched",
+    "✓ Read all audited pages + components; understand user workflows",
+    "✓ Confirmed read-only methodology — no code changes"
+  ],
+
+  scoring_methodology: {
+    dimensions: 5,
+    scale_per_dimension: "0–3 (higher = better, except DEVELOPMENT_EFFORT where lower = easier)",
+    total_possible: 12,
+    interpretation: "Score guides BUILD vs DEFER classification; accounts for both user impact + development effort"
+  },
+
+  feature_scores_summary: [
+    {
+      feature: "Dashboard Hub Page",
+      user_value: 3,
+      ease_of_use: 3,
+      crowdsourcing_impact: 3,
+      engagement: 3,
+      dev_effort: 0,
+      total: 12,
+      classification: "BUILD_NOW",
+      priority: "CRITICAL"
+    },
+    {
+      feature: "LogPrice 4-Step Flow",
+      user_value: 3,
+      ease_of_use: 2,
+      crowdsourcing_impact: 3,
+      engagement: 2,
+      dev_effort: 0,
+      total: 10,
+      classification: "BUILD_NOW",
+      priority: "CRITICAL — optimize ease of use"
+    },
+    {
+      feature: "SubmitPriceCard CTA",
+      user_value: 3,
+      ease_of_use: 3,
+      crowdsourcing_impact: 3,
+      engagement: 1,
+      dev_effort: 0,
+      total: 10,
+      classification: "BUILD_NOW",
+      priority: "CRITICAL — A/B test variants"
+    },
+    {
+      feature: "RadarCard + Confirmation Flow",
+      user_value: 3,
+      ease_of_use: 3,
+      crowdsourcing_impact: 1,
+      engagement: 2,
+      dev_effort: 1,
+      total: 9,
+      classification: "IMPROVE_EXISTING",
+      priority: "HIGH — add confirmation CTA"
+    },
+    {
+      feature: "PumpModeCard (Proximity Detection)",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 2,
+      engagement: 2,
+      dev_effort: 0,
+      total: 9,
+      classification: "BUILD_NOW",
+      priority: "HIGH — promote + onboarding"
+    },
+    {
+      feature: "ContributionImpactCard Gamification",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 2,
+      engagement: 2,
+      dev_effort: 1,
+      total: 9,
+      classification: "IMPROVE_EXISTING",
+      priority: "HIGH — add streaks + leaderboard preview"
+    },
+    {
+      feature: "ActiveAlertsPreview",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 0,
+      engagement: 1,
+      dev_effort: 0,
+      total: 6,
+      classification: "DEFER",
+      priority: "MEDIUM — convert to engagement driver later"
+    },
+    {
+      feature: "RouteSavingsCard",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 0,
+      engagement: 1,
+      dev_effort: 0,
+      total: 6,
+      classification: "DEFER",
+      priority: "MEDIUM — no crowdsourcing value"
+    },
+    {
+      feature: "Profile Account Hub",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 0,
+      engagement: 1,
+      dev_effort: 0,
+      total: 6,
+      classification: "BUILD_NOW",
+      priority: "MEDIUM — maintain + add temporal stats"
+    },
+    {
+      feature: "Statistics Dashboard",
+      user_value: 2,
+      ease_of_use: 3,
+      crowdsourcing_impact: 0,
+      engagement: 1,
+      dev_effort: 0,
+      total: 6,
+      classification: "DEFER",
+      priority: "LOW — credibility feature, no engagement"
+    },
+    {
+      feature: "PriceAlerts (Geographic Alerts)",
+      user_value: 2,
+      ease_of_use: 2,
+      crowdsourcing_impact: 1,
+      engagement: 1,
+      dev_effort: 0,
+      total: 6,
+      classification: "DEFER",
+      priority: "LOW — secondary feature; simplify or skip"
+    },
+    {
+      feature: "Notifications (Alert History)",
+      user_value: 1,
+      ease_of_use: 3,
+      crowdsourcing_impact: 0,
+      engagement: 0,
+      dev_effort: 0,
+      total: 4,
+      classification: "REMOVE",
+      priority: "REMOVE — use simple toasts instead"
+    },
+    {
+      feature: "Settings (Account Management)",
+      user_value: 0,
+      ease_of_use: 1,
+      crowdsourcing_impact: 0,
+      engagement: 0,
+      dev_effort: 2,
+      total: 3,
+      classification: "REMOVE",
+      priority: "REMOVE — broken UI; defer entirely"
+    }
+  ],
+
+  top_5_crowdsourcing_drivers: [
+    {
+      rank: 1,
+      feature: "LogPrice 4-Step Flow",
+      why: "Direct price submission; AI + matching; core to data quality",
+      improvement: "Reduce friction: consider 3-step flow instead of 4; strengthen AI extraction"
+    },
+    {
+      rank: 2,
+      feature: "SubmitPriceCard CTA",
+      why: "Primary entry point; strongest prompt on Dashboard; daily visibility",
+      improvement: "A/B TEST: button text ('Rapporter pris' vs 'Jeg vet prisen' vs 'Del prisinfo'), color (green/blue/gradient), position"
+    },
+    {
+      rank: 3,
+      feature: "ContributionImpactCard Gamification",
+      why: "Motivates repeat submissions via impact feedback; drives retention",
+      improvement: "ENHANCE: add weekly streaks, achievement badges, leaderboard preview, weekly summary email"
+    },
+    {
+      rank: 4,
+      feature: "PumpModeCard (Proximity Detection)",
+      why: "Contextual trigger when user is near station; timely prompt; natural UX",
+      improvement: "PROMOTE: onboarding tour, surface in early-use phase, enable push notifications"
+    },
+    {
+      rank: 5,
+      feature: "RadarCard + 1-Step Confirmation Flow",
+      why: "Link from viewing prices to confirming/correcting; low-friction crowdsourcing",
+      improvement: "NEW: add 'Confirm' button per price row; 1-step flow (yes/no/suggest correction) without full LogPrice"
+    }
+  ],
+
+  dashboard_cta_strategy: {
+    overview: "Dashboard is hub; CTA effectiveness directly drives crowdsourcing participation; every optimization counts",
+
+    primary_cta_hierarchy: {
+      position_1_strongest: {
+        component: "SubmitPriceCard",
+        cta_text_variants: [
+          "'Rapporter pris' (neutral, action-oriented)",
+          "'Jeg vet prisen' (ownership, empowering)",
+          "'Del prisinfo' (sharing, communal)"
+        ],
+        color_variants: [
+          "Green (current; 'go' action)",
+          "Blue (secondary; different weight)",
+          "Gradient (visual emphasis)"
+        ],
+        position_variants: [
+          "Top of Dashboard (current)",
+          "Below PumpModeCard (contextual)",
+          "Floating button (sticky; always visible)"
+        ],
+        recommendation: "A/B TEST all three dimensions; measure tap-through rate + LogPrice completion"
+      },
+
+      position_2_context_dependent: {
+        component: "PumpModeCard (if user ≤150m from station) OR RouteSavingsCard (passive alternative)",
+        rationale: "Context-aware UX; timely when relevant; PumpModeCard drives immediate action"
+      },
+
+      position_3_discovery: {
+        component: "RadarCard (nearby prices)",
+        enhancement: "Add 'Confirm' button per price row; link to 1-step confirmation flow",
+        rationale: "Low-friction crowdsourcing; users can confirm/correct existing prices without full submission"
+      },
+
+      position_4_motivation: {
+        component: "ContributionImpactCard (gamification + impact)",
+        placement_strategy: "Sticky/prominent during first 10 app opens; then move lower as familiarity grows",
+        rationale: "Motivate early adoption; gamification drives repeat submissions"
+      }
+    },
+
+    cta_optimization_tactics: [
+      {
+        tactic: "MOMENTUM MESSAGING",
+        copy: "Example: 'X nye priser denne uken | Du kan hjelpe' (social proof + agency)",
+        placement: "Above SubmitPriceCard CTA",
+        metric: "CTA effectiveness; conversion lift"
+      },
+      {
+        tactic: "SEGMENTATION BY STAGE",
+        segments: [
+          "New (0–7 days): Onboarding flow; guide to LogPrice; simple UX",
+          "Engaged (8–30 days): Streaks, weekly goals, leaderboard preview",
+          "Power (30+ days): Weekly summary, badges, invite friends"
+        ],
+        metric: "Retention; repeat submission rate"
+      },
+      {
+        tactic: "PUSH NOTIFICATIONS (Phase 2)",
+        triggers: [
+          "Alert on price drop at favorite stations",
+          "Nearby station detected (via PumpMode); suggest LogPrice"
+        ],
+        metric: "Daily active users; LogPrice submission rate"
+      },
+      {
+        tactic: "LEADERBOARDS (Phase 2)",
+        type: "Weekly/monthly contributor rankings with badges",
+        rationale: "Social competition drives engagement; gamification",
+        metric: "Repeat submission rate; user retention"
+      }
+    ],
+
+    flow_optimization: {
+      current: "Dashboard SubmitPriceCard CTA → LogPrice (4 steps) → Success",
+      optimization_1: "REDUCE STEPS: 4 → 3; merge redundant screens",
+      optimization_2: "ADD CONFIRMATION FLOW: 'Confirm this price' button on RadarCard → 1-step (yes/no) → Success",
+      optimization_3: "CONTEXT-AWARE CTA: Show PumpModeCard when near station; show SubmitPriceCard when not"
+    },
+
+    success_metrics: {
+      engagement: "DAU (daily active users); avg session length; Dashboard open rate",
+      crowdsourcing: "Daily/weekly new submissions; confirmation rate; avg prices per contributor",
+      retention: "7-day + 30-day return rate; repeat contributor ratio; lifetime contribution trend",
+      cta_performance: "SubmitPriceCard tap-through rate; LogPrice completion rate; drop-off point analysis"
+    }
+  },
+
+  mvp_vs_phase_2_roadmap: {
+    mvp_focus: [
+      "✓ BUILD_NOW functions: Dashboard, LogPrice, SubmitPriceCard, PumpModeCard, Profile",
+      "✓ A/B TEST SubmitPriceCard CTA (text, color, position)",
+      "✓ OPTIMIZE LogPrice ease-of-use (consider 3-step reduction)",
+      "✓ ADD PumpModeCard onboarding; surface in early-use phase",
+      "✓ ENHANCE ContributionImpactCard with weekly goals + streak tracking",
+      "✓ IMPROVE_EXISTING RadarCard with 1-step confirmation flow",
+      "✓ DEFER: Notifications (use simple toasts), Statistics, PriceAlerts, RouteSavingsCard, Settings"
+    ],
+
+    phase_2_roadmap: [
+      "LEADERBOARD: Weekly/monthly rankings with badges (drives social competition)",
+      "PUSH NOTIFICATIONS: Alert on price drop; prompt LogPrice when near station (increases DAU)",
+      "GAMIFICATION: Achievement badges (First submission, 10x contributor, etc.); streaks; weekly challenges",
+      "EMAIL SUMMARY: Weekly contribution summary (drivers helped, fuel saved, ranking position)",
+      "SOCIAL: Invite friends; share contribution stats; team competitions",
+      "ADVANCED STATS: Personal contribution history; coverage heatmap; 'you saved' calculator",
+      "ACCOUNT MANAGEMENT: Full deletion flow (defer entirely to Phase 2)"
+    ]
+  },
+
+  governance_compliance: {
+    read_only_audit: "✓ No implementation code; feature scoring and strategy only",
+    frozen_files_untouched: "✓ All 10 Phase 2 functions verified untouched",
+    audit_system_compliance: "✓ Follows AUDIT_SYSTEM_GUIDE; permanent record",
+    complementary_audits: "✓ Entry 86 uses inventory (83) + value (84) + tier (85) as foundation; adds product/engagement dimension"
+  },
+
+  recommended_next_step: {
+    title: "Product: Execute CTA A/B Tests + Optimize LogPrice Flow",
+    actions: [
+      "A/B TEST SubmitPriceCard: (1) text, (2) color, (3) position variants → measure tap-through + completion",
+      "ANALYZE LogPrice drop-off: which step loses users most? (StationPicker/PhotoCapture/ConfirmPrice/OptimisticSuccess)",
+      "IMPLEMENT 1-step confirmation flow: add 'Confirm' button to RadarCard prices",
+      "ADD PumpModeCard onboarding tour for new users",
+      "ENHANCE ContributionImpactCard: add weekly goals, streak counter, leaderboard preview"
+    ],
+    owner: "Product + Engineering team"
+  },
+
+  historical_context: "Follows Phase 2.5 product strategy pattern (Entry 83: inventory, Entry 84: value, Entry 85: tier, Entry 86: utility + crowdsourcing). Provides quantitative scoring + strategic recommendations for MVP launch. All audits are permanent records; findings ready for product decision-making."
+};
+
+export default entry_86;
