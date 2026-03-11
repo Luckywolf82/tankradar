@@ -336,7 +336,9 @@ export default function LogPrice() {
           show={showSuccess} 
           isLoading={submitting}
           error={submitError}
+          stationName={stationInfo.station_name}
           onReset={reset}
+          onRepeatSameStation={resetForRepeat}
           onDismiss={() => setShowSuccess(false)}
         />
       </div>
