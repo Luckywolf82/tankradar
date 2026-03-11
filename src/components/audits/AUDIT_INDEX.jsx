@@ -16,7 +16,7 @@ export const AUDIT_INDEX = {
     {
       id: "project_structure_audit",
       title: "Project Structure Audit",
-      location: "src/components/audits/PROJECT_STRUCTURE_AUDIT_2026_03_11.jsx",
+      location: "src/components/audits/architecture/project-structure-architecture-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Analyzes routing structure, page registration, and Base44 framework integration",
       relatesTo: "Phase 1 (Route Protection Pass 1)",
