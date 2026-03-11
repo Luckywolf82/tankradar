@@ -101,41 +101,41 @@ export default function RegionalStats({ observedPrices, stations = [], ssbData, 
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base">Statistikk per by</CardTitle>
-        <p className="text-xs text-slate-400">Topp 6 byer med flest observasjoner</p>
+        {stats.ssbReference && (
+          <p className="text-xs text-slate-400">SSB referanse: {stats.ssbReference} kr/l</p>
+        )}
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="px-4 pb-2">
+        <div className="divide-y divide-slate-100">
           {stats.results.map((city, idx) => (
-            <div key={idx} className="rounded-lg p-3 border bg-slate-50 border-slate-200">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-800 text-sm">{city.city}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <div>
-                      <p className="text-xs text-slate-500">Gjennomsnitt</p>
-                      <p className="text-lg font-bold text-slate-800">{city.avg} kr</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Median</p>
-                      <p className="text-lg font-bold text-slate-600">{city.median} kr</p>
-                    </div>
-                  </div>
-                  {city.isWeakSample && (
-                    <p className="text-xs text-slate-400 mt-1">Lavt grunnlag ({city.count} obs.)</p>
-                  )}
+            <div key={idx} className="py-3 flex items-center justify-between gap-3">
+              {/* City name + obs count */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <p className="font-semibold text-slate-800 text-sm truncate">{city.city}</p>
+                  <span className="text-xs text-slate-400 shrink-0">
+                    {city.isWeakSample ? `${city.count} obs.` : `${city.count} obs.`}
+                    {city.isWeakSample && " · lavt"}
+                  </span>
                 </div>
+              </div>
+
+              {/* Prices */}
+              <div className="flex items-center gap-4 shrink-0">
                 <div className="text-right">
-                  <p className="text-xs text-slate-500 uppercase">Observasjoner</p>
-                  <p className="text-xl font-bold text-slate-800">{city.count}</p>
-                  {city.deviation !== null && (
-                    <div className="mt-2 text-xs font-semibold">
-                      <p className={city.deviation < 0 ? "text-green-600" : city.deviation > 0 ? "text-amber-600" : "text-slate-600"}>
-                        {city.deviation > 0 ? "+" : ""}{city.deviation} kr
-                      </p>
-                      <p className="text-slate-500">vs nasjonalt</p>
-                    </div>
-                  )}
+                  <p className="text-lg font-bold text-slate-800 leading-tight">{city.avg} kr</p>
+                  <p className="text-xs text-slate-400">snitt</p>
                 </div>
+                {city.deviation !== null && (
+                  <div className="text-right w-14">
+                    <p className={`text-sm font-semibold leading-tight ${
+                      city.deviation < 0 ? "text-green-600" : city.deviation > 0 ? "text-amber-600" : "text-slate-500"
+                    }`}>
+                      {city.deviation > 0 ? "+" : ""}{city.deviation}
+                    </p>
+                    <p className="text-xs text-slate-400">vs SSB</p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
