@@ -55,20 +55,13 @@ export default function Dashboard() {
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
         <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex gap-2">
-            <Link to={createPageUrl("LogPrice")}>
-              <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
-                <Plus size={18} /> Logg pris
-              </Button>
-            </Link>
-            <Link to={createPageUrl("Statistics")}>
-              <Button variant="outline" className="gap-2">
-                Detaljert analyse
-              </Button>
-            </Link>
-          </div>
+        {/* Primary CTA */}
+        <div className="mb-5">
+          <Link to={createPageUrl("LogPrice")} className="block sm:inline-block">
+            <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 gap-2 h-12 text-base px-6">
+              <Plus size={20} /> Logg pris
+            </Button>
+          </Link>
         </div>
 
         {/* Fuel type selector */}
@@ -88,46 +81,42 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* MY FUEL DASHBOARD - Personalized section */}
-        <MyFuelDashboard />
-
-        {/* SECTION 1: Smart Fill Indicator - Rask beslutning */}
-        <div className="mb-8">
+        {/* Smart Fill Indicator */}
+        <div className="mb-6">
           <SmartFillIndicator ssbData={ssbData} observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
-        {/* SECTION: Billigste nær deg */}
-        <div className="mb-8">
+        {/* Billigste nær deg */}
+        <div className="mb-6">
           <NearbyPrices selectedFuel={selectedFuel} />
         </div>
 
-        {/* SECTION: Siste rapporterte priser */}
-        <div className="mb-8">
+        {/* Siste rapporterte priser */}
+        <div className="mb-6">
           <RecentPricesFeed />
         </div>
 
-        {/* SECTION 2: Live Market Stats - Rask oversikt */}
-        <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Live markedspriser nå</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Min drivstoff — personalisert seksjon */}
+        <MyFuelDashboard />
+
+        {/* Markedsstatistikk */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <LiveMarketStats observedPrices={prices} selectedFuel={selectedFuel} />
             <PriceChangeIndicator observedPrices={prices} selectedFuel={selectedFuel} />
           </div>
         </div>
 
-        {/* SECTION 3: Mini SSB trend - liten historisk referanse */}
-        <div className="mb-8">
+        {/* SSB historisk referanse */}
+        <div className="mb-6">
           <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-slate-600 flex items-center justify-between">
                 <span>Offisiell referanse (SSB)</span>
-                <Link to={createPageUrl("Statistics")}>
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                    Se full analyse →
-                  </Button>
+                <Link to={createPageUrl("Statistics")} className="text-xs text-blue-600 hover:text-blue-700 font-normal">
+                  Se full analyse →
                 </Link>
               </CardTitle>
-              <p className="text-xs text-slate-500 mt-2">Statistisk Sentralbyrå – historisk månedsgjennomsnitt</p>
             </CardHeader>
             <CardContent>
               <div style={{ maxHeight: "200px", overflow: "hidden" }}>

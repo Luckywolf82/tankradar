@@ -120,27 +120,22 @@ export default function SmartFillIndicator({ ssbData, observedPrices, selectedFu
           {/* Price comparison */}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200">
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Marked nå</p>
-              <p className="text-2xl font-bold text-slate-800">{stats.observedAvg} kr</p>
-              <p className="text-xs text-slate-500 mt-1">{stats.sampleSize} obs.</p>
+              <p className="text-xs text-slate-500">Marked nå</p>
+              <p className="text-2xl font-bold text-slate-800">{stats.observedAvg} <span className="text-sm font-normal">kr/l</span></p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wide">Normalt nivå</p>
-              <p className="text-2xl font-bold text-slate-600">{stats.reference} kr</p>
-              <p className="text-xs text-slate-500 mt-1">{stats.referenceLabel}</p>
+              <p className="text-xs text-slate-500">Normalt nivå</p>
+              <p className="text-2xl font-bold text-slate-600">{stats.reference} <span className="text-sm font-normal">kr/l</span></p>
+              <p className="text-xs text-slate-400 mt-0.5">{stats.referenceLabel}</p>
             </div>
           </div>
 
-          {/* Deviation */}
-          <div className="bg-white/60 rounded p-3 text-center">
-            <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Avvik fra normalt</p>
-            <div className={`text-xl font-bold ${stats.deviation < 0 ? "text-green-600" : stats.deviation > 0 ? "text-amber-600" : "text-slate-600"}`}>
-              {stats.deviation > 0 ? "+" : ""}{stats.deviation} kr ({((stats.deviation / stats.reference) * 100).toFixed(1)}%)
-            </div>
-          </div>
+          <p className={`text-sm font-medium ${stats.deviation < 0 ? "text-green-600" : stats.deviation > 0 ? "text-amber-600" : "text-slate-500"}`}>
+            {stats.deviation > 0 ? "+" : ""}{stats.deviation} kr fra normalt ({((stats.deviation / stats.reference) * 100).toFixed(1)}%)
+          </p>
 
-          <p className="text-xs text-slate-500 text-center">
-            Basert på observed prices (realistic_price). SSB-data som offisiell referanse.
+          <p className="text-xs text-slate-400">
+            Basert på sanntidspriser fra Google Places · SSB som offisiell referanse
           </p>
         </div>
       </CardContent>

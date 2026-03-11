@@ -66,29 +66,24 @@ export default function PriceChangeIndicator({ observedPrices, selectedFuel }) {
 
   return (
     <Card className={`shadow-sm ${bg}`}>
-      <CardHeader>
-        <CardTitle className="text-base">Prisendring siste døgn</CardTitle>
-        {change.isWeakData && (
-          <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-2 py-1 rounded border border-amber-200 w-fit">
-            ⚠️ <strong>Begrenset datagrunnlag</strong> – Resultatet baseres på få observasjoner
-          </p>
-        )}
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          Prisendring siste døgn
+          {change.isWeakData && (
+            <span className="text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Begrenset data</span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">
-          <Icon size={32} className={color} />
+          <Icon size={28} className={color} />
           <div className="flex-1">
             <div className={`text-lg font-bold ${color}`}>
               {change.diff > 0 ? "+" : ""}{change.diff} kr ({change.pctChange > 0 ? "+" : ""}{change.pctChange}%)
             </div>
-            <p className="text-sm text-slate-600 mt-1">
-              I dag: <span className="font-semibold">{change.today}</span> kr ({change.todayCount} obs.) vs i går: <span className="font-semibold">{change.yesterday}</span> kr ({change.yesterdayCount} obs.)
+            <p className="text-sm text-slate-500 mt-1">
+              I dag: <span className="font-medium text-slate-700">{change.today} kr</span> · I går: <span className="font-medium text-slate-700">{change.yesterday} kr</span>
             </p>
-            {change.isWeakData && (
-              <p className="text-xs text-slate-500 mt-2 italic">
-                Prisbevegelse kan være mindre pålitelig når datagrunnlaget er lite.
-              </p>
-            )}
           </div>
         </div>
       </CardContent>

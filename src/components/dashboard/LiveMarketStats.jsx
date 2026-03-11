@@ -67,31 +67,28 @@ export default function LiveMarketStats({ observedPrices, selectedFuel }) {
         <p className="text-xs text-slate-400">{stats.count} observasjoner fra Google Places</p>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-            <p className="text-xs text-blue-700 uppercase tracking-wide font-semibold">Gjennomsnitt</p>
-            <p className="text-2xl font-bold text-blue-600 mt-1">{stats.average}</p>
-            <p className="text-xs text-blue-600 mt-1">kr/l</p>
+        <div className="flex items-end gap-6 mb-4">
+          <div>
+            <p className="text-xs text-slate-500">Snitt</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.average} <span className="text-sm font-normal text-slate-500">kr/l</span></p>
           </div>
-          <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
-            <p className="text-xs text-indigo-700 uppercase tracking-wide font-semibold">Median</p>
-            <p className="text-2xl font-bold text-indigo-600 mt-1">{stats.median}</p>
-            <p className="text-xs text-indigo-600 mt-1">kr/l</p>
-          </div>
-          <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
-            <p className="text-xs text-amber-700 uppercase tracking-wide font-semibold">Prisgap</p>
-            <p className="text-2xl font-bold text-amber-600 mt-1">{stats.gap}</p>
-            <p className="text-xs text-amber-600 mt-1">kr/l</p>
+          <div>
+            <p className="text-xs text-slate-500">Median</p>
+            <p className="text-xl font-semibold text-slate-600">{stats.median} <span className="text-sm font-normal text-slate-400">kr/l</span></p>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-slate-200">
+        <div className="border-t border-slate-100 pt-3 space-y-1.5">
           <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Billigste</span>
-            <span className="font-semibold text-slate-800">{stats.min} kr</span>
+            <span className="text-slate-500">Billigste</span>
+            <span className="font-semibold text-green-700">{stats.min} kr</span>
           </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-slate-600">Dyreste</span>
-            <span className="font-semibold text-slate-800">{stats.max} kr</span>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Dyreste</span>
+            <span className="font-semibold text-slate-700">{stats.max} kr</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Prisgap</span>
+            <span className="font-medium text-slate-600">{stats.gap} kr</span>
           </div>
         </div>
       </CardContent>

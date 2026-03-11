@@ -63,10 +63,7 @@ export default function MyFuelDashboard() {
   return (
     <div className="mb-8">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-slate-800">Min drivstoff</h2>
-        <p className="text-xs text-slate-500 mt-1">
-          {favorites.length} av {maxFavorites} favoritter brukt
-        </p>
+        <h2 className="text-lg font-bold text-slate-800">Mine stasjoner</h2>
       </div>
 
       {/* Favorite stations grid */}
@@ -99,21 +96,18 @@ export default function MyFuelDashboard() {
         </button>
       )}
 
-      {/* Limit reached banner */}
-      {favorites.length >= maxFavorites && (
-        <FreemiumBanner
-          type="limit_reached"
-          message={`Du har brukt alle ${maxFavorites} favoritter. Oppgrader til premium for ubegrenset.`}
-        />
-      )}
-
       {/* Premium price alerts section */}
       {canCreateAlerts && (
         <PriceAlertManager stationId={favorites[0]?.stationId} onRefresh={loadData} />
       )}
 
-      {/* Premium locked badge for free users */}
-      {!canCreateAlerts && (
+      {/* Single consolidated premium upsell — only if both limits reached and alerts locked */}
+      {!canCreateAlerts && favorites.length >= maxFavorites && (
+        <FreemiumBanner type="premium_only" message="Oppgrader til premium for ubegrenset favoritter og prisvarslinger" />
+      )}
+
+      {/* Limit reached only (can still get alerts or vice versa) */}
+      {!canCreateAlerts && favorites.length < maxFavorites && (
         <FreemiumBanner type="premium_only" message="Prisvarslinger er kun for premium-brukere" />
       )}
 
