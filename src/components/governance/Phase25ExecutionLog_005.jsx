@@ -1639,3 +1639,52 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. UI-only across 3 files. Requires GitHub verification after publish.
+
+---
+
+## Entry 71 — 2026-03-11
+
+### Action
+Added `QuickReportCard` component to Dashboard — a location-aware shortcut for logging prices at the nearest station without navigating to LogPrice.
+
+### Files created
+- `components/dashboard/QuickReportCard.jsx`
+
+### Files modified
+- `pages/Dashboard.jsx` — import + placed QuickReportCard above primary CTA
+
+### UI flow implemented
+1. GPS acquired → find stations within 1.0 km
+2. Single closest station (confident): show name + distance + "Logg pris" button → fuel picker → price input → submit
+3. Multiple close stations (ambiguous gap < 0.1 km): show station picker list first
+4. Price input: numeric, `inputMode=decimal`, validates 10–30 kr range
+5. On submit: creates `FuelPrice` with `priceType=user_reported`, `station_match_status=matched_station_id`, `plausibilityStatus` derived inline
+6. 2.5s success flash with station + fuel + price, then resets to idle
+
+### FuelPrice fields set by QuickReportCard
+- `stationId`, `station_name`, `station_chain`, `fuelType`, `priceNok`
+- `priceType = "user_reported"`, `sourceName = "user_reported"`
+- `fetchedAt`, `sourceUpdatedAt = now()`
+- `sourceFrequency = "unknown"`, `confidenceScore = 0.7`
+- `confidenceReason = "QuickReportCard — user at pump"`
+- `parserVersion = "quick_report_v1"`
+- `plausibilityStatus` (inline: realistic if 14–26 NOK range)
+- `station_match_status = "matched_station_id"` (user confirmed via station pick)
+- `gps_latitude`, `gps_longitude`, `reportedByUserId`
+
+### Why this is governance-safe
+✓ UI-only new component + 2-line Dashboard change
+✓ No locked Phase 2 files touched — all 10 UNTOUCHED
+✓ No matching logic changes — station selection is user-driven UI choice
+✓ No entity schema changes — all fields within existing FuelPrice schema
+✓ Source metadata fully populated (Rule 5 compliant)
+✓ priceType = user_reported — no ambiguity (Rule 1 compliant)
+✓ station_match_status = matched_station_id — explicit (Rule 28–30 compliant)
+✓ Plausibility classification inline — 10–30 kr guard + 14–26 realistic tag (Rule 41 compliant)
+✓ Component hides gracefully if GPS denied or no stations found nearby
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. New component + 2-line Dashboard import. Requires GitHub verification after publish.
