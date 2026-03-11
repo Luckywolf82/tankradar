@@ -115,6 +115,18 @@ export const AUDIT_INDEX = {
       focusArea: "Tier assignments, 3-screen MVP foundation (Dashboard/LogPrice/Statistics/Profile), navigation optimization, broken UI identification",
       status: "complete",
       canonicalFor: "MVP tier classification and structure"
+    },
+    {
+      id: "store_publishability_audit",
+      title: "Store Publishability Audit — Google Play & Apple App Store Readiness",
+      category: "publishability",
+      location: "src/components/audits/publishability/store-publishability-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Comprehensive assessment of mobile app architecture, UX, feature completeness, and metadata readiness for store submission",
+      relatesTo: "Product Maturity & Long-term Planning (Entry 89)",
+      focusArea: "WebView risk, app value clarity, navigation patterns, feature completeness, privacy transparency, store listing metadata, platform compliance",
+      status: "complete",
+      canonicalFor: "Store submission readiness and blocking issues assessment"
     }
   ],
 
