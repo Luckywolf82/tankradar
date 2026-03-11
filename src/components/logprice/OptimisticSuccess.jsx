@@ -15,7 +15,9 @@ export function OptimisticSuccess({
   show, 
   isLoading, 
   error, 
+  stationName,
   onReset,
+  onRepeatSameStation,
   onDismiss 
 }) {
   const [displayMode, setDisplayMode] = useState("success");
