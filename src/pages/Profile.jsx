@@ -24,7 +24,24 @@ export default function Profile() {
     }).catch(() => {});
   }, []);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-slate-900">Profil</h1>
+        </div>
+        <Card>
+          <CardContent className="py-8 flex flex-col items-center gap-4 text-center">
+            <User size={40} className="text-slate-300" />
+            <p className="text-slate-600 text-sm">Logg inn for å se profil, favoritter og innstillinger</p>
+            <Button onClick={() => base44.auth.redirectToLogin(window.location.pathname)} className="bg-green-600 hover:bg-green-700 gap-2">
+              <LogIn size={16} /> Logg inn
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const roleLabels = {
     guest: "Gjest",

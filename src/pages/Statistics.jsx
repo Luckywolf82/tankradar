@@ -103,9 +103,9 @@ export default function Statistics() {
             </CardHeader>
             <CardContent className="text-sm text-blue-800 space-y-2">
               <p><strong>SSB-data:</strong> Statistisk Sentralbyrå – offisiell historisk referanse</p>
-              <p><strong>Live observed:</strong> Google Places – nåtidsdata (realistic_price only)</p>
-              <p><strong>Regional:</strong> Basert på observerte priser fra live kilder</p>
-              <p><strong>Sample size:</strong> Vises per lokasjon – lavt grunnlag merkes eksplisitt</p>
+              <p><strong>Google Places:</strong> Sanntidspriser fra bensinstasjoner</p>
+              <p><strong>Regionalt:</strong> Basert på observerte priser fra aktive stasjoner</p>
+              <p><strong>Datagrunnlag:</strong> Vises per lokasjon – lavt grunnlag merkes eksplisitt</p>
             </CardContent>
           </Card>
         </div>
