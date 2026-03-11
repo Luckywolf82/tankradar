@@ -10,7 +10,7 @@ export const EXECUTION_LOG_METADATA = {
   purpose: "Governance audit trail for TankRadar station matching and duplicate remediation",
   status: "active",
   lastUpdated: "2026-03-11",
-  entryCount: 76, // Dashboard Card Priority Pass complete
+  entryCount: 77, // UI Architecture Cleanup complete
   
   // Chunk mapping: exact entry ranges in each file
   chunks: [
@@ -40,18 +40,24 @@ export const EXECUTION_LOG_METADATA = {
     },
     {
       fileName: "Phase25ExecutionLog_005.jsx",
-      entries: "41–70",
-      status: "ACTIVE (append new entries here)",
+      entries: "41–76",
+      status: "sealed (historical)",
       description: "Parser integration refactor through proximity station confirmation banner"
+    },
+    {
+      fileName: "Phase25ExecutionLog_006.jsx",
+      entries: "77+",
+      status: "ACTIVE (append new entries here)",
+      description: "UI Architecture cleanup, alert architecture clarification, admin safety assessment"
     }
   ],
 
   // Future append rules
   futureRules: {
-    activeChunk: "Phase25ExecutionLog_005.jsx",
+    activeChunk: "Phase25ExecutionLog_006.jsx",
     whenToCreateNewChunk: "When active chunk exceeds 250KB or contains ~20 entries",
-    nextChunkName: "Phase25ExecutionLog_006.jsx",
-    entryRangeForNextChunk: "61–80",
+    nextChunkName: "Phase25ExecutionLog_007.jsx",
+    entryRangeForNextChunk: "97+",
     updateProcedure: [
       "1. Append new entry to active chunk file (e.g., Phase25ExecutionLog_005.jsx)",
       "2. If chunk size limit reached, create next numbered chunk",
@@ -79,9 +85,9 @@ export const EXECUTION_LOG_METADATA = {
   howToRead: {
     entryPoint: "Phase25ExecutionLogIndex.jsx (this file)",
     structure: "Index → chunk files listed above",
-    chronological: "Read chunks in numerical order (001 → 005)",
+    chronological: "Read chunks in numerical order (001 → 006+)",
     withinChunk: "Read entries in document order (top to bottom)",
-    currentWork: "Check activeChunk for latest entries",
+    currentWork: "Check activeChunk for latest entries (currently Phase25ExecutionLog_006.jsx)",
     deprecated: "Phase25ExecutionLog.jsx is a read-only stub. Do not append to it."
   },
 
@@ -91,7 +97,7 @@ export const EXECUTION_LOG_METADATA = {
       "AI agents must execute these steps IN ORDER before proposing or implementing anything",
     requiredReadOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx (this file)",
-      "2. Read the active execution log chunk listed in chunks[] above (currently Phase25ExecutionLog_005.jsx)",
+      "2. Read the active execution log chunk listed in chunks[] above (currently Phase25ExecutionLog_006.jsx)",
       "3. Read components/governance/NextSafeStep.js"
     ],
     conflictResolution:
