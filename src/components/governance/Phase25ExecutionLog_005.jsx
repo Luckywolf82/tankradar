@@ -1843,3 +1843,37 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. Requires GitHub verification after publish.
+
+---
+
+## Entry 76 — 2026-03-11
+
+### Action
+Dashboard Card Priority Pass — context-aware display coordination between PumpModeCard, QuickReportCard, RouteSavingsCard, and ContributionImpactCard.
+
+### Files modified
+- `components/dashboard/PumpModeCard.jsx` — added optional `onActivate` callback prop; fires `onActivate(true)` when station ≤150m found, `onActivate(false)` on GPS denial or no station
+- `pages/Dashboard.jsx` — added `pumpModeActive` state; PumpModeCard receives `onActivate={setPumpModeActive}`; QuickReportCard and RouteSavingsCard gated behind `!pumpModeActive`; ContributionImpactCard repositioned below RecentPricesFeed
+
+### No files created
+
+### Display priority rules implemented
+1. PumpModeCard (≤150m) is highest-priority action card — always rendered first
+2. QuickReportCard (≤1km) hidden when PumpMode active — no competing dual report UI
+3. RouteSavingsCard hidden when PumpMode active — route detour irrelevant when at pump
+4. ContributionImpactCard moved to secondary zone below RecentPricesFeed — motivational card does not crowd action area
+5. All card logic, GPS flows, and submission handlers fully preserved
+
+### Why this is governance-safe
+✓ UI-only — zero backend, entity, or matching changes
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ Card data logic, GPS logic, submission logic all unchanged
+✓ onActivate is an optional callback — PumpModeCard works identically without it
+✓ No new dependencies added
+✓ No entity schema changes
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. Requires GitHub verification after publish.
