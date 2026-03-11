@@ -1,39 +1,39 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { BarChart2, Plus, Home, Settings, User, ClipboardList, ShieldCheck, Bell } from "lucide-react";
+import { BarChart2, Plus, Home, User, ClipboardList, ShieldCheck } from "lucide-react";
 import { MobileHeader } from "./components/mobile/MobileHeader";
 import { RouteAnimation } from "./components/mobile/RouteAnimation";
 import { useCurrentUser } from "./components/auth/useCurrentUser";
-import { base44 } from "@/api/base44Client";
 import NotificationBell from "./components/shared/NotificationBell";
 
+// Core nav — always shown. Max 4 items for clean mobile UX.
+// Innstillinger, Logg ut, Logg inn, and Områdevarsler live in Profil page.
 const baseNavLinks = [
   { label: "Oversikt", page: "Dashboard", icon: Home },
   { label: "Statistikk", page: "Statistics", icon: BarChart2 },
   { label: "Logg pris", page: "LogPrice", icon: Plus },
-  { label: "Områdevarsler", page: "PriceAlerts", icon: Bell },
+  { label: "Profil", page: "Profile", icon: User },
 ];
 
 export default function Layout({ children, currentPageName }) {
   const { user, role } = useCurrentUser();
 
-  const mainPages = ["Dashboard", "Statistics", "LogPrice", "PriceAlerts", "Notifications"];
+  const mainPages = ["Dashboard", "Statistics", "LogPrice", "Profile", "Notifications"];
   const isMainPage = mainPages.includes(currentPageName);
 
-  // Build role-specific extra nav items
-  const extraNavLinks = [];
-  if (role === "user") {
-    extraNavLinks.push({ label: "Profil", page: "Profile", icon: User });
-  } else if (role === "curator") {
-    extraNavLinks.push({ label: "Review", page: "ReviewQueue", icon: ClipboardList });
-    extraNavLinks.push({ label: "Profil", page: "Profile", icon: User });
+  // Role-specific tool links — added between core items and Profil
+  const roleNavLinks = [];
+  if (role === "curator") {
+    roleNavLinks.push({ label: "Review", page: "ReviewQueue", icon: ClipboardList });
   } else if (role === "admin") {
-    extraNavLinks.push({ label: "Admin", page: "SuperAdmin", icon: ShieldCheck });
-    extraNavLinks.push({ label: "Profil", page: "Profile", icon: User });
+    roleNavLinks.push({ label: "Admin", page: "SuperAdmin", icon: ShieldCheck });
   }
 
-  const allNavLinks = [...baseNavLinks, ...extraNavLinks];
+  // Final nav: Oversikt · Statistikk · Logg pris · [Admin/Review] · Profil
+  const coreLinks = baseNavLinks.slice(0, 3); // Oversikt, Statistikk, Logg pris
+  const profileLink = baseNavLinks[3];         // Profil always last
+  const allNavLinks = [...coreLinks, ...roleNavLinks, profileLink];
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
