@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import RadarCard from "../components/dashboard/RadarCard";
 import SubmitPriceCard from "../components/dashboard/SubmitPriceCard";
+import FirstTimeOverlay from "../components/dashboard/FirstTimeOverlay";
 import ActiveAlertsPreview from "../components/dashboard/ActiveAlertsPreview";
 import PumpModeCard from "../components/dashboard/PumpModeCard";
 import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
@@ -32,14 +33,12 @@ export default function Dashboard() {
 
   return (
     <RouteAnimation pageName="Dashboard">
+      <FirstTimeOverlay />
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
         <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-4 md:py-8">
           <PageContainer>
             <div className="space-y-4">
-              {/* Pump Mode — activates when user is ≤150m from a station */}
-              <PumpModeCard onActivate={setPumpModeActive} />
-
-              {/* Quick Price Submit — always shown */}
+              {/* Quick Price Submit — moved to position 1 (highest priority) */}
               {!pumpModeActive && (
                 <>
                   <SubmitPriceCard />
@@ -52,6 +51,9 @@ export default function Dashboard() {
                   </Link>
                 </>
               )}
+
+              {/* Pump Mode — activates when user is ≤150m from a station (position 2) */}
+              <PumpModeCard onActivate={setPumpModeActive} />
 
               {/* Contribution Impact — user's reporting stats */}
               <ContributionImpactCard />

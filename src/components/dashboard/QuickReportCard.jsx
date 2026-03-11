@@ -213,7 +213,7 @@ export default function QuickReportCard() {
               className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs px-3 gap-1"
               onClick={handleStartReport}
             >
-              Logg pris <ChevronRight size={13} />
+              Save fuel money <ChevronRight size={13} />
             </Button>
           </div>
         </CardContent>
