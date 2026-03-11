@@ -3,14 +3,14 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_69",
+  id: "phase25_step_76",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "Entry 68 (navigation and page responsibility cleanup) is the last pre-authorized improvement. " +
-    "The primary nav is now clean (4–5 items), Profile absorbs logout/settings/Områdevarsler, " +
-    "Statistics header is simplified, and internal enum labels are removed from UI. " +
+    "Entry 75 (Statistics UI cleanup pass) is the last pre-authorized improvement. " +
+    "Statistics page is now calmer: flat bg, divider-row regional table, lighter footnote, " +
+    "shortened chart subtitle. All data intact. " +
     "No further implementation step has been approved. " +
     "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
@@ -42,7 +42,7 @@ export const NEXT_SAFE_STEP = {
 
   status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62, 63, 64, 65, 66, 67, 68]
+  linkedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75]
 };
 
 export default NEXT_SAFE_STEP;

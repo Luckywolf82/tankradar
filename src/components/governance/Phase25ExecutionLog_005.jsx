@@ -1756,7 +1756,7 @@ Added `RouteSavingsCard` to Dashboard — shows cheapest alternative station vs 
 All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
-Ready for publish. New component + 3-line Dashboard change. Requires GitHub verification after publish.
+Ready for publish. Requires GitHub verification after publish.
 
 ---
 
