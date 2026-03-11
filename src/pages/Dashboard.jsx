@@ -57,6 +57,9 @@ export default function Dashboard() {
         {/* Quick Report — nearest station shortcut */}
         <QuickReportCard />
 
+        {/* Contribution impact */}
+        <ContributionImpactCard />
+
         {/* Primary CTA */}
         <div className="mb-5">
           <Link to={createPageUrl("LogPrice")} className="block sm:inline-block">
