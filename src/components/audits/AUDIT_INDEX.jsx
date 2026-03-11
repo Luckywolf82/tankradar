@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-11T18:30:00Z",
+  lastUpdated: "2026-03-11T21:30:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -127,6 +127,18 @@ export const AUDIT_INDEX = {
       focusArea: "WebView risk, app value clarity, navigation patterns, feature completeness, privacy transparency, store listing metadata, platform compliance",
       status: "complete",
       canonicalFor: "Store submission readiness and blocking issues assessment"
+    },
+    {
+      id: "activation_contribution_loop_audit",
+      title: "Activation & Contribution Loop Audit — First-Value & Crowdsourcing Mechanics",
+      category: "activation",
+      location: "src/components/audits/activation/activation-contribution-loop-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Comprehensive analysis of user onboarding, first-value experience, price-reporting contribution loop, gamification strength, and retention hooks",
+      relatesTo: "NextSafeStep Governance Audit (Entry 88); Product Utility Audit (Entry 86)",
+      focusArea: "LogPrice workflow friction, SubmitPriceCard prominence, PumpMode context clarity, ContributionImpactCard gamification, first-value timeline, feature discovery, retention drivers, crowdsourcing blockers",
+      status: "complete",
+      canonicalFor: "Activation metrics, crowdsourcing opportunities, CTA optimization priorities"
     }
   ],
 
@@ -135,12 +147,12 @@ export const AUDIT_INDEX = {
     ui: 3,
     governance: 0,
     product: 3,
-    activation: 0,
+    activation: 1,
     data: 0,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 11
+    total: 12
   },
 
   governanceRules: {
