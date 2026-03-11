@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -8,6 +7,8 @@ import RadarCard from "../components/dashboard/RadarCard";
 import SubmitPriceCard from "../components/dashboard/SubmitPriceCard";
 import ActiveAlertsPreview from "../components/dashboard/ActiveAlertsPreview";
 import PumpModeCard from "../components/dashboard/PumpModeCard";
+import PageContainer from "../components/layout/PageContainer";
+import DashboardGrid from "../components/layout/DashboardGrid";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
@@ -30,33 +31,33 @@ export default function Dashboard() {
   return (
     <RouteAnimation pageName="Dashboard">
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
-        <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-          <div className="max-w-2xl mx-auto space-y-4">
-            {/* Pump Mode — activates when user is ≤150m from a station */}
-            <PumpModeCard onActivate={setPumpModeActive} />
+        <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-4 md:py-8">
+          <PageContainer>
+            <div className="space-y-4">
+              {/* Pump Mode — activates when user is ≤150m from a station */}
+              <PumpModeCard onActivate={setPumpModeActive} />
 
-            {/* Quick Price Submit — always shown */}
-            {!pumpModeActive && (
-              <>
-                <SubmitPriceCard />
+              {/* Quick Price Submit — always shown */}
+              {!pumpModeActive && (
+                <>
+                  <SubmitPriceCard />
 
-                {/* Primary CTA */}
-                <div>
+                  {/* Primary CTA */}
                   <Link to={createPageUrl("LogPrice")} className="block">
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-10 text-sm">
                       <Plus size={16} /> Logg pris
                     </Button>
                   </Link>
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            {/* Nearby Cheap Stations */}
-            <RadarCard selectedFuel="diesel" />
-
-            {/* Active Alerts Overview */}
-            <ActiveAlertsPreview />
-          </div>
+              {/* Dashboard Grid — organized layout */}
+              <DashboardGrid columns={1}>
+                <RadarCard selectedFuel="diesel" />
+                <ActiveAlertsPreview />
+              </DashboardGrid>
+            </div>
+          </PageContainer>
         </div>
       </PullToRefresh>
     </RouteAnimation>
