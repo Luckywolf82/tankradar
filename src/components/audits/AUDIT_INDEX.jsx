@@ -127,8 +127,8 @@ export const AUDIT_INDEX = {
     data: 0,
     performance: 0,
     security: 0,
-    publishability: 0,
-    total: 10
+    publishability: 1,
+    total: 11
   },
 
   governanceRules: {
