@@ -1123,3 +1123,67 @@ Improve user feedback after successful price submission to encourage further rep
 
 ### GitHub visibility status
 Ready for publish. Single minimal success feedback enhancement with full governance compliance. Requires GitHub verification after publish.
+
+---
+
+## Entry 61 — 2026-03-11
+
+### Action
+Added minimal station clarification metadata layer to LogPrice flow.
+
+### Purpose
+Support safer future user clarification UX when station selection is uncertain. Metadata is captured at selection time and appended to rawPayloadSnippet for observability. No matching logic altered.
+
+### Files modified
+- `components/logprice/StationPicker.jsx` — `handleSelectStation` now computes and forwards proximity metadata
+- `pages/LogPrice.jsx` — `stationInfo` state extended with 8 new clarification fields; metadata serialized into rawPayloadSnippet; reset() clears all new fields
+
+### Exact fields added
+| Field | Source | Description |
+|---|---|---|
+| `selectedGooglePlaceId` | StationPicker | place_id if Google Places source, else null |
+| `selectedSource` | StationPicker | 'station_catalog' or 'google_places' |
+| `selectedCandidateDistanceM` | StationPicker | Distance to selected station in meters (rounded) |
+| `secondCandidateDistanceM` | StationPicker | Distance to next-closest candidate in meters |
+| `distanceGapM` | StationPicker | Gap in meters between selected and next-closest |
+| `userConfirmedSuggestedStation` | LogPrice state | null until future clarification UI sets it |
+| `userCorrectedChain` | LogPrice state | null until future clarification UI sets it |
+| `userClarificationReason` | LogPrice state | null until future clarification UI sets it |
+
+### How metadata is captured
+1. StationPicker computes distances from already-sorted `stations` array (no new API calls)
+2. Selected station's index-0 distance = `selectedCandidateDistanceM`
+3. First non-selected station's distance = `secondCandidateDistanceM`
+4. Gap = `secondDistanceM - selectedDistanceM`
+5. All values forwarded to LogPrice via `onSelectStation()` callback
+6. LogPrice stores in `stationInfo` state
+7. At submit time, non-null fields are serialized into `rawPayloadSnippet` as pipe-separated key=value pairs
+8. Fields `userConfirmedSuggestedStation`, `userCorrectedChain`, `userClarificationReason` are initialized as null — reserved for a future confirmation UI step
+
+### Why this is governance-safe
+
+✓ **No locked Phase 2 files touched** — All 10 remain UNTOUCHED
+✓ **No matching logic changed** — matchStationForUserReportedPrice runs unchanged
+✓ **No new entities created** — Metadata serialized into existing rawPayloadSnippet field
+✓ **No new backend functions** — Pure client-side computation from existing sorted array
+✓ **No threshold changes** — Distance values are observational only
+✓ **No auto-selection** — user still picks station manually
+✓ **No new API calls** — Uses `stations` array already in memory
+✓ **Graceful nulls** — All fields default to null; serialize only if non-null
+✓ **Full reset** — reset() clears all new fields
+
+### Verification
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Ready for publish. Metadata-only addition, zero pipeline changes. Requires GitHub verification after publish.
