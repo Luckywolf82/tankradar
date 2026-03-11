@@ -103,25 +103,26 @@ export const NEXT_SAFE_STEP = {
   // NEXT SAFE STEP (ENTRY 93) — ACTIVATION IMPACT REVIEW
   // ═══════════════════════════════════════════════════════════════════════════════
 
-  nextSafeStepEntry94: {
-    id: "phase25_step_94",
-    title: "Activation Improvements Pass 2 — Gamification Layer (Streaks + Social Proof)",
+  nextSafeStepEntry95: {
+    id: "phase25_step_95",
+    title: "CTA A/B Testing — Validate Entry 92 Copy Changes",
     description:
-      "Implement highest-priority remaining activation gap identified in Entry 93. " +
-      "Add streak counter + social proof percentile ranking to ContributionImpactCard. " +
-      "Expected +25–30% lift on repeat submissions.",
+      "Establish baseline metrics for CTA effectiveness (Entry 92 'Spar på drivstoff' vs alternatives). " +
+      "Deploy analytics tracking to measure tap-through rates, conversion to LogPrice, and first-contribution time. " +
+      "Validate +10–15% lift prediction from Entry 91.",
     scope: [
-      "Add streak counter to ContributionImpactCard ('Day N contributor')",
-      "Add social proof percentile ranking ('Top 20% of reporters in Trøndheim')",
-      "Add milestone animations + visual celebration on streak milestones",
-      "Test integration with existing ContributionImpactCard layout"
+      "Add analytics events to SubmitPriceCard (CTA viewed, tapped, dismissed)",
+      "Add analytics events to FirstTimeOverlay (overlay viewed, CTA tapped, dismissed)",
+      "Add analytics events to LogPrice workflow (step 1-4 completion tracking)",
+      "Create dashboard report for CTA tap-through rates + conversion funnel",
+      "Prepare for A/B test variant deployment (if analytics supports it)"
     ],
-    complexity: "LOW–MEDIUM",
-    runtimeImpact: "MINIMAL — UI component enhancement only",
-    estimatedEffort: "2–3 hours",
+    complexity: "MEDIUM",
+    runtimeImpact: "ANALYTICS ONLY — no business logic changes",
+    estimatedEffort: "3–4 hours",
     blockingIssues: "NONE",
-    frozenFilesImpact: "ZERO — no Phase 2 matching engine changes",
-    expectedOutcome: "Gamification mechanics implemented; estimated +25–30% repeat submissions; improved user retention"
+    frozenFilesImpact: "ZERO",
+    expectedOutcome: "Baseline CTA metrics established; validation of Entry 92 effectiveness; data-driven foundation for next optimization"
   }
 };
 
