@@ -22,7 +22,7 @@ export default function ActiveAlertsPreview() {
   const loadAlerts = async () => {
     setLoading(true);
     try {
-      const alertsList = await base44.entities.PriceAlert.list('-created_date', 3);
+      const alertsList = await base44.entities.PriceAlert.list('-created_date', 5);
       setAlerts(alertsList || []);
     } catch (err) {
       console.error('[ActiveAlertsPreview] loadAlerts:', err.message);
@@ -57,25 +57,32 @@ export default function ActiveAlertsPreview() {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2">
         {alerts.length === 0 ? (
-          <p className="text-xs text-slate-600">Ingen varsler opprettet ennå</p>
+          <div className="space-y-2">
+            <p className="text-xs text-slate-600">Ingen varsler opprettet ennå</p>
+            <Link to={createPageUrl('PriceAlerts')}>
+              <Button variant="outline" size="sm" className="w-full text-xs text-blue-600 border-blue-200">
+                Opprett første varsling
+              </Button>
+            </Link>
+          </div>
         ) : (
           <>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {alerts.map((alert) => (
                 <div
                   key={alert.id}
-                  className="text-xs p-2 bg-slate-50 rounded border border-slate-200 flex justify-between items-center"
+                  className="text-xs p-1.5 bg-slate-50 rounded border border-slate-200 flex justify-between items-center gap-2"
                 >
-                  <div>
-                    <p className="font-medium text-slate-800">
-                      {fuelTypeLabels[alert.fuelType] || alert.fuelType}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 truncate">
+                      {fuelTypeLabels[alert.fuelType] || alert.fuelType} · ≤ {alert.maxPrice} kr
                     </p>
-                    <p className="text-slate-600">≤ {alert.maxPrice} NOK · {alert.radiusKm}km</p>
+                    <p className="text-slate-500 text-[11px]">{alert.radiusKm}km radius</p>
                   </div>
                   <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                    className={`text-xs font-semibold px-1.5 py-0.5 rounded shrink-0 ${
                       alert.enabled
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
