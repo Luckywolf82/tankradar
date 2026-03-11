@@ -139,6 +139,18 @@ export const AUDIT_INDEX = {
       focusArea: "LogPrice workflow friction, SubmitPriceCard prominence, PumpMode context clarity, ContributionImpactCard gamification, first-value timeline, feature discovery, retention drivers, crowdsourcing blockers",
       status: "complete",
       canonicalFor: "Activation metrics, crowdsourcing opportunities, CTA optimization priorities"
+    },
+    {
+      id: "activation_impact_review",
+      title: "Activation Impact Review — Post-Entry-92 Evaluation",
+      category: "activation",
+      location: "src/components/audits/activation/activation-impact-review-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Measures effectiveness of Entry 92 CTA improvements and onboarding overlay against Entry 91 baseline metrics; validates blocker resolution and identifies remaining gaps",
+      relatesTo: "Activation Audit (Entry 91); Activation Improvements (Entry 92)",
+      focusArea: "CTA repositioning impact, overlay clarity, metrics re-scoring, blocker resolution validation, remaining activation gaps, next workstream prioritization",
+      status: "complete",
+      canonicalFor: "Post-implementation validation, activation gap prioritization, next feature roadmap"
     }
   ],
 
@@ -147,12 +159,12 @@ export const AUDIT_INDEX = {
     ui: 3,
     governance: 0,
     product: 3,
-    activation: 1,
+    activation: 2,
     data: 0,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 12
+    total: 13
   },
 
   governanceRules: {
