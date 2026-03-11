@@ -9,8 +9,8 @@ export const NEXT_SAFE_STEP = {
 
   description:
     "Entry 76 (Dashboard Card Priority Pass) is the last pre-authorized improvement. " +
-    "Statistics page is now calmer: flat bg, divider-row regional table, lighter footnote, " +
-    "shortened chart subtitle. All data intact. " +
+    "PumpModeCard now suppresses QuickReportCard and RouteSavingsCard when active. " +
+    "ContributionImpactCard moved to secondary zone. All card logic intact. " +
     "No further implementation step has been approved. " +
     "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
