@@ -1005,4 +1005,4 @@ export const entry_92 = {
   historicalContext: "Entry 91 (Activation Audit) identified 5 top blockers and prioritized 3 CTA fixes for immediate implementation. Entry 92 delivers these fixes: Dashboard reordering, CTA copy enhancement, and first-time user overlay. All changes UI-only, audit-driven, low-risk. Governance compliance fully verified."
 };
 
-export default entry_91;
+export default entry_92;
