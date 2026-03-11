@@ -58,18 +58,18 @@ export default function FirstTimeOverlay() {
 
         {/* Heading */}
         <h2 className="text-xl font-bold text-slate-900 text-center mb-2">
-          Help your community find cheaper fuel
+          Hjelp ditt lokalsamfunn å finne billigere drivstoff
         </h2>
 
         {/* Description */}
         <p className="text-sm text-slate-600 text-center mb-6">
-          Every price you report helps drivers in your area save money. Start by tapping "Logg pris" to report a fuel price.
+          Hver pris du rapporterer hjelper sjåfører i ditt område å spare penger. Start ved å trykke "Logg pris" for å rapportere en drivstoffpris.
         </p>
 
         {/* CTA Button */}
         <Link to={createPageUrl("LogPrice")} className="block mb-3">
           <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold">
-            Start reporting prices
+            Start med å rapportere priser
           </Button>
         </Link>
 
@@ -78,7 +78,7 @@ export default function FirstTimeOverlay() {
           onClick={handleDismiss}
           className="w-full text-sm text-slate-500 hover:text-slate-700 text-center py-2"
         >
-          I'll do this later
+          Jeg gjør det senere
         </button>
       </div>
     </div>
