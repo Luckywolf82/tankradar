@@ -3,28 +3,31 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_80",
+  id: "phase25_step_82",
 
-  title: "Await explicit user direction — no pre-authorized next step",
+  title: "UI Restoration Audit Complete — Dashboard, Statistics, Layout all functional",
 
   description:
-    "Entry 80 (Data Transparency Pass) just completed: PriceDistribution, HistoricalSSBTrend, and RegionalStats " +
-    "now explicitly label data sources and sample size warnings. GooglePlaces → 'GooglePlaces-observasjoner', " +
-    "SSB national average → 'Nasjonalt snitt (SSB)', weak samples → amber warning. Pure UI text changes — no backend/logic/entity changes. " +
-    "No further implementation step has been approved. " +
-    "AI must not propose or implement any new step until the user explicitly defines the next task.",
+    "Entry 82 (UI Restoration Audit): Comprehensive audit of Dashboard.jsx, Statistics.jsx, and Layout.jsx " +
+    "conducted per user explicit override of NextSafeStep. Result: All three pages fully functional and complete. " +
+    "Bucket A (broken/incomplete): NONE — ContributionImpactCard + RouteSavingsCard already restored in Entries 76–77; " +
+    "data transparency labels already applied in Entry 80. " +
+    "Bucket B (intentionally simplified): Confirmed — LiveMarketStats, PriceChangeIndicator, MyFuelDashboard correctly removed per governance consolidations. " +
+    "Bucket C (unclear): Deferred — Advanced analytics suite + admin archive route protection held for explicit user direction. " +
+    "No code changes made. Dashboard, Statistics, and navigation ready for production use. " +
+    "User can proceed with normal development or request specific UI enhancements per next explicit instruction.",
 
   files: [],
 
   goals: [
-    "hold position — no speculation about next step",
-    "await explicit user instruction before any new implementation"
+    "UI audit complete — all core user pages functional",
+    "await next explicit user task (new feature, bug fix, or enhancement)"
   ],
 
   constraints: [
-    "do NOT propose new features without user instruction",
-    "do NOT modify any files without explicit approval",
-    "do NOT modify locked Phase-2 files under any circumstances"
+    "do NOT propose changes to frozen Phase-2 files",
+    "do NOT implement beyond explicit user instruction",
+    "do NOT modify UI without clear user request"
   ],
 
   governanceRule: {
@@ -41,9 +44,11 @@ export const NEXT_SAFE_STEP = {
       "Always verify activeChunk field in Index before appending — do not assume chunk number."
   },
 
-  status: "awaiting_user_direction",
+  status: "audit_complete_awaiting_next_task",
   approvedDate: "2026-03-11",
-  completedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80]
+  auditDate: "2026-03-11",
+  completedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81],
+  auditEntry: 82
 };
 
 export default NEXT_SAFE_STEP;
