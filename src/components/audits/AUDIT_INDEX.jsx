@@ -163,20 +163,33 @@ export const AUDIT_INDEX = {
       focusArea: "Streak mechanic validation, percentile ranking effectiveness, milestone celebration impact, engagement metrics re-scoring (3.2→6.3), remaining engagement blockers (leaderboard, reminders, badges), next workstream prioritization",
       status: "complete",
       canonicalFor: "Engagement loop validation, gamification effectiveness assessment, Gamification Pass 2 planning"
+    },
+    {
+      id: "root_workflow_consistency_audit",
+      title: "Root Workflow Consistency Audit",
+      category: "governance",
+      type: "workflow-consistency-audit",
+      location: "src/components/audits/governance/root-workflow-consistency-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "Verifies root-level repository files (README, package.json, vite.config, etc.) align with TankRadar governance system and ChatGPT↔Base44↔GitHub workflow",
+      relatesTo: "Governance Coherence Audit (Entry 96); Base44 platform integration",
+      focusArea: "Root file analysis, build pipeline verification, ChatGPT workflow alignment, Base44 platform compatibility, missing documentation assessment",
+      status: "complete",
+      canonicalFor: "Root configuration verification, workflow consistency confirmation"
     }
   ],
 
   categoryBreakdown: {
     architecture: 4,
     ui: 3,
-    governance: 0,
+    governance: 1,
     product: 3,
     activation: 3,
     data: 0,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 14
+    total: 15
   },
 
   governanceRules: {
