@@ -30,14 +30,15 @@ export const NEXT_SAFE_STEP = {
   governanceRule: {
     preflightOrder: [
       "1. Read Phase25ExecutionLogIndex.jsx",
-      "2. Read the active execution log chunk (currently Phase25ExecutionLog_006.jsx)",
+      "2. Read the active execution log chunk (check chunks[] for ACTIVE status — currently Phase25ExecutionLog_006.jsx)",
       "3. Read NextSafeStep.js (this file)"
     ],
     priority:
       "If NEXT_SAFE_STEP is defined here, AI must implement it before proposing any other step " +
       "unless the user explicitly overrides it in the conversation.",
     conflictResolution:
-      "Phase25ExecutionLogIndex.jsx + active chunk are authoritative over AI_STATE.md."
+      "Phase25ExecutionLogIndex.jsx + active chunk are authoritative. " +
+      "Always verify activeChunk field in Index before appending — do not assume chunk number."
   },
 
   status: "awaiting_user_direction",
