@@ -94,35 +94,6 @@ export default function Layout({ children, currentPageName }) {
               <span className="mt-0.5">{label}</span>
             </Link>
           ))}
-          <Link
-            to={createPageUrl("Settings")}
-            className={`flex flex-col items-center justify-center py-3 flex-1 text-xs transition-colors ${
-              currentPageName === "Settings"
-                ? "bg-green-50 text-green-600"
-                : "text-slate-600"
-            }`}
-          >
-            <Settings size={20} />
-            <span className="mt-0.5">Innstillinger</span>
-          </Link>
-          {/* Login/logout on mobile */}
-          {user ? (
-            <button
-              onClick={() => base44.auth.logout()}
-              className="flex flex-col items-center justify-center py-3 flex-1 text-xs text-slate-600 transition-colors"
-            >
-              <User size={20} />
-              <span className="mt-0.5">Logg ut</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => base44.auth.redirectToLogin(window.location.pathname)}
-              className="flex flex-col items-center justify-center py-3 flex-1 text-xs text-slate-600 transition-colors"
-            >
-              <User size={20} />
-              <span className="mt-0.5">Logg inn</span>
-            </button>
-          )}
         </div>
       </nav>
     </div>
