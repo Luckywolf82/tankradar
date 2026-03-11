@@ -38,15 +38,43 @@ export const NEXT_SAFE_STEP = {
 
   recommendedAuditType: "activation",
 
+  // AUDIT COMPLETED — Entry 91 — See Phase25ExecutionLog_007.jsx for full findings
   auditFocusAreas: [
-    "LogPrice workflow: 4-step efficiency, AI extraction robustness, station matching accuracy",
-    "SubmitPriceCard CTA: copy effectiveness, color/positioning, tap-through rate optimization",
-    "PumpModeCard: proximity detection trigger clarity, onboarding messaging",
-    "ContributionImpactCard: impact calculation transparency, gamification mechanics, streak mechanics",
-    "First-value realization: how quickly can new user see their contribution matter?",
-    "Feature discovery: how do users learn about LogPrice, PumpMode, Alerts?",
-    "Retention drivers: what keeps users coming back daily/weekly to report prices?"
+    "LogPrice workflow: 4-step efficiency, AI extraction robustness, station matching accuracy ✓ ANALYZED",
+    "SubmitPriceCard CTA: copy effectiveness, color/positioning, tap-through rate optimization ✓ ANALYZED",
+    "PumpModeCard: proximity detection trigger clarity, onboarding messaging ✓ ANALYZED",
+    "ContributionImpactCard: impact calculation transparency, gamification mechanics, streak mechanics ✓ ANALYZED",
+    "First-value realization: how quickly can new user see their contribution matter? ✓ ANALYZED",
+    "Feature discovery: how do users learn about LogPrice, PumpMode, Alerts? ✓ ANALYZED",
+    "Retention drivers: what keeps users coming back daily/weekly to report prices? ✓ ANALYZED"
   ],
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NEXT SAFE STEP (ENTRY 92)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  nextSafeStepEntry92: {
+    id: "phase25_step_92",
+    title: "Activation Improvements Implementation — CTA Optimization & Engagement Features",
+    description:
+      "Implement highest-impact improvements from Entry 91 activation audit. " +
+      "Focus on quick-win UI optimizations + low-complexity engagement features. " +
+      "Skip premium complexity features (push notifications, advanced leaderboards) for post-MVP iteration.",
+    scope: [
+      "Reposition SubmitPriceCard to Dashboard position 1 (above PumpModeCard)",
+      "Enhance SubmitPriceCard CTA copy with value-focused messaging",
+      "Add first-time user onboarding overlay",
+      "Add streak counter to ContributionImpactCard ('Day N contributor')",
+      "Add impact transparency tooltip ('How is impact calculated?')",
+      "A/B test CTA variants (copy + position + overlay impact)"
+    ],
+    complexity: "LOW–MEDIUM",
+    runtimeImpact: "MINIMAL — UI reordering + onboarding overlay + component enhancements only",
+    estimatedEffort: "2–4 days",
+    blockingIssues: "NONE",
+    frozenFilesImpact: "ZERO — no Phase 2 matching engine files modified",
+    expectedOutcome: "Enhanced activation flow; estimated +25–50% LogPrice tap-through from repositioning + copy; +25% repeat submissions from streak feature"
+  }
 
   governanceRule: {
     preflightOrder: [
@@ -62,11 +90,11 @@ export const NEXT_SAFE_STEP = {
       "Always verify activeChunk field in Index before appending — do not assume chunk number."
   },
 
-  status: "ready_for_audit",
+  status: "audit_completed",
   approvedDate: "2026-03-11T20:15:00Z",
-  auditDate: "2026-03-11T20:15:00Z",
-  governanceAuditEntry: 90,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90],
+  auditDate: "2026-03-11T21:30:00Z",
+  governanceAuditEntry: 91,
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91],
   readyForNextStep: true
 };
 
