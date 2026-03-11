@@ -95,14 +95,45 @@ export default function Profile() {
         <PrivacySettings user={user} onSaved={() => base44.auth.me().then(setUser)} />
       </div>
 
+      {/* App links — Innstillinger + Områdevarsler */}
+      <Card className="mt-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold text-slate-600">App</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1 pt-0">
+          <Link
+            to={createPageUrl("PriceAlerts")}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <Bell size={16} className="text-slate-400" />
+            Områdevarsler
+          </Link>
+          <Link
+            to={createPageUrl("Settings")}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <Settings size={16} className="text-slate-400" />
+            Innstillinger
+          </Link>
+          <button
+            onClick={() => base44.auth.logout()}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut size={16} />
+            Logg ut
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Admin shortcuts */}
       {user.role === "admin" && (
         <Card className="mt-4 border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-800">
-              <ShieldCheck size={18} /> Admin-snarveier
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-amber-800 text-sm">
+              <ShieldCheck size={16} /> Admin-snarveier
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2 text-sm">
+          <CardContent className="grid grid-cols-2 gap-2 text-sm pt-0">
             {[
               { label: "SuperAdmin", page: "SuperAdmin" },
               { label: "Review-kø", page: "ReviewQueue" },
