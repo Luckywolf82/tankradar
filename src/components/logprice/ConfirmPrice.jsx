@@ -132,8 +132,8 @@ export default function ConfirmPrice({ detectedPrices, setDetectedPrices, statio
              </div>
            )}
 
-           {/* If no station selected, show minimal fields */}
-           {!stationInfo.station_id && (
+           {/* City input only shown when no station candidate is selected (manual entry fallback) */}
+           {!stationInfo.station_id && !stationInfo.station_name && (
              <div className="space-y-1">
                <Label>By *</Label>
                <Input

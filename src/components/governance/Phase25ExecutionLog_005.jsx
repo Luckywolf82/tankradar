@@ -1374,3 +1374,41 @@ All written values are already serialized into `rawPayloadSnippet` at submit tim
 
 ### GitHub visibility status
 Ready for publish. UI-only new component + 2-line LogPrice change. Requires GitHub verification after publish.
+
+---
+
+## Entry 65 — 2026-03-11
+
+### Action
+Removed unnecessary city input field in ConfirmPrice.jsx when a station candidate is already selected.
+
+### Problem
+When a user picks a station via StationPicker, city is already captured in stationInfo metadata. The city `<Input required>` was still rendered and required for users who had a named station selected, creating unnecessary friction and a confusing UX.
+
+### Fix
+Changed the condition from `!stationInfo.station_id` to `!stationInfo.station_id && !stationInfo.station_name`.
+
+City input now shows **only** when neither `station_id` nor `station_name` is set — i.e. the pure manual entry fallback path.
+
+### Files modified
+- `components/logprice/ConfirmPrice.jsx` — 1-line condition change
+
+### Exact diff
+```
+Before: {!stationInfo.station_id && (
+After:  {!stationInfo.station_id && !stationInfo.station_name && (
+```
+
+### Why this is governance-safe
+✓ No locked Phase 2 files touched
+✓ No matching logic changed
+✓ No entity schema changes
+✓ No backend changes
+✓ City value is still preserved in stationInfo (not removed) — just not re-prompted
+✓ Manual entry path (no station selected) still shows city input as before
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. Single-condition change in ConfirmPrice.jsx. Requires GitHub verification after publish.

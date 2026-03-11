@@ -13,35 +13,26 @@
 // User must explicitly override NEXT_SAFE_STEP to propose a different step.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_65",
+  id: "phase25_step_66",
 
-  title: "Remove unnecessary city input when a station is already selected",
+  title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "In the LogPrice confirm step, when a station candidate was already selected " +
-    "(stationInfo.station_id is set OR stationInfo.station_name is non-empty), " +
-    "the city input field is currently still shown and required. " +
-    "This creates unnecessary friction. " +
-    "The fix: hide/skip the city input entirely when station metadata is already known, " +
-    "and only show it as a fallback when no station was selected (manual entry path).",
+    "Entry 65 (city-input friction fix) is the last pre-authorized improvement in the current queue. " +
+    "No further implementation step has been approved. " +
+    "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
-  files: [
-    "components/logprice/ConfirmPrice.jsx"
-  ],
+  files: [],
 
   goals: [
-    "reduce friction in the confirm step for users who picked a station",
-    "city field is already captured from station metadata — no need to re-ask",
-    "keep city input only for the manual-entry (no station selected) fallback path"
+    "hold position — no speculation about next step",
+    "await explicit user instruction before any new implementation"
   ],
 
   constraints: [
-    "UI only — ConfirmPrice.jsx only",
-    "do NOT modify Station entity",
-    "do NOT modify matching engine",
-    "do NOT modify locked Phase-2 files",
-    "do NOT add new fields or entities",
-    "do NOT bundle unrelated changes"
+    "do NOT propose new features without user instruction",
+    "do NOT modify any files without explicit approval",
+    "do NOT modify locked Phase-2 files under any circumstances"
   ],
 
   governanceRule: {
@@ -58,9 +49,9 @@ export const NEXT_SAFE_STEP = {
       "If they disagree, trust the execution log."
   },
 
-  status: "approved",
+  status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62, 63, 64]
+  linkedEntries: [61, 62, 63, 64, 65]
 };
 
 export default NEXT_SAFE_STEP;
