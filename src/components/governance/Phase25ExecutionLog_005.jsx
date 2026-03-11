@@ -1412,3 +1412,36 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. Single-condition change in ConfirmPrice.jsx. Requires GitHub verification after publish.
+
+---
+
+## Entry 66 — 2026-03-11
+
+### Action
+Added readonly selected-station summary block with "Bytt stasjon" action to ConfirmPrice.jsx.
+
+### Problem
+When a station was already selected, the confirm step showed only the blue info block without any way to switch stations — the only escape was the browser back button or the ProximityConfirmBanner's "Velg annen stasjon". This created a dead-end UX for users who realized they had picked the wrong station after reaching the confirm step.
+
+### Fix
+- Extended the existing station block to show: station name, chain + city (joined with ·), and a "Bytt stasjon" inline button
+- Block now triggers on `station_id OR station_name` (consistent with Entry 65 condition)
+- `onChangeStation` prop added to ConfirmPrice; when clicked, navigates back to `step="station"` in LogPrice
+- `onChangeStation` is optional (button only renders when prop is provided) — no breaking change
+
+### Files modified
+- `components/logprice/ConfirmPrice.jsx` — station block UI + `onChangeStation` prop
+- `pages/LogPrice.jsx` — pass `onChangeStation={() => setStep("station")}` to ConfirmPrice
+
+### Why this is governance-safe
+✓ UI-only — no matching logic, no entity changes, no backend
+✓ No locked Phase 2 files touched
+✓ `setStep("station")` already used elsewhere in LogPrice (existing pattern)
+✓ No new state introduced
+✓ "Bytt stasjon" navigates to existing StationPicker step — no new flows
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. UI-only changes in ConfirmPrice.jsx + 1-line prop pass in LogPrice.jsx. Requires GitHub verification after publish.
