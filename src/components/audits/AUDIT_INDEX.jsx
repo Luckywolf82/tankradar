@@ -106,7 +106,61 @@ export const AUDIT_INDEX = {
     allAuditsAreReadOnly: true,
     noRuntimeModification: "Audits analyze only; changes recorded in execution log",
     permanentRecord: "All audits stored permanently in repository",
-    requiredSections: ["context", "observedFiles", "observedBehavior", "structuralRisks", "confirmedFacts", "unknowns", "recommendations"]
+    requiredSections: ["context", "observedFiles", "observedBehavior", "structuralRisks", "confirmedFacts", "unknowns", "recommendations"],
+    evidenceLevels: {
+      "code-observed": "Directly visible in source code; requires no inference",
+      "reasoned-inference": "Logical deduction from code patterns; reasoned but not directly observed",
+      "requires-telemetry": "Requires user behavior data or runtime metrics to verify",
+      "user-experience-hypothesis": "Based on design principles or user testing assumptions"
+    }
+  },
+
+  auditCategories: {
+    architecture: {
+      description: "Code structure, routing, data flow, component hierarchy, dependencies",
+      analyzes: ["routing mechanisms", "page registration", "dependency direction", "component wiring", "module separation"],
+      notFor: ["UI appearance", "business logic optimization", "feature prioritization"]
+    },
+    ui: {
+      description: "Interface design, visual consistency, navigation, CTA placement, UX clarity",
+      analyzes: ["visible navigation", "CTA discoverability", "layout consistency", "responsive behavior", "component hierarchy"],
+      notFor: ["data integrity", "routing mechanics", "business logic"]
+    },
+    governance: {
+      description: "Phase locks, rule compliance, execution log integrity, frozen files",
+      analyzes: ["locked files", "phase boundaries", "task sequencing", "modification restrictions", "compliance tracking"],
+      notFor: ["feature implementation", "user behavior", "data quality"]
+    },
+    product: {
+      description: "Feature usefulness, crowdsourcing incentives, retention value, prioritization",
+      analyzes: ["feature utility scoring", "crowdsourcing impact", "user retention hooks", "CTA effectiveness", "prioritization classification"],
+      notFor: ["technical implementation", "code quality", "data structures"]
+    },
+    activation: {
+      description: "User onboarding, first-value experience, contribution loops, engagement hooks",
+      analyzes: ["onboarding friction", "time-to-first-contribution", "engagement mechanics", "early retention", "feature discovery"],
+      notFor: ["visual design", "data quality", "security controls"]
+    },
+    data: {
+      description: "Data integrity, matching reliability, source quality, metadata completeness",
+      analyzes: ["station matching", "price plausibility", "source reliability", "confidence scoring", "validation rules"],
+      notFor: ["UI presentation", "user behavior", "performance optimization"]
+    },
+    performance: {
+      description: "Load times, query efficiency, rendering optimization, network behavior",
+      analyzes: ["page load times", "database queries", "rendering efficiency", "network requests", "memory usage"],
+      notFor: ["user experience design", "business logic", "data modeling"]
+    },
+    security: {
+      description: "Input validation, access controls, abuse vectors, authentication boundaries",
+      analyzes: ["input sanitization", "access control", "authentication", "abuse prevention", "data privacy"],
+      notFor: ["feature design", "data modeling", "user acquisition"]
+    },
+    publishability: {
+      description: "App store readiness, platform compliance, distribution requirements, metadata",
+      analyzes: ["Google Play readiness", "App Store readiness", "platform metadata", "WebView risks", "release requirements"],
+      notFor: ["feature implementation", "user acquisition", "performance tuning"]
+    }
   },
 
   howToUseThisIndex: {
