@@ -85,7 +85,7 @@ export default function Statistics() {
 
         {/* SECTION 2: Price Distribution */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Prisfordeling (live observed)</h2>
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Prisfordeling</h2>
           <PriceDistribution observedPrices={prices} selectedFuel={selectedFuel} />
         </div>
 
