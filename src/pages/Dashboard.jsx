@@ -7,6 +7,8 @@ import RadarCard from "../components/dashboard/RadarCard";
 import SubmitPriceCard from "../components/dashboard/SubmitPriceCard";
 import ActiveAlertsPreview from "../components/dashboard/ActiveAlertsPreview";
 import PumpModeCard from "../components/dashboard/PumpModeCard";
+import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
+import RouteSavingsCard from "../components/dashboard/RouteSavingsCard";
 import PageContainer from "../components/layout/PageContainer";
 import DashboardGrid from "../components/layout/DashboardGrid";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
@@ -50,6 +52,12 @@ export default function Dashboard() {
                   </Link>
                 </>
               )}
+
+              {/* Contribution Impact — user's reporting stats */}
+              <ContributionImpactCard />
+
+              {/* Route Savings — cheapest alternative station */}
+              <RouteSavingsCard selectedFuel="diesel" />
 
               {/* Dashboard Grid — organized layout */}
               <DashboardGrid columns={1}>
