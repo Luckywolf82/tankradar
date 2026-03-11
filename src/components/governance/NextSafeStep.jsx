@@ -3,13 +3,14 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_79",
+  id: "phase25_step_80",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "Entry 79 (Alert Preview Density Pass) just completed: ActiveAlertsPreview compressed row height, " +
-    "increased alert display from 3 to 5, and added empty state CTA. Pure UI refinement — no backend/data changes. " +
+    "Entry 80 (Data Transparency Pass) just completed: PriceDistribution, HistoricalSSBTrend, and RegionalStats " +
+    "now explicitly label data sources and sample size warnings. GooglePlaces → 'GooglePlaces-observasjoner', " +
+    "SSB national average → 'Nasjonalt snitt (SSB)', weak samples → amber warning. Pure UI text changes — no backend/logic/entity changes. " +
     "No further implementation step has been approved. " +
     "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
@@ -42,7 +43,7 @@ export const NEXT_SAFE_STEP = {
 
   status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  completedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+  completedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80]
 };
 
 export default NEXT_SAFE_STEP;

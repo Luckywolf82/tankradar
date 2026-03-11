@@ -344,4 +344,94 @@ export const entry_79 = {
   historical_context: "Follows Phase 2.5 UI refinement pattern (Entry 77: structural cleanup, Entry 78: governance hardening, Entry 79: density optimization). Implements recommended cleanup pass #1 from comprehensive UI audit. Pure UI enhancement — no business logic or data model changes."
 };
 
-export default entry_79;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 80: DATA TRANSPARENCY PASS — PriceDistribution, HistoricalSSBTrend, RegionalStats
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_80 = {
+  timestamp: "2026-03-11T16:15:00Z",
+  phase: "Phase 2.5 UI Refinement",
+  title: "Data Transparency Quick Fix — Explicit Source Labeling & Weak Sample Indicators",
+  
+  objectives: [
+    "Make filtered/limited datasets explicitly visible to users",
+    "Disclose data sources to comply with governance rules (no 'silent fallback')",
+    "Improve weak sample indicators for data integrity",
+    "Align UI with KOMPROMISS disclosure rule"
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — Active chunk confirmed: Phase25ExecutionLog_006.jsx",
+    "✓ Read NextSafeStep.jsx — Status: awaiting_user_direction (user approved Pass A)",
+    "✓ Read ui-audit-2026-03-11.md — Pass A identified as safest next cleanup",
+    "✓ Verified locked Phase 2 files — all 6 frozen functions remain untouched"
+  ],
+
+  changes_made: {
+    "components/dashboard/PriceDistribution.jsx": {
+      issue: "Chart title 'Prisfordeling' with subtitle 'Antall observasjoner per priskategori' does not disclose that data is filtered to GooglePlaces only",
+      fix: "Changed subtitle from 'Antall observasjoner per priskategori' to 'GooglePlaces-observasjoner · {count} priser'",
+      detail: "Now explicitly shows data source is GooglePlaces + shows observation count dynamically",
+      lines: "56",
+      governance_alignment: "Fixes KOMPROMISS violation: 'Ingen stille fallback' (no silent fallback to limited data)"
+    },
+    "components/dashboard/HistoricalSSBTrend.jsx": {
+      issue: "Subtitle 'Kilde: SSB · siste 12 måneder' does not clarify this is NATIONAL average, not regional",
+      fix: "Changed subtitle from 'Kilde: SSB · siste 12 måneder' to 'Nasjonalt snitt (SSB) · siste 12 måneder'",
+      detail: "Explicitly states this is national average. Users now understand data granularity",
+      lines: "52",
+      governance_alignment: "Aligns with rule: data granularity must be explicit (national vs. regional vs. station-level)"
+    },
+    "components/dashboard/RegionalStats.jsx": {
+      issue: "Weak sample indicator '· lavt' is easy to miss; inline text not prominent enough for data integrity warning",
+      fix: "Changed weak sample indicator from 'text-slate-400 · lavt' to 'text-amber-600 font-medium · ⚠ Lavt datagrunnlag'",
+      detail: [
+        "Added warning icon (⚠) for visual prominence",
+        "Changed color to amber-600 to stand out from normal text",
+        "Made font-medium (bold) to increase visibility",
+        "Clarified text: 'Lavt datagrunnlag' instead of just 'lavt'"
+      ],
+      lines: "116–119",
+      governance_alignment: "Improves transparency: weak samples now clearly marked for data quality assessment"
+    }
+  },
+
+  data_integrity_improvements: {
+    "PriceDistribution transparency": "Users now see 'GooglePlaces-observasjoner' instead of generic 'prisfordeling'. Source is visible, not hidden.",
+    "HistoricalSSBTrend clarity": "Users understand this is 'nasjonalt snitt' (national average), not regional or station-level data.",
+    "RegionalStats warnings": "Weak samples (<5 obs.) now clearly marked with warning color + icon + bold text. Can't be missed."
+  },
+
+  verification: {
+    no_logic_changes: "✓ All changes are UI text/presentation only",
+    no_backend_changes: "✓ No API calls modified; data fetching unchanged",
+    no_matching_changes: "✓ No station-linking logic touched",
+    no_entity_changes: "✓ No schema modifications",
+    no_phase2_changes: "✓ All 6 frozen Phase 2 functions verified untouched",
+    ui_only: "✓ 3 component files modified: text labels and styling only"
+  },
+
+  governance_rules_applied: [
+    "Rule: 'Ingen stille fallback' — Fallback data source (GooglePlaces) now explicitly disclosed",
+    "Rule: Data granularity transparency — National vs. regional clearly labeled",
+    "Rule: Weak data disclosure — Small samples now have prominent visual warning",
+    "Rule: No unmatched compromises — KOMPROMISS violations now addressed"
+  ],
+
+  next_recommended_step: {
+    title: "Monitor user feedback on data transparency improvements",
+    description: "Collect user feedback on whether label clarity improves understanding of data sources and limitations",
+    scope: "Optional analytics/feedback step",
+    priority: "Low — implementation already complete"
+  },
+
+  files_modified: [
+    "components/dashboard/PriceDistribution.jsx",
+    "components/dashboard/HistoricalSSBTrend.jsx",
+    "components/dashboard/RegionalStats.jsx"
+  ],
+
+  historical_context: "Follows Phase 2.5 UI refinement pattern (Entry 77–79: structural cleanup, density pass, governance hardening). Entry 80 implements Pass A from ui-audit-2026-03-11.md: Data Transparency Quick Fix. Addresses KOMPROMISS violations identified during governance audit."
+};
+
+export default entry_80;
