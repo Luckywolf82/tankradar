@@ -27,7 +27,7 @@ function distLabel(km) {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-export default function PumpModeCard() {
+export default function PumpModeCard({ onActivate }) {
   const [station, setStation] = useState(null);        // nearest within PUMP_RADIUS_KM
   const [distKm, setDistKm] = useState(null);
   const [userCoords, setUserCoords] = useState(null);
