@@ -68,12 +68,14 @@ export const AUDIT_INDEX = {
     {
       id: "base44_router_audit",
       title: "Base44 Router Architecture Audit",
+      category: "architecture",
       location: "src/components/audits/architecture/base44-router-architecture-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Comprehensive analysis of router entrypoint, layers, page registration, and nested router risks",
       relatesTo: "Phase 1 Architecture Verification (router entrypoint unknown)",
       focusArea: "Root app bootstrap, multiple router layers, page registration mechanism, nested router risks",
-      status: "critical_unknowns_identified"
+      status: "critical_unknowns_identified",
+      canonicalFor: "Router infrastructure baseline"
     },
 
     {
