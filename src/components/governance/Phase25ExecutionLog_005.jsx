@@ -1222,3 +1222,73 @@ Increase repeat price submissions by allowing users to immediately log another p
 
 ### GitHub visibility status
 Ready for publish. UI-only CTA addition. Requires GitHub verification after publish.
+
+---
+
+## Entry 63 — 2026-03-11
+
+### Action
+Created `components/governance/NextSafeStep.js` and added `mandatoryPreflight` block to `Phase25ExecutionLogIndex.jsx`.
+
+### Purpose
+Establish a canonical, machine-readable "next safe step" file so AI agents stop guessing the next implementation from execution log previews. Mandatory preflight is now visible in the file Base44 already reads as the canonical governance entry point.
+
+### Files created
+- `components/governance/NextSafeStep.js` — new canonical file exporting `NEXT_SAFE_STEP` object
+
+### Files modified
+- `components/governance/Phase25ExecutionLogIndex.jsx` — added `mandatoryPreflight` metadata block
+
+### Exact content added
+
+**NextSafeStep.js exports:**
+```
+NEXT_SAFE_STEP = {
+  id: "phase25_step_63",
+  title: "Improve station selection when user logs price",
+  description: "When multiple stations are close, add lightweight confirmation UI for user correction",
+  files: [StationPicker.jsx, ProximityConfirmBanner.jsx, LogPrice.jsx],
+  goals: [reduce incorrect station submissions, allow quick correction, improve user trust],
+  constraints: [UI only, no Phase-2 engine, no locked functions, no auto-create Station],
+  governanceRule: {
+    preflightOrder: [Read Index → Read active chunk → Read NextSafeStep.js],
+    priority: "Implement NEXT_SAFE_STEP unless user explicitly overrides",
+    conflictResolution: "Execution log > AI_STATE.md"
+  },
+  status: "approved",
+  approvedDate: "2026-03-11",
+  linkedEntries: [61, 62]
+}
+```
+
+**mandatoryPreflight block added to Phase25ExecutionLogIndex.jsx:**
+- `requiredReadOrder`: 3-step ordered preflight (Index → active chunk → NextSafeStep.js)
+- `conflictResolution`: Execution log is authoritative over AI_STATE.md
+- `nextSafeStep`: Points to NextSafeStep.js as canonical source
+- `forbidden`: 4 explicit anti-patterns prohibited
+
+### Why this is governance-safe
+✓ No locked Phase 2 files touched — all 10 remain UNTOUCHED
+✓ No matching logic changed
+✓ No entity schema changes
+✓ No new backend functions
+✓ No threshold changes
+✓ No UI or user-facing changes
+✓ Governance-metadata only (2 files: 1 new, 1 updated)
+✓ AI_STATE.md relationship clarified: it is a pointer, not an authority
+
+### Verification
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+### GitHub visibility status
+Ready for publish. Governance-metadata only. Requires GitHub verification after publish.

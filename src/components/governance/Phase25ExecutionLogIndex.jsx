@@ -83,6 +83,30 @@ export const EXECUTION_LOG_METADATA = {
     withinChunk: "Read entries in document order (top to bottom)",
     currentWork: "Check activeChunk for latest entries",
     deprecated: "Phase25ExecutionLog.jsx is a read-only stub. Do not append to it."
+  },
+
+  // Mandatory preflight — AI agents MUST execute before ANY implementation proposal
+  mandatoryPreflight: {
+    description:
+      "AI agents must execute these steps IN ORDER before proposing or implementing anything",
+    requiredReadOrder: [
+      "1. Read Phase25ExecutionLogIndex.jsx (this file)",
+      "2. Read the active execution log chunk listed in chunks[] above (currently Phase25ExecutionLog_005.jsx)",
+      "3. Read components/governance/NextSafeStep.js"
+    ],
+    conflictResolution:
+      "If AI_STATE.md conflicts with Phase25ExecutionLogIndex.jsx or the active chunk, " +
+      "the execution log (Index + active chunk) is authoritative. " +
+      "AI_STATE.md is a summary pointer only — it does not override execution log state.",
+    nextSafeStep:
+      "components/governance/NextSafeStep.js contains the canonical approved next step. " +
+      "AI must not propose alternatives without explicit user override in conversation.",
+    forbidden: [
+      "Do not guess next step from execution log entry titles alone",
+      "Do not implement without reading active chunk tail first",
+      "Do not modify locked Phase 2 files under any circumstances",
+      "Do not bundle unrelated changes into a single implementation step"
+    ]
   }
 };
 
