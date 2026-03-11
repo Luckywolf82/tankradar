@@ -42,12 +42,14 @@ export const AUDIT_INDEX = {
     {
       id: "routing_architecture_audit",
       title: "Routing Architecture Audit",
+      category: "architecture",
       location: "src/components/audits/architecture/routing-architecture-audit-2026-03-11.jsx",
       dateCreated: "2026-03-11",
       description: "Deep analysis of dual router configuration and nested router conflict",
       relatesTo: "Phase 1 Architecture (Pass 1 Correction)",
       focusArea: "Router hierarchy, pages/App.jsx structure, initialization",
-      status: "complete"
+      status: "complete",
+      canonicalFor: "Routing architecture risk assessment"
     },
 
     {
