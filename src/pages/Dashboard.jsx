@@ -104,6 +104,12 @@ export default function Dashboard() {
           <RecentPricesFeed />
         </div>
 
+        {/* Route savings — secondary; hidden when PumpMode active */}
+        {!pumpModeActive && <RouteSavingsCard selectedFuel={selectedFuel} />}
+
+        {/* Contribution impact — motivational, always secondary */}
+        <ContributionImpactCard />
+
         {/* Min drivstoff — personalisert seksjon */}
         <MyFuelDashboard />
 
