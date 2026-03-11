@@ -1598,3 +1598,44 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. UI-only, single file change. Requires GitHub verification after publish.
+
+---
+
+## Entry 70 — 2026-03-11
+
+### Action
+Statistics UI cleanup pass — removed double-labeling, quieted weak-sample notices, removed duplicate footer text, removed amber noise from regional rows.
+
+### Files modified
+- `pages/Statistics.jsx`
+- `components/dashboard/RegionalStats.jsx`
+- `components/dashboard/HistoricalSSBTrend.jsx`
+
+### Changes applied
+
+**Statistics.jsx**
+- Removed `<h2>` section wrappers around each component — CardTitles inside components are sufficient
+- Reduced `mb-8` to `mb-6` for tighter, consistent spacing
+- No logic changes
+
+**RegionalStats.jsx**
+- Subtitle: `"basert på locationLabel fra observerte priser"` → `"Topp 6 byer med flest observasjoner"` (pipeline term removed)
+- Weak-sample notice: replaced heavy amber badge box with quiet inline `text-xs text-slate-400 "Lavt grunnlag (N obs.)"`
+- Row background: removed conditional amber background — all rows now plain `bg-slate-50`
+- Removed `AlertCircle` import (no longer used)
+
+**HistoricalSSBTrend.jsx**
+- Removed duplicate footer `"Siste 12 måneder fra SSB"` — subtitle already says this
+
+### Why this is governance-safe
+✓ Zero backend changes
+✓ Zero entity changes
+✓ Zero data or matching logic changes
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ All analytics data kept intact — only presentation and labeling changed
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. UI-only across 3 files. Requires GitHub verification after publish.
