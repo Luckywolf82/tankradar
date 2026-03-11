@@ -14,6 +14,16 @@ export const AUDIT_INDEX = {
 
   audits: [
     {
+      id: "product_utility_audit",
+      title: "Product Utility & Crowdsourcing Audit",
+      location: "src/components/audits/product/product-utility-audit-2026-03-11.jsx",
+      dateCreated: "2026-03-11",
+      description: "5-dimension utility scoring (USER_VALUE, EASE_OF_USE, CROWDSOURCING_IMPACT, ENGAGEMENT, DEVELOPMENT_EFFORT) for all functions; crowdsourcing strategy; Dashboard CTA optimization",
+      relatesTo: "Product Planning (Entry 86)",
+      focusArea: "Feature utility classification (BUILD_NOW/IMPROVE/DEFER/REMOVE), top 5 crowdsourcing drivers, CTA effectiveness, engagement roadmap",
+      status: "complete"
+    },
+    {
       id: "project_structure_audit",
       title: "Project Structure Audit",
       location: "src/components/audits/architecture/project-structure-architecture-audit-2026-03-11.jsx",
