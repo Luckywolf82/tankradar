@@ -1757,3 +1757,47 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. New component + 3-line Dashboard change. Requires GitHub verification after publish.
+
+---
+
+## Entry 74 — 2026-03-11
+
+### Action
+Added `PumpModeCard` to Dashboard — activates when user is ≤150m from a station, shows all three fuel types with pre-filled prices for multi-fuel bulk reporting.
+
+### Files created
+- `components/dashboard/PumpModeCard.jsx`
+
+### Files modified
+- `pages/Dashboard.jsx` — import + placed above QuickReportCard
+
+### Display logic
+- GPS acquired → find stations within 150m (tighter than QuickReportCard's 300m)
+- Nearest station selected automatically (no picker needed — user is physically there)
+- Pre-fills latest known prices per fuel type from FuelPrice entity (read-only query)
+- User edits any/all prices → "Rapporter priser" submits only filled + valid entries
+- Orange "Pump-modus" badge to distinguish from QuickReportCard
+- Hides completely if no station within 150m, GPS denied, or after 3s success flash
+
+### FuelPrice fields set (per submission)
+- Same governance-approved field set as QuickReportCard
+- `confidenceReason = "PumpModeCard — user at pump, multi-fuel"`
+- `parserVersion = "pump_mode_v1"`
+- `station_match_status = "matched_station_id"`
+- `confidenceScore = 0.75` (slightly higher — user physically confirmed location)
+
+### Why this is governance-safe
+✓ UI-only new component + 3-line Dashboard change
+✓ No locked Phase 2 files touched — all 10 UNTOUCHED
+✓ No entity schema changes — all fields within existing FuelPrice schema
+✓ No matching logic changes — station auto-selected by GPS proximity only
+✓ Source metadata fully populated (Rule 5 compliant)
+✓ priceType = user_reported, station_match_status = matched_station_id (Rules 1, 28–30)
+✓ Plausibility inline: 14–26 kr = realistic_price (Rule 41 compliant)
+✓ Pre-fill is read-only — zero writes during prefill phase
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. New component + 3-line Dashboard change. Requires GitHub verification after publish.
