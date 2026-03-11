@@ -23,6 +23,12 @@
  *   architecture/                 (routing, structure, data flow audits)
  *   ui/                           (interface and design audits)
  *   governance/                   (phase locks, compliance audits)
+ *   product/                      (feature utility, crowdsourcing, engagement audits)
+ *   activation/                   (onboarding, first-value, user lifecycle audits)
+ *   data/                         (data integrity, matching, source reliability audits)
+ *   performance/                  (load times, query efficiency, rendering audits)
+ *   security/                     (input validation, access control, abuse vectors audits)
+ *   publishability/               (app store, distribution, platform readiness audits)
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *
