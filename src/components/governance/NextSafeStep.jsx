@@ -103,26 +103,25 @@ export const NEXT_SAFE_STEP = {
   // NEXT SAFE STEP (ENTRY 93) — ACTIVATION IMPACT REVIEW
   // ═══════════════════════════════════════════════════════════════════════════════
 
-  nextSafeStepEntry93: {
-    id: "phase25_step_93",
-    title: "Activation Impact Review — Measure Entry 92 Changes & Validate Audit Findings",
+  nextSafeStepEntry94: {
+    id: "phase25_step_94",
+    title: "Activation Improvements Pass 2 — Gamification Layer (Streaks + Social Proof)",
     description:
-      "Evaluate effects of Entry 92 activation improvements on user behavior. " +
-      "Validate Entry 91 audit predictions against real-world metrics. " +
-      "Determine if additional CTA variants or features should be implemented.",
+      "Implement highest-priority remaining activation gap identified in Entry 93. " +
+      "Add streak counter + social proof percentile ranking to ContributionImpactCard. " +
+      "Expected +25–30% lift on repeat submissions.",
     scope: [
-      "Track CTA tap-through rates (SubmitPriceCard before/after repositioning)",
-      "Measure first-time overlay completion rate (overlay display → LogPrice navigation)",
-      "Assess user understanding of value proposition (qualitative feedback if available)",
-      "Evaluate overlay clarity and usability (click-through, dismissal rate)",
-      "Compare actual lift against Entry 91 predictions (+25–40% repositioning, +15–25% overlay)"
+      "Add streak counter to ContributionImpactCard ('Day N contributor')",
+      "Add social proof percentile ranking ('Top 20% of reporters in Trøndheim')",
+      "Add milestone animations + visual celebration on streak milestones",
+      "Test integration with existing ContributionImpactCard layout"
     ],
-    complexity: "ANALYSIS-ONLY (NO IMPLEMENTATION)",
-    runtimeImpact: "NONE — measurement and review only",
-    estimatedEffort: "2–3 hours analysis + documentation",
+    complexity: "LOW–MEDIUM",
+    runtimeImpact: "MINIMAL — UI component enhancement only",
+    estimatedEffort: "2–3 hours",
     blockingIssues: "NONE",
-    frozenFilesImpact: "ZERO",
-    expectedOutcome: "Validation of audit findings; data-driven prioritization for next feature build (Entry 92 Recommendations 1–3)"
+    frozenFilesImpact: "ZERO — no Phase 2 matching engine changes",
+    expectedOutcome: "Gamification mechanics implemented; estimated +25–30% repeat submissions; improved user retention"
   }
 };
 
