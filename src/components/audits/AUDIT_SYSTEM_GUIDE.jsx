@@ -103,9 +103,15 @@
  *
  * Organized by subcategories:
  *
- * architecture/   — Code structure, routing, data flow, components
- * ui/             — Interface design, visual consistency, UX
- * governance/     — Phase locks, rule compliance, execution log
+ * architecture/    — Code structure, routing, data flow, components
+ * ui/              — Interface design, visual consistency, UX, navigation
+ * governance/      — Phase locks, rule compliance, execution log
+ * product/         — Feature utility, crowdsourcing, engagement, prioritization
+ * activation/      — Onboarding, first-value, user lifecycle, engagement hooks
+ * data/            — Data integrity, matching, source reliability, plausibility
+ * performance/     — Load times, queries, rendering, network efficiency
+ * security/        — Input validation, access controls, abuse vectors
+ * publishability/  — App store readiness, platform compliance, metadata
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *
