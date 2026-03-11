@@ -96,31 +96,22 @@ export default function Dashboard() {
         {/* Min drivstoff — personalisert seksjon */}
         <MyFuelDashboard />
 
-        {/* Markedsstatistikk */}
+        {/* Link to full analysis */}
         <div className="mb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <LiveMarketStats observedPrices={prices} selectedFuel={selectedFuel} />
-            <PriceChangeIndicator observedPrices={prices} selectedFuel={selectedFuel} />
-          </div>
-        </div>
-
-        {/* SSB historisk referanse */}
-        <div className="mb-6">
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-slate-600 flex items-center justify-between">
-                <span>Offisiell referanse (SSB)</span>
-                <Link to={createPageUrl("Statistics")} className="text-xs text-blue-600 hover:text-blue-700 font-normal">
-                  Se full analyse →
-                </Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div style={{ maxHeight: "200px", overflow: "hidden" }}>
-                <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
-              </div>
-            </CardContent>
-          </Card>
+          <Link to={createPageUrl("Statistics")}>
+            <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer border-blue-100 bg-blue-50">
+              <CardContent className="flex items-center justify-between py-4 px-5">
+                <div className="flex items-center gap-3">
+                  <BarChart2 size={20} className="text-blue-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">Se full analyse</p>
+                    <p className="text-xs text-blue-600">Historisk trend, regional fordeling og prisstatistikk</p>
+                  </div>
+                </div>
+                <span className="text-blue-600 text-sm font-medium">→</span>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
         </div>
