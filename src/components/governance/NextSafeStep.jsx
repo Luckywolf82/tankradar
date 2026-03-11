@@ -13,31 +13,35 @@
 // User must explicitly override NEXT_SAFE_STEP to propose a different step.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_63",
+  id: "phase25_step_65",
 
-  title: "Improve station selection when user logs price",
+  title: "Remove unnecessary city input when a station is already selected",
 
   description:
-    "When multiple stations are close (example Circle K vs Uno-X across the street), " +
-    "add a lightweight confirmation UI allowing the user to correct the detected station.",
+    "In the LogPrice confirm step, when a station candidate was already selected " +
+    "(stationInfo.station_id is set OR stationInfo.station_name is non-empty), " +
+    "the city input field is currently still shown and required. " +
+    "This creates unnecessary friction. " +
+    "The fix: hide/skip the city input entirely when station metadata is already known, " +
+    "and only show it as a fallback when no station was selected (manual entry path).",
 
   files: [
-    "components/logprice/StationPicker.jsx",
-    "components/logprice/ProximityConfirmBanner.jsx",
-    "pages/LogPrice.jsx"
+    "components/logprice/ConfirmPrice.jsx"
   ],
 
   goals: [
-    "reduce incorrect station submissions",
-    "allow quick correction when stations are very close",
-    "improve user trust in price logging"
+    "reduce friction in the confirm step for users who picked a station",
+    "city field is already captured from station metadata — no need to re-ask",
+    "keep city input only for the manual-entry (no station selected) fallback path"
   ],
 
   constraints: [
-    "UI only",
-    "do not modify Phase-2 matching engine",
-    "do not modify locked functions",
-    "do not create Station automatically"
+    "UI only — ConfirmPrice.jsx only",
+    "do NOT modify Station entity",
+    "do NOT modify matching engine",
+    "do NOT modify locked Phase-2 files",
+    "do NOT add new fields or entities",
+    "do NOT bundle unrelated changes"
   ],
 
   governanceRule: {
@@ -52,11 +56,11 @@ export const NEXT_SAFE_STEP = {
     conflictResolution:
       "Phase25ExecutionLogIndex.jsx + active chunk are authoritative over AI_STATE.md. " +
       "If they disagree, trust the execution log."
-  ],
+  },
 
   status: "approved",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62]
+  linkedEntries: [61, 62, 63, 64]
 };
 
 export default NEXT_SAFE_STEP;
