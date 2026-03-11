@@ -1236,4 +1236,285 @@ export const entry_84 = {
   historical_context: "Follows Phase 2.5 strategic analysis pattern (Entry 83: inventory/visibility, Entry 84: value/prioritization). Provides quantitative scoring basis for MVP scope freeze decisions. Both audits are permanent repository records; findings inform launch planning without implementation."
 };
 
-export default entry_84;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 85: MVP FUNCTION PRIORITIZATION AUDIT — TIER CLASSIFICATION & 3-SCREEN STRUCTURE
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_85 = {
+  timestamp: "2026-03-11T18:00:00Z",
+  phase: "Phase 2.5 MVP Launch Readiness",
+  title: "MVP Function Prioritization Audit — Tier Classification, 3-Screen Structure, Nav Optimization",
+  
+  objectives: [
+    "Classify all user-facing functions into 6 tiers: CORE, SECONDARY, SUPPORT_ONLY, HIDE, REMOVE_CANDIDATE, NEEDS_VERIFICATION",
+    "Establish 3-screen MVP foundation (Dashboard + LogPrice + Statistics + Profile)",
+    "Optimize main nav: eliminate non-essential items; recommend primary → secondary promotion path",
+    "Identify broken or half-implemented features that block MVP launch"
+  ],
+
+  preFlight_verification: [
+    "✓ Relationship to Entries 83–84: (83 = inventory, 84 = value scoring, 85 = tier classification + structure)",
+    "✓ Verified locked Phase 2 files — All 10 frozen functions remain untouched",
+    "✓ Read all audited pages; Entry 83 + Entry 84 provide foundation",
+    "✓ Confirmed read-only methodology — no code changes, audit only"
+  ],
+
+  tier_classification_summary: {
+    CORE: [
+      {
+        name: "Dashboard (Oversikt)",
+        rationale: "Hub page; product identity; 6 cards complete; real-time data; responsive; DAILY user engagement"
+      },
+      {
+        name: "LogPrice (Logg pris)",
+        rationale: "Crowdsourcing pipeline; 4-step workflow complete; AI + matching + persistence; essential contribution mechanism"
+      }
+    ],
+
+    SECONDARY: [
+      {
+        name: "Statistics (Statistikk)",
+        rationale: "Data transparency; 3 charts complete; SSB + GooglePlaces integration; builds MVP credibility"
+      },
+      {
+        name: "Profile (Profil)",
+        rationale: "Account hub; mature UI; all sections complete; expected UX pattern; auth flow correct"
+      }
+    ],
+
+    SUPPORT_ONLY: [
+      {
+        name: "PriceAlerts (Områdevarsler)",
+        rationale: "Fully functional CRUD; complete but lower priority; post-MVP users prefer simple defaults; include if timeline allows"
+      }
+    ],
+
+    HIDE: [
+      {
+        name: "Notifications (Varsler)",
+        rationale: "Functional but lower priority; regex-based trigger derivation fragile; defer full feature; use simple in-app toasts for MVP"
+      }
+    ],
+
+    REMOVE_CANDIDATE: [
+      {
+        name: "Settings (Innstillinger)",
+        rationale: "Account deletion TODO stub (broken); minimal value for MVP; defer entire account management to Phase 2"
+      }
+    ],
+
+    NEEDS_VERIFICATION: [
+      {
+        name: "NotificationBell component",
+        rationale: "Used in Layout.js; implementation not verified; impacts nav UX; recommend separate audit"
+      },
+      {
+        name: "PrivacySettings component",
+        rationale: "Used in Profile; field list + persistence not audited; recommend verification before shipping"
+      }
+    ]
+  },
+
+  recommended_3_screen_mvp_structure: {
+    foundation: "Minimal viable product focused on price discovery + contribution + market context + account management",
+    
+    screen_1_dashboard: {
+      name: "Dashboard (Oversikt) — TIER: CORE",
+      purpose: "Hub page; primary user workflow; price discovery + contribution entry point",
+      cards_must_include: [
+        "PumpModeCard (proximity detection ≤150m, optional flow)",
+        "SubmitPriceCard (quick CTA to LogPrice)",
+        "RadarCard (nearby prices with fuel type selector)",
+        "ContributionImpactCard (user stats: drivers helped, savings estimated)",
+        "ActiveAlertsPreview (top 5 alerts, CTA to PriceAlerts page)"
+      ],
+      cards_optional_for_mvp: [
+        "RouteSavingsCard (nice-to-have; can defer if timeline tight)"
+      ]
+    },
+
+    screen_2_contribute: {
+      name: "LogPrice (Logg pris) — TIER: CORE",
+      purpose: "Crowdsourcing; user price submission workflow",
+      workflow_steps: [
+        "StationPicker (search/select station or use GPS option)",
+        "PhotoCapture (image upload + AI price extraction)",
+        "ConfirmPrice (review + manual edit prices)",
+        "OptimisticSuccess (feedback + repeat option)"
+      ],
+      data_pipeline: "Fully integrated: AI extraction + station matching + FuelPrice persistence + candidate creation",
+      readiness: "✓ READY TO SHIP"
+    },
+
+    screen_3_data: {
+      name: "Statistics (Statistikk) — TIER: SECONDARY",
+      purpose: "Market transparency; user trust building; context for comparison shopping",
+      charts_include: [
+        "HistoricalSSBTrend (12-month national average, SSB source)",
+        "PriceDistribution (GooglePlaces observation histogram)",
+        "RegionalStats (regional breakdown with low-sample warnings)"
+      ],
+      features: [
+        "Fuel type selector (filters all charts)",
+        "Data transparency labels (applied Entry 80)",
+        "Responsive design"
+      ],
+      readiness: "✓ READY TO SHIP"
+    },
+
+    screen_4_profile: {
+      name: "Profile (Profil) — TIER: SECONDARY",
+      purpose: "User account hub; navigation to secondary features",
+      sections_include: [
+        "User Info (email, name, role)",
+        "Contributions (count of user_reported prices)",
+        "Privacy Settings (expandable form)",
+        "App Links (Områdevarsler → PriceAlerts, Logg ut)",
+        "Admin Shortcuts (if admin role)"
+      ],
+      readiness: "✓ READY TO SHIP"
+    },
+
+    secondary_features_decision: {
+      pricealerts: {
+        name: "PriceAlerts (Områdevarsler) — TIER: SUPPORT_ONLY",
+        status: "Fully functional; accessible from Profile card",
+        decision: "INCLUDE IF TIME; DEFER IF TIMELINE TIGHT"
+      },
+      notifications: {
+        name: "Notifications (Varsler) — TIER: HIDE",
+        status: "Functional but lower priority; fragile trigger derivation",
+        decision: "DEFER; USE SIMPLE IN-APP TOASTS INSTEAD"
+      },
+      settings: {
+        name: "Settings (Innstillinger) — TIER: REMOVE_CANDIDATE",
+        status: "Account deletion broken stub; app info minimal",
+        decision: "DO NOT SHIP; REMOVE FROM MVP"
+      }
+    }
+  },
+
+  nav_optimization_recommendation: {
+    current_nav_structure: [
+      "1. Oversikt (Dashboard)",
+      "2. Statistikk (Statistics)",
+      "3. Logg pris (LogPrice)",
+      "4. Profil (Profile)",
+      "5. [role-conditional: Review, Admin]",
+      "6. [icon: NotificationBell]"
+    ],
+
+    mvp_optimized_nav_structure: [
+      "1. Oversikt (Dashboard) — CORE; keep first position (hub page)",
+      "2. Logg pris (LogPrice) — CORE; promote to position 2 (essential contribution mechanism)",
+      "3. Statistikk (Statistics) — SECONDARY; position 3 (credibility, market context)",
+      "4. Profil (Profile) — SECONDARY; position 4 (account hub + secondary features access)"
+    ],
+
+    changes: [
+      "REORDER: Move LogPrice to position 2 (emphasize contribution as core workflow)",
+      "REMOVE from main nav: NotificationBell icon (use simple in-app toasts for MVP Phase 1)",
+      "KEEP conditional: Review (curator+admin), Admin (admin only) — unchanged",
+      "DEFER: Notifications page access to Phase 2"
+    ],
+
+    secondary_access: [
+      "PriceAlerts → accessible from Profile card (Områdevarsler link); no main nav promotion needed for MVP",
+      "Settings → DO NOT INCLUDE in MVP; defer to Phase 2"
+    ],
+
+    rationale: "4-item main nav is optimal for mobile UX; LogPrice positioned as core workflow; profile acts as hub for secondary features"
+  },
+
+  broken_ui_and_blockers: [
+    {
+      feature: "Settings account deletion flow",
+      severity: "BLOCKING",
+      detail: "handleConfirmDeletion (line 25) is TODO stub; dialog renders but no backend call",
+      mvp_decision: "✗ DO NOT SHIP — either implement full deletion flow for MVP or remove UI entirely",
+      recommendation: "Consider removing Settings.jsx from MVP; defer account management to Phase 2"
+    },
+    {
+      feature: "Notifications trigger reason derivation",
+      severity: "MEDIUM",
+      detail: "Uses regex keyword matching from title/message (hardcoded keywords: 'prisfall', 'målpris', 'nytt lav', 'nær deg')",
+      mvp_decision: "⚠ RISKY — works but fragile if message format changes",
+      recommendation: "If deferring Notifications (recommended), this is non-blocking; otherwise strengthen derivation or use simple category labels"
+    },
+    {
+      feature: "NotificationBell implementation",
+      severity: "UNKNOWN",
+      detail: "Used in Layout.js line 54; implementation not verified; impacts nav behavior",
+      mvp_decision: "? DEFER DECISION — conduct separate focused audit",
+      recommendation: "Verify behavior before finalizing nav structure; if deferring Notifications, also defer NotificationBell"
+    }
+  ],
+
+  verification_gaps: [
+    {
+      component: "PrivacySettings",
+      location: "components/profile/PrivacySettings.jsx (assumed)",
+      status: "Field list and persistence not audited",
+      impact: "Profile.jsx depends on PrivacySettings; unknown data model",
+      recommendation: "Verify what privacy fields are saved and how before shipping Profile"
+    },
+    {
+      component: "PhotoCapture + StationPicker sub-components",
+      location: "LogPrice.jsx imports",
+      status: "GPS error handling and edge cases not fully audited",
+      impact: "LogPrice workflow depends on these; behavior gaps possible",
+      recommendation: "Verify GPS fallback behavior and error handling before shipping LogPrice"
+    }
+  ],
+
+  launch_readiness_checklist: {
+    core_features_ready: [
+      "✓ Dashboard.jsx — all cards complete; responsive; real-time data",
+      "✓ LogPrice.jsx — 4-step workflow; AI + matching + persistence complete",
+      "✓ Statistics.jsx — 3 charts complete; data transparency applied",
+      "✓ Profile.jsx — all sections complete; auth flow correct"
+    ],
+
+    secondary_decision_required: [
+      "? PriceAlerts.jsx — fully functional; decide: SHIP if time allows, DEFER if timeline tight"
+    ],
+
+    do_not_ship_in_current_state: [
+      "✗ Settings.jsx — account deletion broken; defer or remove"
+    ],
+
+    defer_to_phase_2: [
+      "Notifications.jsx (use simple in-app toasts instead)",
+      "Account deletion (full backend flow)",
+      "Detailed settings management",
+      "NotificationBell (if deferring Notifications)"
+    ],
+
+    must_verify_before_shipping: [
+      "PrivacySettings field list and persistence",
+      "PhotoCapture + StationPicker GPS handling"
+    ]
+  },
+
+  governance_compliance: {
+    read_only_audit: "✓ No implementation; tier classification only",
+    frozen_files_untouched: "✓ All 10 Phase 2 functions verified untouched",
+    audit_system_compliance: "✓ Follows AUDIT_SYSTEM_GUIDE; permanent record",
+    complementary_audits: "✓ Entry 83 (inventory) → Entry 84 (value scoring) → Entry 85 (tier classification + structure)"
+  },
+
+  recommended_next_step: {
+    title: "Product Decision: Finalize MVP Scope & Resolve Blockers",
+    decisions_required: [
+      "Confirm CORE (Dashboard + LogPrice + Statistics + Profile) ship in MVP",
+      "Decide PriceAlerts inclusion (SUPPORT_ONLY) based on timeline",
+      "RESOLVE: Remove Settings.jsx from MVP OR implement full account deletion flow for launch",
+      "Schedule separate audit of NotificationBell before finalizing nav"
+    ],
+    owner: "Product team"
+  },
+
+  historical_context: "Follows Phase 2.5 MVP analysis pattern (Entry 83: inventory, Entry 84: value, Entry 85: tier classification + structure). Provides clear tier hierarchy and 3-screen foundation for MVP launch. All three audits are permanent records; findings ready to inform product decision-making."
+};
+
+export default entry_85;
