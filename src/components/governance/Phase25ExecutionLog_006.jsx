@@ -972,4 +972,268 @@ export const entry_83 = {
   historical_context: "Follows Phase 2.5 UI analysis pattern (Entries 77–82: structural cleanup, data transparency, admin security, restoration audit). Entry 83 provides comprehensive UI function inventory to inform future optimization decisions. Audit is permanent repository record; findings may drive future implementation decisions pending explicit user direction."
 };
 
-export default entry_83;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 84: UI FUNCTION VALUE AUDIT — MVP PRIORITIZATION SCORING
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_84 = {
+  timestamp: "2026-03-11T17:45:00Z",
+  phase: "Phase 2.5 MVP Launch Planning",
+  title: "UI Function Value Audit — MVP Prioritization Scoring Matrix",
+  
+  objectives: [
+    "Score all user-facing functions on 4 dimensions: USER_VALUE, DATA_SUPPORT, UI_MATURITY, MVP_RELEVANCE",
+    "Create decision table classifying functions as CORE, KEEP, DEFER, REMOVE",
+    "Identify structural issues: duplicate functionality, dead UI, incomplete features",
+    "Provide strategic recommendations for MVP scope and launch sequencing"
+  ],
+
+  preFlight_verification: [
+    "✓ Relationship to Entry 83: Entry 83 = inventory/visibility; Entry 84 = value/prioritization",
+    "✓ Verified locked Phase 2 files — All 10 frozen functions remain untouched",
+    "✓ Read all audited pages + components from Entry 83",
+    "✓ Confirmed AUDIT_SYSTEM_GUIDE methodology — read-only analysis only"
+  ],
+
+  scoring_methodology: {
+    dimensions: [
+      "USER_VALUE: How essential is this to core user workflows? (0–3)",
+      "DATA_SUPPORT: How complete is backend data integration? (0–3)",
+      "UI_MATURITY: How polished is the UI? (0–3)",
+      "MVP_RELEVANCE: How critical for MVP launch? (0–3)"
+    ],
+    total_possible: 12,
+    interpretation: "12 = perfect score (CORE_FEATURE); 10 = high (KEEP); 8–9 = medium (DEFER/NICE_TO_HAVE); <8 = low (POST_MVP/REMOVE)"
+  },
+
+  function_scores: {
+    dashboard: {
+      name: "Dashboard (Oversikt)",
+      user_value: 3,
+      data_support: 3,
+      ui_maturity: 3,
+      mvp_relevance: 3,
+      total: 12,
+      percentile: "100%",
+      classification: "CORE_FEATURE",
+      rationale: "Perfect score; hub page defines product identity; all 6 cards complete and responsive"
+    },
+
+    logprice: {
+      name: "LogPrice (Logg pris)",
+      user_value: 3,
+      data_support: 3,
+      ui_maturity: 3,
+      mvp_relevance: 3,
+      total: 12,
+      percentile: "100%",
+      classification: "CORE_FEATURE",
+      rationale: "Perfect score; crowdsourcing pipeline essential; 4-step workflow + AI + matching complete"
+    },
+
+    statistics: {
+      name: "Statistics (Statistikk)",
+      user_value: 2,
+      data_support: 3,
+      ui_maturity: 3,
+      mvp_relevance: 2,
+      total: 10,
+      percentile: "83%",
+      classification: "KEEP",
+      rationale: "High data support + mature UI; builds credibility; nice-to-have for MVP"
+    },
+
+    profile: {
+      name: "Profile (Profil)",
+      user_value: 2,
+      data_support: 3,
+      ui_maturity: 3,
+      mvp_relevance: 2,
+      total: 10,
+      percentile: "83%",
+      classification: "KEEP",
+      rationale: "Mature UI + full data support; expected UX pattern; supporting feature"
+    },
+
+    pricealerts: {
+      name: "PriceAlerts (Områdevarsler)",
+      user_value: 2,
+      data_support: 3,
+      ui_maturity: 3,
+      mvp_relevance: 1,
+      total: 9,
+      percentile: "75%",
+      classification: "NICE_TO_HAVE / DEFER",
+      rationale: "Fully functional CRUD; secondary feature; can defer if timeline tight"
+    },
+
+    notifications: {
+      name: "Notifications (Varsler)",
+      user_value: 2,
+      data_support: 3,
+      ui_maturity: 2,
+      mvp_relevance: 1,
+      total: 8,
+      percentile: "67%",
+      classification: "DEFER",
+      rationale: "Functional but lower priority; use simpler in-app notifications for MVP Phase 1"
+    },
+
+    settings: {
+      name: "Settings (Innstillinger)",
+      user_value: 1,
+      data_support: 1,
+      ui_maturity: 1,
+      mvp_relevance: 0,
+      total: 3,
+      percentile: "25%",
+      classification: "DEFER / POST_MVP",
+      rationale: "Account deletion stubbed; minimal value; post-MVP candidate"
+    }
+  },
+
+  mvp_tier_structure: {
+    tier_1_must_ship: {
+      priority: "CRITICAL",
+      functions: ["Dashboard", "LogPrice"],
+      justification: "Perfect scores; product cannot launch without these; user journey depends on them",
+      status: "✓ READY — all components complete and functional"
+    },
+
+    tier_2_should_ship: {
+      priority: "HIGH",
+      functions: ["Statistics", "Profile"],
+      justification: "Scores 10/12; expected by users; credibility + UX expectations; low risk",
+      status: "✓ READY — all components complete and functional"
+    },
+
+    tier_3_nice_to_have: {
+      priority: "MEDIUM",
+      functions: ["PriceAlerts"],
+      justification: "Score 9/12; fully functional + polished; non-blocking if timeline tight",
+      status: "✓ READY — can ship or defer without MVP impact"
+    },
+
+    tier_4_post_mvp: {
+      priority: "LOW",
+      functions: ["Notifications", "Settings"],
+      justification: "Scores 8/12 and 3/12; secondary; can use simpler mechanisms; not defining features",
+      status: "⚠ DEFERRABLE — account management especially should not ship incomplete"
+    }
+  },
+
+  structural_findings_summary: {
+    duplicate_functionality: [
+      {
+        issue: "Alert access via 3 paths: Profile → link, ActiveAlertsPreview → CTA, Notifications → 'Se varsler'",
+        severity: "LOW",
+        recommendation: "Remove Notifications link; use Profile card as single entry point"
+      }
+    ],
+
+    dead_ui: [
+      {
+        feature: "Settings account deletion",
+        severity: "MEDIUM",
+        detail: "Dialog renders but backend call stubbed (TODO line 25)",
+        decision_required: "Either complete deletion flow for MVP or remove UI entirely"
+      }
+    ],
+
+    hidden_but_functional: [
+      {
+        feature: "PriceAlerts",
+        visibility: "Deep-linked from Profile; not in main nav",
+        risk: "Users may not discover alerts if they skip Profile card exploration",
+        status: "✓ Acceptable for MVP; can promote to main nav later if engagement warrants"
+      },
+      {
+        feature: "Notifications",
+        visibility: "Accessible via NotificationBell icon (not audited)",
+        risk: "Trigger reason derivation uses fragile regex (keywords from title/message)",
+        status: "⚠ Recommend NotificationBell separate audit before shipping"
+      }
+    ],
+
+    unaudited_subcomponents: [
+      {
+        component: "NotificationBell",
+        status: "CRITICAL TO VERIFY",
+        reason: "Used in primary nav; behavior not verified in this or Entry 83 audit"
+      },
+      {
+        component: "PrivacySettings",
+        status: "SHOULD VERIFY",
+        reason: "Used in Profile; field list and persistence not confirmed"
+      },
+      {
+        component: "PhotoCapture + StationPicker",
+        status: "SHOULD VERIFY",
+        reason: "Critical to LogPrice workflow; GPS error handling not audited"
+      }
+    ]
+  },
+
+  recommendations_for_launch: [
+    {
+      priority: "CRITICAL",
+      action: "SHIP Dashboard + LogPrice as-is",
+      owner: "Product must include both in MVP"
+    },
+    {
+      priority: "HIGH",
+      action: "SHIP Statistics + Profile",
+      owner: "Expected features; minimal risk to include"
+    },
+    {
+      priority: "MEDIUM",
+      action: "EVALUATE PriceAlerts: Include if time, defer if tight timeline",
+      owner: "Product decision based on MVP scope freeze"
+    },
+    {
+      priority: "MEDIUM",
+      action: "DECIDE: Complete OR remove Settings account deletion",
+      owner: "Product decision required before launch; do not ship broken UI"
+    },
+    {
+      priority: "LOW",
+      action: "DEFER Notifications to Phase 2; use simpler alert mechanism for MVP",
+      owner: "Use in-app toast notifications instead of full history"
+    },
+    {
+      priority: "LOW",
+      action: "AUDIT NotificationBell separately before shipping",
+      owner: "Verify component behavior, icon state, dropdown/navigation"
+    }
+  ],
+
+  governance_compliance: {
+    read_only_audit: "✓ No implementation code; analysis and scoring only",
+    frozen_files_untouched: "✓ All 10 Phase 2 functions verified untouched",
+    audit_system_compliance: "✓ Follows AUDIT_SYSTEM_GUIDE; permanent repository record",
+    entry_83_relationship: "✓ Entry 83 = inventory/visibility; Entry 84 = value/prioritization (complementary audits)"
+  },
+
+  audit_artifacts: {
+    file_created: "src/components/audits/ui/ui-function-value-audit-2026-03-11.jsx (588 lines)",
+    index_updated: "src/components/audits/AUDIT_INDEX.jsx (new entry added)",
+    scoring_dimensions: 4,
+    functions_scored: 7,
+    decision_categories: 3
+  },
+
+  next_steps: {
+    audit_distribution: "Audit available in AUDIT_INDEX for MVP planning reference",
+    product_decisions_required: [
+      "Confirm Tier 1 + Tier 2 functions are MVP must-haves",
+      "Decide on PriceAlerts inclusion (Tier 3)",
+      "Resolve Settings account deletion (ship complete or remove)",
+      "Schedule NotificationBell separate audit if shipping Notifications"
+    ],
+    implementation_blocked: "No code changes proposed; audit is decision-support artifact"
+  },
+
+  historical_context: "Follows Phase 2.5 strategic analysis pattern (Entry 83: inventory/visibility, Entry 84: value/prioritization). Provides quantitative scoring basis for MVP scope freeze decisions. Both audits are permanent repository records; findings inform launch planning without implementation."
+};
+
+export default entry_84;
