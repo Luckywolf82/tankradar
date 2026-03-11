@@ -11,6 +11,7 @@ import RecentPricesFeed from "../components/dashboard/RecentPricesFeed";
 import MyFuelDashboard from "../components/dashboard/MyFuelDashboard";
 import QuickReportCard from "../components/dashboard/QuickReportCard";
 import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
+import RouteSavingsCard from "../components/dashboard/RouteSavingsCard";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
