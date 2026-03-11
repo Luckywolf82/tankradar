@@ -68,9 +68,15 @@
  *
  * CATEGORIES
  *
- * architecture/ — Code structure, routing, data flow, component hierarchy
- * ui/           — Interface design, visual consistency, layout, UX clarity
- * governance/   — Phase locks, rule compliance, execution log integrity
+ * architecture/    — Code structure, routing, data flow, component hierarchy, dependencies
+ * ui/              — Interface design, visual consistency, navigation, CTA placement, UX clarity
+ * governance/      — Phase locks, rule compliance, execution log integrity, frozen files
+ * product/         — Feature usefulness, crowdsourcing incentives, retention value, prioritization
+ * activation/      — User onboarding friction, first-value experience, contribution loops, engagement hooks
+ * data/            — Station matching integrity, price plausibility, source reliability, metadata completeness
+ * performance/     — Page load times, expensive queries, rendering inefficiencies, network requests
+ * security/        — Input validation, admin access controls, abuse vectors, authentication boundaries
+ * publishability/  — Google Play readiness, App Store readiness, platform compliance, store submission metadata
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *
