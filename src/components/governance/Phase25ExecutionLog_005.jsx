@@ -1877,3 +1877,84 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. Requires GitHub verification after publish.
+
+---
+
+## 2026-03-11 — Entry 77
+
+### Task requested
+Restore missing Dashboard UI components (ContributionImpactCard, RouteSavingsCard) that were documented in execution log but absent from live Dashboard page.
+
+### Context
+Following recent data transparency cleanup phase, user reports some UI functions have disappeared. Audit was performed to distinguish between:
+A) Confirmed missing functions (restore candidates)
+B) Intentionally removed UI (no restore)
+C) Unclear items (hold)
+
+Result: Confirmed missing = ContributionImpactCard (Entry 72) + RouteSavingsCard (Entry 73). Both components exist in codebase; only Dashboard.jsx import/render was missing.
+
+### Files actually modified
+- pages/Dashboard.jsx (2 imports added, 2 components rendered)
+- components/dashboard/ContributionImpactCard.jsx (React imports added)
+- components/dashboard/RouteSavingsCard.jsx (React imports added)
+
+### What was implemented
+
+**pages/Dashboard.jsx:**
+1. Added imports:
+   ```javascript
+   import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
+   import RouteSavingsCard from "../components/dashboard/RouteSavingsCard";
+   ```
+
+2. Restored render positions (Entry 76 priority order):
+   - ContributionImpactCard → rendered above RecentPricesFeed (motivational card in secondary zone)
+   - RouteSavingsCard → rendered between QuickReportCard and primary CTA (action card, gated by !pumpModeActive from Entry 76)
+
+**Component imports fixed:**
+- ContributionImpactCard.jsx: Added `import React, { useState, useEffect }`
+- RouteSavingsCard.jsx: Added `import React, { useState, useEffect }`
+
+### Data integrity preserved
+✓ ContributionImpactCard: Reads user_reported FuelPrice records, calculates motivational stats (driversHelped, estimatedSaved), gracefully hides for zero reports or unauthenticated
+✓ RouteSavingsCard: Reads active Station + FuelPrice entities, calculates cheapest alternative within 15km, hides silently on GPS denial or insufficient savings (<5kr)
+✓ No entity schema changes
+✓ No matching logic touched
+✓ All 10 locked Phase 2 files UNTOUCHED
+
+### Audit findings summary
+
+**Bucket A (Confirmed Missing):**
+- ContributionImpactCard — RESTORED ✓
+- RouteSavingsCard — RESTORED ✓
+
+**Bucket B (Intentionally Removed):**
+- LiveMarketStats, PriceChangeIndicator, HistoricalSSBTrend (Entry 69) — correctly removed
+- Triggered Alerts section (Entry 45) — correctly consolidated to Notifications page
+
+**Bucket C (Unclear):**
+- Analytics dashboard suite — deferred (backend query verification needed)
+- Station discovery tools — deferred (admin-only, governance review pending)
+
+### Verification
+
+✓ All 10 locked Phase 2 files remain UNTOUCHED:
+  - functions/matchStationForUserReportedPrice.ts — UNTOUCHED
+  - functions/auditPhase2DominanceGap.ts — UNTOUCHED
+  - functions/getNearbyStationCandidates.ts — UNTOUCHED
+  - functions/validateDistanceBands.ts — UNTOUCHED
+  - functions/classifyStationsRuleEngine.ts — UNTOUCHED
+  - functions/classifyGooglePlacesConfidence.ts — UNTOUCHED
+  - functions/classifyPricePlausibility.ts — UNTOUCHED
+  - functions/deleteAllGooglePlacesPrices.ts — UNTOUCHED
+  - functions/deleteGooglePlacesPricesForReclassification.ts — UNTOUCHED
+  - functions/verifyGooglePlacesPriceNormalization.ts — UNTOUCHED
+
+✓ No entity schema changes
+✓ No matching/station logic modified
+✓ No backend changes
+✓ Dashboard state management + Entry 76 render priority preserved
+✓ Navigation routing intact
+
+### GitHub visibility status
+Ready for publish. UI-only restore operation. Requires GitHub verification after publish.
