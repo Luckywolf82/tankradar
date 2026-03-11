@@ -13,12 +13,12 @@
 // User must explicitly override NEXT_SAFE_STEP to propose a different step.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_67",
+  id: "phase25_step_68",
 
   title: "Await explicit user direction — no pre-authorized next step",
 
   description:
-    "Entry 66 (selected-station summary block with Bytt stasjon) is the last pre-authorized improvement. " +
+    "Entry 67 (dashboard UI simplification pass) is the last pre-authorized improvement. " +
     "No further implementation step has been approved. " +
     "AI must not propose or implement any new step until the user explicitly defines the next task.",
 
@@ -51,7 +51,7 @@ export const NEXT_SAFE_STEP = {
 
   status: "awaiting_user_direction",
   approvedDate: "2026-03-11",
-  linkedEntries: [61, 62, 63, 64, 65, 66]
+  linkedEntries: [61, 62, 63, 64, 65, 66, 67]
 };
 
 export default NEXT_SAFE_STEP;

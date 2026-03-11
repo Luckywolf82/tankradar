@@ -1445,3 +1445,64 @@ All 10 locked Phase 2 files remain UNTOUCHED.
 
 ### GitHub visibility status
 Ready for publish. UI-only changes in ConfirmPrice.jsx + 1-line prop pass in LogPrice.jsx. Requires GitHub verification after publish.
+
+---
+
+## Entry 67 — 2026-03-11
+
+### Action
+Dashboard UI simplification pass — reduced visual clutter, strengthened hierarchy, consolidated premium messaging, fixed enum label leaks.
+
+### Files modified
+- `pages/Dashboard.jsx`
+- `components/dashboard/SmartFillIndicator.jsx`
+- `components/dashboard/LiveMarketStats.jsx`
+- `components/dashboard/PriceChangeIndicator.jsx`
+- `components/dashboard/MyFuelDashboard.jsx`
+
+### Changes applied
+
+**pages/Dashboard.jsx**
+- Single primary CTA: "Logg pris" now full-width on mobile, standalone above fuel selector
+- "Detaljert analyse" button removed from top header (already in nav)
+- "Live markedspriser nå" section heading removed (redundant with card titles)
+- Market stats section heading removed; grid gap reduced 6→4
+- MyFuelDashboard moved below NearbyPrices + RecentPricesFeed (action content first)
+- SSB card title downgraded to `text-sm font-semibold text-slate-600`; subtitle removed; SSB section header replaced with inline "Se full analyse →" link
+- All `mb-8` reduced to `mb-6` for tighter vertical rhythm
+
+**SmartFillIndicator.jsx**
+- Raw enum leak fixed: `"observed prices (realistic_price)"` → `"sanntidspriser fra Google Places"`
+- Observation count (`N obs.`) removed from visible UI
+- "UPPERCASE TRACKING WIDE" labels → plain `text-xs text-slate-500`
+- Deviation inner box removed; replaced with single colored line
+- `kr/l` unit moved inline with price value
+
+**LiveMarketStats.jsx**
+- Three colored inner boxes replaced with flat two-value layout (Snitt + Median)
+- Remaining stats (Billigste / Dyreste / Prisgap) presented as plain list with divider
+- All colored inner-box borders removed
+
+**PriceChangeIndicator.jsx**
+- Duplicate weak-data warning consolidated: header badge only (body italic text removed)
+- Raw observation counts `(N obs.)` removed from body text
+- Icon size reduced 32→28
+
+**MyFuelDashboard.jsx**
+- Section title "Min drivstoff" → "Mine stasjoner" (clearer)
+- Removed "X av Y favoritter brukt" subtitle
+- Premium upsell consolidated: two simultaneous FreemiumBanners → single contextual banner
+
+### Why this is governance-safe
+✓ No data logic changed
+✓ No entity schema changes
+✓ No backend changes
+✓ No matching logic touched
+✓ All 10 locked Phase 2 files UNTOUCHED
+✓ No new features — display/presentation only
+
+### Locked file verification
+All 10 locked Phase 2 files remain UNTOUCHED.
+
+### GitHub visibility status
+Ready for publish. UI-only across 5 files. Requires GitHub verification after publish.
