@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, MapPin, Fuel, Loader2 } from "lucide-react";
+import { CheckCircle, MapPin, Fuel, Loader2, ArrowLeftRight } from "lucide-react";
 
 const CHAINS = ["Circle K", "Uno-X", "Esso", "Shell", "YX", "Best", "Annet"];
 const FUEL_TYPES = [
