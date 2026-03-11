@@ -5,6 +5,10 @@ import { Bell, Trash2, Eye, EyeOff, Plus, Loader2, MapPin } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 
+// CANONICAL ALERT MODEL
+// PriceAlert is the only active alert model.
+// UserPriceAlert exists only for historical reference and must not be used.
+
 export default function PriceAlertsPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
