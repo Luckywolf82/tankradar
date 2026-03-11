@@ -3,31 +3,49 @@
 // AI agents MUST read this file before proposing any new implementation.
 
 export const NEXT_SAFE_STEP = {
-  id: "phase25_step_82",
+  id: "phase25_step_88",
 
-  title: "UI Restoration Audit Complete — Dashboard, Statistics, Layout all functional",
+  title: "Activation & Contribution Loop Audit — Next Safe Workstream",
 
   description:
-    "Entry 82 (UI Restoration Audit): Comprehensive audit of Dashboard.jsx, Statistics.jsx, and Layout.jsx " +
-    "conducted per user explicit override of NextSafeStep. Result: All three pages fully functional and complete. " +
-    "Bucket A (broken/incomplete): NONE — ContributionImpactCard + RouteSavingsCard already restored in Entries 76–77; " +
-    "data transparency labels already applied in Entry 80. " +
-    "Bucket B (intentionally simplified): Confirmed — LiveMarketStats, PriceChangeIndicator, MyFuelDashboard correctly removed per governance consolidations. " +
-    "Bucket C (unclear): Deferred — Advanced analytics suite + admin archive route protection held for explicit user direction. " +
-    "No code changes made. Dashboard, Statistics, and navigation ready for production use. " +
-    "User can proceed with normal development or request specific UI enhancements per next explicit instruction.",
+    "Entry 88 (NextSafeStep Governance Audit): Repository state analyzed across 7 completed execution log entries (82–87A), " +
+    "audit system, idea bank, and UI pages. Findings: All core UI functional (Entry 82), comprehensive audits in place (Entries 83–86), " +
+    "audit system expanded to 9 categories (Entry 87), idea bank with 6 candidate ideas created (Entry 87-A). " +
+    "DECISION: Next safe step is ACTIVATION AUDIT of first-value experience and price-reporting contribution loop. " +
+    "Why: (1) Low risk — pure analysis, no code changes; (2) High impact — Entry 86 identified activation as critical to crowdsourcing; " +
+    "(3) Directly actionable — findings can drive immediate engagement improvements; (4) Unblocked — no infrastructure dependencies; " +
+    "(5) Aligns with roadmap — Entry 85 deferred advanced analytics; Entry 86 recommended activation focus. " +
+    "Recommended audit category: activation (user onboarding friction, time-to-first-contribution, engagement mechanics). " +
+    "Audit should analyze: (a) LogPrice 4-step flow efficiency; (b) SubmitPriceCard CTA effectiveness; (c) PumpModeCard contextual triggering; " +
+    "(d) ContributionImpactCard gamification; (e) Onboarding clarity + feature discovery + first-value realization timeline. " +
+    "No code changes proposed. Ready for explicit user direction to proceed with audit or request alternative workstream.",
 
   files: [],
 
   goals: [
-    "UI audit complete — all core user pages functional",
-    "await next explicit user task (new feature, bug fix, or enhancement)"
+    "Activate Governance Audit workflow: Audit System → Idea Bank → Product Ideas",
+    "Analyze first-value experience and contribution loop per activation audit category",
+    "Identify friction points + optimization opportunities in LogPrice flow + Dashboard CTAs",
+    "Generate actionable findings for product team to drive engagement + crowdsourcing participation"
   ],
 
   constraints: [
-    "do NOT propose changes to frozen Phase-2 files",
-    "do NOT implement beyond explicit user instruction",
-    "do NOT modify UI without clear user request"
+    "do NOT implement features — audit analysis only",
+    "do NOT modify frozen Phase-2 matching engine files",
+    "do NOT change runtime business logic",
+    "do NOT bundle with other workstreams"
+  ],
+
+  recommendedAuditType: "activation",
+
+  auditFocusAreas: [
+    "LogPrice workflow: 4-step efficiency, AI extraction robustness, station matching accuracy",
+    "SubmitPriceCard CTA: copy effectiveness, color/positioning, tap-through rate optimization",
+    "PumpModeCard: proximity detection trigger clarity, onboarding messaging",
+    "ContributionImpactCard: impact calculation transparency, gamification mechanics, streak mechanics",
+    "First-value realization: how quickly can new user see their contribution matter?",
+    "Feature discovery: how do users learn about LogPrice, PumpMode, Alerts?",
+    "Retention drivers: what keeps users coming back daily/weekly to report prices?"
   ],
 
   governanceRule: {
@@ -44,11 +62,12 @@ export const NEXT_SAFE_STEP = {
       "Always verify activeChunk field in Index before appending — do not assume chunk number."
   },
 
-  status: "audit_complete_awaiting_next_task",
+  status: "ready_for_audit",
   approvedDate: "2026-03-11",
   auditDate: "2026-03-11",
-  completedEntries: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81],
-  auditEntry: 82
+  governanceAuditEntry: 88,
+  completedEntries: [82, 83, 84, 85, 86, 87, 87],
+  readyForNextStep: true
 };
 
 export default NEXT_SAFE_STEP;
