@@ -10,7 +10,8 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-11T17:30:00Z",
+  lastUpdated: "2026-03-11T18:30:00Z",
+  taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
     {
