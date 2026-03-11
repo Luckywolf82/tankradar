@@ -57,21 +57,31 @@ export function OptimisticSuccess({
                   <CheckCircle className="mx-auto text-green-500" size={56} />
                 </motion.div>
                 <h2 className="text-2xl font-bold text-slate-800 mb-2">Pris registrert ✔</h2>
-                <p className="text-slate-600 font-medium mb-2">Du sparer bilister i området estimert penger</p>
+                {stationName && (
+                  <p className="text-slate-500 text-sm mb-1">{stationName}</p>
+                )}
                 <p className="text-slate-500 text-sm mb-6">Takk for bidraget ditt!</p>
                 {isLoading && (
                   <p className="text-xs text-slate-400 mb-4">Sender data...</p>
                 )}
-                <div className="flex gap-3 justify-center">
-                  <Button variant="outline" onClick={() => {
-                    onReset?.();
-                    onDismiss?.();
-                  }}>
-                    Logg en til
-                  </Button>
-                  <Link to={createPageUrl("Dashboard")}>
-                    <Button className="bg-blue-600 hover:bg-blue-700">Se statistikk</Button>
-                  </Link>
+                <div className="flex flex-col gap-2">
+                  {onRepeatSameStation && (
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 w-full gap-2"
+                      onClick={() => { onRepeatSameStation?.(); onDismiss?.(); }}
+                    >
+                      <RefreshCw size={16} />
+                      Logg en til på samme stasjon
+                    </Button>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => { onReset?.(); onDismiss?.(); }}>
+                      Ny stasjon
+                    </Button>
+                    <Link to={createPageUrl("Dashboard")} className="flex-1">
+                      <Button className="bg-blue-600 hover:bg-blue-700 w-full">Se statistikk</Button>
+                    </Link>
+                  </div>
                 </div>
               </>
             )}
