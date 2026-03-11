@@ -133,6 +133,7 @@
  * Rule 2: Fact vs. Speculation
  *   State only observations from code review.
  *   Mark unknowns and assumptions explicitly.
+ *   Label evidence level: code-observed, reasoned-inference, requires-telemetry, user-experience-hypothesis.
  *
  * Rule 3: Permanent Record
  *   Audits are stored forever in repository.
@@ -147,6 +148,12 @@
  *   Some Phase 2 files are locked and read-only.
  *   Verify frozen files list before creating audit.
  *   See: AI_PROJECT_INSTRUCTIONS.jsx
+ *
+ * Rule 6: Evidence Levels for Major Claims
+ *   code-observed           — directly visible in source code
+ *   reasoned-inference      — logical deduction from code patterns
+ *   requires-telemetry      — needs user behavior data to verify
+ *   user-experience-hypothesis — user testing or design assumption
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *
