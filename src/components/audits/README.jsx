@@ -14,19 +14,19 @@ This directory (`src/components/audits/`) is the **canonical location** for all 
 
 ```
 src/components/audits/
-├── README.md                    (this file — overview)
+├── README.jsx                   (this file — overview)
 ├── AUDIT_INDEX.jsx              (canonical index registry)
 │
 ├── ui/
-│   ├── README.md                (UI audit guidelines)
+│   ├── README.jsx               (UI audit guidelines)
 │   └── {topic}-ui-audit-YYYY-MM-DD.jsx   (individual UI audits)
 │
 ├── architecture/
-│   ├── README.md                (architecture audit guidelines)
+│   ├── README.jsx               (architecture audit guidelines)
 │   └── {topic}-architecture-audit-YYYY-MM-DD.jsx  (individual audits)
 │
 └── governance/
-    ├── README.md                (governance audit guidelines)
+    ├── README.jsx               (governance audit guidelines)
     └── {topic}-governance-audit-YYYY-MM-DD.jsx   (individual audits)
 ```
 
