@@ -57,17 +57,11 @@ export default function Dashboard() {
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
         <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
-        {/* Pump Mode — activates when user is ≤150m from a station */}
-        <PumpModeCard />
+        {/* Pump Mode — activates when user is ≤150m from a station (highest priority) */}
+        <PumpModeCard onActivate={setPumpModeActive} />
 
-        {/* Quick Report — nearest station shortcut */}
-        <QuickReportCard />
-
-        {/* Contribution impact */}
-        <ContributionImpactCard />
-
-        {/* Route savings */}
-        <RouteSavingsCard selectedFuel={selectedFuel} />
+        {/* Quick Report — only shown when PumpMode is not active */}
+        {!pumpModeActive && <QuickReportCard />}
 
         {/* Primary CTA */}
         <div className="mb-5">
