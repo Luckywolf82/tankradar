@@ -1,4 +1,4 @@
-# AI_STATE.md — TankRadar Governance Pointer
+# AI_STATE.jsx — TankRadar Governance Pointer
 
 **Last Updated:** 2026-03-11T14:00:00Z
 
