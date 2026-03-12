@@ -206,7 +206,7 @@ export const AUDIT_INDEX = {
 
   categoryBreakdown: {
     architecture: 4,
-    ui: 3,
+    ui: 4,
     governance: 2,
     product: 3,
     activation: 3,
@@ -214,7 +214,7 @@ export const AUDIT_INDEX = {
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 16
+    total: 17
   },
 
   governanceRules: {
