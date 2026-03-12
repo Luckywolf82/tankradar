@@ -1,9 +1,23 @@
 /*
-TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.1
+TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.2
 Canonical Roadmap Manager with Weighted Stability
 
-Last updated:   2026-03-12 (Entry 102 — Roadmap Governor refinement pass)
-Replaces:       ROADMAP v4.0 (Entry 101 — Roadmap Governor pass)
+Last updated:   2026-03-12 (Entry 103 — scoping-required status pass)
+Replaces:       ROADMAP v4.1 (Entry 102 — Roadmap Governor refinement pass)
+
+CHANGE LOG vs v4.2:
+  - New status level introduced: scoping-required
+      Definition: strategically valid, likely to be built, but requires a
+      design/scoping pass before implementation can begin.
+      Distinct from: planned (ambiguous readiness), blocked (infra missing),
+      build-ready (can start immediately).
+  - community-price-verification reclassified: planned → scoping-required
+      Reason: requires trust-model + confidence-scoring design before sprint
+  - community-station-validation reclassified: planned → scoping-required
+      Reason: requires user-trust-model + validation-model design before sprint
+  - ACTIONABLE_PRIORITY_ORDER action wording updated for both features
+  - NEXT_ACTIONS recommendedBuildSequence notes updated for steps 3 and 4
+  - GOVERNANCE updated: statusDefinitions added, v42Changes documented
 
 CHANGE LOG vs v4.0:
   - Verification language corrected: admin files were referenced, not directly read in v4.0 pass
@@ -69,6 +83,33 @@ export const SCORING_MODEL = {
     singleAuditCap: "ONE STEP only — cannot jump multiple phases from one audit alone",
   },
   scoringNote: "Raw score 0–5.0, ×5 for display (0–25). Stability-adjusted score is authoritative for priority ordering.",
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATUS DEFINITIONS
+// Canonical reference for all valid feature status values.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const STATUS_DEFINITIONS = {
+  completed: "Shipped and live. No further action required unless regression is detected.",
+  active: "Built and live, under ongoing iteration and improvement.",
+  "build-ready": "Implementation can begin immediately. No design prerequisites. No blocking infra gaps.",
+  "scoping-required": [
+    "Strategically valid and likely to be built.",
+    "Scores highly on the weighted model.",
+    "NOT blocked by long-term infrastructure constraints.",
+    "BUT requires a dedicated design/scoping pass before implementation sprint can begin.",
+    "Typical scoping work: trust-model design, API contract, routing library decision, privacy architecture.",
+    "DISTINCT FROM planned — planned has no readiness signal. scoping-required is an explicit gate.",
+    "DISTINCT FROM build-ready — build-ready means start now. scoping-required means scope first.",
+    "DISTINCT FROM blocked — blocked means infra is missing. scoping-required means design is missing.",
+    "Transition path: scoping-required → (scoping pass completed) → build-ready → (sprint) → active/completed",
+  ],
+  planned: "Intended to be built at some point. No readiness assessment performed yet.",
+  dependent: "Cannot start until a specific other feature ships first.",
+  blocked: "Cannot start until missing infrastructure, data, or external dependency is resolved.",
+  partial: "Partially buildable now; full feature requires unresolved dependencies.",
+  deferred: "Deprioritized due to risk, complexity, or strategic timing. Revisit in a future pass.",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -291,7 +332,9 @@ export const FEATURES = [
     phase: 3,
     category: "crowdsourcing",
     description: "Allow users to verify or dispute existing prices — weighted trust signals improve data confidence without full moderation overhead",
-    status: "planned",
+    status: "scoping-required",  // v4.2: was "planned". Reclassified because trust-model + confidence-scoring
+                                  // design must be completed before implementation sprint can begin.
+                                  // Not blocked by infra — blocked by design gap only.
     userValueImportance:   3,
     dataQualityImportance: 5,
     adminUiImportance:     3,
@@ -311,7 +354,9 @@ export const FEATURES = [
     phase: 3,
     category: "crowdsourcing",
     description: "Let trusted contributors validate station details (name, chain, address, GPS) — crowdsourced mastering quality without curator bottleneck",
-    status: "planned",
+    status: "scoping-required",  // v4.2: was "planned". Reclassified because user-trust-model +
+                                  // validation-model design must be completed before sprint.
+                                  // Shares trust-model prerequisite with community-price-verification.
     userValueImportance:   2,
     dataQualityImportance: 5,
     adminUiImportance:     4,
@@ -747,21 +792,21 @@ export const ACTIONABLE_PRIORITY_ORDER = [
   {
     rank: 7,
     id: "community-price-verification",
-    status: "planned",
+    status: "scoping-required",  // v4.2
     adjustedScore: 3.75,
-    action: "BUILD — highest adjusted score in Phase 3. Requires trust-model design before sprint. Scope first, then build.",
+    action: "SCOPE — run trust-model + confidence-scoring design pass. Then move to build-ready. Do not start implementation sprint without completed scoping.",
     highestScoringPhase3: true,
     adminEscalationActive: true,
-    prerequisite: "Design trust-model and confidence-scoring logic before implementation sprint",
+    scopingRequired: "Trust-model design: how are user verifications weighted? Confidence-scoring logic: how does a verification update priceNok confidence? These must be decided before UI/backend sprint.",
   },
   {
     rank: 8,
     id: "community-station-validation",
-    status: "planned",
+    status: "scoping-required",  // v4.2
     adjustedScore: 3.65,
-    action: "BUILD — after community-price-verification design is settled",
+    action: "SCOPE — run validation-model design pass after community-price-verification scoping settles. Shares trust-model prerequisite.",
     adminEscalationActive: true,
-    prerequisite: "user-trust-model must be established first",
+    scopingRequired: "Validation model: which fields are crowdsource-editable? How are conflicting contributor edits resolved? Trust threshold for auto-apply vs. curator queue?",
   },
   {
     rank: 9,
@@ -937,8 +982,8 @@ export const NEXT_ACTIONS = {
   recommendedBuildSequence: [
     { step: 1, id: "admin-operations-panel-integration", effort: "2–4 hours", score: 3.50, note: "Admin fix — do first, unblocks governance" },
     { step: 2, id: "fuel-savings-tracker",               effort: "2–3 days",  score: 3.70, note: "Recommended next ship — zero prerequisites" },
-    { step: 3, id: "community-price-verification",       effort: "3–5 days",  score: 3.75, note: "Design trust-model first, then build" },
-    { step: 4, id: "community-station-validation",       effort: "3–5 days",  score: 3.65, note: "After community-price-verification design settles" },
+    { step: 3, id: "community-price-verification",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.75, note: "STATUS: scoping-required. Run trust-model + confidence-scoring design pass first, then move to build-ready." },
+    { step: 4, id: "community-station-validation",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.65, note: "STATUS: scoping-required. Scoping can overlap with step 3. Shares trust-model prerequisite." },
     { step: 5, id: "gamification-system",                effort: "2–3 days",  score: 3.30, note: "After fuel-savings-tracker ships" },
     { step: 6, id: "driver-leaderboard",                 effort: "2–3 days",  score: 3.30, note: "After gamification-system, requires privacy plan" },
     { step: 7, id: "fill-historikk",                     effort: "1–2 days",  score: 3.70, note: "Phase 4 — pull forward after Phase 3 user features ship" },
@@ -1022,10 +1067,25 @@ export const NORTH_STAR_FEATURES = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const GOVERNANCE = {
-  version: "4.1",
+  version: "4.2",
   lastUpdated: "2026-03-12",
-  updatedBy: "Roadmap Governor — Entry 102 (v4.1 refinement pass)",
-  previousVersion: "4.0 (Entry 101 — Roadmap Governor pass)",
+  updatedBy: "Roadmap Governor — Entry 103 (v4.2 scoping-required pass)",
+  previousVersion: "4.1 (Entry 102 — Roadmap Governor refinement pass)",
+
+  v42Changes: [
+    "1. NEW STATUS LEVEL: scoping-required added to STATUS_DEFINITIONS and stabilityContract.",
+    "   Definition: strategically valid, likely to be built, but requires a design/scoping pass before implementation.",
+    "   Distinct from: planned (no readiness signal), build-ready (start now), blocked (infra missing).",
+    "   Transition path: scoping-required → (scoping pass) → build-ready → (sprint) → active/completed.",
+    "2. community-price-verification reclassified: planned → scoping-required.",
+    "   Reason: requires trust-model + confidence-scoring design decision before implementation sprint.",
+    "3. community-station-validation reclassified: planned → scoping-required.",
+    "   Reason: requires validation-model design (editable fields, conflict resolution, trust threshold) before sprint.",
+    "4. ACTIONABLE_PRIORITY_ORDER action wording updated for both: 'SCOPE — run design pass, then build-ready'.",
+    "5. NEXT_ACTIONS recommendedBuildSequence effort + notes updated for steps 3 and 4.",
+    "6. STATUS_DEFINITIONS export added as canonical reference for all valid status values.",
+    "NO CHANGES: weights, phase baseline, scoring model values, priority order ranks, completed trace, blocked/north-star logic.",
+  ],
 
   v41Changes: [
     "1. EVIDENCE WORDING CORRECTED — v4.0 claimed direct inspection of admin files that were only referenced. v4.1 clearly distinguishes: directly read, referenced, inferred.",
@@ -1042,6 +1102,8 @@ export const GOVERNANCE = {
     "Features may only be promoted one phase step at a time without explicit human approval",
     "Admin UI importance must be explicitly evaluated in every scoring pass",
     "adminEscalationBonus is temporary — must be removed per feature once its gap is resolved",
+    "scoping-required is a first-class status — do not silently treat it as planned or build-ready",
+    "scoping-required → build-ready promotion requires: explicit scoping output documented before sprint start",
   ],
 
   frozenFilesModified: "NONE",
@@ -1067,6 +1129,7 @@ export const GOVERNANCE = {
 
 export default {
   SCORING_MODEL,
+  STATUS_DEFINITIONS,
   PHASE_BASELINE,
   FEATURES,
   COMPLETED_TRACE,
