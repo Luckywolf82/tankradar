@@ -26,6 +26,7 @@ import SystemHealthDashboard from "../components/admin/SystemHealthDashboard";
 import Phase2MatchingPreviewPanel from "../components/admin/Phase2MatchingPreviewPanel";
 import Phase2MatchingAuditPanel from "../components/admin/Phase2MatchingAuditPanel";
 import Phase2MatchingTestHarness from "../components/admin/Phase2MatchingTestHarness";
+import RoadmapAdminPanel from "../components/admin/RoadmapAdminPanel";
 
 // ─── Link grids ──────────────────────────────────────────────────────────────
 
