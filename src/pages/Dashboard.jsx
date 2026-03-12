@@ -56,6 +56,9 @@ export default function Dashboard() {
               {/* Pump Mode — activates when user is ≤150m from a station (position 2) */}
               <PumpModeCard onActivate={setPumpModeActive} />
 
+              {/* National Fuel Barometer — price context vs. 30-day historical */}
+              <NationalFuelBarometer />
+
               {/* Contribution Impact — user's reporting stats */}
               <ContributionImpactCard />
 
