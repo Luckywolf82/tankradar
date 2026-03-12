@@ -661,51 +661,233 @@ export const FEATURES = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CURRENT PRIORITY ORDER
-// Ordered by: phase sequence first, then stability-adjusted score within/across adjacent phases.
-// Completed items listed for traceability but not actionable.
+// COMPLETED_TRACE
+// Purpose: preserve roadmap history and shipped milestones — not for operational decision-making.
+// Do not reference this list to determine what to build next.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const CURRENT_PRIORITY_ORDER = [
+export const COMPLETED_TRACE = [
+  { id: "station-matching-engine",    phase: 1, status: "completed", note: "Matching engine ships. Conservative strategy confirmed." },
+  { id: "station-candidate-pipeline", phase: 1, status: "completed", note: "Candidate ingestion + classification pipeline live." },
+  { id: "prisrapportering",           phase: 2, status: "completed", note: "4-step LogPrice flow live. Core crowdsourcing loop operational." },
+  { id: "national-fuel-barometer",    phase: 2, status: "completed", completedDate: "2026-03-12", note: "Shipped. Component: components/dashboard/NationalFuelBarometer.jsx. Bensin/Diesel toggle, 3-band bar, SSBData historical comparison." },
+];
 
-  // ── PHASE 1 (completed / active) ─────────────────────────────────────────
-  { rank: 1,  id: "station-matching-engine",             status: "completed",  score: 3.35, action: "DONE" },
-  { rank: 2,  id: "station-candidate-pipeline",          status: "completed",  score: 3.50, action: "DONE" },
-  { rank: 3,  id: "governance-stabilisering",            status: "active",     score: 3.35, action: "ONGOING — never fully done" },
-  { rank: 4,  id: "admin-operations-panel-integration",  status: "planned",    score: 3.50, action: "▶ NEXT IMMEDIATE — Wire AdminOperationsPanel + MasteringMetrics into SuperAdmin tabs" },
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTIONABLE_PRIORITY_ORDER
+// Purpose: What should be worked on NOW or NEXT.
+// Contains only: active, planned, build-ready, partial, dependent items.
+// Ordered by: phase sequence first, then stability-adjusted score.
+//
+// IMPORTANT DISTINCTION:
+//   highestScoringFeature ≠ recommendedNextShip
+//   The highest adjusted score identifies the strongest candidate, but
+//   recommended next ship must also consider: readiness, sequencing, admin
+//   foundations, and whether the previous ship has settled.
+//   See NEXT_ACTIONS for the explicit separation.
+// ─────────────────────────────────────────────────────────────────────────────
 
-  // ── PHASE 2 (completed / active) ─────────────────────────────────────────
-  { rank: 5,  id: "national-fuel-barometer",             status: "completed",  score: 3.90, action: "DONE — shipped 2026-03-12" },
-  { rank: 6,  id: "prisrapportering",                    status: "completed",  score: 3.95, action: "DONE" },
-  { rank: 7,  id: "billigste-drivstoff-naerheten",       status: "active",     score: 3.40, action: "ACTIVE — improve coverage" },
-  { rank: 8,  id: "prisvarsler",                         status: "active",     score: 3.35, action: "ACTIVE — iterate on alert types" },
-  { rank: 9,  id: "favorittstasjoner",                   status: "active",     score: 2.90, action: "ACTIVE" },
+export const ACTIONABLE_PRIORITY_ORDER = [
 
-  // ── PHASE 3 (growth engine) ───────────────────────────────────────────────
-  { rank: 10, id: "community-price-verification",        status: "planned",    score: 3.75, action: "BUILD — Phase 3 priority #1 (highest adj. score in phase)" },
-  { rank: 11, id: "community-station-validation",        status: "planned",    score: 3.65, action: "BUILD — Phase 3 priority #2" },
-  { rank: 12, id: "fuel-savings-tracker",                status: "build-ready",score: 3.70, action: "BUILD — Phase 3 priority #3 (strongest user retention hook)" },
-  { rank: 13, id: "price-war-alerts",                    status: "blocked",    score: 2.80, action: "MONITOR — unblocks when station-level coverage improves" },
-  { rank: 14, id: "gamification-system",                 status: "build-ready",score: 3.30, action: "BUILD — Phase 3, after savings-tracker" },
-  { rank: 15, id: "driver-leaderboard",                  status: "build-ready",score: 3.30, action: "BUILD — Phase 3, requires opt-in + anonymization plan" },
-  { rank: 16, id: "fuel-price-heatmap",                  status: "partial",    score: 3.30, action: "BUILD regional MVP only — defer station pin layer" },
-  { rank: 17, id: "tankradar-score",                     status: "dependent",  score: 2.25, action: "AFTER fuel-savings-tracker + gamification-system" },
+  // ── PHASE 1 — ongoing / planned ──────────────────────────────────────────
+  {
+    rank: 1,
+    id: "governance-stabilisering",
+    status: "active",
+    adjustedScore: 3.35,
+    action: "ONGOING — governance is never fully done; maintain execution log and audit system",
+  },
+  {
+    rank: 2,
+    id: "admin-operations-panel-integration",
+    status: "planned",
+    adjustedScore: 3.50,
+    action: "▶ NEXT IMMEDIATE — Wire AdminOperationsPanel + MasteringMetrics into SuperAdmin tabs. 2–4 hours. Zero new code. Admin escalation bonus active — gap is open.",
+    adminEscalationActive: true,
+    adminGapNote: "Gap inferred from v4.0 roadmap findings (admin files referenced, not directly read in this pass).",
+  },
 
-  // ── PHASE 4 (decision intelligence) ──────────────────────────────────────
-  { rank: 18, id: "fill-historikk",                      status: "build-ready",score: 3.70, action: "BUILD — Phase 4, pure UI, unlocks bilokonomi + tankradar-score" },
-  { rank: 19, id: "bilokonomi-dashboard",                status: "dependent",  score: 2.40, action: "AFTER fill-historikk ships" },
-  { rank: 20, id: "route-fuel-intelligence",             status: "blocked",    score: 2.30, action: "PLAN routing library decision — Phase 4 hero feature" },
-  { rank: 21, id: "favorite-route-alerts",               status: "blocked",    score: 2.00, action: "AFTER route-fuel-intelligence routing layer" },
+  // ── PHASE 2 — active, improving ──────────────────────────────────────────
+  {
+    rank: 3,
+    id: "billigste-drivstoff-naerheten",
+    status: "active",
+    adjustedScore: 3.40,
+    action: "ACTIVE — iterate on coverage and distance accuracy",
+  },
+  {
+    rank: 4,
+    id: "prisvarsler",
+    status: "active",
+    adjustedScore: 3.35,
+    action: "ACTIVE — iterate on alert types and notification delivery",
+  },
+  {
+    rank: 5,
+    id: "favorittstasjoner",
+    status: "active",
+    adjustedScore: 2.90,
+    action: "ACTIVE — maintain, low iteration priority",
+  },
 
-  // ── PHASE 5 (predictive) ─────────────────────────────────────────────────
-  { rank: 22, id: "naar-loenner-det-seg",                status: "blocked",    score: 2.00, action: "NORTH STAR — revisit when 6-months station-level data available" },
-  { rank: 23, id: "price-drop-predictor",                status: "blocked",    score: 2.00, action: "NORTH STAR — same blocker as naar-loenner-det-seg" },
+  // ── PHASE 3 — growth engine builds ───────────────────────────────────────
+  // Note: community-price-verification scores highest (3.75) due to admin escalation.
+  // However fuel-savings-tracker is the recommended next USER-FACING ship because it
+  // is purely build-ready, zero scoping risk, and immediately visible to users.
+  // Community features require trust-model design before implementation.
+  // See NEXT_ACTIONS for explicit recommendedNextShip.
+  {
+    rank: 6,
+    id: "fuel-savings-tracker",
+    status: "build-ready",
+    adjustedScore: 3.70,
+    action: "BUILD — recommended next user-facing ship. Highest build-ready user score. Zero infra.",
+    recommendedNextShip: true,
+  },
+  {
+    rank: 7,
+    id: "community-price-verification",
+    status: "planned",
+    adjustedScore: 3.75,
+    action: "BUILD — highest adjusted score in Phase 3. Requires trust-model design before sprint. Scope first, then build.",
+    highestScoringPhase3: true,
+    adminEscalationActive: true,
+    prerequisite: "Design trust-model and confidence-scoring logic before implementation sprint",
+  },
+  {
+    rank: 8,
+    id: "community-station-validation",
+    status: "planned",
+    adjustedScore: 3.65,
+    action: "BUILD — after community-price-verification design is settled",
+    adminEscalationActive: true,
+    prerequisite: "user-trust-model must be established first",
+  },
+  {
+    rank: 9,
+    id: "gamification-system",
+    status: "build-ready",
+    adjustedScore: 3.30,
+    action: "BUILD — after fuel-savings-tracker ships. Extends existing ContributionImpactCard + StreakCounter.",
+  },
+  {
+    rank: 10,
+    id: "driver-leaderboard",
+    status: "build-ready",
+    adjustedScore: 3.30,
+    action: "BUILD — after gamification-system. Requires opt-in display + anonymization plan.",
+  },
+  {
+    rank: 11,
+    id: "fuel-price-heatmap",
+    status: "partial",
+    adjustedScore: 3.00,
+    action: "BUILD regional heat zone MVP only — after gamification + leaderboard ship. Nice-to-have visual, not a user-value priority.",
+    priorityNote: "v4.1: Scored down from 3.30 → 3.00. Build after stronger user-value features.",
+  },
+  {
+    rank: 12,
+    id: "tankradar-score",
+    status: "dependent",
+    adjustedScore: 2.25,
+    action: "AFTER fuel-savings-tracker + gamification-system ship",
+  },
 
-  // ── PHASE 6 (platform expansion) ─────────────────────────────────────────
-  { rank: 24, id: "receipt-import",                      status: "deferred",   score: 2.30, action: "DEFERRED — privacy architecture review first" },
-  { rank: 25, id: "fleet-mode",                          status: "blocked",    score: 2.20, action: "BLOCKED — consumer product must mature" },
-  { rank: 26, id: "fuel-data-api",                       status: "blocked",    score: 1.50, action: "BLOCKED — data quality + legal terms required" },
-  { rank: 27, id: "ev-fuel-hybrid",                      status: "planned",    score: 1.40, action: "PLANNED — no data source evaluated yet" },
+  // ── PHASE 4 — decision intelligence ──────────────────────────────────────
+  {
+    rank: 13,
+    id: "fill-historikk",
+    status: "build-ready",
+    adjustedScore: 3.70,
+    action: "BUILD — Phase 4, pure UI, unlocks bilokonomi-dashboard. No blocking dependencies.",
+    note: "High adjusted score — could be pulled forward once Phase 3 user features are shipped.",
+  },
+  {
+    rank: 14,
+    id: "bilokonomi-dashboard",
+    status: "dependent",
+    adjustedScore: 2.40,
+    action: "AFTER fill-historikk ships",
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOCKED_OR_NORTH_STAR
+// Purpose: Strategic features visible for planning, not currently actionable.
+// Do not promote these to ACTIONABLE_PRIORITY_ORDER without resolving blockers.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const BLOCKED_OR_NORTH_STAR = [
+  {
+    id: "price-war-alerts",
+    phase: 3,
+    adjustedScore: 2.80,
+    status: "blocked",
+    blocker: "Station-level coverage insufficient for reliable war detection",
+    unblockCondition: "Monitor SourceRegistry observedCoverageRate. Unblocks when coverage is sufficient for reliable local detection.",
+    northStarNote: "Would rank Phase 3 #1 if coverage improves.",
+  },
+  {
+    id: "route-fuel-intelligence",
+    phase: 4,
+    adjustedScore: 2.30,
+    status: "blocked",
+    blocker: "No routing library decided. Station-level coverage <70% nationally.",
+    unblockCondition: "Choose routing library. Confirm station coverage threshold met.",
+    northStarNote: "Phase 4 hero feature. Begin routing library evaluation when Phase 3 ships.",
+  },
+  {
+    id: "favorite-route-alerts",
+    phase: 4,
+    adjustedScore: 2.00,
+    status: "blocked",
+    blocker: "Blocked by route-fuel-intelligence routing layer",
+    unblockCondition: "route-fuel-intelligence must ship first",
+  },
+  {
+    id: "naar-loenner-det-seg",
+    phase: 5,
+    adjustedScore: 2.00,
+    status: "blocked",
+    blocker: "Requires 6+ months station-level historical data",
+    northStarNote: "Phase 5 flagship. Strong install driver. Revisit when data matures.",
+  },
+  {
+    id: "price-drop-predictor",
+    phase: 5,
+    adjustedScore: 2.00,
+    status: "blocked",
+    blocker: "Same blocker as naar-loenner-det-seg",
+    northStarNote: "Strongest install driver in Phase 5.",
+  },
+  {
+    id: "receipt-import",
+    phase: 6,
+    adjustedScore: 2.30,
+    status: "deferred",
+    blocker: "Privacy architecture + store review + OCR pipeline all missing",
+  },
+  {
+    id: "fleet-mode",
+    phase: 6,
+    adjustedScore: 2.20,
+    status: "blocked",
+    blocker: "Consumer product must mature before B2B surface",
+  },
+  {
+    id: "fuel-data-api",
+    phase: 6,
+    adjustedScore: 1.50,
+    status: "blocked",
+    blocker: "Data quality + legal terms + billing infrastructure all missing",
+  },
+  {
+    id: "ev-fuel-hybrid",
+    phase: 6,
+    adjustedScore: 1.40,
+    status: "planned",
+    blocker: "No EV charging data source evaluated",
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
