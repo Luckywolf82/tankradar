@@ -47,7 +47,7 @@ function ClassificationSection({ config, groups, expanded, onToggle }) {
             <p className="text-sm text-slate-500">No groups match current filters.</p>
           ) : (
             groups.map((group, idx) => (
-              <DuplicateStationGroup key={`${group.classification}-${index}-${idx}`} group={group} index={idx} />
+              <DuplicateStationGroup key={`${group.classification}-${idx}`} group={group} index={idx} />
             ))
           )}
         </div>
