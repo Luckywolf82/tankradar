@@ -299,8 +299,8 @@ export const IDEA_INDEX = {
   summary: {
     total: 15,
     by_status: {
-      candidate: 9,
-      audited: 6,
+      candidate: 4,
+      audited: 11,
       approved_for_build: 0,
       deferred: 1,
       rejected: 0,

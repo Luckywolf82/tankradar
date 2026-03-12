@@ -342,6 +342,91 @@ export const PRODUCT_INTELLIGENCE_AUDIT = {
   // GOVERNANCE
   // ─────────────────────────────────────────────────────────────────
 
+  // ─────────────────────────────────────────────────────────────────
+  // AUDIT UPDATE — POST IDEA EXPANSION (Entry 99 v2, 2026-03-12)
+  // ─────────────────────────────────────────────────────────────────
+
+  auditUpdate_postIdeaExpansion: {
+    updateDate: "2026-03-12",
+    trigger: "User task: verify strategic ideas, rescore, confirm next feature",
+    verificationMethod: "Direct repository file inspection — no memory/snapshot assumed",
+
+    strategicIdeasVerified: [
+      { id: "price-war-alerts",     existedBefore: true,  status_before: "candidate", status_after: "audited", score: 20, buildReadiness: "blocked" },
+      { id: "fuel-savings-tracker", existedBefore: true,  status_before: "audited",   status_after: "audited", score: 23, buildReadiness: "ready" },
+      { id: "route-fuel-intelligence", existedBefore: true, status_before: "audited", status_after: "audited", score: 18, buildReadiness: "blocked" },
+      { id: "fill-historikk",       existedBefore: true,  status_before: "candidate", status_after: "audited", score: 23, buildReadiness: "ready" },
+      { id: "bilokonomi-dashboard", existedBefore: true,  status_before: "candidate", status_after: "audited", score: 18, buildReadiness: "dependent" },
+    ],
+
+    newIdeasCreated: "NONE — all 5 strategic ideas already existed from previous session",
+
+    updatedTop10: [
+      { rank: 1,  id: "national-fuel-barometer", score: 24, buildStatus: "BUILD-READY",  note: "Highest score. No new infrastructure. Build this week." },
+      { rank: 2,  id: "fuel-savings-tracker",    score: 23, buildStatus: "BUILD-READY",  note: "Core value proposition made visible. Strongest retention hook." },
+      { rank: 3,  id: "fill-historikk",          score: 23, buildStatus: "BUILD-READY",  note: "Zero infrastructure. Prerequisite for bilokonomi + tankradar-score." },
+      { rank: 4,  id: "price-war-alerts",        score: 20, buildStatus: "BLOCKED",      note: "Would rank #1 if station-level data coverage were sufficient." },
+      { rank: 5,  id: "gamification-system",     score: 20, buildStatus: "BUILD-READY",  note: "Closes Entry 95 engagement gaps. Low effort." },
+      { rank: 6,  id: "driver-leaderboard",      score: 19, buildStatus: "BUILD-READY",  note: "Fast build. Privacy plan required." },
+      { rank: 7,  id: "fuel-price-heatmap",      score: 18, buildStatus: "PARTIAL",      note: "Regional MVP buildable. Station-level blocked." },
+      { rank: 8,  id: "bilokonomi-dashboard",    score: 18, buildStatus: "DEPENDENT",    note: "Build after fill-historikk." },
+      { rank: 9,  id: "route-fuel-intelligence", score: 18, buildStatus: "BLOCKED",      note: "Hero feature. Phase 3 — data infrastructure first." },
+      { rank: 10, id: "tankradar-score",         score: 17, buildStatus: "DEPENDENT",    note: "Synthesis layer — ship fuel-savings-tracker + gamification first." },
+    ],
+
+    nextFeatureConfirmed: {
+      feature: "national-fuel-barometer",
+      score: 24,
+      rationale: "Unchanged from v1. Highest score, lowest effort, zero new infrastructure, highest dashboard activation impact.",
+      buildSequence: [
+        "1. national-fuel-barometer  (1 day)",
+        "2. fill-historikk           (1–2 days)",
+        "3. fuel-savings-tracker     (2–3 days)",
+        "4. gamification-system      (2–3 days)",
+        "5. driver-leaderboard       (2 days)",
+      ],
+    },
+
+    updatedRoadmap: {
+      phase1: {
+        title: "Engagement & Value Visibility",
+        features: ["national-fuel-barometer", "fill-historikk", "fuel-savings-tracker", "gamification-system", "driver-leaderboard"],
+        effort: "9–11 days",
+      },
+      phase2: {
+        title: "Visualization & Personal Analytics",
+        features: ["bilokonomi-dashboard", "fuel-price-heatmap", "tankradar-score", "price-war-alerts"],
+        effort: "11–16 days",
+        note: "price-war-alerts unblocked when station-level coverage improves",
+      },
+      phase3: {
+        title: "Route Intelligence",
+        features: ["route-fuel-intelligence", "favorite-route-alerts"],
+        effort: "8–13 days",
+      },
+      phase4: {
+        title: "Predictive Pricing + B2B",
+        features: ["price-drop-predictor", "fleet-mode", "receipt-import"],
+        effort: "20–33 days",
+      },
+      phase5: {
+        title: "Monetization & Data Platform",
+        features: ["fuel-data-api"],
+        effort: "5–8 days",
+      },
+    },
+
+    ideasSummary: {
+      total: 15,
+      audited: 11,
+      candidate: 4,
+      buildReady: 5,
+      blocked: 4,
+      dependent: 2,
+      deferred: 1,
+    },
+  },
+
   governanceNotes: {
     auditIsReadOnly: true,
     noCodeChanges: true,
