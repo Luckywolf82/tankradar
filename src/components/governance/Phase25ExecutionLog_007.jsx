@@ -1381,4 +1381,77 @@ export const entry_95 = {
   }
 };
 
-export default entry_95;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 97: AUDIT SYSTEM HARDENING PASS
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_97 = {
+  timestamp: "2026-03-12T01:00:00Z",
+  phase: "Phase 2.5 Governance & Audit System",
+  title: "Audit System Hardening Pass — Rename ChatGPT Instructions, Standardize Audit Structure, Fix Governance Pointers",
+
+  objectives: [
+    "Rename AI_PROJECT_INSTRUCTIONS.jsx to CHATGPT_INSTRUCTIONS.jsx to clarify it is an agent reference, not governance authority",
+    "Update all references to deprecated AI_PROJECT_INSTRUCTIONS across audit system files",
+    "Standardize governance audit with official audit structure sections and evidence level tags",
+    "Register governance workflow coherence audit in AUDIT_INDEX.jsx",
+    "Add audit time-context clarification to governance audit",
+    "Correct stale governance pointer in AUDIT_INDEX relatedFiles",
+    "Update NextSafeStep to Governance Conflict Resolution Pass"
+  ],
+
+  preFlightVerification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — Active chunk: Phase25ExecutionLog_007.jsx, entryCount: 95",
+    "✓ Read Phase25ExecutionLog_007.jsx tail (entries 87–95) — Engagement Impact Review complete",
+    "✓ Read NextSafeStep.jsx — readyForNextStep: true, status: implementation_complete",
+    "✓ Read AI_PROJECT_INSTRUCTIONS.jsx — confirmed as agent reference file, not governance authority",
+    "✓ Read AUDIT_INDEX.jsx — confirmed governance audit registered (total: 16)",
+    "✓ Read AUDIT_SYSTEM_GUIDE.jsx, README.jsx — stale AI_PROJECT_INSTRUCTIONS references identified",
+    "✓ Read BASE44_PROJECT_INSTRUCTIONS.jsx — confirmed as sole governance authority"
+  ],
+
+  filesCreated: [
+    "components/governance/CHATGPT_INSTRUCTIONS.jsx — renamed/rewritten agent instruction file with correct authority references"
+  ],
+
+  filesModified: [
+    "components/governance/AI_PROJECT_INSTRUCTIONS.jsx — DEPRECATED header added; redirects to CHATGPT_INSTRUCTIONS + BASE44_PROJECT_INSTRUCTIONS",
+    "components/audits/README.jsx — Updated workflow step 2 and KEY FILES to reference BASE44_PROJECT_INSTRUCTIONS + CHATGPT_INSTRUCTIONS",
+    "components/audits/AUDIT_SYSTEM_GUIDE.jsx — Updated Rule 5 and RELATED FILES to remove AI_PROJECT_INSTRUCTIONS reference",
+    "components/audits/AUDIT_INDEX.jsx — relatedFiles.projectInstructions updated to BASE44_PROJECT_INSTRUCTIONS",
+    "components/audits/governance/governance-workflow-coherence-audit-2026-03-11-final.jsx — Time context clarification added at top",
+    "components/governance/Phase25ExecutionLogIndex.jsx — entryCount incremented, lastUpdated updated",
+    "components/governance/NextSafeStep.jsx — Updated to define Governance Conflict Resolution Pass as next safe step"
+  ],
+
+  changeSummary: {
+    filesCreated: 1,
+    filesModified: 7,
+    runtimeCodeChanges: 0,
+    backendChanges: 0,
+    phase2LockedFilesModified: 0,
+    governanceFilesHardened: 6
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched"
+  ],
+
+  governanceCompliance: {
+    noRuntimeChanges: "✓ Zero runtime code modified",
+    noBackendChanges: "✓ Zero backend logic modified",
+    noLockedFilesModified: "✓ All 6 Phase-2 frozen functions untouched",
+    auditSystemIntegrity: "✓ Governance audit fully registered in AUDIT_INDEX (16 total audits, governance: 2)",
+    authorityConflictMitigated: "✓ AI_PROJECT_INSTRUCTIONS deprecated; CHATGPT_INSTRUCTIONS created; all 4 reference sites updated",
+    stalePointersFixed: "✓ README, AUDIT_SYSTEM_GUIDE, AUDIT_INDEX relatedFiles all corrected"
+  },
+
+  historicalContext: "Entry 96 (Governance + Workflow Coherence Audit) identified: (1) authority conflict between BASE44_PROJECT_INSTRUCTIONS and AI_PROJECT_INSTRUCTIONS, (2) stale entry count in AI_STATE (78 vs actual 95), (3) stale governance pointers in AUDIT_INDEX, AUDIT_SYSTEM_GUIDE, and README. Entry 97 resolves all structural pointer issues, renames the agent instruction file for clarity, and hardens the audit system documentation. The remaining CRITICAL DECISION (BASE44 vs AI_PROJECT_INSTRUCTIONS authority) is addressed by deprecating AI_PROJECT_INSTRUCTIONS and creating CHATGPT_INSTRUCTIONS with explicit authority routing."
+};
+
+export default entry_97;

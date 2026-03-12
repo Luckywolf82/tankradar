@@ -13,6 +13,21 @@ Evidence: code-observed
 THIS IS A PROTECTED AUDIT — Do not simplify governance without explicit human review.
 */
 
+/*
+AUDIT TIME CONTEXT NOTICE
+
+Observed values such as execution log entry numbers (e.g., entryCount: 95),
+active chunk identifiers (e.g., Phase25ExecutionLog_007.jsx), and repository
+state descriptions in this audit reflect the repository at the time this
+audit was performed (2026-03-11 / 2026-03-12).
+
+Future changes to entry counts, active chunk files, or governance file names
+do not invalidate the structural findings of this audit.
+
+Read audit findings as observations about governance patterns and risks,
+not as assertions about current runtime values.
+*/
+
 export const governance_workflow_coherence_audit = {
   auditMetadata: {
     id: "governance_workflow_coherence_audit_2026_03_11_final",
