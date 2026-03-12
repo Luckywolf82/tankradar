@@ -318,18 +318,7 @@ export default function StationCandidateReview() {
 
       <QueueWorkflowGuide />
 
-      {/* Metrics & Export */}
-      <div className="mb-8">
-        <MasteringMetrics />
-      </div>
-
-      {/* Consistency Check */}
-      <ReviewConsistencyCheck />
-
-      {/* Manual Chain-Unconfirmed Review Workflow */}
-      <ChainUnconfirmedManualReviewUI />
-
-      {/* Admin Operations Panel */}
+      {/* Admin Operations Panel — run first */}
       <div className="mb-6 border border-slate-200 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
           <div>
@@ -587,6 +576,11 @@ export default function StationCandidateReview() {
           </button>
         </div>
       )}
+
+      {/* Metrics & Export — after operations, before manual review */}
+      <div className="mb-8">
+        <MasteringMetrics />
+      </div>
 
       {/* Stats: GooglePlaces Candidates */}
       <div className="mb-8">
@@ -1026,6 +1020,30 @@ export default function StationCandidateReview() {
           <p className="text-xs text-green-600 mt-1">Alle stasjonskandidater er behandlet. Sjekk stasjonsreview-seksjonen ovenfor.</p>
         </div>
       )}
+
+      {/* Manual Chain-Unconfirmed Review Workflow — step 5 */}
+      <div className="mt-10 mb-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-800">Kjede ikke bekreftet — manuell gjennomgang</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            <strong>Hva er dette?</strong> Stasjonsposter der systemet ikke klarte å bekrefte kjede automatisk. Gjennomgås én og én.<br />
+            <strong>Hva gjør du?</strong> Klikk «Hent neste sak», se analyse og eventuelle eksternlenker, velg riktig kategori.<br />
+            <strong>Etterpå:</strong> Saken reklassifiseres og flyttes til riktig review-type — eller lukkes.
+          </p>
+        </div>
+        <ChainUnconfirmedManualReviewUI />
+      </div>
+
+      {/* Consistency Check — step 6 */}
+      <div className="mt-10">
+        <div className="mb-3">
+          <h2 className="text-xl font-semibold text-slate-800">Konsistenssjekk</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Kontroller at køtellerne er konsistente og synker etter manuell behandling. Grønn = alt OK.
+          </p>
+        </div>
+        <ReviewConsistencyCheck />
+      </div>
     </div>
   );
 }
