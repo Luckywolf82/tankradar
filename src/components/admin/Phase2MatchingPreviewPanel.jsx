@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { base44 } from "@/api/base44Client";
 import { Search, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import GeoContextLinks from "../geo/GeoContextLinks";
 
 export default function Phase2MatchingPreviewPanel() {
   const [stationName, setStationName] = useState("");
@@ -135,17 +134,6 @@ export default function Phase2MatchingPreviewPanel() {
             </div>
           </div>
 
-          {/* Geo context links when coords are present */}
-          {latitude && longitude && (
-            <GeoContextLinks
-              latitude={latitude}
-              longitude={longitude}
-              stationName={stationName || undefined}
-              city={city || undefined}
-              label="Verifiser koordinater:"
-            />
-          )}
-
           <Button
             onClick={handlePreview}
             disabled={loading || !stationName}
@@ -250,15 +238,6 @@ export default function Phase2MatchingPreviewPanel() {
                       )}
                       {candidate.distance_km !== undefined && (
                         <div className="text-slate-600">Avstand: {candidate.distance_km.toFixed(2)} km</div>
-                      )}
-                      {candidate.latitude && candidate.longitude && (
-                        <GeoContextLinks
-                          latitude={candidate.latitude}
-                          longitude={candidate.longitude}
-                          stationName={candidate.name}
-                          city={candidate.city}
-                          compact
-                        />
                       )}
                       {candidate.score_breakdown && (
                         <div className="mt-2 pt-2 border-t border-slate-200 text-slate-500 space-y-0.5">
