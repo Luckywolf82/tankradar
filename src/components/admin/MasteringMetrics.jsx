@@ -132,14 +132,14 @@ export default function MasteringMetrics() {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="w-5 h-5 text-slate-700" />
-          <h3 className="text-lg font-bold text-slate-900">Mastering Metrics</h3>
+          <h3 className="text-lg font-bold text-slate-900">Mastering-metrikk</h3>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
            <Card>
              <CardContent className="pt-4">
                <div className="text-2xl font-bold text-blue-600">{metrics.totalStations}</div>
-               <div className="text-xs text-gray-600 mt-1">Total Stasjoner</div>
+               <div className="text-xs text-gray-600 mt-1">Totalt stasjoner</div>
              </CardContent>
            </Card>
            <Card>
@@ -185,30 +185,30 @@ export default function MasteringMetrics() {
 
       {/* Candidate Status Breakdown */}
       <div>
-        <h4 className="font-semibold text-slate-900 mb-3">Google Places Kandidater</h4>
+        <h4 className="font-semibold text-slate-900 mb-3">Google Places-kandidater</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="border-l-4 border-l-yellow-400">
             <CardContent className="pt-4">
               <div className="text-xl font-bold text-yellow-600">{metrics.candidateStats.pending}</div>
-              <div className="text-xs text-gray-600 mt-1">Pending</div>
+              <div className="text-xs text-gray-600 mt-1">Ventende</div>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-green-400">
             <CardContent className="pt-4">
               <div className="text-xl font-bold text-green-600">{metrics.candidateStats.approved}</div>
-              <div className="text-xs text-gray-600 mt-1">Approved</div>
+              <div className="text-xs text-gray-600 mt-1">Godkjent</div>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-red-400">
             <CardContent className="pt-4">
               <div className="text-xl font-bold text-red-600">{metrics.candidateStats.rejected}</div>
-              <div className="text-xs text-gray-600 mt-1">Rejected</div>
+              <div className="text-xs text-gray-600 mt-1">Avvist</div>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-gray-400">
             <CardContent className="pt-4">
               <div className="text-xl font-bold text-gray-600">{metrics.candidateStats.duplicate}</div>
-              <div className="text-xs text-gray-600 mt-1">Duplicate</div>
+              <div className="text-xs text-gray-600 mt-1">Duplikat</div>
             </CardContent>
           </Card>
         </div>
@@ -217,30 +217,30 @@ export default function MasteringMetrics() {
       {/* Review Status Breakdown */}
       {metrics.totalReviews > 0 && (
         <div>
-          <h4 className="font-semibold text-slate-900 mb-3">Station-Data Reviews</h4>
+          <h4 className="font-semibold text-slate-900 mb-3">Stasjonsdata-review</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="border-l-4 border-l-purple-400">
               <CardContent className="pt-4">
                 <div className="text-xl font-bold text-purple-600">{metrics.reviewStats.pending}</div>
-                <div className="text-xs text-gray-600 mt-1">Pending</div>
-              </CardContent>
-            </Card>
-            <Card className="border-l-4 border-l-green-500">
-              <CardContent className="pt-4">
+                <div className="text-xs text-gray-600 mt-1">Ventende</div>
+                </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-green-500">
+                <CardContent className="pt-4">
                 <div className="text-xl font-bold text-green-600">{metrics.reviewStats.approved}</div>
-                <div className="text-xs text-gray-600 mt-1">Approved</div>
-              </CardContent>
-            </Card>
-            <Card className="border-l-4 border-l-red-500">
-              <CardContent className="pt-4">
+                <div className="text-xs text-gray-600 mt-1">Godkjent</div>
+                </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-red-500">
+                <CardContent className="pt-4">
                 <div className="text-xl font-bold text-red-600">{metrics.reviewStats.rejected}</div>
-                <div className="text-xs text-gray-600 mt-1">Rejected</div>
-              </CardContent>
-            </Card>
-            <Card className="border-l-4 border-l-indigo-400">
-              <CardContent className="pt-4">
+                <div className="text-xs text-gray-600 mt-1">Avvist</div>
+                </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-indigo-400">
+                <CardContent className="pt-4">
                 <div className="text-xl font-bold text-indigo-600">{metrics.reviewStats.duplicate}</div>
-                <div className="text-xs text-gray-600 mt-1">Duplicate</div>
+                <div className="text-xs text-gray-600 mt-1">Duplikat</div>
               </CardContent>
             </Card>
           </div>
