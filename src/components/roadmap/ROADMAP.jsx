@@ -1022,40 +1022,47 @@ export const NORTH_STAR_FEATURES = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const GOVERNANCE = {
-  version: "4.0",
+  version: "4.1",
   lastUpdated: "2026-03-12",
-  updatedBy: "Roadmap Governor — Entry 101",
-  previousVersion: "3.0 (Entry 100 — AI Product Brain pass)",
-  keyChangesFromV3: [
-    "ADMIN_UI_IMPORTANCE weight corrected from 0.15 → 0.20 per Governor spec",
-    "INSTALL_DRIVER weight corrected from 0.20 → 0.15 per Governor spec",
-    "Phase structure replaced with Governor-locked 6-phase baseline",
-    "Stability modifiers applied to all raw scores",
-    "national-fuel-barometer marked COMPLETED (shipped 2026-03-12)",
-    "Community validation features added to Phase 3",
-    "Admin operations panel integration elevated to immediate next action",
-    "fill-historikk correctly placed in Phase 4 per locked baseline (not Phase 1)",
-    "currentPriorityOrder aligned to locked phase + stability-adjusted scores",
+  updatedBy: "Roadmap Governor — Entry 102 (v4.1 refinement pass)",
+  previousVersion: "4.0 (Entry 101 — Roadmap Governor pass)",
+
+  v41Changes: [
+    "1. EVIDENCE WORDING CORRECTED — v4.0 claimed direct inspection of admin files that were only referenced. v4.1 clearly distinguishes: directly read, referenced, inferred.",
+    "2. PRIORITY LIST SPLIT — CURRENT_PRIORITY_ORDER replaced with three distinct exports: COMPLETED_TRACE, ACTIONABLE_PRIORITY_ORDER, BLOCKED_OR_NORTH_STAR. Completed items no longer clutter operational planning.",
+    "3. SCORE WINNER vs NEXT SHIP SEPARATED — highestScoringFeature (community-price-verification, 3.75) is now explicitly distinct from recommendedNextShip (fuel-savings-tracker, 3.70). Rationale documented in NEXT_ACTIONS.",
+    "4. ADMIN ESCALATION BONUS MADE CONDITIONAL — adminEscalationBonus is now state-dependent. Documented with: conditions, re-evaluation requirement, and list of features currently receiving the bonus. Will be removed per feature once its gap is resolved.",
+    "5. FUEL-PRICE-HEATMAP RE-EVALUATED — USER_VALUE corrected 4 → 3. Regional color map is informational/marketing-friendly but does not directly help users buy cheaper fuel. Adjusted score lowered 3.30 → 3.00. Now ranked after gamification and leaderboard in build sequence.",
   ],
+
   stabilityContract: [
     "Layer 1 (phase structure) is LOCKED — do not collapse, reorder, or merge phases",
     "Layer 2 (feature priority within/across adjacent phases) may be refined by weighted scoring",
     "A single audit may refine priorities but NOT overturn the baseline",
     "Features may only be promoted one phase step at a time without explicit human approval",
     "Admin UI importance must be explicitly evaluated in every scoring pass",
+    "adminEscalationBonus is temporary — must be removed per feature once its gap is resolved",
   ],
+
   frozenFilesModified: "NONE",
   codeChangesInThisPass: "NONE — roadmap document only",
-  verificationMethod: "Direct file inspection: IDEA_INDEX, NextSafeStep, admin components, product audit",
-  sourceFiles: [
-    "components/ideas/IDEA_INDEX.jsx",
-    "components/governance/NextSafeStep.jsx",
-    "components/audits/product/product-intelligence-audit-2026-03-12.jsx",
-    "components/admin/AdminOperationsPanel.jsx (referenced — not read)",
-    "components/admin/MasteringMetrics.jsx (referenced — not read)",
-    "pages/SuperAdmin.jsx (referenced — not read)",
-    "components/roadmap/ROADMAP.jsx (previous v3.0)",
-  ],
+
+  evidenceLog: {
+    directlyReadThisPass: [
+      "components/roadmap/ROADMAP.jsx (v4.0)",
+      "components/ideas/IDEA_INDEX.jsx",
+      "components/governance/NextSafeStep.jsx",
+      "components/audits/product/product-intelligence-audit-2026-03-12.jsx",
+    ],
+    referencedNotRead: [
+      "components/admin/AdminOperationsPanel.jsx — admin gap assessment inferred from v4.0 findings",
+      "components/admin/MasteringMetrics.jsx — same",
+      "pages/SuperAdmin.jsx — same",
+    ],
+    inferredFromStructure: [
+      "Admin orphan gaps: inferred from v4.0 ADMIN_UI_GAPS section, which was based on prior session inspection of the above files",
+    ],
+  },
 };
 
 export default {
