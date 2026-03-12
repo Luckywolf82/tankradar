@@ -200,54 +200,80 @@ export default function SuperAdmin() {
         <TabsContent value="behandle" className="space-y-6">
           <SectionHeader
             title="Behandle saker"
-            description="Her finner du alle saker som krever manuell avgjørelse — review-kø for brukerrapporter og prisrader som ikke ble matchet mot en kjent stasjon."
+            description="Her finner du to uavhengige køer som krever manuell behandling. Les forklaringen under hver seksjon før du starter."
           />
 
-          {/* Review-kø */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <p className="text-sm font-semibold text-slate-700">Review-kø</p>
+          {/* Explanation of the two queues */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
+            <p className="text-xs font-semibold text-slate-700 mb-2">To ulike køer — ikke bland dem</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="font-semibold text-amber-800 mb-1">Kø 1: Review-kø (prismatching)</p>
+                <p>FuelPrice-poster som matchingmotoren var for usikker til å koble. Behandles i <strong>ReviewQueue</strong>.</p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="font-semibold text-green-800 mb-1">Kø 2: Stasjonskatalog (kandidater + review)</p>
+                <p>Stasjonskandidater og stasjonsreview-saker. Behandles i <strong>Stasjonsmastering</strong>.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Review-kø task card */}
+          <div className="border border-amber-200 bg-amber-50 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <ClipboardList size={15} className="text-amber-600" />
+              <p className="text-sm font-semibold text-amber-800">Review-kø — prismatching</p>
               <ModeBadge type="vurdering" />
             </div>
-            <p className="text-xs text-slate-500 mb-3">
-              Hva er dette? Saker der matchingmotoren ikke hadde høy nok sikkerhet til å koble prisen til en stasjon automatisk.<br />
-              Når brukes det? Daglig — gjennomgå og avklar for å holde pipeline oppdatert.<br />
-              Neste steg: Åpne review-kø-siden og behandle sak for sak.
+            <p className="text-xs text-slate-600 mb-3">
+              <strong>Hva er dette?</strong> Priser der matchingmotoren ikke hadde høy nok sikkerhet til å koble dem automatisk til en stasjon.<br />
+              <strong>Når brukes det?</strong> Daglig — gjennomgå og avklar for å holde pipeline oppdatert.<br />
+              <strong>Neste steg:</strong> Åpne review-kø-siden og behandle sak for sak.
             </p>
             <ReviewQueueSummary />
-            <div className="flex flex-wrap gap-2 mt-2">
-              <Link
-                to={createPageUrl("ReviewQueue")}
-                className="flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                <ClipboardList size={14} />
-                Åpne review-kø
-              </Link>
-              <Link
-                to={createPageUrl("StationCandidateReview")}
-                className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors"
-              >
-                <ExternalLink size={13} />
-                Godkjenn stasjonskandidater
-              </Link>
+            <Link
+              to={createPageUrl("ReviewQueue")}
+              className="inline-flex items-center gap-1.5 px-3 py-2 mt-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <ClipboardList size={14} />
+              Åpne review-kø
+            </Link>
+          </div>
+
+          {/* Stasjonskatalog task card */}
+          <div className="border border-green-200 bg-green-50 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink size={15} className="text-green-600" />
+              <p className="text-sm font-semibold text-green-800">Stasjonskatalog — kandidater og review</p>
+              <ModeBadge type="vurdering" />
             </div>
+            <p className="text-xs text-slate-600 mb-3">
+              <strong>Hva er dette?</strong> Stasjonskandidater (fra Google Places m.fl.) som venter på godkjenning, og eksisterende stasjoner flagget for gjennomgang.<br />
+              <strong>Når brukes det?</strong> Etter at du har kjørt trygge automatiske steg i Drift. Behandle resten manuelt her.<br />
+              <strong>Neste steg:</strong> Åpne Stasjonsmastering og følg den stegvise arbeidsflyten.
+            </p>
+            <Link
+              to={createPageUrl("StationCandidateReview")}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <ExternalLink size={13} />
+              Åpne Stasjonsmastering
+            </Link>
           </div>
 
           {/* Nye og uavklarte stasjoner */}
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-sm font-semibold text-slate-700">Nye og uavklarte stasjoner</p>
-              <ModeBadge type="vurdering" />
+              <p className="text-sm font-semibold text-slate-700">Umatchede stasjonsposter</p>
+              <ModeBadge type="lesemodus" />
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Hva er dette? Prisrapporter der systemet ikke fant noen trygg stasjon å koble til.<br />
-              Når brukes det? Etter at nye prisrapporter er mottatt, og etter Google Places-henting.<br />
-              Neste steg: Gjennomgå de mest rapporterte og avgjør om stasjonen skal opprettes eller kobles manuelt.
+              Prisrapporter der systemet ikke fant noen trygg stasjon å koble til. Kun oversikt — behandling skjer i Stasjonsmastering.
             </p>
             <StationDiscoveryQueue />
           </div>
 
-          {/* Review-lenker */}
+          {/* Additional links */}
           <div className="border-t pt-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Alle verktøy for behandling</p>
             <LinkGrid links={reviewLinks} />
@@ -330,13 +356,23 @@ export default function SuperAdmin() {
         <TabsContent value="drift" className="space-y-6">
           <SectionHeader
             title="Drift og systemstatus"
-            description="Systemhelse, datakildestatus og driftsoperasjoner. Skill mellom trygge kontroller og farehandlinger."
+            description="Systemhelse, datakildestatus og driftsoperasjoner. Kjør trygge automatiseringer HER først — gå deretter til Stasjonsmastering for manuell behandling."
           />
+
+          {/* Workflow reminder */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800 space-y-1.5">
+            <p className="font-semibold">Anbefalt arbeidsflyt</p>
+            <ol className="list-decimal list-inside space-y-0.5">
+              <li>Kjør trygge automatiske steg nedenfor (pipeline, auto-bekreft, geocoding)</li>
+              <li>Gå til <strong>Stasjonsmastering</strong> for å behandle gjenværende saker manuelt</li>
+              <li>Kontroller at køen synker og konsistenssjekken er grønn</li>
+            </ol>
+          </div>
 
           {/* Systemhelse og datakilder */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-sm font-semibold text-slate-700">Systemhelse og datakildestatus</p>
+              <p className="text-sm font-semibold text-slate-700">Systemstatus</p>
               <ModeBadge type="lesemodus" />
             </div>
             <SystemHealthDashboard />
@@ -354,17 +390,20 @@ export default function SuperAdmin() {
             <MasteringMetrics />
           </div>
 
-          {/* Driftsoperasjoner */}
+          {/* Driftsoperasjoner — canonical bulk ops */}
           <div className="border-t pt-5">
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-sm font-semibold text-slate-700">Driftsoperasjoner</p>
+              <p className="text-sm font-semibold text-slate-700">Trygge automatiske kjøringer og manuell kontroll</p>
               <ModeBadge type="vurdering" />
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Hva er dette? Manuelle operasjoner for stasjonskatalog og pipeline-håndtering.<br />
-              Fareområde-seksjon krever bekreftelse for alle handlinger. Start alltid med forhåndsvisning.
+              <strong>Hva er dette?</strong> Bulk-operasjoner for stasjonskatalog og pipeline. Kjør disse FØR du starter manuell behandling i Stasjonsmastering.<br />
+              <strong>DRIFT</strong> = trygge operasjoner. <strong>FAREOMRÅDE</strong> = krever bekreftelse og forhåndsvisning først.
             </p>
             <AdminOperationsPanel onLoadCandidates={() => {}} />
+            <p className="text-xs text-slate-400 mt-2">
+              Merk: Resultater av bulk-operasjoner vises i konsollloggen. Oppdaterte tellere ser du i Stasjonsmastering.
+            </p>
           </div>
 
           {/* Datakvalitet og importlenker */}
@@ -387,7 +426,7 @@ export default function SuperAdmin() {
               <ModeBadge type="lesemodus" />
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Read-only oversikt over planlagte og aktive funksjoner. Kilde: ROADMAP.jsx.
+              Kun lesemodus — oversikt over planlagte og aktive funksjoner. Kilde: ROADMAP.jsx.
             </p>
             <RoadmapAdminPanel />
           </div>

@@ -590,7 +590,7 @@ export default function StationCandidateReview() {
 
       {/* Stats: GooglePlaces Candidates */}
       <div className="mb-8">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Google Places Kandidater</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Google Places-kandidater</h3>
         <div className="grid grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
@@ -622,7 +622,7 @@ export default function StationCandidateReview() {
       {/* Stats: Station Reviews */}
       {stationStats.pending_total > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Station-data Review</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Stasjonsreview per type</h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <Card className="border-l-4 border-l-purple-400">
               <CardContent className="pt-6">
