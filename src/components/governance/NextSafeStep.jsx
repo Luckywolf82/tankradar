@@ -96,33 +96,35 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // NEXT SAFE STEP (ENTRY 93) — ACTIVATION IMPACT REVIEW
   // ═══════════════════════════════════════════════════════════════════════════════
 
-  nextSafeStepEntry95: {
-    id: "phase25_step_95",
-    title: "CTA A/B Testing — Validate Entry 92 Copy Changes",
+  nextSafeStepEntry98: {
+    id: "phase25_step_98",
+    title: "Governance Conflict Resolution Pass",
     description:
-      "Establish baseline metrics for CTA effectiveness (Entry 92 'Spar på drivstoff' vs alternatives). " +
-      "Deploy analytics tracking to measure tap-through rates, conversion to LogPrice, and first-contribution time. " +
-      "Validate +10–15% lift prediction from Entry 91.",
+      "Resolve governance authority conflicts and execution-log synchronization issues identified by the Governance + Workflow Coherence Audit (Entry 96). " +
+      "Entry 97 (Audit System Hardening) deprecated AI_PROJECT_INSTRUCTIONS and created CHATGPT_INSTRUCTIONS. " +
+      "Entry 98 must resolve the remaining structural issues: " +
+      "(1) AI_STATE.jsx shows stale entry count (78 vs actual 97) — update or strengthen deprecation warning, " +
+      "(2) Strengthen mandatoryPreflight in Phase25ExecutionLogIndex with explicit chunk filename and NextSafeStep sync rule, " +
+      "(3) Add sync enforcement checklist to Phase25ExecutionLogIndex as final task-completion gate.",
     scope: [
-      "Add analytics events to SubmitPriceCard (CTA viewed, tapped, dismissed)",
-      "Add analytics events to FirstTimeOverlay (overlay viewed, CTA tapped, dismissed)",
-      "Add analytics events to LogPrice workflow (step 1-4 completion tracking)",
-      "Create dashboard report for CTA tap-through rates + conversion funnel",
-      "Prepare for A/B test variant deployment (if analytics supports it)"
+      "Update AI_STATE.jsx: Fix stale entry count (78 → 97) OR add BOLD WARNING: entry count here is STALE, see Index",
+      "Strengthen Phase25ExecutionLogIndex mandatoryPreflight: make chunk filename explicit in read order",
+      "Add SYNC ENFORCEMENT CHECKLIST to Phase25ExecutionLogIndex: 5-point sync gate before task completion",
+      "Update NextSafeStep sync rule: NextSafeStep MUST be updated synchronously with each completed entry"
     ],
-    complexity: "MEDIUM",
-    runtimeImpact: "ANALYTICS ONLY — no business logic changes",
-    estimatedEffort: "3–4 hours",
+    complexity: "LOW",
+    runtimeImpact: "ZERO — governance documentation only",
+    estimatedEffort: "1–2 hours",
     blockingIssues: "NONE",
     frozenFilesImpact: "ZERO",
-    expectedOutcome: "Baseline CTA metrics established; validation of Entry 92 effectiveness; data-driven foundation for next optimization"
+    expectedOutcome: "Governance system fully coherent; no stale pointers; sync enforcement checklist active; ChatGPT reads correct state on every preflight"
   }
 };
 
