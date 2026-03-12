@@ -147,7 +147,8 @@
  * Rule 5: Never Touch Frozen Files
  *   Some Phase 2 files are locked and read-only.
  *   Verify frozen files list before creating audit.
- *   See: AI_PROJECT_INSTRUCTIONS.jsx
+ *   See: BASE44_PROJECT_INSTRUCTIONS.jsx (governance authority)
+ *   See: CHATGPT_INSTRUCTIONS.jsx (agent preflight reference)
  *
  * Rule 6: Evidence Levels for Major Claims
  *   code-observed           — directly visible in source code
@@ -236,7 +237,8 @@
  *
  * AUDIT_INDEX.jsx                    — Registry of all audits
  * README.jsx                         — Quick reference guide
- * AI_PROJECT_INSTRUCTIONS.jsx        — Governance and frozen files
+ * BASE44_PROJECT_INSTRUCTIONS.jsx    — Governance authority and frozen files
+ * CHATGPT_INSTRUCTIONS.jsx           — Agent preflight instructions (ChatGPT reference)
  * Phase25ExecutionLog_*.jsx          — Change history
  *
  * ————————————————————————————————————————————————————————————————————————————————

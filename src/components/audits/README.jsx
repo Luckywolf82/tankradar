@@ -38,7 +38,8 @@
  *    Check that no major changes are in progress.
  *
  * 2. Read governance instructions
- *    src/components/governance/AI_PROJECT_INSTRUCTIONS.jsx
+ *    src/components/governance/BASE44_PROJECT_INSTRUCTIONS.jsx  (governance authority)
+ *    src/components/governance/CHATGPT_INSTRUCTIONS.jsx         (agent preflight reference)
  *
  * 3. Check AUDIT_INDEX.jsx
  *    See what audits already exist and their status.
@@ -82,9 +83,10 @@
  *
  * KEY FILES
  *
- * AUDIT_INDEX.jsx         — Registry of all audits (start here)
- * AUDIT_SYSTEM_GUIDE.jsx  — Detailed audit rules and required sections
- * AI_PROJECT_INSTRUCTIONS.jsx — Governance and frozen files
+ * AUDIT_INDEX.jsx                    — Registry of all audits (start here)
+ * AUDIT_SYSTEM_GUIDE.jsx             — Detailed audit rules and required sections
+ * BASE44_PROJECT_INSTRUCTIONS.jsx    — Governance authority and frozen files
+ * CHATGPT_INSTRUCTIONS.jsx           — Agent preflight instructions (ChatGPT reference)
  *
  * ————————————————————————————————————————————————————————————————————————————————
  *

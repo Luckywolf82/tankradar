@@ -1,7 +1,21 @@
 // ────────────────────────────────────────────────────────────────────────────
-// AI_PROJECT_INSTRUCTIONS.jsx
-// Central governance rules for TankRadar development
-// All AI agents MUST read this file before proposing changes
+// AI_PROJECT_INSTRUCTIONS.jsx — DEPRECATED
+//
+// ⚠ THIS FILE HAS BEEN SUPERSEDED.
+//
+// Agent instruction file renamed to: CHATGPT_INSTRUCTIONS.jsx
+// Governance authority moved to:     BASE44_PROJECT_INSTRUCTIONS.jsx
+//
+// DO NOT use this file as governance authority.
+// DO NOT use this file to define the canonical instruction set.
+//
+// Redirects:
+//   • Agent preflight / instructions → CHATGPT_INSTRUCTIONS.jsx
+//   • Governance rules, frozen files, data integrity → BASE44_PROJECT_INSTRUCTIONS.jsx
+//   • Execution log → Phase25ExecutionLogIndex.jsx
+//   • Next safe step → NextSafeStep.jsx
+//
+// Deprecated on: 2026-03-12 (Entry 97 — Audit System Hardening Pass)
 // ────────────────────────────────────────────────────────────────────────────
 
 export const PROJECT_INSTRUCTIONS = {
