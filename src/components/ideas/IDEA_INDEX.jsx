@@ -13,8 +13,8 @@ Status values:
 - rejected: decided against, kept for traceability
 - implemented: shipped to production
 
-Last updated: 2026-03-12 (Entry 99 — Product Intelligence Audit)
-Added 9 new ideas. Total: 15 ideas.
+Last updated: 2026-03-12 (Entry 99 — Product Intelligence Audit v2 — Post Idea Expansion)
+Total: 15 ideas (all scored). 5 strategic ideas promoted to audited status.
 */
 
 export const IDEA_INDEX = {
@@ -150,7 +150,12 @@ export const IDEA_INDEX = {
       id: "price-war-alerts",
       title: "Bensinkrig varsler",
       category: "alerts",
-      status: "candidate",
+      status: "audited",
+      auditedBy: "product-intelligence-audit-2026-03-12",
+      auditScore: 20,
+      auditRank: 4,
+      buildReadiness: "blocked",
+      blockingReason: "Requires near-realtime station-level prices with sufficient coverage. GooglePlaces coverage currently partial.",
       summary: "Detect and alert users when competing stations trigger a local price war — cascading competitive price drops",
       userValue: "high",
       crowdsourcingImpact: "indirect",
@@ -158,14 +163,18 @@ export const IDEA_INDEX = {
       complexity: "medium",
       dependencies: ["station-level-prices", "price-change-detection-engine", "push-notifications"],
       recommendedAuditTypes: ["product", "activation", "data", "performance"],
-      notes: "Requires near-realtime station-level pricing. High impact when data coverage is sufficient.",
+      notes: "Would rank #1 if data coverage were sufficient. Phase 2 — monitor data readiness.",
     },
 
     {
       id: "fill-historikk",
       title: "Min tankhistorikk",
       category: "engagement",
-      status: "candidate",
+      status: "audited",
+      auditedBy: "product-intelligence-audit-2026-03-12",
+      auditScore: 23,
+      auditRank: 3,
+      buildReadiness: "ready",
       summary: "Personal refueling log showing every fill-up recorded via TankRadar — price, station, date, and cost",
       userValue: "high",
       crowdsourcingImpact: "indirect",
@@ -173,14 +182,19 @@ export const IDEA_INDEX = {
       complexity: "low",
       dependencies: ["user-price-history", "user-reported-fuelprice-entity"],
       recommendedAuditTypes: ["product", "activation", "ui"],
-      notes: "Pure UI feature — data already exists in FuelPrice entity. No new infrastructure required.",
+      notes: "Pure UI feature — data already exists in FuelPrice entity. Zero backend. Prerequisite for bilokonomi-dashboard and tankradar-score.",
     },
 
     {
       id: "bilokonomi-dashboard",
       title: "Bilens økonomi-dashboard",
       category: "engagement",
-      status: "candidate",
+      status: "audited",
+      auditedBy: "product-intelligence-audit-2026-03-12",
+      auditScore: 18,
+      auditRank: 8,
+      buildReadiness: "dependent",
+      blockingReason: "fill-historikk must ship first. Requires user-vehicle-profile entity (new).",
       summary: "Personal vehicle economics dashboard: monthly fuel costs, consumption, and efficiency trends",
       userValue: "high",
       crowdsourcingImpact: "indirect",
@@ -188,7 +202,7 @@ export const IDEA_INDEX = {
       complexity: "medium",
       dependencies: ["fill-historikk", "user-vehicle-profile", "national-benchmark-data"],
       recommendedAuditTypes: ["product", "activation", "ui"],
-      notes: "Depends on fill-historikk shipping first. High retention value for engaged users.",
+      notes: "Phase 2 feature. High retention value for engaged users once fill-historikk is live.",
     },
 
     {
@@ -302,8 +316,9 @@ export const IDEA_INDEX = {
       maps: 1,
       other: 2,
     },
-    build_ready: ["fuel-savings-tracker", "driver-leaderboard", "fill-historikk", "gamification-system", "national-fuel-barometer"],
-    blocked: ["route-fuel-intelligence", "favorite-route-alerts", "price-drop-predictor"],
+    build_ready: ["national-fuel-barometer", "fill-historikk", "fuel-savings-tracker", "gamification-system", "driver-leaderboard"],
+    blocked: ["route-fuel-intelligence", "favorite-route-alerts", "price-drop-predictor", "price-war-alerts"],
+    dependent: ["bilokonomi-dashboard", "tankradar-score"],
     deferred: ["receipt-import"],
     phase_map: {
       phase1: ["fuel-savings-tracker", "fill-historikk", "national-fuel-barometer", "gamification-system", "driver-leaderboard"],
