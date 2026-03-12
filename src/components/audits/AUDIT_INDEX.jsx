@@ -189,6 +189,18 @@ export const AUDIT_INDEX = {
       focusArea: "Authority conflict resolution, canonical sources mapping, workflow handoff protection, repo sync enforcement, ChatGPT↔Base44↔GitHub loop integrity, overlaps analysis, sync verification, root-level alignment",
       status: "complete",
       canonicalFor: "Governance system integrity, workflow coherence validation, sync enforcement confirmation, ChatGPT↔Base44↔GitHub workflow protection"
+    },
+    {
+      id: "admin_operator_ux_audit",
+      title: "Admin Operator UX Audit — SuperAdmin Usability",
+      category: "ui",
+      location: "src/components/audits/ui/admin-operator-ux-audit-2026-03-12.jsx",
+      dateCreated: "2026-03-12",
+      description: "Read-only audit of SuperAdmin operator usability across three layers: admin UI navigation/clarity, governance context visibility, and operational statistics utility. Evaluates 8 core operator tasks using code-observed evidence. Verdict: power-user-biased (52.5% score). Identifies remaining English islands, absent prioritization signals, broken workflow continuity, and governance opacity.",
+      relatesTo: "SuperAdmin UX clarity and admin workflow simplification (Norwegian UX pass)",
+      focusArea: "operator-first admin flow, review/discovery/matching/duplicates usability, Norwegian language consistency, action safety clarity, cross-panel workflow continuity",
+      status: "complete",
+      canonicalFor: "SuperAdmin operator UX improvements"
     }
   ],
 
