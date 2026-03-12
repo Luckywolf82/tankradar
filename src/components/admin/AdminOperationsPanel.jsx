@@ -175,9 +175,9 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           </div>
         </CollapsibleSection>
 
-        {/* DATA QUALITY */}
+        {/* DATAKVALITET */}
         <CollapsibleSection
-          title="DATA QUALITY"
+          title="DATAKVALITET"
           icon={Zap}
           section="dataQuality"
           isExpanded={expandedSections.dataQuality}
@@ -271,9 +271,9 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           </div>
         </CollapsibleSection>
 
-        {/* ANALYSIS */}
+        {/* ANALYSE */}
         <CollapsibleSection
-          title="ANALYSIS"
+          title="ANALYSE"
           icon={Zap}
           section="analysis"
           isExpanded={expandedSections.analysis}
@@ -329,9 +329,9 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           </div>
         </CollapsibleSection>
 
-        {/* ADMIN / DANGER ZONE */}
+        {/* FAREOMRÅDE */}
         <CollapsibleSection
-          title="ADMIN / DANGER ZONE"
+          title="⚠ FAREOMRÅDE"
           icon={AlertTriangle}
           section="dangerZone"
           isExpanded={expandedSections.dangerZone}
@@ -451,13 +451,13 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
       {/* Confirmation Modal */}
       <AlertDialog open={!!confirmModal} onOpenChange={() => setConfirmModal(null)}>
         <AlertDialogContent>
-          <AlertDialogTitle>Confirm destructive operation</AlertDialogTitle>
+          <AlertDialogTitle>Bekreft destruktiv operasjon</AlertDialogTitle>
           <AlertDialogDescription>
-            This action may modify or delete large amounts of station data.
-            Are you sure you want to continue?
+            Denne handlingen kan endre eller slette store mengder stasjonsdata.
+            Er du sikker på at du vil fortsette?
           </AlertDialogDescription>
           <div className="flex justify-end gap-3">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (confirmModal) confirmModal();
@@ -465,7 +465,7 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
               }}
               className="bg-red-600 hover:bg-red-700"
             >
-              Confirm
+              Bekreft
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
