@@ -402,7 +402,7 @@ export default function SuperAdmin() {
             </p>
             <AdminOperationsPanel onLoadCandidates={() => {}} />
             <p className="text-xs text-slate-400 mt-2">
-              Merk: Resultater av bulk-operasjoner vises i konsollloggen. Oppdaterte tellere ser du i Stasjonsmastering.
+              Merk: Resultater av bulk-operasjoner vises i systemloggen. Oppdaterte tellere ser du i Stasjonsmastering.
             </p>
           </div>
 
