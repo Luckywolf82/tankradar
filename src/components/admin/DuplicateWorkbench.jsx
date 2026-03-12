@@ -40,9 +40,9 @@ export default function DuplicateWorkbench() {
       {/* Step indicator */}
       <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
         {STEPS.map((s, i) => (
-          <React.Fragment key={s}>
-            <span className={`font-medium px-2 py-1 rounded ${step === s ? "bg-blue-100 text-blue-700" : "text-slate-400"}`}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+          <React.Fragment key={s.id}>
+            <span className={`font-medium px-2 py-1 rounded ${step === s.id ? "bg-blue-100 text-blue-700" : "text-slate-400"}`}>
+              {s.label}
             </span>
             {i < STEPS.length - 1 && <ChevronRight size={12} />}
           </React.Fragment>
@@ -68,7 +68,7 @@ export default function DuplicateWorkbench() {
             disabled={loading || !city.trim()}
             className="bg-amber-600 hover:bg-amber-700"
           >
-            {loading ? <><Loader size={16} className="animate-spin mr-2" />Skanner...</> : <><Search size={16} className="mr-2" />Scan</>}
+            {loading ? <><Loader size={16} className="animate-spin mr-2" />Skanner...</> : <><Search size={16} className="mr-2" />Kjør skann</>}
           </Button>
         </div>
         {error && (
@@ -82,7 +82,7 @@ export default function DuplicateWorkbench() {
           <DuplicateDetectionResults results={results} />
           <div className="mt-3 flex justify-end">
             <Button variant="outline" size="sm" onClick={() => setStep("remediation")}>
-              Gå til Remediation →
+              Gå til forhåndsvisning →
             </Button>
           </div>
         </div>
@@ -92,8 +92,8 @@ export default function DuplicateWorkbench() {
       {step === "remediation" && (
         <div className="border-t pt-4">
           <div className="flex items-center gap-2 mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Duplikatretting — Phase 3</p>
-            <span className="text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Preview only</span>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Deduplisering — forhåndsvisning</p>
+            <span className="text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Lesemodus</span>
           </div>
           <p className="text-xs text-slate-500 mb-3">Ingen merge- eller slettehandlinger er aktivert.</p>
           <DuplicateRemediationPanel />
