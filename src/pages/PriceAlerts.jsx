@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Bell, Trash2, Eye, EyeOff, Plus, Loader2, MapPin } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import GeoLocationInput from "../components/geo/GeoLocationInput";
+import GeoContextLinks from "../components/geo/GeoContextLinks";
 
 // ─── ALERT ARCHITECTURE CLARIFICATION ──────────────────────────────────
 // 

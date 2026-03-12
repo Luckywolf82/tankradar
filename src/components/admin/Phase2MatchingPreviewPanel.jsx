@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { base44 } from "@/api/base44Client";
 import { Search, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import GeoContextLinks from "../geo/GeoContextLinks";
 
 export default function Phase2MatchingPreviewPanel() {
   const [stationName, setStationName] = useState("");
