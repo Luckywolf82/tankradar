@@ -895,43 +895,54 @@ export const BLOCKED_OR_NORTH_STAR = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const NEXT_ACTIONS = {
-  immediateAdminFix: {
-    id: "admin-operations-panel-integration",
-    effort: "2–4 hours",
-    description: "Wire AdminOperationsPanel into SuperAdmin Operations tab. Wire MasteringMetrics into Data Quality tab. These are built — zero new code needed. Orphaned bulk ops are a governance gap.",
-    stabilityAdjustedScore: 3.50,
+
+  // ── SCORE WINNER vs NEXT SHIP — explicitly separated ─────────────────────
+  //
+  // These are NOT the same thing. A high adjusted score means strong strategic
+  // value. Recommended next ship must also consider: implementation readiness,
+  // dependency risk, admin foundations, and operational sequencing.
+  //
+  highestScoringFeature: {
+    id: "community-price-verification",
+    adjustedScore: 3.75,
+    why: "Admin escalation bonus applied — data quality flywheel + reduces admin review load. Gap is open.",
+    caveat: "Requires trust-model design before implementation. Not zero-risk to start immediately.",
+  },
+
+  recommendedNextShip: {
+    id: "fuel-savings-tracker",
+    adjustedScore: 3.70,
+    why: [
+      "Highest stability-adjusted score of features that are IMMEDIATELY build-ready (no design prerequisites)",
+      "Zero infrastructure — reads existing FuelPrice + NationalFuelBenchmark entities",
+      "Strongest user retention hook: makes the value proposition of TankRadar concrete",
+      "No trust model, no confidence scoring, no new entity required — pure UI + calculation",
+      "community-price-verification (score 3.75) needs trust-model design before sprint — fuel-savings-tracker does not",
+      "Shareable savings card drives organic installs",
+    ],
+    effort: "2–3 days",
     frozenFileRisk: "ZERO",
   },
-  nextUserFeature: {
-    id: "fuel-savings-tracker",
-    effort: "2–3 days",
-    rationale: [
-      "Highest stability-adjusted score of build-ready user features (3.70)",
-      "Zero infrastructure — reads existing FuelPrice + NationalFuelBenchmark",
-      "Strongest retention hook: makes TankRadar's value proposition concrete",
-      "Phase 3 priority #3 (below community validation features which need scoping)",
-      "Shareable card drives organic installs",
-    ],
+
+  immediateAdminAction: {
+    id: "admin-operations-panel-integration",
+    adjustedScore: 3.50,
+    effort: "2–4 hours",
+    description: "Wire AdminOperationsPanel into SuperAdmin Operations tab. Wire MasteringMetrics into Data Quality tab. Built — zero new code. Orphaned bulk ops are a governance gap.",
+    doThisFirst: "Yes — admin wiring is 2–4 hours and unblocks governance workflows before next feature sprint",
+    evidenceNote: "Gap inferred from v4.0 roadmap findings. Admin files (AdminOperationsPanel, MasteringMetrics, SuperAdmin) were referenced in v4.0 but not directly read in this pass.",
+    frozenFileRisk: "ZERO",
   },
-  nextCommunityFeature: {
-    id: "community-price-verification",
-    effort: "3–5 days",
-    rationale: [
-      "Highest stability-adjusted score in Phase 3 (3.75) — admin escalation applied",
-      "Directly improves data quality AND reduces admin review burden",
-      "Phase 3 priority #1 per Governor model",
-      "Data flywheel: better community data → better product → more users → more data",
-    ],
-  },
-  phaseSequenceSummary: [
-    "1. Admin fix: Wire AdminOperationsPanel + MasteringMetrics      — 2–4 hours  (score 3.50)",
-    "2. User: fuel-savings-tracker                                   — 2–3 days   (score 3.70)",
-    "3. Community: community-price-verification                      — 3–5 days   (score 3.75)",
-    "4. Community: community-station-validation                      — 3–5 days   (score 3.65)",
-    "5. User: gamification-system                                    — 2–3 days   (score 3.30)",
-    "6. User: driver-leaderboard                                     — 2–3 days   (score 3.30)",
-    "7. Map: fuel-price-heatmap (regional MVP only)                  — 3–4 days   (score 3.30)",
-    "8. Decision: fill-historikk                                     — 1–2 days   (score 3.70)",
+
+  recommendedBuildSequence: [
+    { step: 1, id: "admin-operations-panel-integration", effort: "2–4 hours", score: 3.50, note: "Admin fix — do first, unblocks governance" },
+    { step: 2, id: "fuel-savings-tracker",               effort: "2–3 days",  score: 3.70, note: "Recommended next ship — zero prerequisites" },
+    { step: 3, id: "community-price-verification",       effort: "3–5 days",  score: 3.75, note: "Design trust-model first, then build" },
+    { step: 4, id: "community-station-validation",       effort: "3–5 days",  score: 3.65, note: "After community-price-verification design settles" },
+    { step: 5, id: "gamification-system",                effort: "2–3 days",  score: 3.30, note: "After fuel-savings-tracker ships" },
+    { step: 6, id: "driver-leaderboard",                 effort: "2–3 days",  score: 3.30, note: "After gamification-system, requires privacy plan" },
+    { step: 7, id: "fill-historikk",                     effort: "1–2 days",  score: 3.70, note: "Phase 4 — pull forward after Phase 3 user features ship" },
+    { step: 8, id: "fuel-price-heatmap",                 effort: "3–4 days",  score: 3.00, note: "Regional MVP only — nice-to-have, build after core features" },
   ],
 };
 
