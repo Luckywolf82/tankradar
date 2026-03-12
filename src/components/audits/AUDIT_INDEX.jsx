@@ -201,6 +201,18 @@ export const AUDIT_INDEX = {
       focusArea: "operator-first admin flow, review/discovery/matching/duplicates usability, Norwegian language consistency, action safety clarity, cross-panel workflow continuity",
       status: "complete",
       canonicalFor: "SuperAdmin operator UX improvements"
+    },
+    {
+      id: "admin_preview_queue_workflow_audit",
+      title: "Admin Preview Queue Workflow Audit — Canonical Operator Workflow for Clearing Station Preview/Review Queues",
+      category: "ui",
+      location: "src/components/audits/ui/admin-preview-queue-workflow-audit-2026-03-12.jsx",
+      dateCreated: "2026-03-12",
+      description: "Read-only audit of the real operator workflow for clearing station preview/review queues across StationCandidateReview and SuperAdmin. Confirms 5 confirmed overlaps, maps 9-step canonical queue-clearing workflow, classifies all actions as automatic/semi-automatic/manual, identifies 6 governance risks including CRITICAL direct Station creation without post-creation classification, and flags DEMO_CANONICAL_ID trap in DuplicateRemediationPanel.",
+      relatesTo: "SuperAdmin operator UX improvements (admin-operator-ux-audit-2026-03-12); StationCandidateReview workflow; AdminOperationsPanel dual-embedding",
+      focusArea: "queue-clearing workflow, duplicate surface detection, automation vs manual review, StationCandidate approval path, StationReview decision semantics, ChainUnconfirmedManualReviewUI, FAREOMRÅDE bulk operations",
+      status: "complete",
+      canonicalFor: "Queue-clearing operator workflow; StationCandidateReview as canonical execution surface; SuperAdmin as monitoring/navigation surface"
     }
   ],
 
