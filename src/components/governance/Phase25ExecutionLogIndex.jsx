@@ -166,11 +166,11 @@ export const EXECUTION_LOG_METADATA = {
     failureProtocol:
       "If any checkpoint fails: STOP. Do not proceed. Fix the desync before generating next prompt.",
     currentStatus: {
-      checkpoint1: "✓ entryCount=97, sealed chunks cover 1–81, active chunk 87–97 = 97 entries (note: entries 82–86 in Phase25ExecutionLog_007 preamble section)",
+      checkpoint1: "✓ entryCount=98, sealed chunks cover 1–81, active chunk 87–98 = 98 entries (note: entries 82–86 in Phase25ExecutionLog_007 preamble section)",
       checkpoint2: "✓ Only Phase25ExecutionLog_007.jsx marked ACTIVE",
       checkpoint3: "✓ activeChunk = 'Phase25ExecutionLog_007.jsx' matches ACTIVE chunk",
       checkpoint4: "✓ Chunk ranges are contiguous",
-      checkpoint5: "✓ NextSafeStep defines Entry 98 (Governance Conflict Resolution — in progress)"
+      checkpoint5: "✓ NextSafeStep updated — Entry 98 complete; Entry 99 (Post-Governance Product Decision) is next approved step"
     }
   }
 };
