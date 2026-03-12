@@ -39,10 +39,13 @@ export default function DataSourceStatus() {
           <div className="p-1.5 rounded-lg bg-green-50">
             <Activity size={16} className="text-green-700" />
           </div>
-          Datakilde-status
+          Datakildestatus
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <p className="text-xs text-slate-500 mb-3">
+          Siste hentestatus per datakilde. Grønt betyr siste kjøring var vellykket. Rødt betyr siste kjøring feilet.
+        </p>
         <div className="divide-y divide-slate-100">
           {SOURCES.map(source => {
             const data = getSourceData(source);
@@ -52,7 +55,7 @@ export default function DataSourceStatus() {
                 <span className="text-xs text-slate-400">Ingen logg funnet</span>
               </div>
             );
-            const { latest, lastSuccess, lastFailure } = data;
+            const { latest } = data;
             const isOk = latest?.success;
             return (
               <div key={source} className="py-3">
@@ -86,6 +89,9 @@ export default function DataSourceStatus() {
             );
           })}
         </div>
+        <p className="text-xs text-slate-400 mt-3 border-t pt-3">
+          Hva betyr dette? Denne statusen leses fra FetchLog. Kilde-sannhetskilden er SourceRegistry.
+        </p>
       </CardContent>
     </Card>
   );

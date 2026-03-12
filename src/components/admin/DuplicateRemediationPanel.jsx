@@ -6,40 +6,40 @@ import { base44 } from "@/api/base44Client";
 /**
  * DuplicateRemediationPanel
  *
- * Phase 3 placeholder component.
- * No remediation logic is implemented yet.
+ * Fase 3 plassholderkomponent.
+ * Ingen remediering er implementert ennå.
  *
- * Governance gate: Phase 3 execution logic must not be activated
- * without explicit approval recorded in ProjectControlPanel.
+ * Governance-port: Fase 3-utføringslogikk må ikke aktiveres
+ * uten eksplisitt godkjennelse registrert i ProjectControlPanel.
  *
- * Phase 4A additions (read-only preview only):
- * - Canonical station preview (Entry 14)
- * - Merge impact preview (Entry 15)
+ * Fase 4A-tillegg (kun lesemodus-forhåndsvisning):
+ * - Forhåndsvisning av kanonisk stasjon (oppføring 14)
+ * - Forhåndsvisning av merge-effekt (oppføring 15)
  *
- * Phase 4C additions:
- * - Live Execute Merge section wired to executeDuplicateMerge backend
- * - Requires explicit curator confirmation checkbox before button is enabled
- * - Shows pre-execution preview summary and post-execution result
+ * Fase 4C-tillegg:
+ * - Live Execute Merge-seksjon koblet til executeDuplicateMerge-backend
+ * - Krever eksplisitt kurator-bekreftelsesavkrysning før knapp aktiveres
+ * - Viser forhåndsvisningsoppsummering og etterutføringsresultat
  */
 
-// ─── STATIC DATA ─────────────────────────────────────────────────────────────
+// ─── STATISKE DATA ─────────────────────────────────────────────────────────────
 
 const SAFETY_CHECKLIST = [
-  "Preview only — no merge actions enabled",
-  "Canonical station selection not active",
-  "No record deletion enabled",
-  "No automatic remediation enabled",
-  "Curator confirmation workflow required before activation",
-  "Audit logging required for future remediation actions",
+  "Kun forhåndsvisning — ingen sammenslåingshandlinger aktivert",
+  "Valg av kanonisk stasjon ikke aktivt",
+  "Ingen postsletting aktivert",
+  "Ingen automatisk remediering aktivert",
+  "Kuratorbekreftelsesflyt kreves før aktivering",
+  "Revisjonsloggføring kreves for fremtidige remediationshandlinger",
 ];
 
 const PROCESS_OVERVIEW = [
-  { step: 1, label: "Detect duplicates", desc: "Run duplicate scan to identify candidate groups" },
-  { step: 2, label: "Curator triage", desc: "Curator reviews each group and selects canonical station" },
-  { step: 3, label: "Non-destructive preview", desc: "System shows merge effect before any write" },
-  { step: 4, label: "Curator acknowledgement", desc: "Explicit confirmation required per group" },
-  { step: 5, label: "Atomic execution", desc: "Re-point FuelPrice records, soft-archive duplicates" },
-  { step: 6, label: "Audit log entry", desc: "Full audit trail written to StationMergeLog" },
+  { step: 1, label: "Oppdag duplikater", desc: "Kjør duplikatskann for å identifisere kandidatgrupper" },
+  { step: 2, label: "Kuratortriage", desc: "Kurator gjennomgår hver gruppe og velger kanonisk stasjon" },
+  { step: 3, label: "Ikke-destruktiv forhåndsvisning", desc: "Systemet viser merge-effekt før noe skrives" },
+  { step: 4, label: "Kuratorbekreftelse", desc: "Eksplisitt bekreftelse kreves per gruppe" },
+  { step: 5, label: "Atomisk utføring", desc: "Repeker FuelPrice-poster, myk-arkiver duplikater" },
+  { step: 6, label: "Revisjonsloggoppføring", desc: "Fullstendig revisjonsspor skrives til StationMergeLog" },
 ];
 
 const MOCK_CANDIDATES = [
@@ -49,7 +49,7 @@ const MOCK_CANDIDATES = [
     address: "Moholt allé 57, Trondheim",
     sourceCount: 3,
     priceCount: 14,
-    confidenceBadge: "High",
+    confidenceBadge: "Høy",
     isCanonicalExample: true,
   },
   {
@@ -58,7 +58,7 @@ const MOCK_CANDIDATES = [
     address: "Moholt allé 55, Trondheim",
     sourceCount: 1,
     priceCount: 2,
-    confidenceBadge: "Low",
+    confidenceBadge: "Lav",
     isCanonicalExample: false,
   },
   {
@@ -67,39 +67,37 @@ const MOCK_CANDIDATES = [
     address: "Moholt allé, Trondheim",
     sourceCount: 1,
     priceCount: 1,
-    confidenceBadge: "Low",
+    confidenceBadge: "Lav",
     isCanonicalExample: false,
   },
 ];
 
 const MERGE_SUMMARY_STATS = [
-  { label: "Canonical station kept", value: "1" },
-  { label: "Duplicates soft-archived", value: "2" },
-  { label: "FuelPrice records re-pointed", value: "16" },
-  { label: "Manual curator confirmation", value: "Required" },
-  { label: "Audit log entry", value: "Required" },
-  { label: "Hard deletes", value: "None" },
+  { label: "Kanonisk stasjon beholdt", value: "1" },
+  { label: "Duplikater myk-arkivert", value: "2" },
+  { label: "FuelPrice-poster repektet", value: "16" },
+  { label: "Manuell kuratorbekreftelse", value: "Påkrevet" },
+  { label: "Revisjonsloggoppføring", value: "Påkrevet" },
+  { label: "Harde slettinger", value: "Ingen" },
 ];
 
 const MERGE_ACTION_MAP = [
-  { action: "Keep as canonical", station: "Circle K Moholt", style: "text-green-700 bg-green-50 border border-green-200" },
-  { action: "Archive duplicate", station: "Circle K Moholt Senter", style: "text-amber-700 bg-amber-50 border border-amber-200" },
-  { action: "Archive duplicate", station: "Moholt Bensinstasjon", style: "text-amber-700 bg-amber-50 border border-amber-200" },
-  { action: "Re-point FuelPrice records", station: "All duplicate-linked prices → canonical station", style: "text-blue-700 bg-blue-50 border border-blue-200" },
+  { action: "Behold som kanonisk", station: "Circle K Moholt", style: "text-green-700 bg-green-50 border border-green-200" },
+  { action: "Arkiver duplikat", station: "Circle K Moholt Senter", style: "text-amber-700 bg-amber-50 border border-amber-200" },
+  { action: "Arkiver duplikat", station: "Moholt Bensinstasjon", style: "text-amber-700 bg-amber-50 border border-amber-200" },
+  { action: "Repek FuelPrice-poster", station: "Alle duplikatkoblede priser → kanonisk stasjon", style: "text-blue-700 bg-blue-50 border border-blue-200" },
 ];
 
-// ─── GOVERNANCE FEATURE FLAG ──────────────────────────────────────────────────
-// Phase 4C execution hardening: live merge execution must be explicitly enabled
-// in code before curators can execute merges. Dry-run preview remains available.
+// ─── GOVERNANCE-FUNKSJONS-FLAGG ───────────────────────────────────────────────
+// Fase 4C-utføringsherdning: live merge-utføring må eksplisitt aktiveres
+// i kode før kuratorer kan utføre sammenslåinger. Tørrkjøringsforhåndsvisning forblir tilgjengelig.
 const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = false;
 
-// ─── MOCK IDs FOR PHASE 4C DEMO — replace with real IDs from duplicate scan ──
-// These are placeholder values only. In production, these come from the
-// DuplicateDetectionScanner result passed as props.
+// ─── MOCK-IDer FOR FASE 4C-DEMO — erstatt med ekte IDer fra duplikatskann ──
 const DEMO_CANONICAL_ID = "CANONICAL_STATION_ID_HERE";
 const DEMO_DUPLICATE_IDS = ["DUPLICATE_ID_1", "DUPLICATE_ID_2"];
 
-// ─── COMPONENT ───────────────────────────────────────────────────────────────
+// ─── KOMPONENT ────────────────────────────────────────────────────────────────
 
 export default function DuplicateRemediationPanel() {
   const [confirmed, setConfirmed] = useState(false);
@@ -107,25 +105,22 @@ export default function DuplicateRemediationPanel() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // Phase 4B — live dry-run preview state
   const [previewCanonicalId, setPreviewCanonicalId] = useState("");
   const [previewDuplicateIds, setPreviewDuplicateIds] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewResult, setPreviewResult] = useState(null);
   const [previewError, setPreviewError] = useState(null);
 
-  // Phase 4C — audit history state
   const [auditHistory, setAuditHistory] = useState([]);
   const [auditLoading, setAuditLoading] = useState(true);
 
-  // Load audit history on mount
   useEffect(() => {
     const loadAuditHistory = async () => {
       try {
         const logs = await base44.entities.StationMergeLog.list();
         setAuditHistory(logs || []);
       } catch (err) {
-        console.error('Failed to load audit history:', err);
+        console.error('Klarte ikke å laste revisjonshistorikk:', err);
         setAuditHistory([]);
       } finally {
         setAuditLoading(false);
@@ -142,7 +137,7 @@ export default function DuplicateRemediationPanel() {
       .filter(Boolean);
 
     if (!canonicalId || dupIds.length === 0) {
-      setPreviewError("Enter a canonical station ID and at least one duplicate ID.");
+      setPreviewError("Legg inn kanonisk stasjons-ID og minst én duplikat-ID.");
       return;
     }
 
@@ -150,18 +145,16 @@ export default function DuplicateRemediationPanel() {
     setPreviewError(null);
     setPreviewResult(null);
 
-    const requestPayload = {
+    const res = await base44.functions.invoke("previewDuplicateMerge", {
       canonical_station_id: canonicalId,
       duplicate_station_ids: dupIds,
-    };
-
-    const res = await base44.functions.invoke("previewDuplicateMerge", requestPayload);
+    });
 
     setPreviewLoading(false);
     if (res.data && res.data.safe_to_merge !== undefined) {
       setPreviewResult(res.data);
     } else {
-      setPreviewError(res.data?.error ?? "Unknown error from previewDuplicateMerge");
+      setPreviewError(res.data?.error ?? "Ukjent feil fra previewDuplicateMerge");
     }
   };
 
@@ -174,43 +167,42 @@ export default function DuplicateRemediationPanel() {
       canonical_station_id: DEMO_CANONICAL_ID,
       duplicate_station_ids: DEMO_DUPLICATE_IDS,
       curator_confirmation: true,
-      notes: "Executed via DuplicateRemediationPanel Phase 4C",
+      notes: "Utført via DuplicateRemediationPanel Fase 4C",
     });
     setLoading(false);
     if (res.data && res.data.success) {
       setResult(res.data);
     } else {
-      setError(res.data?.error ?? "Unknown error from executeDuplicateMerge");
+      setError(res.data?.error ?? "Ukjent feil fra executeDuplicateMerge");
     }
   };
 
   return (
     <div className="space-y-4">
 
-      {/* ── 1. Placeholder banner ─────────────────────────────────────────── */}
+      {/* ── 1. Tittel og status-banner ─────────────────────────────────────── */}
       <Card className="bg-slate-50 border border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2 text-slate-700">
             <ShieldAlert size={18} className="text-slate-400" />
-            Duplicate Remediation
+            Deduplisering og sammenslåing
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">
-            Phase 3 remediation tools will appear here.
+          <p className="text-sm text-slate-600 mb-2">
+            Denne delen viser status for opprydding av duplikater. Utføring skal bare være mulig når governance tillater det.
           </p>
-          <p className="text-xs text-slate-400 mt-1">
-            No records can be merged, modified, or deleted from this panel yet.
-            Requires explicit governance approval before activation.
-          </p>
+          <div className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+            Status nå: forhåndsvisning og dokumentasjon. Live sammenslåing er ikke aktiv.
+          </div>
         </CardContent>
       </Card>
 
-      {/* ── 2. Safety checklist ───────────────────────────────────────────── */}
+      {/* ── 2. Sikkerhetsstatus ───────────────────────────────────────────── */}
       <Card className="border border-amber-200 bg-amber-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-amber-800">
-            Safety checklist — current status
+            Sikkerhetsstatus — gjeldende tilstand
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -225,11 +217,11 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 3. Remediation process overview ──────────────────────────────── */}
+      {/* ── 3. Stegvis prosess for deduplisering ──────────────────────────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700">
-            Remediation process — overview (not yet active)
+            Stegvis prosess for deduplisering (ikke aktiv ennå)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -249,20 +241,20 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 4. Canonical station preview ─────────────────────────────────── */}
+      {/* ── 4. Forhåndsvisning av kanonisk stasjon ─────────────────────────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            Canonical station preview
-            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Read-only</span>
-            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Not active yet</span>
+            Forhåndsvisning av kanonisk stasjon
+            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Lesemodus</span>
+            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Ikke aktiv ennå</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-            This does not select or save a canonical station. No remediation action is performed from this panel.
+            Dette velger ikke eller lagrer en kanonisk stasjon. Ingen remediationshandling utføres fra dette panelet.
           </div>
-          <p className="text-xs text-slate-400 mb-3">Example duplicate group — static mock data only</p>
+          <p className="text-xs text-slate-400 mb-3">Eksempeldata – ikke reelle endringer</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {MOCK_CANDIDATES.map((c, i) => (
               <div
@@ -276,26 +268,26 @@ export default function DuplicateRemediationPanel() {
                   {c.isCanonicalExample && <Star size={13} className="text-green-500 shrink-0 mt-0.5" />}
                 </div>
                 <p className="text-xs text-slate-500">
-                  {c.chain ?? <span className="italic text-slate-400">Chain unknown</span>}
+                  {c.chain ?? <span className="italic text-slate-400">Kjede ukjent</span>}
                 </p>
                 <p className="text-xs text-slate-400">{c.address}</p>
                 <div className="flex gap-2 mt-1 flex-wrap">
                   <span className="text-xs bg-slate-200 text-slate-600 rounded px-1.5 py-0.5">
-                    {c.sourceCount} source{c.sourceCount !== 1 ? "s" : ""}
+                    {c.sourceCount} kilde{c.sourceCount !== 1 ? "r" : ""}
                   </span>
-                  <span className="text-xs bg-slate-200 text-slate-600 rounded px-1.5 py-0.5">{c.priceCount} prices</span>
-                  <span className={`text-xs rounded px-1.5 py-0.5 ${c.confidenceBadge === "High" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}>
-                    {c.confidenceBadge} conf.
+                  <span className="text-xs bg-slate-200 text-slate-600 rounded px-1.5 py-0.5">{c.priceCount} priser</span>
+                  <span className={`text-xs rounded px-1.5 py-0.5 ${c.confidenceBadge === "Høy" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-500"}`}>
+                    {c.confidenceBadge} konf.
                   </span>
                 </div>
                 <div className="mt-1">
                   {c.isCanonicalExample ? (
                     <span className="text-xs font-medium bg-green-100 text-green-700 border border-green-300 rounded px-2 py-0.5">
-                      Example canonical choice
+                      Eksempel kanonisk valg
                     </span>
                   ) : (
                     <span className="text-xs text-slate-400 bg-slate-100 border border-slate-200 rounded px-2 py-0.5">
-                      Preview only
+                      Kun forhåndsvisning
                     </span>
                   )}
                 </div>
@@ -305,22 +297,21 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 5. Merge impact preview ───────────────────────────────────────── */}
+      {/* ── 5. Forhåndsvisning av merge-effekt ───────────────────────────────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            Merge impact preview
-            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Read-only</span>
-            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Not active yet</span>
+            Forhåndsvisning av merge-effekt
+            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Lesemodus</span>
+            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Ikke aktiv ennå</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-            Preview only — no merge is executed. No records are changed from this panel.
+            Kun forhåndsvisning — ingen sammenslåing utføres. Ingen poster endres fra dette panelet.
           </div>
-          <p className="text-xs text-slate-400 mb-3">Example merge summary — static mock data only</p>
+          <p className="text-xs text-slate-400 mb-3">Eksempeldata – ikke reelle endringer</p>
 
-          {/* Summary stats grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
             {MERGE_SUMMARY_STATS.map(({ label, value }) => (
               <div key={label} className="bg-slate-50 border border-slate-200 rounded p-2">
@@ -330,10 +321,9 @@ export default function DuplicateRemediationPanel() {
             ))}
           </div>
 
-          {/* Action mapping table */}
           <div className="border border-slate-200 rounded overflow-hidden">
             <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-              Planned action mapping
+              Planlagt handlingskartlegging
             </div>
             <div className="divide-y divide-slate-100">
               {MERGE_ACTION_MAP.map(({ action, station, style }, i) => (
@@ -347,121 +337,116 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 6. Curator confirmation preview ──────────────────────────────── */}
+      {/* ── 6. Kuratorkvittering (forhåndsvisning) ───────────────────────────── */}
       <Card className="border border-slate-200 bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            Curator confirmation preview
-            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Read-only</span>
-            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Not active yet</span>
+            Kuratorkvittering
+            <span className="text-xs font-normal bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5">Lesemodus</span>
+            <span className="text-xs font-normal bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5">Ikke aktiv ennå</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-            Preview only — no confirmation can be submitted from this panel. No merge can be executed from this panel.
+            Kun forhåndsvisning — ingen bekreftelse kan sendes inn fra dette panelet. Ingen sammenslåing kan utføres fra dette panelet.
           </div>
-          <p className="text-xs text-slate-400 mb-3">Example curator checklist — static mock data only</p>
+          <p className="text-xs text-slate-400 mb-3">Eksempeldata – ikke reelle endringer</p>
 
-          {/* Mock confirmation checklist */}
           <div className="space-y-2 mb-4">
             {[
-              "Canonical station reviewed",
-              "Duplicate stations reviewed",
-              "Merge impact reviewed",
-              "FuelPrice re-point count reviewed",
-              "Audit logging requirement acknowledged",
+              "Kanonisk stasjon gjennomgått",
+              "Duplikatstasjoner gjennomgått",
+              "Merge-effekt gjennomgått",
+              "Antall FuelPrice-repeking gjennomgått",
+              "Revisjonsloggingskrav bekreftet",
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-xs text-slate-600">
                 <div className="w-4 h-4 rounded border border-slate-300 bg-slate-100 flex items-center justify-center shrink-0">
                   <CheckCircle2 size={11} className="text-slate-300" />
                 </div>
                 <span>{item}</span>
-                <span className="ml-auto text-slate-400 italic">Preview only</span>
+                <span className="ml-auto text-slate-400 italic">Kun forhåndsvisning</span>
               </div>
             ))}
           </div>
 
-          {/* Mock confirmation summary */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             {[
-              { label: "Curator confirmation required", value: "Yes" },
-              { label: "Second review required", value: "No" },
-              { label: "Execution allowed from this panel", value: "No" },
-              { label: "Current mode", value: "Preview only" },
+              { label: "Kuratorbekreftelse påkrevet", value: "Ja" },
+              { label: "Andregangsgjennomgang påkrevet", value: "Nei" },
+              { label: "Utføring tillatt fra dette panelet", value: "Nei" },
+              { label: "Gjeldende modus", value: "Kun forhåndsvisning" },
             ].map(({ label, value }) => (
               <div key={label} className="bg-slate-50 border border-slate-200 rounded p-2">
                 <p className="text-xs text-slate-400">{label}</p>
-                <p className={`text-xs font-semibold mt-0.5 ${value === "No" || value === "Preview only" ? "text-amber-700" : "text-slate-700"}`}>{value}</p>
+                <p className={`text-xs font-semibold mt-0.5 ${value === "Nei" || value === "Kun forhåndsvisning" ? "text-amber-700" : "text-slate-700"}`}>{value}</p>
               </div>
             ))}
           </div>
 
-          {/* Locked-action footer */}
           <div className="border border-slate-200 rounded overflow-hidden">
             <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500 flex items-center gap-2">
               <ShieldAlert size={13} className="text-slate-400" />
-              Confirmation disabled in preview mode
+              Bekreftelse deaktivert i forhåndsvisningsmodus
             </div>
             <div className="px-3 py-3 bg-slate-50">
               <button
                 disabled
                 className="w-full py-2 px-4 text-xs font-medium rounded border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
               >
-                Confirm and execute merge — disabled
+                Bekreft og utfør sammenslåing — deaktivert
               </button>
               <p className="text-xs text-slate-400 text-center mt-2">
-                No merge can be executed from this panel. Activation requires governance approval.
+                Ingen sammenslåing kan utføres fra dette panelet. Aktivering krever governance-godkjennelse.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ── 8. Live dry-run preview — Phase 4B ───────────────────────────── */}
+      {/* ── 8. Live tørrkjøringsforhåndsvisning ───────────────────────────── */}
       <Card className="border border-blue-200 bg-blue-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-blue-800 flex items-center gap-2">
             <CheckCircle2 size={14} className="text-blue-500" />
-            Live dry-run merge preview
-            <span className="text-xs font-normal bg-blue-100 text-blue-600 border border-blue-200 rounded px-2 py-0.5">Read-only</span>
-            <span className="text-xs font-normal bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Dry-run only</span>
+            Live tørrkjøring av merge-forhåndsvisning
+            <span className="text-xs font-normal bg-blue-100 text-blue-600 border border-blue-200 rounded px-2 py-0.5">Lesemodus</span>
+            <span className="text-xs font-normal bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Kun tørrkjøring</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-3 text-xs text-blue-900 bg-blue-100 border border-blue-200 rounded px-3 py-2">
-            Calls <code className="font-mono">previewDuplicateMerge</code> — a fully read-only backend.
-            No merge is executed. No records are changed. No StationMergeLog entry is written.
+            Kaller <code className="font-mono">previewDuplicateMerge</code> — en fullstendig lesemodusbakende.
+            Ingen sammenslåing utføres. Ingen poster endres. Ingen StationMergeLog-oppføring skrives.
           </div>
 
-          {/* Input fields */}
           <div className="space-y-3 mb-4">
             <div>
               <label className="block text-xs font-medium text-blue-900 mb-1">
-                Canonical station ID
+                Kanonisk stasjons-ID
               </label>
               <input
                 type="text"
                 value={previewCanonicalId}
                 onChange={(e) => { setPreviewCanonicalId(e.target.value); setPreviewResult(null); setPreviewError(null); }}
-                placeholder="e.g. abc123def456"
+                placeholder="f.eks. abc123def456"
                 className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-blue-900 mb-1">
-                Duplicate station IDs <span className="font-normal text-slate-500">(comma-separated)</span>
+                Duplikat-stasjons-IDer <span className="font-normal text-slate-500">(kommaseparert)</span>
               </label>
               <input
                 type="text"
                 value={previewDuplicateIds}
                 onChange={(e) => { setPreviewDuplicateIds(e.target.value); setPreviewResult(null); setPreviewError(null); }}
-                placeholder="e.g. dup001, dup002"
+                placeholder="f.eks. dup001, dup002"
                 className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
               />
             </div>
           </div>
 
-          {/* Run button */}
           <button
             onClick={handleRunDryRunPreview}
             disabled={previewLoading}
@@ -474,21 +459,19 @@ export default function DuplicateRemediationPanel() {
             {previewLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 size={12} className="animate-spin" />
-                Running dry-run preview…
+                Kjører tørrkjøringsforhåndsvisning...
               </span>
             ) : (
-              "Run dry-run preview"
+              "Kjør tørrkjøringsforhåndsvisning"
             )}
           </button>
 
-          {/* Error state */}
           {previewError && (
             <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">
-              <strong>Error:</strong> {previewError}
+              <strong>Feil:</strong> {previewError}
             </div>
           )}
 
-          {/* Result */}
           {previewResult && (
             <div className="border border-slate-200 rounded overflow-hidden">
               <div className={`px-3 py-2 text-xs font-semibold flex items-center gap-2 ${
@@ -502,7 +485,7 @@ export default function DuplicateRemediationPanel() {
                   ["canonical_already_archived", String(previewResult.canonical_already_archived)],
                   ["canonical_in_duplicate_list", String(previewResult.canonical_in_duplicate_list)],
                   ["duplicate_stations_found", String(previewResult.duplicate_stations_found)],
-                  ["duplicate_station_ids_missing", previewResult.duplicate_station_ids_missing?.join(", ") || "none"],
+                  ["duplicate_station_ids_missing", previewResult.duplicate_station_ids_missing?.join(", ") || "ingen"],
                   ["fuelprice_records_would_be_repointed", String(previewResult.fuelprice_records_would_be_repointed)],
                   ["duplicate_stations_would_be_archived", String(previewResult.duplicate_stations_would_be_archived)],
                 ].map(([label, value]) => (
@@ -514,7 +497,7 @@ export default function DuplicateRemediationPanel() {
               </div>
               {previewResult.blockers && previewResult.blockers.length > 0 && (
                 <div className="px-3 py-2 bg-red-50 border-t border-red-100">
-                  <p className="text-xs font-semibold text-red-700 mb-1">Blockers:</p>
+                  <p className="text-xs font-semibold text-red-700 mb-1">Blokkere:</p>
                   <ul className="space-y-1">
                     {previewResult.blockers.map((b, i) => (
                       <li key={i} className="text-xs text-red-700 flex items-start gap-1">
@@ -530,169 +513,164 @@ export default function DuplicateRemediationPanel() {
         </CardContent>
       </Card>
 
-      {/* ── 7. Execute Merge — Phase 4C live section (governance-controlled) ──── */}
+      {/* ── 7. Utfør sammenslåing — Fase 4C (governance-kontrollert) ──── */}
       <Card className={ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? "border border-orange-200 bg-orange-50" : "border border-slate-200 bg-slate-50"}>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2" style={ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? { color: '#92400e' } : { color: '#64748b' }}>
             <AlertTriangle size={14} />
-            Execute Merge
+            Utfør sammenslåing
             <span className={`text-xs font-normal border rounded px-2 py-0.5 ${
-              ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION 
-                ? 'bg-orange-100 text-orange-600 border-orange-200' 
+              ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION
+                ? 'bg-orange-100 text-orange-600 border-orange-200'
                 : 'bg-slate-100 text-slate-500 border-slate-200'
             }`}>
-              Phase 4C — {ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? 'live' : 'disabled'}
+              Fase 4C — {ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? 'live' : 'deaktivert'}
             </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION ? (
             <div className="text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded px-3 py-3 space-y-2">
-              <p className="font-semibold">Live merge execution is disabled.</p>
-              <p>Dry-run preview remains fully available above.</p>
-              <p className="text-slate-500">Execution requires explicit governance enablement via feature flag in component code.</p>
+              <p className="font-semibold">Live sammenslåing er deaktivert i kode og kan ikke kjøres fra dette panelet.</p>
+              <p>Tørrkjøringsforhåndsvisning er fortsatt tilgjengelig ovenfor.</p>
+              <p className="text-slate-500">Utføring krever eksplisitt governance-aktivering via funksjons-flagg i komponentkode.</p>
             </div>
           ) : (
             <>
               <div className="mb-3 text-xs text-orange-900 bg-orange-100 border border-orange-200 rounded px-3 py-2">
-                This section connects to the real <code className="font-mono">executeDuplicateMerge</code> backend.
-                Execution will re-point FuelPrice records and soft-archive duplicate stations.
-                No hard deletes. Audit log is mandatory.
+                Denne seksjonen kobler til den ekte <code className="font-mono">executeDuplicateMerge</code>-backend.
+                Utføring vil repeke FuelPrice-poster og myk-arkivere duplikatstasjoner.
+                Ingen harde slettinger. Revisjonslogg er obligatorisk.
               </div>
 
-              {/* Pre-execution preview summary */}
               {!result && (
-            <div className="mb-4 border border-slate-200 rounded overflow-hidden">
-              <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                Pre-execution summary (demo values)
-              </div>
-              <div className="divide-y divide-slate-100">
-                <div className="flex justify-between px-3 py-2 text-xs">
-                  <span className="text-slate-500">Canonical station ID</span>
-                  <span className="font-mono text-slate-700">{DEMO_CANONICAL_ID}</span>
-                </div>
-                <div className="flex justify-between px-3 py-2 text-xs">
-                  <span className="text-slate-500">Duplicates to archive</span>
-                  <span className="font-mono text-slate-700">{DEMO_DUPLICATE_IDS.length}</span>
-                </div>
-                <div className="flex justify-between px-3 py-2 text-xs">
-                  <span className="text-slate-500">Hard deletes</span>
-                  <span className="text-green-700 font-semibold">None</span>
-                </div>
-                <div className="flex justify-between px-3 py-2 text-xs">
-                  <span className="text-slate-500">Audit log</span>
-                  <span className="text-green-700 font-semibold">Required — always written</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-              {/* Curator confirmation checkbox */}
-              {!result && (
-            <label className="flex items-start gap-2 mb-4 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                className="mt-0.5 accent-orange-600"
-              />
-              <span className="text-xs text-orange-900">
-                I have reviewed the canonical station, the duplicates, and the merge impact.
-                I authorise this merge operation. I understand this cannot be automatically undone.
-              </span>
-            </label>
-          )}
-
-              {/* Execute button */}
-              {!result && (
-            <button
-              onClick={handleExecuteMerge}
-              disabled={!confirmed || loading}
-              className={`w-full py-2 px-4 text-xs font-semibold rounded border transition-colors ${
-                confirmed && !loading
-                  ? "bg-orange-600 text-white border-orange-700 hover:bg-orange-700 cursor-pointer"
-                  : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-              }`}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={12} className="animate-spin" />
-                  Executing merge…
-                </span>
-              ) : (
-                "Execute Merge"
-              )}
-            </button>
-          )}
-
-              {/* Error state */}
-              {error && (
-            <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
-
-              {/* Post-execution result summary */}
-              {result && (
-            <div className="mt-2">
-              <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mb-3 font-semibold">
-                ✓ Merge executed successfully
-              </div>
-              <div className="border border-slate-200 rounded overflow-hidden">
-                <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                  Execution result
-                </div>
-                <div className="divide-y divide-slate-100">
-                  {[
-                    ["Canonical station ID", result.canonical_station_id],
-                    ["Duplicates archived", result.duplicates_archived],
-                    ["FuelPrice records moved", result.fuelprice_records_moved],
-                    ["Archive confirmed", result.validation?.duplicates_archived_confirmed ? "Yes" : "Not confirmed"],
-                    ["FuelPrice move confirmed", result.validation?.fuelprice_moved_confirmed ? "Yes" : "Not confirmed"],
-                    ["Curator", result.curator_id],
-                    ["Timestamp", result.timestamp],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex justify-between px-3 py-2 text-xs">
-                      <span className="text-slate-500">{label}</span>
-                      <span className="font-mono text-slate-700 text-right max-w-[55%] break-all">{String(value)}</span>
+                <div className="mb-4 border border-slate-200 rounded overflow-hidden">
+                  <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                    Forutføringsoppsummering (demoverdier)
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    <div className="flex justify-between px-3 py-2 text-xs">
+                      <span className="text-slate-500">Kanonisk stasjons-ID</span>
+                      <span className="font-mono text-slate-700">{DEMO_CANONICAL_ID}</span>
                     </div>
-                  ))}
+                    <div className="flex justify-between px-3 py-2 text-xs">
+                      <span className="text-slate-500">Duplikater som arkiveres</span>
+                      <span className="font-mono text-slate-700">{DEMO_DUPLICATE_IDS.length}</span>
+                    </div>
+                    <div className="flex justify-between px-3 py-2 text-xs">
+                      <span className="text-slate-500">Harde slettinger</span>
+                      <span className="text-green-700 font-semibold">Ingen</span>
+                    </div>
+                    <div className="flex justify-between px-3 py-2 text-xs">
+                      <span className="text-slate-500">Revisjonslogg</span>
+                      <span className="text-green-700 font-semibold">Påkrevet — skrives alltid</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <p className="text-xs text-slate-400 mt-2 text-center">
-                Audit log entry written to StationMergeLog.
-              </p>
-            </div>
+              )}
+
+              {!result && (
+                <label className="flex items-start gap-2 mb-4 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                    className="mt-0.5 accent-orange-600"
+                  />
+                  <span className="text-xs text-orange-900">
+                    Jeg har gjennomgått den kanoniske stasjonen, duplikatene og merge-effekten.
+                    Jeg autoriserer denne sammenslåingsoperasjonen. Jeg forstår at dette ikke kan angres automatisk.
+                  </span>
+                </label>
+              )}
+
+              {!result && (
+                <button
+                  onClick={handleExecuteMerge}
+                  disabled={!confirmed || loading}
+                  className={`w-full py-2 px-4 text-xs font-semibold rounded border transition-colors ${
+                    confirmed && !loading
+                      ? "bg-orange-600 text-white border-orange-700 hover:bg-orange-700 cursor-pointer"
+                      : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                  }`}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 size={12} className="animate-spin" />
+                      Utfører sammenslåing...
+                    </span>
+                  ) : (
+                    "Utfør sammenslåing"
+                  )}
+                </button>
+              )}
+
+              {error && (
+                <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                  <strong>Feil:</strong> {error}
+                </div>
+              )}
+
+              {result && (
+                <div className="mt-2">
+                  <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2 mb-3 font-semibold">
+                    ✓ Sammenslåing utført
+                  </div>
+                  <div className="border border-slate-200 rounded overflow-hidden">
+                    <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                      Utføringsresultat
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {[
+                        ["Kanonisk stasjons-ID", result.canonical_station_id],
+                        ["Duplikater arkivert", result.duplicates_archived],
+                        ["FuelPrice-poster flyttet", result.fuelprice_records_moved],
+                        ["Arkivering bekreftet", result.validation?.duplicates_archived_confirmed ? "Ja" : "Ikke bekreftet"],
+                        ["FuelPrice-flytt bekreftet", result.validation?.fuelprice_moved_confirmed ? "Ja" : "Ikke bekreftet"],
+                        ["Kurator", result.curator_id],
+                        ["Tidsstempel", result.timestamp],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex justify-between px-3 py-2 text-xs">
+                          <span className="text-slate-500">{label}</span>
+                          <span className="font-mono text-slate-700 text-right max-w-[55%] break-all">{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2 text-center">
+                    Revisjonsloggoppføring skrevet til StationMergeLog.
+                  </p>
+                </div>
               )}
             </>
           )}
         </CardContent>
       </Card>
 
-      {/* ── 9. Merge Audit History — Phase 4C read-only ──────────────────── */}
+      {/* ── 9. Historikk ──────────────────────────────────────────────── */}
       <Card className="border border-green-200 bg-green-50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-green-800 flex items-center gap-2">
             <History size={14} className="text-green-600" />
-            Merge audit history
-            <span className="text-xs font-normal bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Read-only</span>
-            <span className="text-xs font-normal bg-slate-100 text-slate-600 border border-slate-200 rounded px-2 py-0.5">Audit trail</span>
+            Historikk
+            <span className="text-xs font-normal bg-green-100 text-green-700 border border-green-200 rounded px-2 py-0.5">Lesemodus</span>
+            <span className="text-xs font-normal bg-slate-100 text-slate-600 border border-slate-200 rounded px-2 py-0.5">Revisjonsspor</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-3 text-xs text-green-900 bg-green-100 border border-green-200 rounded px-3 py-2">
-            Complete audit trail of all executed station merges. No actions can be triggered from this section.
+            Fullstendig revisjonsspor for alle utførte stasjonsammenslåinger. Ingen handlinger kan utløses fra denne seksjonen.
           </div>
 
           {auditLoading ? (
             <div className="text-center py-6">
               <Loader2 size={16} className="animate-spin inline text-slate-400 mb-2" />
-              <p className="text-xs text-slate-500">Loading audit history…</p>
+              <p className="text-xs text-slate-500">Laster revisjonshistorikk...</p>
             </div>
           ) : auditHistory.length === 0 ? (
             <div className="text-center py-6 bg-white rounded border border-slate-200">
-              <p className="text-xs text-slate-500">No merge actions have been executed yet.</p>
-              <p className="text-xs text-slate-400 mt-1">Executed merges will appear here with full curator audit trail.</p>
+              <p className="text-xs text-slate-500">Ingen sammenslåingshandlinger er utført ennå.</p>
+              <p className="text-xs text-slate-400 mt-1">Utførte sammenslåinger vises her med fullstendig kurator-revisjonsspor.</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -700,34 +678,34 @@ export default function DuplicateRemediationPanel() {
                 <div key={log.id || idx} className="border border-slate-200 rounded p-3 bg-white text-xs space-y-1.5">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
-                      <p className="font-semibold text-slate-800">Merge #{idx + 1}</p>
+                      <p className="font-semibold text-slate-800">Sammenslåing #{idx + 1}</p>
                       <p className="text-slate-500">{new Date(log.timestamp).toLocaleString('no-NO')}</p>
                     </div>
                     <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium shrink-0">
-                      ✓ Executed
+                      ✓ Utført
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 py-1.5 border-t border-slate-100 pt-1.5">
                     <div>
-                      <span className="text-slate-500">Canonical ID</span>
+                      <span className="text-slate-500">Kanonisk ID</span>
                       <p className="font-mono text-slate-700 text-xs break-all">{log.canonical_station_id}</p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Duplicates merged</span>
+                      <span className="text-slate-500">Duplikater sammenslått</span>
                       <p className="font-mono text-slate-700 text-xs">{log.merged_station_ids?.length || 0}</p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Prices re-pointed</span>
+                      <span className="text-slate-500">Priser repektet</span>
                       <p className="font-mono text-slate-700 text-xs">{log.fuelprice_records_moved}</p>
                     </div>
                     <div>
-                      <span className="text-slate-500">Curator</span>
+                      <span className="text-slate-500">Kurator</span>
                       <p className="font-mono text-slate-700 text-xs break-all">{log.curator_id}</p>
                     </div>
                   </div>
                   {log.merged_station_ids && log.merged_station_ids.length > 0 && (
                     <div className="py-1.5 border-t border-slate-100 pt-1.5">
-                      <span className="text-slate-500">Merged IDs</span>
+                      <span className="text-slate-500">Sammenslåtte IDer</span>
                       <p className="font-mono text-slate-700 text-xs mt-0.5 break-all">
                         {log.merged_station_ids.join(', ')}
                       </p>
@@ -735,7 +713,7 @@ export default function DuplicateRemediationPanel() {
                   )}
                   {log.notes && (
                     <div className="py-1.5 border-t border-slate-100 pt-1.5">
-                      <span className="text-slate-500">Notes</span>
+                      <span className="text-slate-500">Notater</span>
                       <p className="text-slate-700 text-xs mt-0.5">{log.notes}</p>
                     </div>
                   )}
