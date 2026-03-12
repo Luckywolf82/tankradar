@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-12T00:30:00Z",
+  lastUpdated: "2026-03-12T10:00:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -218,7 +218,7 @@ export const AUDIT_INDEX = {
 
   categoryBreakdown: {
     architecture: 4,
-    ui: 4,
+    ui: 5,
     governance: 2,
     product: 3,
     activation: 3,
@@ -226,7 +226,7 @@ export const AUDIT_INDEX = {
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 17
+    total: 18
   },
 
   governanceRules: {
