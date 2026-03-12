@@ -7,6 +7,7 @@ import ReviewConsistencyCheck from '../components/admin/ReviewConsistencyCheck';
 import MasteringMetrics from '../components/admin/MasteringMetrics';
 import ChainUnconfirmedManualReviewUI from '../components/admin/ChainUnconfirmedManualReviewUI';
 import AdminOperationsPanel from '../components/admin/AdminOperationsPanel';
+import QueueWorkflowGuide from '../components/admin/QueueWorkflowGuide';
 
 export default function StationCandidateReview() {
   const [candidates, setCandidates] = useState([]);
@@ -287,8 +288,35 @@ export default function StationCandidateReview() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 pb-24">
-      <h1 className="text-3xl font-bold mb-6">Station Mastering Hub</h1>
-      <p className="text-gray-600 mb-6">Google Places-kandidater + Station-data review</p>
+      <h1 className="text-2xl font-bold mb-1">Stasjonsmastering</h1>
+      <p className="text-sm text-slate-500 mb-4">Her behandler du stasjonskandidater og stasjonsreview steg for steg til køen er redusert.</p>
+
+      {/* Status bar */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${stats.pending > 0 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+          {stats.pending} kandidater ventende
+        </span>
+        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${stationStats.pending_total > 0 ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}>
+          {stationStats.pending_total} stasjonsreview ventende
+        </span>
+        {groups.length > 0 && (
+          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-100 text-blue-700">
+            {groups.length} grupper
+          </span>
+        )}
+        {ungrouped.length > 0 && (
+          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-slate-100 text-slate-700">
+            {ungrouped.length} enkeltkandidater
+          </span>
+        )}
+        {stats.pending === 0 && stationStats.pending_total === 0 && (
+          <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-green-100 text-green-700">
+            Køen er tom — bra jobba!
+          </span>
+        )}
+      </div>
+
+      <QueueWorkflowGuide />
 
       {/* Metrics & Export */}
       <div className="mb-8">
@@ -302,555 +330,18 @@ export default function StationCandidateReview() {
       <ChainUnconfirmedManualReviewUI />
 
       {/* Admin Operations Panel */}
-      <AdminOperationsPanel onLoadCandidates={loadCandidates} />
-
-      {/* Deprecated: Old buttons section removed - now in AdminOperationsPanel */}
-      <div className="mb-6 space-y-3 hidden">
-        <div>
-          <Button
-            onClick={handleAutoApproveExactDuplicates}
-            disabled={autoProcessing}
-            className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Behandler...' : 'Auto-godkjenn eksakte duplikater'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Godkjenner automatisk første kandidat og markerer resten som duplikater når navn, adresse og koordinater er eksakt like.
-          </p>
+      <div className="mb-6 border border-slate-200 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
+          <div>
+            <p className="text-sm font-semibold text-slate-700">Driftsoperasjoner</p>
+            <p className="text-xs text-slate-500 mt-0.5">Kjør disse <strong>FØR</strong> du starter manuell gjennomgang nedenfor. Bulk-operasjonene reduserer antall saker du må behandle manuelt.</p>
+          </div>
+          <span className="text-xs text-slate-400 bg-white border border-slate-200 rounded px-2 py-0.5 whitespace-nowrap shrink-0">
+            Også i SuperAdmin → Drift
+          </span>
         </div>
-        
-        <div>
-          <Button
-            onClick={() => base44.functions.invoke('identifyStationReviewProblems').then(() => loadCandidates())}
-            disabled={autoProcessing}
-            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Skanninger...' : 'Scan Station-data for problemer'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Identifiserer mangel på kjede, generiske navn og andre problemer i Station-tabellen.
-          </p>
-        </div>
-
-        <div>
-          <Button
-            onClick={handleAutoConfirmChainFromName}
-            disabled={autoProcessing}
-            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Behandler...' : 'Auto-bekreft kjede fra navn'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Bekrefter kjede automatisk for station_review med chain_unconfirmed der navn matcher kjent kjede.
-          </p>
-        </div>
-
-        <div>
-          <Button
-            onClick={handleAutoFillLocation}
-            disabled={autoProcessing}
-            className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Behandler...' : 'Auto-fyll stedsinfo fra navn'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Fyller inn by og områdenavn automatisk fra stasjonsnavn der det er entydig.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              setAutoProcessing(true);
-              try {
-                const result = await base44.functions.invoke('classifyStationsRuleEngine');
-                setRuleEngineResult(result.data);
-                loadCandidates();
-              } catch (e) {
-                console.error('Rule engine failed:', e);
-              } finally {
-                setAutoProcessing(false);
-              }
-            }}
-            disabled={autoProcessing}
-            className="bg-violet-600 hover:bg-violet-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Klassifiserer...' : 'Kjør regelmotor (full klassifisering)'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Klassifiserer alle stasjoner etter regelmotor (kjeder, spesialtyper, retail, generiske navn). Kjøres også automatisk daglig kl 03:00.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              setAutoProcessing(true);
-              try {
-                // Først dry-run for å se rapport
-                const result = await base44.functions.invoke('verifyGenericNameStations', { dryRun: false });
-                setRuleEngineResult({ ...result.data, _type: 'verify_generic' });
-                loadCandidates();
-              } catch (e) {
-                console.error('Verify generic names failed:', e);
-              } finally {
-                setAutoProcessing(false);
-              }
-            }}
-            disabled={autoProcessing}
-            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2 mb-3"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Verifiserer...' : 'Verifiser Tanken/stedsnavn mot geocodet lokasjon'}
-          </Button>
-          <p className="text-xs text-gray-600 mb-3">
-            Sjekker om stedsnavn i stasjonsnavn (f.eks. "Tanken Hjartdal") stemmer med geocodet by/kommune. Setter areaLabel automatisk der det matcher.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              // Dry run først for å vise hva som vil bli slettet
-              const preview = await base44.functions.invoke('deleteForeignStations', { dryRun: true });
-              const count = preview.data?.count ?? 0;
-              const names = (preview.data?.stations ?? []).map(s => s.name).join('\n');
-              if (count === 0) { alert('Ingen utenlandske stasjoner funnet.'); return; }
-              if (!window.confirm(`Vil du slette ${count} utenlandske stasjoner?\n\n${names}\n\nDette kan ikke angres.`)) return;
-              setAutoProcessing(true);
-              try {
-                const result = await base44.functions.invoke('deleteForeignStations', { dryRun: false });
-                alert(`Slettet ${result.data?.deletedStations} stasjoner og ${result.data?.deletedReviews} reviews.`);
-                loadCandidates();
-              } catch (e) {
-                console.error('Delete foreign failed:', e);
-              } finally {
-                setAutoProcessing(false);
-              }
-            }}
-            disabled={autoProcessing}
-            className="bg-red-700 hover:bg-red-800 flex items-center gap-2"
-          >
-            <X className="w-4 h-4" />
-            {autoProcessing ? 'Sletter...' : 'Slett alle utenlandske stasjoner'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Sletter stasjoner som matcher utenlandske mønstre (Preem, Tännäs, Sälen, Åre, K-market, Kilpisjärvi osv.) samt tilhørende reviews. Viser forhåndsvisning før sletting.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              setAutoProcessing(true);
-              try {
-                const result = await base44.functions.invoke('geocodeStationsFromCoordinates', { batchSize: 80 });
-                setGeocodeResult(result.data);
-                loadCandidates();
-              } catch (e) {
-                console.error('Geocoding failed:', e);
-              } finally {
-                setAutoProcessing(false);
-              }
-            }}
-            disabled={autoProcessing}
-            className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Geocoder batch...' : 'Geocode neste batch (80 stk)'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Kjører én batch på 80 stk manuelt. Automatisk scheduled kjøring hvert 5. minutt tar resten — ingen manuell oppfølging nødvendig.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Reclassify UI] Previewing review reclassification (dry run)...');
-              try {
-                const result = await base44.functions.invoke('previewStationReviewReclassification', { dryRun: true });
-                const data = result.data;
-                console.log('[Reclassify UI] Full result:', data);
-                console.log('[Reclassify UI] Summary:', data?.summary);
-                for (const p of data?.proposals || []) {
-                  console.log(`[Reclassify UI] ${p.currentReviewType} → ${p.targetReviewType} | ${p.stationName}`, {
-                    analysisBucket: p.analysisBucket,
-                    safeToReclassify: p.safeToReclassify,
-                    blocked: p.blockedByMissingReviewType,
-                    reasonTags: p.reasonTags,
-                    explanation: p.explanation,
-                  });
-                }
-              } catch (e) {
-                console.error('[Reclassify UI] Preview failed:', e);
-              }
-            }}
-            className="bg-orange-600 hover:bg-orange-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Preview review reclassification
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Dry run — ingen data endres. Viser hvilke pending reviews som trygt kan reklassifiseres. Resultater logges til konsollen.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Historical Reclassification UI] Previewing historical station reclassification...');
-              try {
-                const result = await base44.functions.invoke('previewHistoricalStationReclassification', { dryRun: true });
-                const data = result.data;
-                console.log('[Historical Reclassification UI] Full result:', data);
-                console.log('[Historical Reclassification UI] Summary:', data?.summary);
-                console.log('[Historical Reclassification UI] Proposals count:', data?.proposals?.length);
-                if (data?.proposals) {
-                  for (const p of data.proposals.slice(0, 10)) {
-                    console.log(`[Historical] ${p.stationName}`, {
-                      classification: p.currentExpectedClassification,
-                      targetReviewType: p.targetReviewType,
-                      historicalReviews: p.historicalReviewTypes,
-                      explanation: p.explanation,
-                    });
-                  }
-                }
-              } catch (e) {
-                console.error('[Historical Reclassification UI] Preview failed:', e);
-              }
-            }}
-            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Preview historical reclassification
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Re-evaluate all stations against current normalization rules. Identifies outdated historical review outcomes. Dry run only — no writes.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Preview Safe Mass UI] Previewing safe mass reclassification...');
-              try {
-                const result = await base44.functions.invoke('applySafeMassReviewReclassification', { dryRun: true, includeForeign: false });
-                const data = result.data;
-                console.log('[Preview Safe Mass UI] Full result:', data);
-                console.log('[Preview Safe Mass UI] Summary:', data?.summary);
-                if (data?.summary?.appliedExamples?.length > 0) {
-                  console.log('Preview examples:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.category})`).join(' | '));
-                }
-              } catch (e) {
-                console.error('[Preview Safe Mass UI] Preview failed:', e);
-              }
-            }}
-            className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Preview safe mass reclassification
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Dry run only. Shows what safe categories would be reclassified (non_fuel_poi + specialty_fuel). Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Apply Safe Mass UI] Applying safe mass reclassification...');
-              try {
-                const result = await base44.functions.invoke('applySafeMassReviewReclassification', { dryRun: false, includeForeign: false });
-                const data = result.data;
-                console.log('[Apply Safe Mass UI] Result:', data);
-                console.log('[Apply Safe Mass UI] Summary:', data?.summary);
-                if (data?.summary?.appliedExamples?.length > 0) {
-                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.actionTaken})`).join(' | '));
-                }
-              } catch (e) {
-                console.error('[Apply Safe Mass UI] Apply failed:', e);
-              }
-            }}
-            className="bg-emerald-600 hover:bg-emerald-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Apply safe mass reclassification
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Applies safe categories only (non_fuel_poi + specialty_fuel). Updates or creates reviews. Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Apply Historical Reclassification UI] Applying historical station reclassification...');
-              try {
-                const result = await base44.functions.invoke('applyHistoricalStationReclassification', { dryRun: false });
-                const data = result.data;
-                console.log('[Apply Historical Reclassification UI] Result:', data);
-                console.log('[Apply Historical Reclassification UI] Summary:', data?.summary);
-                if (data?.summary?.appliedExamples?.length > 0) {
-                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} (${a.action})`).join(' | '));
-                }
-              } catch (e) {
-                console.error('[Apply Historical Reclassification UI] Apply failed:', e);
-              }
-            }}
-            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Apply historical reclassification
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Apply safe reclassifications (non_fuel_poi + specialty_fuel only). Updates existing chain_unconfirmed or creates new reviews. Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Apply Auto-Confirm Specialty Fuel UI] Applying auto-confirm specialty_fuel...');
-              try {
-                const result = await base44.functions.invoke('applyAutoConfirmSpecialtyFuel');
-                const data = result.data;
-                console.log('[Apply Auto-Confirm Specialty Fuel UI] Full result:', data);
-                console.log('[Apply Auto-Confirm Specialty Fuel UI] Summary:', data?.summary);
-                if (data?.summary?.appliedExamples?.length > 0) {
-                  console.log('Applied stations:', data.summary.appliedExamples.map(a => `${a.stationName} → ${a.newStationType}`).join(' | '));
-                }
-              } catch (e) {
-                console.error('[Apply Auto-Confirm Specialty Fuel UI] Apply failed:', e);
-              }
-            }}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Apply auto-confirm specialty_fuel
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Auto-resolves safe specialty_fuel_review candidates and sets correct stationType (lpg, cng, truck_diesel, biogas, etc). Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Preview Auto-Confirm Specialty Fuel UI] Previewing auto-confirm candidates...');
-              try {
-                const result = await base44.functions.invoke('previewAutoConfirmSpecialtyFuel');
-                const data = result.data;
-                console.log('[Preview Auto-Confirm Specialty Fuel UI] Full result:', data);
-                console.log('[Preview Auto-Confirm Specialty Fuel UI] Summary:', data?.summary);
-                if (data?.examplesSafeToAutoConfirm?.length > 0) {
-                  console.log('Safe to auto-confirm examples:', data.examplesSafeToAutoConfirm.map(a => `${a.stationName} → ${a.suggestedStationType}`).join(' | '));
-                }
-              } catch (e) {
-                console.error('[Preview Auto-Confirm Specialty Fuel UI] Preview failed:', e);
-              }
-            }}
-            className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Preview auto-confirm specialty_fuel (safe subset)
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Dry run only. Identifies specialty_fuel_review items with strong, unambiguous fuel signals that can be auto-confirmed. Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Analyze Specialty Fuel Queue UI] Analyzing specialty_fuel_review queue...');
-              try {
-                const result = await base44.functions.invoke('analyzeSpecialtyFuelReviewQueue');
-                const data = result.data;
-                console.log('[Analyze Specialty Fuel Queue UI] Full result:', data);
-                console.log('[Analyze Specialty Fuel Queue UI] Summary:', data?.summary);
-                if (data?.fullResultRows) {
-                  console.log(`[Analyze Specialty Fuel Queue UI] Full rows (${data.fullResultRows.length} stations):`, data.fullResultRows);
-                }
-              } catch (e) {
-                console.error('[Analyze Specialty Fuel Queue UI] Analysis failed:', e);
-              }
-            }}
-            className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Analyze specialty_fuel_review queue
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Read-only analysis of pending specialty_fuel_review queue. Shows distribution by derived bucket, signals, and chain presence. Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              console.log('[Inspect State UI] Inspecting historical reclassification stations...');
-              try {
-                const stationIds = [
-                  '69aca2538c602f6662ce6f98',
-                  '69aca2e54d3570418b70979a',
-                  '69aca299de10b0286d782ff7',
-                  '69aca2985510daf759a31be3',
-                  '69aca1951f274bd58abd8128',
-                ];
-                const result = await base44.functions.invoke('inspectStationReviewState', { stationIds });
-                const data = result.data;
-                console.log('[Inspect State UI] Full result:', data);
-                if (data?.result) {
-                  for (const station of data.result) {
-                    console.log(`[Inspect State UI] ${station.stationName} (${station.reviewCount} reviews)`, station.reviews);
-                  }
-                }
-              } catch (e) {
-                console.error('[Inspect State UI] Inspection failed:', e);
-              }
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            Inspect review state (historical test stations)
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Inspects review state for 5 test stations. Results logged to console.
-          </p>
-        </div>
-
-        <div className="border-t pt-3">
-           <Button
-             onClick={async () => {
-               console.log('[Preview Semantic Chain UI] Previewing semantic chain cleanup...');
-               try {
-                 const result = await base44.functions.invoke('previewResolveSemanticChainUnconfirmed');
-                 const data = result.data;
-                 console.log('[Preview Semantic Chain UI] Full result:', data);
-                 console.log('[Preview Semantic Chain UI] Summary:', data?.summary);
-                 if (data?.toReclassify?.length > 0) {
-                   console.log('Preview examples:', data.toReclassify.map(r => `${r.stationName} (${r.semanticBucket})`).join(' | '));
-                 }
-               } catch (e) {
-                 console.error('[Preview Semantic Chain UI] Preview failed:', e);
-               }
-             }}
-             className="bg-lime-600 hover:bg-lime-700 flex items-center gap-2"
-           >
-             <Zap className="w-4 h-4" />
-             Preview semantic chain cleanup
-           </Button>
-           <p className="text-xs text-gray-600 mt-2">
-             Dry run only. Identifies pending chain_unconfirmed reviews that can be safely reclassified to local_fuel_site_review, specialty_fuel_review, or retail_fuel_operator_review. Results logged to console.
-           </p>
-         </div>
-
-         <div className="border-t pt-3">
-           <Button
-             onClick={async () => {
-               console.log('[Apply Semantic Chain UI] Applying semantic chain cleanup...');
-               try {
-                 const result = await base44.functions.invoke('resolveSemanticChainUnconfirmed');
-                 const data = result.data;
-                 console.log('[Apply Semantic Chain UI] Full result:', data);
-                 console.log('[Apply Semantic Chain UI] Summary:', data?.summary);
-                 if (data?.reclassifiedExamples?.length > 0) {
-                   console.log('Applied stations:', data.reclassifiedExamples.map(r => `${r.stationName} → ${r.newReviewType}`).join(' | '));
-                 }
-                 loadCandidates();
-               } catch (e) {
-                 console.error('[Apply Semantic Chain UI] Apply failed:', e);
-               }
-             }}
-             disabled={autoProcessing}
-             className="bg-lime-600 hover:bg-lime-700 flex items-center gap-2"
-           >
-             <Zap className="w-4 h-4" />
-             {autoProcessing ? 'Reklassifiserer...' : 'Apply semantic chain cleanup'}
-           </Button>
-           <p className="text-xs text-gray-600 mt-2">
-             Reclassifies pending chain_unconfirmed reviews using semantic analysis. Only applies high-confidence reclassifications. Results logged to console.
-           </p>
-         </div>
-
-        <div className="border-t pt-3">
-           <Button
-             onClick={async () => {
-               console.log('[Analyze UI] Fetching pending review analysis...');
-               try {
-                 const result = await base44.functions.invoke('analyzePendingStationReviews');
-                 const data = result.data;
-                 console.log('[Analyze UI] Full result:', data);
-                 console.log('[Analyze UI] Summary:', data?.summary);
-                 for (const item of data?.details || []) {
-                   console.log(`[Analyze UI] ${item.analysisBucket} | ${item.reviewType} | ${item.stationName}`, {
-                     reasonTags: item.reasonTags,
-                     explanation: item.explanation,
-                     chain: item.currentChain,
-                     operator: item.currentOperator,
-                     stationType: item.currentStationType,
-                   });
-                 }
-               } catch (e) {
-                 console.error('[Analyze UI] Analysis failed:', e);
-               }
-             }}
-             className="bg-slate-600 hover:bg-slate-700 flex items-center gap-2"
-           >
-             <Zap className="w-4 h-4" />
-             Analyze pending reviews
-           </Button>
-           <p className="text-xs text-gray-600 mt-2">
-             Read-only analyse av pending review-køen. Ingen data endres. Resultater logges til nettleserkonsollen.
-           </p>
-         </div>
-
-        <div className="border-t pt-3">
-          <Button
-            onClick={async () => {
-              setAutoProcessing(true);
-              console.log('[Pipeline UI] Starting full review pipeline...');
-              try {
-                const result = await base44.functions.invoke('runStationReviewPipeline');
-                const data = result.data;
-                console.log('[Pipeline UI] Full result:', data);
-                for (const step of data?.results || []) {
-                  console.log(`[Pipeline UI] Step ${step.step} ${step.functionName}`, {
-                    success: step.success,
-                    durationMs: step.durationMs,
-                    payload: step.payload,
-                    response: step.response,
-                    error: step.error,
-                  });
-                }
-                console.log('[Pipeline UI] Final summary:', {
-                  totalDurationMs: data?.totalDurationMs,
-                  stepsRun: data?.stepsRun,
-                  stepsSucceeded: data?.stepsSucceeded,
-                  stepsFailed: data?.stepsFailed,
-                });
-                loadCandidates();
-              } catch (e) {
-                console.error('[Pipeline UI] Full pipeline failed:', e);
-              } finally {
-                setAutoProcessing(false);
-              }
-            }}
-            disabled={autoProcessing}
-            className="bg-sky-700 hover:bg-sky-800 flex items-center gap-2"
-          >
-            <Zap className="w-4 h-4" />
-            {autoProcessing ? 'Kjører pipeline...' : 'Kjør full review pipeline'}
-          </Button>
-          <p className="text-xs text-gray-600 mt-2">
-            Kjører alle 8 automatiske review-funksjoner sekvensielt i riktig rekkefølge. Detaljerte resultater logges til nettleserkonsollen.
-          </p>
+        <div className="p-4">
+          <AdminOperationsPanel onLoadCandidates={loadCandidates} />
         </div>
       </div>
 
@@ -1184,7 +675,14 @@ export default function StationCandidateReview() {
       {/* Station Reviews Section */}
       {stationReviews.filter(r => r.status === 'pending').length > 0 && (
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4 text-purple-900">Station-Data Review ({stationReviews.filter(r => r.status === 'pending').length})</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-purple-900">Stasjonsreview ({stationReviews.filter(r => r.status === 'pending').length} ventende)</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              <strong>Hva er dette?</strong> Stasjonsposter flagget av klassifiseringspipelinen. Hver sak har en type som bestemmer hva «Godkjenn» faktisk betyr.<br />
+              <strong>Hva gjør du?</strong> Les type og beskrivelse, deretter godkjenn, avvis eller marker som duplikat.<br />
+              <strong>Viktig:</strong> Se den fargemerkede advarselen per sak — «Godkjenn» har ulik betydning avhengig av type.
+            </p>
+          </div>
           <div className="space-y-3">
             {stationReviews.filter(r => r.status === 'pending').map(review => {
               const borderColor =
@@ -1232,33 +730,38 @@ export default function StationCandidateReview() {
                       )}
                     </div>
 
-                    <div className="flex gap-2 flex-wrap">
-                      <Button
-                        onClick={() => handleStationReviewApprove(review)}
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Godkjenn
-                      </Button>
-                      <Button
-                        onClick={() => handleStationReviewDuplicate(review)}
-                        size="sm"
-                        variant="outline"
-                      >
-                        <MapPin className="w-4 h-4 mr-1" />
-                        Duplikat
-                      </Button>
-                      <Button
-                        onClick={() => handleStationReviewReject(review)}
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600"
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Avvis
-                      </Button>
-                    </div>
+                    {(() => {
+                      const approveMap = {
+                        non_fuel_poi_review:      { label: "Bekreft (ikke drivstoff)",  cls: "bg-amber-600 hover:bg-amber-700", note: "Godkjenner at dette er et IKKE-drivstoffsted. Stasjonen beholdes men klassifiseres som ikke-drivstoff." },
+                        specialty_fuel_review:    { label: "Bekreft spesialdrivstoff",  cls: "bg-amber-600 hover:bg-amber-700", note: "Godkjenner at dette er spesialdrivstoff (LPG, CNG, marine, lastebil osv.)." },
+                        chain_unconfirmed:        { label: "Godkjenn uten kjede",       cls: "bg-blue-600 hover:bg-blue-700",   note: "Aksepterer stasjonen som den er — uten en bekreftet kjede." },
+                        possible_foreign_station: { label: "Bekreft utenlandsk",        cls: "bg-red-600 hover:bg-red-700",     note: "Bekrefter at dette er en utenlandsk stasjon som ikke skal inkluderes i norsk katalog." },
+                      };
+                      const cfg = approveMap[review.review_type] || { label: "Godkjenn", cls: "bg-green-600 hover:bg-green-700", note: null };
+                      return (
+                        <>
+                          {cfg.note && (
+                            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-2">
+                              ⚠ {cfg.note}
+                            </p>
+                          )}
+                          <div className="flex gap-2 flex-wrap">
+                            <Button onClick={() => handleStationReviewApprove(review)} size="sm" className={cfg.cls}>
+                              <Check className="w-4 h-4 mr-1" />
+                              {cfg.label}
+                            </Button>
+                            <Button onClick={() => handleStationReviewDuplicate(review)} size="sm" variant="outline">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              Marker som duplikat
+                            </Button>
+                            <Button onClick={() => handleStationReviewReject(review)} size="sm" variant="outline" className="text-red-600">
+                              <X className="w-4 h-4 mr-1" />
+                              Avvis
+                            </Button>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </CardContent>
                 )}
               </Card>
@@ -1271,7 +774,14 @@ export default function StationCandidateReview() {
       {/* Grouped candidates */}
       {groups.length > 0 && (
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4 text-blue-900">Grupperte kandidater ({groups.length})</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-blue-900">Grupperte kandidater ({groups.length})</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              <strong>Hva er dette?</strong> Kandidater fra samme fysiske sted, gruppert etter navn og koordinater.<br />
+              <strong>Hva gjør du?</strong> Velg det beste navnet (radioknapp for «samme sted»-grupper), klikk «Godkjenn» på riktig kandidat — resten markeres som duplikat automatisk.<br />
+              <strong>Etterpå:</strong> En ny stasjon opprettes direkte og kandidatene lukkes.
+            </p>
+          </div>
           <div className="space-y-3">
             {groups.map(group => (
               <Card key={group.groupId} className="border-l-4 border-l-blue-400">
@@ -1444,7 +954,14 @@ export default function StationCandidateReview() {
       {/* Ungrouped candidates */}
       {ungrouped.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Individuelle kandidater ({ungrouped.length})</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Enkeltkandidater ({ungrouped.length})</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              <strong>Hva er dette?</strong> Kandidater som ikke ble gruppert med andre.<br />
+              <strong>Hva gjør du?</strong> Vurder navn, adresse og koordinater. Godkjenn om stasjonen er reell og ny. Avvis om den er feil eller allerede finnes. Marker som duplikat om den overlapper med en eksisterende stasjon.<br />
+              <strong>Etterpå:</strong> Godkjente kandidater opprettes som nye stasjoner.
+            </p>
+          </div>
           <div className="space-y-4">
             {ungrouped.map(candidate => (
               <Card key={candidate.id} className="border-l-4 border-l-green-400">
@@ -1504,8 +1021,9 @@ export default function StationCandidateReview() {
       )}
 
       {groups.length === 0 && ungrouped.length === 0 && (
-        <div className="p-6 bg-gray-50 rounded-lg text-center">
-          <p className="text-gray-600">Ingen kandidater å gjennomgå</p>
+        <div className="p-6 bg-green-50 border border-green-200 rounded-xl text-center">
+          <p className="text-green-700 font-medium">Ingen ventende kandidater</p>
+          <p className="text-xs text-green-600 mt-1">Alle stasjonskandidater er behandlet. Sjekk stasjonsreview-seksjonen ovenfor.</p>
         </div>
       )}
     </div>
