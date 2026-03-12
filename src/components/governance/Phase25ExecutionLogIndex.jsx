@@ -125,9 +125,10 @@ export const EXECUTION_LOG_METADATA = {
     description:
       "AI agents must execute these steps IN ORDER before proposing or implementing anything",
     requiredReadOrder: [
-      "1. Read Phase25ExecutionLogIndex.jsx (this file)",
-      "2. Read the active execution log chunk marked ACTIVE in chunks[] array above",
-      "3. Read components/governance/NextSafeStep.jsx"
+      "1. Read Phase25ExecutionLogIndex.jsx (this file) — verify entryCount, active chunk filename, locked files",
+      "2. Read Phase25ExecutionLog_007.jsx — the chunk with status 'ACTIVE (append new entries here)' in chunks[] above. " +
+        "If chunks[] shows a different file as ACTIVE, read that file instead. Never assume chunk filename.",
+      "3. Read components/governance/NextSafeStep.jsx — verify approved next step before proposing anything"
     ],
     conflictResolution:
       "If AI_STATE.jsx conflicts with Phase25ExecutionLogIndex.jsx or the active chunk, " +
@@ -136,12 +137,41 @@ export const EXECUTION_LOG_METADATA = {
     nextSafeStep:
       "components/governance/NextSafeStep.jsx contains the canonical approved next step. " +
       "AI must not propose alternatives without explicit user override in conversation.",
+    nextSafeStepSyncRule:
+      "NextSafeStep.jsx MUST be updated synchronously with the execution log entry that completes it. " +
+      "After an entry is appended to the active chunk and entryCount is incremented, " +
+      "NextSafeStep MUST define the next approved step before ChatGPT generates the next prompt. " +
+      "A log entry without a corresponding NextSafeStep update is considered INCOMPLETE.",
     forbidden: [
       "Do not guess next step from execution log entry titles alone",
       "Do not implement without reading active chunk tail first",
       "Do not modify locked Phase 2 files under any circumstances",
-      "Do not bundle unrelated changes into a single implementation step"
+      "Do not bundle unrelated changes into a single implementation step",
+      "Do not treat AI_STATE.jsx entry count as authoritative — always verify against this file"
     ]
+  },
+
+  // Sync enforcement checklist — MUST PASS before any task is considered complete
+  syncEnforcementChecklist: {
+    description:
+      "Verify all 5 points pass before marking a task complete. " +
+      "Any failure = task is INCOMPLETE and must be resolved before proceeding.",
+    checkpoints: [
+      "□ 1. entryCount in this file matches: sum of all sealed chunk entries + active chunk entries",
+      "□ 2. Exactly ONE chunk in chunks[] has status 'ACTIVE (append new entries here)'",
+      "□ 3. activeChunk field matches the filename of the ACTIVE chunk in chunks[]",
+      "□ 4. Entry ranges in chunks[] are contiguous with no gaps or overlaps",
+      "□ 5. NextSafeStep.jsx has been updated to reflect the next approved workstream"
+    ],
+    failureProtocol:
+      "If any checkpoint fails: STOP. Do not proceed. Fix the desync before generating next prompt.",
+    currentStatus: {
+      checkpoint1: "✓ entryCount=97, sealed chunks cover 1–81, active chunk 87–97 = 97 entries (note: entries 82–86 in Phase25ExecutionLog_007 preamble section)",
+      checkpoint2: "✓ Only Phase25ExecutionLog_007.jsx marked ACTIVE",
+      checkpoint3: "✓ activeChunk = 'Phase25ExecutionLog_007.jsx' matches ACTIVE chunk",
+      checkpoint4: "✓ Chunk ranges are contiguous",
+      checkpoint5: "✓ NextSafeStep defines Entry 98 (Governance Conflict Resolution — in progress)"
+    }
   }
 };
 
