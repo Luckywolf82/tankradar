@@ -1454,4 +1454,73 @@ export const entry_97 = {
   historicalContext: "Entry 96 (Governance + Workflow Coherence Audit) identified: (1) authority conflict between BASE44_PROJECT_INSTRUCTIONS and AI_PROJECT_INSTRUCTIONS, (2) stale entry count in AI_STATE (78 vs actual 95), (3) stale governance pointers in AUDIT_INDEX, AUDIT_SYSTEM_GUIDE, and README. Entry 97 resolves all structural pointer issues, renames the agent instruction file for clarity, and hardens the audit system documentation. The remaining CRITICAL DECISION (BASE44 vs AI_PROJECT_INSTRUCTIONS authority) is addressed by deprecating AI_PROJECT_INSTRUCTIONS and creating CHATGPT_INSTRUCTIONS with explicit authority routing."
 };
 
-export default entry_97;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 98: GOVERNANCE CONFLICT RESOLUTION PASS
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_98 = {
+  timestamp: "2026-03-12T02:00:00Z",
+  phase: "Phase 2.5 Governance Conflict Resolution",
+  title: "Governance Conflict Resolution Pass — AI_STATE Stale Warning, mandatoryPreflight Hardening, Sync Enforcement Checklist",
+
+  objectives: [
+    "Fix AI_STATE.jsx stale entry count (78 → 97) with bold STALE DATA WARNING",
+    "Strengthen Phase25ExecutionLogIndex mandatoryPreflight with explicit active chunk filename",
+    "Add NextSafeStep sync rule to mandatoryPreflight: NextSafeStep MUST update synchronously with each entry",
+    "Add 5-point Sync Enforcement Checklist to Phase25ExecutionLogIndex as final task-completion gate",
+    "Ensure ChatGPT cannot accidentally read stale state from AI_STATE.jsx"
+  ],
+
+  preFlightVerification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount: 97, active chunk: Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx tail (entries 87–97) — Entry 97 Audit Hardening complete",
+    "✓ Read NextSafeStep.jsx — Entry 98 scope confirmed (Governance Conflict Resolution Pass)",
+    "✓ Read AI_STATE.jsx — stale entry count (78) and stale Latest Entries confirmed"
+  ],
+
+  filesModified: [
+    "components/governance/AI_STATE.jsx — STALE DATA WARNING added at top; entry count updated 78→97; Latest Entries updated to entries 93–97; Key Rules updated for Entry 97 renames",
+    "components/governance/Phase25ExecutionLogIndex.jsx — mandatoryPreflight requiredReadOrder made explicit (chunk filename + no-assumption rule); nextSafeStepSyncRule added; syncEnforcementChecklist added (5-point gate)",
+    "components/governance/Phase25ExecutionLog_007.jsx — Entry 98 appended",
+    "components/governance/Phase25ExecutionLogIndex.jsx — entryCount 97→98, lastUpdated updated",
+    "components/governance/NextSafeStep.jsx — Updated to define Entry 99 next safe step"
+  ],
+
+  changeSummary: {
+    filesModified: 4,
+    runtimeCodeChanges: 0,
+    backendChanges: 0,
+    phase2LockedFilesModified: 0,
+    governanceFilesHardened: 3
+  },
+
+  syncEnforcementChecklistResult: {
+    checkpoint1: "✓ entryCount=98 matches actual entries",
+    checkpoint2: "✓ Exactly one ACTIVE chunk (Phase25ExecutionLog_007.jsx)",
+    checkpoint3: "✓ activeChunk field matches ACTIVE chunk filename",
+    checkpoint4: "✓ Chunk ranges contiguous",
+    checkpoint5: "✓ NextSafeStep updated to Entry 99"
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched"
+  ],
+
+  governanceCompliance: {
+    noRuntimeChanges: "✓ Zero runtime code modified",
+    noBackendChanges: "✓ Zero backend logic modified",
+    noLockedFilesModified: "✓ All 6 Phase-2 frozen functions untouched",
+    syncEnforcementActive: "✓ 5-point checklist now embedded in Phase25ExecutionLogIndex",
+    aiStateWarningActive: "✓ Bold STALE WARNING prevents ChatGPT from using stale entry count",
+    preflightHardened: "✓ Explicit chunk filename in read order; NextSafeStep sync rule enforced"
+  },
+
+  historicalContext: "Entry 97 (Audit System Hardening) renamed AI_PROJECT_INSTRUCTIONS to CHATGPT_INSTRUCTIONS and fixed stale governance pointers. Entry 98 (Governance Conflict Resolution) completes the governance cleanup cycle: AI_STATE stale count corrected, mandatoryPreflight made explicit, and sync enforcement checklist added as a formal 5-point task-completion gate. The ChatGPT↔Base44↔GitHub workflow is now fully protected against the three desync failure modes identified in Entry 96."
+};
+
+export default entry_98;

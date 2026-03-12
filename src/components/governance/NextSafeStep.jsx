@@ -125,6 +125,36 @@ export const NEXT_SAFE_STEP = {
     blockingIssues: "NONE",
     frozenFilesImpact: "ZERO",
     expectedOutcome: "Governance system fully coherent; no stale pointers; sync enforcement checklist active; ChatGPT reads correct state on every preflight"
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NEXT SAFE STEP (ENTRY 99) — POST-GOVERNANCE PRODUCT DECISION
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  nextSafeStepEntry99: {
+    id: "phase25_step_99",
+    title: "Post-Governance Product Decision — Choose Next Product Workstream",
+    description:
+      "Governance cycle (Entries 96–98) is complete. The ChatGPT↔Base44↔GitHub loop is fully hardened. " +
+      "Governance system is now coherent, sync-enforced, and pointer-correct. " +
+      "Entry 99 is a DECISION POINT — choose next product workstream from the idea bank or engagement roadmap. " +
+      "Candidates from Entry 95 engagement review: " +
+      "(A) Leaderboard system (global/regional top reporters), " +
+      "(B) Gamification Pass 2 (badges + progress countdown + milestone persistence), " +
+      "(C) CTA A/B testing (analytics tracking for Entry 92 validation), " +
+      "(D) Data workstream (data quality audit, source registry review). " +
+      "No code changes in this entry — decision and scoping only.",
+    scope: [
+      "Review Entry 95 remaining engagement gaps (leaderboard, reminders, badges, countdown)",
+      "Review IDEA_INDEX.jsx for candidate ideas (route-intelligence, price-predictor, leaderboard, savings-tracker)",
+      "Select ONE workstream with explicit rationale",
+      "Update NextSafeStep with approved scope before implementation begins"
+    ],
+    complexity: "DECISION ONLY — no code",
+    runtimeImpact: "ZERO",
+    estimatedEffort: "15 minutes (decision + NextSafeStep update)",
+    blockingIssues: "NONE — governance cycle complete; repo fully synced",
+    frozenFilesImpact: "ZERO"
   }
 };
 
