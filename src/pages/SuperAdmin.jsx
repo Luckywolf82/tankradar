@@ -13,6 +13,7 @@ import {
   Archive,
   LayoutDashboard,
   ExternalLink,
+  Map,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -142,6 +143,10 @@ export default function SuperAdmin() {
             <Archive size={14} />
             Archive
           </TabsTrigger>
+          <TabsTrigger value="roadmap" className="flex items-center gap-1.5">
+            <Map size={14} />
+            Roadmap
+          </TabsTrigger>
         </TabsList>
 
         {/* ── OVERVIEW ── */}
@@ -219,6 +224,11 @@ export default function SuperAdmin() {
             <p className="text-xs text-slate-500 mb-3">Batch-testverktøy for manuell verifisering av matching-motor. Kjør testcaser og inspiser resultater.</p>
             <Phase2MatchingTestHarness />
           </div>
+        </TabsContent>
+
+        {/* ── ROADMAP ── */}
+        <TabsContent value="roadmap">
+          <RoadmapAdminPanel />
         </TabsContent>
 
         {/* ── ARCHIVE ── */}
