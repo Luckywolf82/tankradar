@@ -10,6 +10,7 @@ import ActiveAlertsPreview from "../components/dashboard/ActiveAlertsPreview";
 import PumpModeCard from "../components/dashboard/PumpModeCard";
 import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
 import RouteSavingsCard from "../components/dashboard/RouteSavingsCard";
+import NationalFuelBarometer from "../components/dashboard/NationalFuelBarometer";
 import PageContainer from "../components/layout/PageContainer";
 import DashboardGrid from "../components/layout/DashboardGrid";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
