@@ -148,7 +148,7 @@ export default function PriceAlertsPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus size={14} className="mr-1" />
-              Nytt varsling
+              Nytt varsel
             </Button>
           </div>
         </CardHeader>
@@ -174,8 +174,13 @@ export default function PriceAlertsPage() {
                          </div>
                     <div className="flex items-center gap-1 text-slate-600">
                       <MapPin size={12} />
-                      {alert.radiusKm} km fra ({alert.latitude.toFixed(2)}, {alert.longitude.toFixed(2)})
+                      {alert.radiusKm} km fra ({alert.latitude?.toFixed(4)}, {alert.longitude?.toFixed(4)})
                     </div>
+                    <GeoContextLinks
+                      latitude={alert.latitude}
+                      longitude={alert.longitude}
+                      compact
+                    />
                     {alert.lastTriggeredAt && (
                       <div className="text-slate-500">
                         Sist utløst: {new Date(alert.lastTriggeredAt).toLocaleString("no-NO")} @ {alert.lastTriggeredPrice} NOK
@@ -213,7 +218,7 @@ export default function PriceAlertsPage() {
       {showCreateForm && (
        <Card className="bg-blue-50 border border-blue-200">
          <CardHeader className="pb-2">
-           <CardTitle className="text-sm">Nytt områdevarsel</CardTitle>
+           <CardTitle className="text-sm">Nytt varsel</CardTitle>
          </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateAlert} className="space-y-3">
@@ -245,34 +250,10 @@ export default function PriceAlertsPage() {
                     className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Breddegrad
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
-                    className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-700 block mb-1">
-                    Lengdegrad
-                  </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
-                    className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  />
-                </div>
                 <div className="col-span-2">
-                   <label className="text-xs font-medium text-slate-700 block mb-1">
-                     Søkeradius (km)
-                   </label>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">
+                    Søkeradius (km)
+                  </label>
                   <input
                     type="number"
                     step="0.5"
@@ -282,6 +263,18 @@ export default function PriceAlertsPage() {
                   />
                 </div>
               </div>
+
+              {/* Geo input */}
+              <div className="border-t pt-3">
+                <GeoLocationInput
+                  title="Varselsposisjon"
+                  value={{ latitude: formData.latitude, longitude: formData.longitude }}
+                  onChange={({ latitude, longitude }) =>
+                    setFormData((f) => ({ ...f, latitude: latitude ?? f.latitude, longitude: longitude ?? f.longitude }))
+                  }
+                />
+              </div>
+
               <div className="flex gap-2 justify-end">
                 <Button
                   type="button"
@@ -289,16 +282,16 @@ export default function PriceAlertsPage() {
                   size="sm"
                   onClick={() => setShowCreateForm(false)}
                   className="text-xs"
-                  >
+                >
                   Avbryt
-                  </Button>
-                  <Button
+                </Button>
+                <Button
                   type="submit"
                   size="sm"
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
-                  >
-                  Opprett varsling
-                  </Button>
+                >
+                  Opprett varsel
+                </Button>
               </div>
             </form>
           </CardContent>
