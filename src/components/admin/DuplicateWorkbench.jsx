@@ -6,7 +6,11 @@ import { Search, Loader, ChevronRight } from "lucide-react";
 import DuplicateDetectionResults from "./DuplicateDetectionResults";
 import DuplicateRemediationPanel from "./DuplicateRemediationPanel";
 
-const STEPS = ["scan", "inspect", "remediation"];
+const STEPS = [
+  { id: "scan", label: "Skann" },
+  { id: "inspect", label: "Se resultater" },
+  { id: "remediation", label: "Forhåndsvisning" },
+];
 
 export default function DuplicateWorkbench() {
   const [city, setCity] = useState("Trondheim");

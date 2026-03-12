@@ -80,9 +80,9 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
   return (
     <>
       <div className="mb-8 space-y-4">
-        {/* OPERATIONS */}
+        {/* DRIFT */}
         <CollapsibleSection
-          title="OPERATIONS"
+          title="DRIFT"
           icon={Zap}
           section="operations"
           isExpanded={expandedSections.operations}

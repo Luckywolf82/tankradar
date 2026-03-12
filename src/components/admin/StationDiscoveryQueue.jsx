@@ -37,7 +37,7 @@ export default function StationDiscoveryQueue() {
           <div className="p-1.5 rounded-lg bg-purple-50">
             <MapPin size={16} className="text-purple-600" />
           </div>
-          Station Discovery Queue
+          Nye og uavklarte stasjoner
           <span className="ml-auto text-xs font-normal text-slate-400">{items.length} poster</span>
         </CardTitle>
       </CardHeader>
