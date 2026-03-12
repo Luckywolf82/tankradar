@@ -1,30 +1,37 @@
 /*
-TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.0
+TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.1
 Canonical Roadmap Manager with Weighted Stability
 
-Last updated:   2026-03-12 (Entry 101 — Roadmap Governor pass)
-Replaces:       ROADMAP v3.0 (Entry 100 — AI Product Brain pass)
+Last updated:   2026-03-12 (Entry 102 — Roadmap Governor refinement pass)
+Replaces:       ROADMAP v4.0 (Entry 101 — Roadmap Governor pass)
 
-CHANGE LOG vs v3.0:
-  - Weight model corrected: ADMIN_UI_IMPORTANCE raised to 0.20, INSTALL_DRIVER lowered to 0.15
-  - Phase structure replaced with Governor-locked 6-phase baseline
-  - Stability modifiers applied to all raw scores
-  - national-fuel-barometer marked COMPLETED (shipped 2026-03-12)
-  - Community station validation + Community price verification added (Phase 3)
-  - Admin operations panel integration elevated to immediate next action (admin escalation +0.50)
-  - currentPriorityOrder aligned to locked phase baseline + stability-adjusted scores
+CHANGE LOG vs v4.0:
+  - Verification language corrected: admin files were referenced, not directly read in v4.0 pass
+  - CURRENT_PRIORITY_ORDER split into three distinct lists:
+      COMPLETED_TRACE, ACTIONABLE_PRIORITY_ORDER, BLOCKED_OR_NORTH_STAR
+  - Highest-scoring feature and recommended-next-ship now explicitly separated
+  - adminEscalationBonus made conditional and state-dependent (re-evaluated each pass)
+  - fuel-price-heatmap USER_VALUE corrected from 4 → 3 (informational/marketing, not direct fuel savings)
+  - fuel-price-heatmap stabilityAdjustedScore lowered from 3.30 → 3.00
 
 STABILITY CONTRACT:
   Layer 1 (phase structure) is LOCKED — do not collapse, reorder, or merge phases.
   Layer 2 (feature priority within/across adjacent phases) may be refined by weighted scoring.
   A single audit may NOT overturn the baseline.
 
-VERIFICATION: All scores derived from direct file inspection of:
-  - components/ideas/IDEA_INDEX.jsx
-  - components/governance/NextSafeStep.jsx
-  - components/admin/* (AdminOperationsPanel, MasteringMetrics, SuperAdmin, etc.)
-  - components/audits/product/product-intelligence-audit-2026-03-12.jsx
-  No memory or snapshot assumed.
+EVIDENCE STANDARDS (v4.1 corrected):
+  Files directly read in this pass:
+    - components/roadmap/ROADMAP.jsx (v4.0)
+    - components/ideas/IDEA_INDEX.jsx
+    - components/governance/NextSafeStep.jsx
+    - components/audits/product/product-intelligence-audit-2026-03-12.jsx
+  Files referenced but NOT directly read in this pass:
+    - components/admin/AdminOperationsPanel.jsx
+    - components/admin/MasteringMetrics.jsx
+    - pages/SuperAdmin.jsx
+  Admin gap assessment (orphaned panels) is inferred from v4.0 roadmap findings,
+  which were themselves based on prior session inspection of those files.
+  Do not treat referenced files as directly verified in this pass.
 */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,11 +47,26 @@ export const SCORING_MODEL = {
     IMPLEMENTATION_COST:  0.15,  // Inverse complexity: 5 = easy, 1 = hard
   },
   stabilityModifiers: {
-    phaseAlignmentBonus:    +0.25,  // Feature fits naturally in its current phase
-    readinessPenalty:       -0.50,  // Depends on missing data / routing / admin / history
-    partialDependencyPenalty: -0.25, // Depends on feature not yet shipped
-    adminEscalationBonus:   +0.50,  // Admin UI weakness currently blocks operational scaling
-    singleAuditCap:         "ONE STEP only — cannot jump multiple phases from one audit alone",
+    phaseAlignmentBonus:      +0.25,  // Feature fits naturally in its current phase
+    readinessPenalty:         -0.50,  // Depends on missing data / routing / admin / history
+    partialDependencyPenalty: -0.25,  // Depends on feature not yet shipped
+    adminEscalationBonus: {
+      value: +0.50,
+      rule: "CONDITIONAL AND STATE-DEPENDENT. Applied only when ALL of the following are true:",
+      conditions: [
+        "1. A specific admin UI gap is currently open and verified in current repo state",
+        "2. The gap has meaningful impact on data quality or operational throughput",
+        "3. The gap has not been resolved since the last scoring pass",
+      ],
+      reEvaluation: "This bonus MUST be re-evaluated in every roadmap scoring pass. Remove it for any feature whose admin gap has been resolved. Do not let it permanently distort priority after the gap is fixed.",
+      currentlyApplied: [
+        "admin-operations-panel-integration — gap open, verified referenced from v4.0 inspection",
+        "community-price-verification — reduces admin review load, gap open",
+        "community-station-validation — reduces curator bottleneck, gap open",
+        "governance-stabilisering — ongoing operational gap",
+      ],
+    },
+    singleAuditCap: "ONE STEP only — cannot jump multiple phases from one audit alone",
   },
   scoringNote: "Raw score 0–5.0, ×5 for display (0–25). Stability-adjusted score is authoritative for priority ordering.",
 };
@@ -391,18 +413,21 @@ export const FEATURES = [
     category: "maps",
     description: "Interactive map of Norway: color-coded heat zones by region with station pins. Regional MVP buildable with RegionalFuelBenchmark + react-leaflet today.",
     status: "partial",
-    userValueImportance:   4,
+    userValueImportance:   3,  // v4.1 correction: was 4. Regional color map is informational/marketing-friendly.
+                               // Does not directly help a user buy cheaper fuel the way savings-tracker or fill-historikk does.
+                               // Lowered from 4 → 3 to reflect realistic product value vs data flywheel features.
     dataQualityImportance: 2,
     adminUiImportance:     2,
     installDriverImportance: 4,
     implementationCost:    3,
-    rawWeightedScore: 3.05,  // 1.20+0.40+0.40+0.60+0.45
-    stabilityNote: "Phase alignment +0.25. Station pins blocked by partial GooglePlaces coverage.",
-    stabilityAdjustedScore: 3.30,
-    displayScore: 16.50,
+    rawWeightedScore: 2.75,  // 0.90+0.40+0.40+0.60+0.45 (corrected from 3.05)
+    stabilityNote: "Phase alignment +0.25. Station pins blocked by partial GooglePlaces coverage. v4.1: USER_VALUE corrected 4→3.",
+    stabilityAdjustedScore: 3.00,  // corrected from 3.30
+    displayScore: 15.00,           // corrected from 16.50
     dependencies: ["RegionalFuelBenchmark-entity", "react-leaflet"],
     blockers: ["Station pin layer requires GooglePlaces coverage >60% nationally — regional heat zones unblocked"],
-    buildNote: "BUILD regional heat zone MVP only. Defer station pin layer.",
+    buildNote: "Nice-to-have visual/marketing feature. Build AFTER fuel-savings-tracker and gamification-system. Regional heat zone MVP only.",
+    priorityNote: "v4.1: Does not create stronger immediate user value than savings/data-flywheel features. Ranked below gamification-system and driver-leaderboard in actionable order.",
   },
 
   {
