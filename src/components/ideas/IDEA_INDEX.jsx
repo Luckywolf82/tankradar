@@ -1,7 +1,6 @@
 /*
-IDEA INDEX
-
-Canonical registry of TankRadar product ideas.
+IDEA INDEX — TankRadar
+Canonical registry of all product ideas.
 All ideas awaiting audit analysis before implementation.
 
 Workflow: IDEA → AUDIT → BUILD
@@ -13,162 +12,305 @@ Status values:
 - deferred: temporarily postponed
 - rejected: decided against, kept for traceability
 - implemented: shipped to production
+
+Last updated: 2026-03-12 (Entry 99 — Product Intelligence Audit)
+Added 9 new ideas. Total: 15 ideas.
 */
 
 export const IDEA_INDEX = {
   registry: [
+
+    // ─────────────────────────────────────────────────────────────────
+    // EXISTING IDEAS (Entry 87-A baseline)
+    // ─────────────────────────────────────────────────────────────────
+
     {
       id: "route-fuel-intelligence",
       title: "Billigste drivstoff langs ruten",
       category: "routing",
-      status: "candidate",
-      summary:
-        "Show users the cheapest fuel stations along their planned driving route, with savings estimates",
-      problem:
-        "Drivers often discover cheaper fuel stations after they've already filled up elsewhere. Route-aware pricing could save money before the purchase decision.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 18,
+      auditRank: 3,
+      buildReadiness: "blocked",
+      blockingReason: "Requires station-level route data and route calculation engine — not available today",
+      summary: "Show users the cheapest fuel stations along their planned driving route, with savings estimates",
       userValue: "high",
       crowdsourcingImpact: "indirect",
       activationImpact: "medium",
       complexity: "high",
-      dependencies: [
-        "user-authenticated-routes",
-        "geolocation",
-        "station-level-prices",
-        "route-optimization-library",
-      ],
+      dependencies: ["user-authenticated-routes", "geolocation", "station-level-prices", "route-optimization-library"],
       recommendedAuditTypes: ["product", "activation", "data", "performance"],
-      notes:
-        "Requires real-time station data along route. Privacy concern: location sharing. MVP could start with manual route entry.",
+      notes: "Phase 3 feature. Data infrastructure must come first.",
     },
+
     {
       id: "price-drop-predictor",
       title: "Når lønner det seg å fylle?",
       category: "pricing",
-      status: "candidate",
-      summary:
-        "ML-based prediction of upcoming price movements to guide refueling timing",
-      problem:
-        "Users want to know if prices will drop soon or if they should fill up now. No tool exists for this.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 16,
+      auditRank: 6,
+      buildReadiness: "blocked",
+      blockingReason: "Requires 6+ months station-level historical data. Currently only monthly national SSB averages available.",
+      summary: "ML-based prediction of upcoming price movements to guide refueling timing",
       userValue: "high",
       crowdsourcingImpact: "none",
       activationImpact: "medium",
       complexity: "high",
-      dependencies: [
-        "historical-price-data",
-        "statistical-modeling",
-        "ml-training-pipeline",
-        "national-trend-data",
-      ],
+      dependencies: ["historical-price-data", "statistical-modeling", "ml-training-pipeline", "national-trend-data"],
       recommendedAuditTypes: ["product", "data", "performance"],
-      notes:
-        "Requires 6+ months of historical data to train. Initial MVP could use simple trend analysis instead.",
+      notes: "Phase 4 feature. Requires mature data pipeline.",
     },
+
     {
       id: "receipt-import",
       title: "Samtykkebasert lesing av drivstoffkjøp",
       category: "crowdsourcing",
-      status: "candidate",
-      summary:
-        "Allow users to optionally import fuel prices from email receipts or photos for automatic price logging",
-      problem:
-        "Manual price entry is friction. Automated import from receipts reduces effort and increases data quality.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 15,
+      auditRank: 4,
+      buildReadiness: "deferred",
+      blockingReason: "High privacy risk, store review complexity. OCR pipeline and email OAuth not implemented.",
+      summary: "Allow users to optionally import fuel prices from email receipts or photos for automatic price logging",
       userValue: "medium",
       crowdsourcingImpact: "direct",
       activationImpact: "high",
       complexity: "medium",
-      dependencies: [
-        "ocr-or-receipt-parser",
-        "user-email-oauth",
-        "receipt-validation",
-        "image-upload",
-      ],
-      recommendedAuditTypes: [
-        "product",
-        "activation",
-        "security",
-        "publishability",
-      ],
-      notes:
-        "Privacy-critical: requires explicit consent. Must not store emails or images long-term. OCR accuracy matters.",
+      dependencies: ["ocr-or-receipt-parser", "user-email-oauth", "receipt-validation", "image-upload"],
+      recommendedAuditTypes: ["product", "activation", "security", "publishability"],
+      notes: "Privacy-critical. Deferred pending privacy architecture review.",
     },
+
     {
       id: "driver-leaderboard",
       title: "Lokal bidragsrangering for drivstoffpriser",
       category: "gamification",
-      status: "candidate",
-      summary:
-        "Show top contributors by region / city with streak counters and badges",
-      problem:
-        "No social incentive for consistent price contributions. Leaderboards could drive engagement.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 19,
+      auditRank: 2,
+      buildReadiness: "ready",
+      summary: "Show top contributors by region / city with streak counters and badges",
       userValue: "low",
       crowdsourcingImpact: "direct",
       activationImpact: "high",
       complexity: "low",
       dependencies: ["contribution-tracking", "user-profiles", "regional-segmentation"],
       recommendedAuditTypes: ["product", "activation"],
-      notes:
-        "Requires anonymization or opt-in display. Must not reveal location patterns. Consider privacy implications.",
+      notes: "Requires opt-in display and anonymization. Fast to build.",
     },
+
     {
       id: "fuel-savings-tracker",
       title: "Hvor mye har du spart?",
       category: "engagement",
-      status: "candidate",
-      summary:
-        "Calculate estimated savings from using TankRadar prices vs. national average",
-      problem:
-        "Users don't see the concrete value of price reporting. Savings tracker makes impact visible.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 23,
+      auditRank: 1,
+      buildReadiness: "ready",
+      summary: "Calculate estimated savings from using TankRadar prices vs. national average",
       userValue: "high",
       crowdsourcingImpact: "indirect",
       activationImpact: "high",
       complexity: "low",
       dependencies: ["user-price-history", "national-benchmark", "user-location"],
       recommendedAuditTypes: ["product", "activation"],
-      notes:
-        "Could be gamified with milestones. Estimates based on assumed km/year—should be user-configurable.",
+      notes: "Highest scored candidate. Data ready today. Recommended next build.",
     },
+
     {
       id: "favorite-route-alerts",
       title: "Billigste varsel på din rute",
       category: "alerts",
-      status: "candidate",
-      summary:
-        "Alert users when fuel is cheapest on their regular commute route",
-      problem:
-        "Price alerts exist for single stations, but not for routes. Route-based alerts serve commuters better.",
+      status: "audited",
+      auditedBy: "core-value-feature-audit-2026-03-12",
+      auditScore: 16,
+      auditRank: 5,
+      buildReadiness: "blocked",
+      blockingReason: "Requires saved-routes system and push notifications — not yet implemented.",
+      summary: "Alert users when fuel is cheapest on their regular commute route",
       userValue: "medium",
       crowdsourcingImpact: "none",
       activationImpact: "medium",
       complexity: "medium",
-      dependencies: [
-        "saved-routes",
-        "route-matching",
-        "price-alert-engine",
-        "push-notifications",
-      ],
+      dependencies: ["saved-routes", "route-matching", "price-alert-engine", "push-notifications"],
       recommendedAuditTypes: ["product", "activation", "performance"],
-      notes:
-        "Requires geofencing or route distance calculation. Push notification opt-in is critical.",
+      notes: "Phase 3 feature. Blocked by routing layer.",
+    },
+
+    // ─────────────────────────────────────────────────────────────────
+    // NEW IDEAS (Entry 99 — Product Intelligence Audit, 2026-03-12)
+    // ─────────────────────────────────────────────────────────────────
+
+    {
+      id: "price-war-alerts",
+      title: "Bensinkrig varsler",
+      category: "alerts",
+      status: "candidate",
+      summary: "Detect and alert users when competing stations trigger a local price war — cascading competitive price drops",
+      userValue: "high",
+      crowdsourcingImpact: "indirect",
+      activationImpact: "high",
+      complexity: "medium",
+      dependencies: ["station-level-prices", "price-change-detection-engine", "push-notifications"],
+      recommendedAuditTypes: ["product", "activation", "data", "performance"],
+      notes: "Requires near-realtime station-level pricing. High impact when data coverage is sufficient.",
+    },
+
+    {
+      id: "fill-historikk",
+      title: "Min tankhistorikk",
+      category: "engagement",
+      status: "candidate",
+      summary: "Personal refueling log showing every fill-up recorded via TankRadar — price, station, date, and cost",
+      userValue: "high",
+      crowdsourcingImpact: "indirect",
+      activationImpact: "high",
+      complexity: "low",
+      dependencies: ["user-price-history", "user-reported-fuelprice-entity"],
+      recommendedAuditTypes: ["product", "activation", "ui"],
+      notes: "Pure UI feature — data already exists in FuelPrice entity. No new infrastructure required.",
+    },
+
+    {
+      id: "bilokonomi-dashboard",
+      title: "Bilens økonomi-dashboard",
+      category: "engagement",
+      status: "candidate",
+      summary: "Personal vehicle economics dashboard: monthly fuel costs, consumption, and efficiency trends",
+      userValue: "high",
+      crowdsourcingImpact: "indirect",
+      activationImpact: "medium",
+      complexity: "medium",
+      dependencies: ["fill-historikk", "user-vehicle-profile", "national-benchmark-data"],
+      recommendedAuditTypes: ["product", "activation", "ui"],
+      notes: "Depends on fill-historikk shipping first. High retention value for engaged users.",
+    },
+
+    {
+      id: "tankradar-score",
+      title: "TankRadar-score",
+      category: "gamification",
+      status: "candidate",
+      summary: "A composite personal score: savings rate × contribution quality × streak — single motivating number",
+      userValue: "medium",
+      crowdsourcingImpact: "direct",
+      activationImpact: "high",
+      complexity: "low",
+      dependencies: ["contribution-tracking", "fuel-savings-tracker", "streak-counter", "national-benchmark-data"],
+      recommendedAuditTypes: ["product", "activation", "ui"],
+      notes: "Best built after fuel-savings-tracker and gamification-system ship.",
+    },
+
+    {
+      id: "gamification-system",
+      title: "Gamification 2.0 — Badges og milepæler",
+      category: "gamification",
+      status: "candidate",
+      summary: "Full gamification layer: persistent badges, milestone progress countdowns, achievement history",
+      userValue: "medium",
+      crowdsourcingImpact: "direct",
+      activationImpact: "high",
+      complexity: "low",
+      dependencies: ["contribution-tracking", "streak-counter", "user-price-history"],
+      recommendedAuditTypes: ["product", "activation", "ui"],
+      notes: "Directly addresses Entry 95 remaining gaps. Low complexity, high engagement impact.",
+    },
+
+    {
+      id: "fuel-price-heatmap",
+      title: "Drivstoffpris-kart",
+      category: "maps",
+      status: "candidate",
+      summary: "Interactive map of Norway showing fuel prices by region with color-coded heat zones and station pins",
+      userValue: "medium",
+      crowdsourcingImpact: "indirect",
+      activationImpact: "medium",
+      complexity: "medium",
+      dependencies: ["station-coordinates", "regional-fuel-benchmarks", "react-leaflet"],
+      recommendedAuditTypes: ["product", "ui", "performance"],
+      notes: "Regional heatmap MVP can be built with existing RegionalFuelBenchmark data. react-leaflet already installed.",
+    },
+
+    {
+      id: "national-fuel-barometer",
+      title: "Nasjonal drivstoffbarometer",
+      category: "pricing",
+      status: "candidate",
+      summary: "A single-glance barometer: are today's prices low, normal, or high vs. 30-day historical average?",
+      userValue: "high",
+      crowdsourcingImpact: "none",
+      activationImpact: "high",
+      complexity: "low",
+      dependencies: ["national-benchmark-data", "ssb-historical-data"],
+      recommendedAuditTypes: ["product", "activation", "ui", "data"],
+      notes: "No new data sources required. Uses existing NationalFuelBenchmark + SSBData. Extremely low effort, high dashboard impact.",
+    },
+
+    {
+      id: "fleet-mode",
+      title: "Flåtemodus for bedrifter",
+      category: "other",
+      status: "candidate",
+      summary: "Multi-vehicle management for SMEs: per-vehicle cost tracking, expense reports, fleet dashboard",
+      userValue: "high",
+      crowdsourcingImpact: "indirect",
+      activationImpact: "low",
+      complexity: "high",
+      dependencies: ["multi-vehicle-profiles", "organization-account-model", "premium-tier"],
+      recommendedAuditTypes: ["product", "security", "publishability"],
+      notes: "Phase 4–5 feature. Requires org account model. Do not build before consumer product is mature.",
+    },
+
+    {
+      id: "fuel-data-api",
+      title: "Drivstoffdata-API for utviklere",
+      category: "other",
+      status: "candidate",
+      summary: "Commercial or open-access API exposing Norwegian fuel price data to third-party developers",
+      userValue: "low",
+      crowdsourcingImpact: "none",
+      activationImpact: "low",
+      complexity: "medium",
+      dependencies: ["stable-data-pipeline", "api-key-management", "rate-limiting", "data-quality-maturity"],
+      recommendedAuditTypes: ["product", "security", "publishability"],
+      notes: "Phase 5 monetization feature. Requires data pipeline maturity and legal review.",
     },
   ],
 
   summary: {
-    total: 6,
+    total: 15,
     by_status: {
-      candidate: 6,
-      audited: 0,
+      candidate: 9,
+      audited: 6,
       approved_for_build: 0,
-      deferred: 0,
+      deferred: 1,
       rejected: 0,
       implemented: 0,
     },
     by_category: {
       routing: 1,
-      pricing: 1,
+      pricing: 2,
       crowdsourcing: 1,
-      engagement: 1,
-      alerts: 1,
-      gamification: 1,
+      engagement: 3,
+      alerts: 2,
+      gamification: 3,
+      maps: 1,
+      other: 2,
+    },
+    build_ready: ["fuel-savings-tracker", "driver-leaderboard", "fill-historikk", "gamification-system", "national-fuel-barometer"],
+    blocked: ["route-fuel-intelligence", "favorite-route-alerts", "price-drop-predictor"],
+    deferred: ["receipt-import"],
+    phase_map: {
+      phase1: ["fuel-savings-tracker", "fill-historikk", "national-fuel-barometer", "gamification-system", "driver-leaderboard"],
+      phase2: ["bilokonomi-dashboard", "tankradar-score", "fuel-price-heatmap", "price-war-alerts"],
+      phase3: ["route-fuel-intelligence", "favorite-route-alerts"],
+      phase4: ["price-drop-predictor", "fleet-mode"],
+      phase5: ["fuel-data-api", "receipt-import"],
     },
   },
 
@@ -193,6 +335,7 @@ export const IDEA_INDEX = {
     ideaSystemReadme: "src/components/ideas/README.jsx",
     auditRegistry: "src/components/audits/AUDIT_INDEX.jsx",
     rejectedIdeas: "src/components/ideas/rejected/README.jsx",
+    productIntelligenceAudit: "src/components/audits/product/product-intelligence-audit-2026-03-12.jsx",
   },
 };
 
