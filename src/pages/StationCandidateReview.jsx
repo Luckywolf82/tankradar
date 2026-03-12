@@ -8,6 +8,7 @@ import MasteringMetrics from '../components/admin/MasteringMetrics';
 import ChainUnconfirmedManualReviewUI from '../components/admin/ChainUnconfirmedManualReviewUI';
 import AdminOperationsPanel from '../components/admin/AdminOperationsPanel';
 import QueueWorkflowGuide from '../components/admin/QueueWorkflowGuide';
+import MapVerificationLinks from '../components/admin/MapVerificationLinks';
 
 export default function StationCandidateReview() {
   const [candidates, setCandidates] = useState([]);
@@ -705,6 +706,7 @@ export default function StationCandidateReview() {
 
                 {expandedStationReviewId === review.id && (
                   <CardContent className="bg-purple-50 border-t space-y-4 p-4">
+                    <MapVerificationLinks lat={review.station_latitude} lng={review.station_longitude} />
                     <div className="bg-white p-3 rounded border">
                       <div className="text-sm font-semibold mb-2">Problem:</div>
                       <p className="text-sm text-gray-700">{review.issue_description}</p>
@@ -824,10 +826,10 @@ export default function StationCandidateReview() {
                             <div>
                               <div className="font-semibold">{candidate.proposedName}</div>
                               <div className="text-sm text-gray-600">{candidate.address}</div>
-                              <div className="text-xs text-gray-500">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <MapVerificationLinks lat={candidate.latitude} lng={candidate.longitude} />
+                          <div className="flex gap-2 mt-3">
                             <Button
                               onClick={() => handleApprove(candidate, selectedNames[group.groupId] ? group.candidates.find(c => c.id === selectedNames[group.groupId])?.proposedName : null, group.candidates)}
                               size="sm"
@@ -883,10 +885,10 @@ export default function StationCandidateReview() {
                                 <div>
                                   <div className="font-semibold text-sm">{candidate.proposedName}</div>
                                   <div className="text-xs text-gray-600">{candidate.address}</div>
-                                  <div className="text-xs text-gray-500">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
                                 </div>
                               </div>
-                              <div className="flex gap-2 flex-wrap">
+                              <MapVerificationLinks lat={candidate.latitude} lng={candidate.longitude} />
+                              <div className="flex gap-2 flex-wrap mt-3">
                                 <Button
                                   onClick={() => handleApprove(candidate, candidate.proposedName, [])}
                                   size="sm"
@@ -977,10 +979,12 @@ export default function StationCandidateReview() {
                       <div className="text-sm">{candidate.address || 'Ingen'}</div>
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-gray-700">Koordinater</div>
-                      <div className="text-sm">{candidate.latitude.toFixed(4)}, {candidate.longitude.toFixed(4)}</div>
+                      <div className="text-sm font-semibold text-gray-700">Region</div>
+                      <div className="text-sm">{candidate.region || '—'}</div>
                     </div>
                   </div>
+
+                  <MapVerificationLinks lat={candidate.latitude} lng={candidate.longitude} />
 
                   <div className="flex gap-2 pt-2">
                     <Button
