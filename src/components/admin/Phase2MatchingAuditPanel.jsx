@@ -5,89 +5,96 @@ import { CheckCircle2, AlertCircle, Lock, ClipboardList } from "lucide-react";
 
 export default function Phase2MatchingAuditPanel() {
   const governanceLocks = [
-    { rule: "Score threshold (auto-match)", value: "≥65", status: "locked" },
-    { rule: "Score threshold (review)", value: "≥35", status: "locked" },
-    { rule: "Dominance gap minimum", value: "≥10 (multi-candidate)", status: "locked" },
-    { rule: "Distance bands", value: "30m/75m/150m/300m", status: "locked" },
-    { rule: "Chain matching logic", value: "exact match + high-confidence gate", status: "locked" },
-    { rule: "Name similarity scoring", value: "bigram-based (95/85/70/50)", status: "locked" },
-    { rule: "Location signal", value: "+10 match / -15 conflict / 0 uncertain", status: "locked" },
-    { rule: "Review routing", value: "low score or insufficient gap", status: "locked" },
+    { rule: "Poengterskel for auto-match", value: "≥65", status: "locked" },
+    { rule: "Poengterskel for review", value: "≥35", status: "locked" },
+    { rule: "Minimum dominance gap", value: "≥10 (flere kandidater)", status: "locked" },
+    { rule: "Avstandsbånd", value: "30m / 75m / 150m / 300m", status: "locked" },
+    { rule: "Kjede-matching", value: "eksakt match + høy-konfidensport", status: "locked" },
+    { rule: "Navnelikhet (scoring)", value: "bigram-basert (95/85/70/50)", status: "locked" },
+    { rule: "Stedssignal", value: "+10 match / -15 konflikt / 0 usikker", status: "locked" },
+    { rule: "Review-ruting", value: "lav poengsum eller utilstrekkelig gap", status: "locked" },
   ];
 
   const validationStatus = [
-    { component: "Chain normalization", status: "parser_validated", coverage: "Known chains only (conservative)" },
-    { component: "Station name parsing", status: "parser_validated", coverage: "Chain + area keywords" },
-    { component: "Match scoring", status: "parser_validated", coverage: "Distance + chain + name + location" },
-    { component: "Decision gate", status: "parser_validated", coverage: "Score + dominance gap logic" },
-    { component: "Live source validation", status: "not_yet_validated", coverage: "Requires live GooglePlaces data" },
-    { component: "Full pipeline (E2E)", status: "not_yet_validated", coverage: "Requires representative sample" },
+    { component: "Kjede-normalisering", status: "parser_validated", coverage: "Kjente kjeder (konservativ liste)" },
+    { component: "Parsing av stasjonsnavn", status: "parser_validated", coverage: "Kjede + stedsnøkkelord" },
+    { component: "Match-scoring", status: "parser_validated", coverage: "Avstand + kjede + navn + sted" },
+    { component: "Beslutningsport", status: "parser_validated", coverage: "Poengsum + dominance gap-logikk" },
+    { component: "Live kildevalidering", status: "not_yet_validated", coverage: "Krever ekte GooglePlaces-data" },
+    { component: "Full pipeline (E2E)", status: "not_yet_validated", coverage: "Krever representativt utvalg" },
   ];
 
   const manualTestCases = [
     {
-      category: "Exact Known Stations",
+      category: "Eksakte kjente stasjoner",
       cases: [
-        "Circle K Moholt (exact name + chain)",
-        "Uno-X Heimdal (exact name + chain)",
-        "Shell Sentrum (exact name + chain)",
+        "Circle K Moholt (eksakt navn + kjede)",
+        "Uno-X Heimdal (eksakt navn + kjede)",
+        "Shell Sentrum (eksakt navn + kjede)",
       ],
-      expectedOutcome: "MATCHED_STATION_ID (score ≥65)",
+      expectedOutcome: "MATCHED_STATION_ID (poengsum ≥65)",
     },
     {
-      category: "Noisy / Variant Names",
+      category: "Støyende / variant-navn",
       cases: [
-        "circlek moholt (lowercase + chain)",
-        "CIRCLE K MOHOLT (uppercase + chain)",
-        "Circle K - Moholt (punctuation variant)",
-        "CK Moholt (abbreviation + location)",
+        "circlek moholt (lowercase + kjede)",
+        "CIRCLE K MOHOLT (uppercase + kjede)",
+        "Circle K - Moholt (tegnsettingsvariant)",
+        "CK Moholt (forkortelse + sted)",
       ],
-      expectedOutcome: "MATCHED_STATION_ID or REVIEW_NEEDED (depends on similarity)",
+      expectedOutcome: "MATCHED_STATION_ID eller REVIEW_NEEDED (avhenger av likhet)",
     },
     {
-      category: "Multi-Candidate Ambiguity",
+      category: "Fler-kandidat-tvetydighet",
       cases: [
-        "Moholt (location only, no chain)",
-        "Heimdal (location only, no chain)",
-        "Station near two Circle K branches",
+        "Moholt (kun sted, ingen kjede)",
+        "Heimdal (kun sted, ingen kjede)",
+        "Stasjon nær to Circle K-avdelinger",
       ],
-      expectedOutcome: "REVIEW_NEEDED (multiple candidates, check dominance gap)",
+      expectedOutcome: "REVIEW_NEEDED (flere kandidater – sjekk dominance gap)",
     },
     {
-      category: "Distance Band Edge Cases",
+      category: "Avstandsbånd-grensetilfeller",
       cases: [
-        "Station at 30m (very close)",
-        "Station at 75m boundary",
-        "Station at 150m boundary",
-        "Station at 300m boundary",
-        "Station at 301m+ (too far)",
+        "Stasjon på 30m (svært nær)",
+        "Stasjon ved 75m-grense",
+        "Stasjon ved 150m-grense",
+        "Stasjon ved 300m-grense",
+        "Stasjon ved 301m+ (for langt unna)",
       ],
-      expectedOutcome: "Confirm distance signals: 30/20/10/5/0 respectively",
+      expectedOutcome: "Bekreft avstandssignaler: 30 / 20 / 10 / 5 / 0 henholdsvis",
     },
     {
-      category: "Chain Mismatch Cases",
+      category: "Kjede-uoverensstemmelse",
       cases: [
-        "Circle K reported, but only Uno-X nearby",
-        "Shell reported, but station chain unknown",
-        "High-confidence mismatch should gate to review",
+        "Circle K rapportert, men kun Uno-X i nærheten",
+        "Shell rapportert, men kjede ukjent i databasen",
+        "Høy-konfidenskonflikt skal rutes til review",
       ],
-      expectedOutcome: "NO_SAFE_STATION_MATCH or REVIEW_NEEDED (chain gate)",
+      expectedOutcome: "NO_SAFE_STATION_MATCH eller REVIEW_NEEDED (kjede-port)",
     },
   ];
 
   return (
     <div className="space-y-4">
+      {/* Operator note */}
+      <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+        <p className="font-semibold mb-1">Leseliste for operatør</p>
+        <p>Denne delen viser hva som er låst i Phase 2 og hvordan matching skal verifiseres uten å endre logikken.
+        Bruk <strong>Matching-preview</strong> for all praktisk testing. Reglene her kan ikke justeres fra panelet.</p>
+      </div>
+
       {/* Section 1: Governance Lock Summary */}
       <Card className="border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Lock size={16} className="text-amber-600" />
-            Governance Locks (Phase 2 — Frozen)
+            Låste regler (Phase 2 — Frosset)
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-xs text-slate-500 bg-amber-50 border border-amber-200 rounded p-2 mb-3">
-            All thresholds, gates, and scoring rules are locked and cannot be changed without explicit governance approval.
+            Alle terskelverdier, porter og poengregler er låst og kan ikke endres uten eksplisitt governance-godkjennelse.
           </div>
           <div className="space-y-2">
             {governanceLocks.map((lock, idx) => (
@@ -105,17 +112,17 @@ export default function Phase2MatchingAuditPanel() {
         </CardContent>
       </Card>
 
-      {/* Section 2: Validation Status Summary */}
+      {/* Section 2: Validation Status */}
       <Card className="border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <AlertCircle size={16} className="text-blue-600" />
-            Validation Status
+            Valideringsstatus
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded p-2 mb-3">
-            Parser validation confirms parsing logic. Live validation pending — requires representative GooglePlaces data sample.
+            Parser-validering bekrefter tolkningslogikk mot fixtures. Live-validering er ikke gjennomført — krever representativt utvalg fra GooglePlaces.
           </div>
           <div className="space-y-2">
             {validationStatus.map((item, idx) => (
@@ -125,12 +132,12 @@ export default function Phase2MatchingAuditPanel() {
                   {item.status === "parser_validated" ? (
                     <Badge className="bg-green-100 text-green-700 border-green-200">
                       <CheckCircle2 size={12} className="mr-1 inline" />
-                      Parser Validated
+                      Parser-validert
                     </Badge>
                   ) : (
                     <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
                       <AlertCircle size={12} className="mr-1 inline" />
-                      Not Yet Validated
+                      Ikke validert ennå
                     </Badge>
                   )}
                 </div>
@@ -146,12 +153,12 @@ export default function Phase2MatchingAuditPanel() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <ClipboardList size={16} className="text-slate-600" />
-            Manual Verification Checklist
+            Manuell testliste
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded p-2 mb-3">
-            Use the Phase 2 Matching Preview panel to verify parser behavior on representative test cases.
+            Bruk matching-preview-panelet for å verifisere parseatferd på representative testcaser.
           </div>
           <div className="space-y-4">
             {manualTestCases.map((testGroup, idx) => (
@@ -166,7 +173,7 @@ export default function Phase2MatchingAuditPanel() {
                   ))}
                 </ul>
                 <p className="text-xs bg-blue-50 border border-blue-200 rounded p-1.5 text-blue-800">
-                  <span className="font-semibold">Expected:</span> {testGroup.expectedOutcome}
+                  <span className="font-semibold">Forventet utfall:</span> {testGroup.expectedOutcome}
                 </p>
               </div>
             ))}
@@ -174,37 +181,37 @@ export default function Phase2MatchingAuditPanel() {
         </CardContent>
       </Card>
 
-      {/* Section 4: GitHub Visibility */}
+      {/* Section 4: GitHub-synlighet */}
       <Card className="bg-green-50 border-green-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <CheckCircle2 size={16} className="text-green-600" />
-            GitHub Visibility
+            GitHub-synlighet
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-xs text-slate-700 space-y-2">
             <p>
-              <strong>Execution Log Status:</strong> Entries 26–28 (Phase 25 implementation history) are now visible in GitHub after publication. Prior entries in the log that stated "Not yet verified in GitHub after publish" have been confirmed accessible.
+              <strong>Status for kjøringslogg:</strong> Oppføringer 26–28 (Phase 25-implementeringshistorikk) er nå synlige i GitHub etter publisering. Tidligere oppføringer med status «ikke bekreftet i GitHub» er bekreftet tilgjengelige.
             </p>
             <p className="text-slate-600">
-              This Phase 2 Matching Audit panel (Entry 34) and governance-sync clarification (Entry 35) are also scheduled for GitHub publication.
+              Dette Phase 2 Matching Audit-panelet (oppføring 34) og governance-synkronisering (oppføring 35) er planlagt for GitHub-publisering.
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Footer Notes */}
+      {/* Footer */}
       <Card className="bg-slate-50 border-slate-200">
         <CardContent className="pt-4 text-xs text-slate-600">
           <p className="mb-2">
-            <strong>Audit Purpose:</strong> Verify that the existing Phase 2 parser and matching engine behaves consistently with locked governance rules. All matching logic is parser-validated against fixtures and locked against production changes.
+            <strong>Formål:</strong> Verifisere at Phase 2-parseren og matchingmotoren oppfører seg konsistent med låste governance-regler. All matchinglogikk er parser-validert mot fixtures og låst mot produksjonsendringer.
           </p>
           <p className="mb-2">
-            <strong>Validation Status:</strong> Parser behavior is validated. Live source validation (GooglePlaces real-world data) is pending.
+            <strong>Valideringsstatus:</strong> Parser-atferd er validert. Live kildevalidering (ekte GooglePlaces-data) gjenstår.
           </p>
           <p>
-            <strong>Next Step:</strong> After manual verification on representative samples using the Preview panel, live validation can proceed with representative GooglePlaces data.
+            <strong>Neste steg:</strong> Etter manuell verifisering på representative utvalg via preview-panelet kan live-validering gjennomføres med ekte GooglePlaces-data.
           </p>
         </CardContent>
       </Card>

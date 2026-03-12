@@ -23,8 +23,6 @@ export default function ReviewQueueSummary() {
 
   const now = new Date();
   const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
-  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
-
   const newLast24h = items.filter(i => new Date(i.created_date) >= oneDayAgo).length;
   const oldest = items.length ? items[items.length - 1] : null;
 
@@ -35,17 +33,21 @@ export default function ReviewQueueSummary() {
           <div className="p-1.5 rounded-lg bg-amber-50">
             <ClipboardList size={16} className="text-amber-600" />
           </div>
-          Review Queue
+          Review-kø
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <p className="text-xs text-slate-500 mb-3">
+          Saker her må avklares manuelt fordi matchingmotoren ikke hadde høy nok sikkerhet til å koble dem automatisk.
+        </p>
+
         {items.length === 0 ? (
-          <p className="text-sm text-slate-400">Ingen venter på review.</p>
+          <p className="text-sm text-slate-400">Ingen saker venter på review.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="bg-amber-50 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-amber-700">{items.length}</p>
-              <p className="text-xs text-amber-600 mt-0.5">Totalt review_needed</p>
+              <p className="text-xs text-amber-600 mt-0.5">Totalt til review</p>
             </div>
             <div className="bg-blue-50 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-blue-700">{newLast24h}</p>
@@ -56,11 +58,22 @@ export default function ReviewQueueSummary() {
                 <p className="text-sm font-semibold text-slate-700">
                   {formatDistanceToNow(new Date(oldest.created_date), { addSuffix: true, locale: nb })}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">Eldste urevidert</p>
+                <p className="text-xs text-slate-500 mt-0.5">Eldste ubehandlede</p>
               </div>
             )}
           </div>
         )}
+
+        <div className="mt-4 bg-slate-50 border border-slate-200 rounded p-3">
+          <p className="text-xs font-semibold text-slate-700 mb-2">Arbeidsflyt for review</p>
+          <ol className="space-y-1 text-xs text-slate-600 list-decimal list-inside">
+            <li>Åpne review-kø</li>
+            <li>Kontroller navn, kjede og sted for saken</li>
+            <li>Vurder om saken kan kobles trygt til en stasjon</li>
+            <li>Dokumenter hvorfor den godkjennes eller må stå videre</li>
+          </ol>
+        </div>
+
         <p className="text-xs text-slate-400 mt-3">
           Merk: «Løst siste 7 dager» krever en historisk status-logg som ikke finnes ennå.
         </p>

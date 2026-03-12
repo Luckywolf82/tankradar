@@ -39,7 +39,7 @@ export default function Phase2MatchingTestHarness() {
 
     const testCases = parseTestCases();
     if (testCases.length === 0) {
-      setError("No valid test cases found. Format: station_name | chain | city | latitude | longitude");
+      setError("Ingen gyldige testcaser funnet. Format: stasjonsnavn | kjede | by | breddegrad | lengdegrad");
       setRunning(false);
       return;
     }
@@ -80,7 +80,7 @@ export default function Phase2MatchingTestHarness() {
 
       setResults(testResults);
     } catch (err) {
-      setError(err.message || "Error running tests");
+      setError(err.message || "Feil ved kjøring av tester");
     } finally {
       setRunning(false);
     }
@@ -99,7 +99,7 @@ export default function Phase2MatchingTestHarness() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `phase2-matching-tests-${new Date().toISOString().split("T")[0]}.json`;
+    link.download = `phase2-matching-tester-${new Date().toISOString().split("T")[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -134,12 +134,14 @@ export default function Phase2MatchingTestHarness() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Play size={16} className="text-slate-600" />
-            Test Case Input
+            Batchtest av matching
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded p-2">
-            Enter test cases, one per line. Format: station_name | chain | city | latitude | longitude
+          <div className="text-xs text-slate-700 bg-blue-50 border border-blue-200 rounded p-3">
+            <p className="font-semibold text-blue-800 mb-1">Brukes for å kjøre flere testcaser mot preview-modus og eksportere resultat.</p>
+            <p className="text-blue-700">Dette er ikke et daglig driftsverktøy — bruk det for å verifisere matchingmotoratferd over et sett med eksempler.</p>
+            <p className="mt-2 text-blue-600 font-mono">Format: stasjonsnavn | kjede | by | breddegrad | lengdegrad</p>
           </div>
 
           <Textarea
@@ -158,26 +160,26 @@ export default function Phase2MatchingTestHarness() {
             {running ? (
               <>
                 <Loader2 size={16} className="mr-2 animate-spin" />
-                Running tests...
+                Kjører tester...
               </>
             ) : (
               <>
                 <Play size={16} className="mr-2" />
-                Run Tests
+                Kjør batchtest
               </>
             )}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Error Display */}
+      {/* Error */}
       {error && (
         <Card className="bg-red-50 border-red-200">
           <CardContent className="pt-6">
             <div className="flex gap-3">
               <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-900">Test Error</p>
+                <p className="text-sm font-medium text-red-900">Testfeil</p>
                 <p className="text-xs text-red-700 mt-1">{error}</p>
               </div>
             </div>
@@ -191,29 +193,29 @@ export default function Phase2MatchingTestHarness() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <CheckCircle2 size={16} className="text-green-600" />
-              Summary Metrics
+              Oppsummeringsmetrikk
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="bg-slate-50 rounded p-3">
-                <p className="text-xs text-slate-600 font-medium">Total Tests</p>
+                <p className="text-xs text-slate-600 font-medium">Totale tester</p>
                 <p className="text-lg font-bold text-slate-900">{summary.total_tests}</p>
               </div>
               <div className="bg-green-50 rounded p-3">
-                <p className="text-xs text-green-600 font-medium">Auto Matched</p>
+                <p className="text-xs text-green-600 font-medium">Automatiske matcher</p>
                 <p className="text-lg font-bold text-green-900">{summary.auto_matches}</p>
               </div>
               <div className="bg-amber-50 rounded p-3">
-                <p className="text-xs text-amber-600 font-medium">Review Required</p>
+                <p className="text-xs text-amber-600 font-medium">Krever review</p>
                 <p className="text-lg font-bold text-amber-900">{summary.review_required}</p>
               </div>
               <div className="bg-red-50 rounded p-3">
-                <p className="text-xs text-red-600 font-medium">No Safe Match</p>
+                <p className="text-xs text-red-600 font-medium">Ingen trygg match</p>
                 <p className="text-lg font-bold text-red-900">{summary.no_safe_match}</p>
               </div>
               <div className="bg-blue-50 rounded p-3">
-                <p className="text-xs text-blue-600 font-medium">Avg Dominance Gap</p>
+                <p className="text-xs text-blue-600 font-medium">Gjennomsnittlig dominance gap</p>
                 <p className="text-lg font-bold text-blue-900">{summary.average_dominance_gap}</p>
               </div>
             </div>
@@ -226,7 +228,7 @@ export default function Phase2MatchingTestHarness() {
         <Card className="border-slate-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Test Results</CardTitle>
+              <CardTitle className="text-base">Testresultater</CardTitle>
               <Button
                 onClick={handleExport}
                 variant="outline"
@@ -234,7 +236,7 @@ export default function Phase2MatchingTestHarness() {
                 className="gap-2"
               >
                 <Download size={14} />
-                Export JSON
+                Eksporter JSON
               </Button>
             </div>
           </CardHeader>
@@ -243,15 +245,15 @@ export default function Phase2MatchingTestHarness() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Station Name</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Chain</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">City</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Parsed Base</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Parsed Chain</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Top Candidate</th>
-                    <th className="text-center px-3 py-2 font-semibold text-slate-600">Score</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Stasjonsnavn</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Kjede</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">By</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Tolket base</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Tolket kjede</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Beste kandidat</th>
+                    <th className="text-center px-3 py-2 font-semibold text-slate-600">Poeng</th>
                     <th className="text-center px-3 py-2 font-semibold text-slate-600">Gap</th>
-                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Decision</th>
+                    <th className="text-left px-3 py-2 font-semibold text-slate-600">Beslutning</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -280,11 +282,11 @@ export default function Phase2MatchingTestHarness() {
                           </span>
                         ) : result.final_decision === "matched" ? (
                           <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">
-                            Matched
+                            Matchet
                           </span>
                         ) : (
                           <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-medium">
-                            No Match
+                            Ingen match
                           </span>
                         )}
                       </td>
