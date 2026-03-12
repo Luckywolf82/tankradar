@@ -38,16 +38,17 @@ export default function StationDiscoveryQueue() {
             <MapPin size={16} className="text-purple-600" />
           </div>
           Nye og uavklarte stasjoner
-          <span className="ml-auto text-xs font-normal text-slate-400">{items.length} poster</span>
+          <span className="ml-auto text-xs font-normal text-slate-400">{items.length} uavklarte poster</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {sorted.length === 0 ? (
-          <p className="text-sm text-slate-400">Ingen no_safe_station_match funnet.</p>
+          <p className="text-sm text-slate-400">Ingen uavklarte stasjonsposter — bra!</p>
         ) : (
           <>
             <p className="text-xs text-slate-500 mb-3">
-              Gruppert på stasjonsnavn + kjede. Placeholder for framtidig geospatial clustering.
+              Gruppert på stasjonsnavn og kjede. Prisrapporter som ikke kunne kobles til en kjent stasjon.
+              Geografisk GPS-basert clustering er planlagt i en fremtidig versjon.
             </p>
             <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto">
               {sorted.map((g, i) => (
@@ -67,7 +68,7 @@ export default function StationDiscoveryQueue() {
               ))}
             </div>
             <p className="text-xs text-slate-400 mt-3">
-              Begrensning: Ingen GPS-clustering ennå. Gruppering er kun basert på navn/kjede.
+              Merk: Gruppering er kun basert på navn og kjede — ikke GPS-posisjon ennå.
             </p>
           </>
         )}
