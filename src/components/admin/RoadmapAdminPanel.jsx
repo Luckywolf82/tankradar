@@ -72,28 +72,28 @@ function FeatureRow({ feature }) {
 
           {feature.immediateAction && (
             <div className="bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              <span className="font-semibold text-amber-800">Action: </span>
+              <span className="font-semibold text-amber-800">Handling: </span>
               <span className="text-amber-700">{feature.immediateAction}</span>
             </div>
           )}
 
           {feature.scopingRequired && (
             <div className="bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              <span className="font-semibold text-amber-800">Scoping required: </span>
+              <span className="font-semibold text-amber-800">Krever scoping: </span>
               <span className="text-amber-700">{feature.scopingRequired}</span>
             </div>
           )}
 
           {feature.dependencies?.length > 0 && (
             <div>
-              <span className="font-semibold text-slate-600">Dependencies: </span>
+              <span className="font-semibold text-slate-600">Avhengigheter: </span>
               <span className="text-slate-500">{feature.dependencies.join(", ")}</span>
             </div>
           )}
 
           {feature.blockers?.length > 0 && (
             <div>
-              <span className="font-semibold text-red-600">Blockers: </span>
+              <span className="font-semibold text-red-600">Blokkere: </span>
               <span className="text-red-500">{feature.blockers.join(" · ")}</span>
             </div>
           )}
@@ -157,20 +157,20 @@ export default function RoadmapAdminPanel() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Map size={16} className="text-slate-600" />
-        <h2 className="text-base font-semibold text-slate-800">Produkt-roadmap</h2>
+        <h2 className="text-base font-semibold text-slate-800">Veikart — produktplan</h2>
         <span className="text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200 rounded px-2 py-0.5 ml-1">
-          Read-only · Kilde: ROADMAP.jsx
+          Lesemodus · Kilde: ROADMAP.jsx
         </span>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <SummaryCard label="Totalt"            count={total}                        color="border-slate-200 text-slate-700" />
-        <SummaryCard label="Completed"         count={count("completed")}            color="border-green-200 text-green-800 bg-green-50" />
-        <SummaryCard label="Active"            count={count("active")}               color="border-blue-200 text-blue-800 bg-blue-50" />
-        <SummaryCard label="Build-ready"       count={count("build-ready")}          color="border-emerald-200 text-emerald-800 bg-emerald-50" />
-        <SummaryCard label="Scoping required"  count={count("scoping-required")}     color="border-amber-200 text-amber-800 bg-amber-50" />
-        <SummaryCard label="Blocked"           count={count("blocked")}              color="border-red-200 text-red-800 bg-red-50" />
+        <SummaryCard label="Totalt"              count={total}                        color="border-slate-200 text-slate-700" />
+        <SummaryCard label="Fullført"           count={count("completed")}            color="border-green-200 text-green-800 bg-green-50" />
+        <SummaryCard label="Aktiv"              count={count("active")}               color="border-blue-200 text-blue-800 bg-blue-50" />
+        <SummaryCard label="Klar å bygge"       count={count("build-ready")}          color="border-emerald-200 text-emerald-800 bg-emerald-50" />
+        <SummaryCard label="Krever scoping"     count={count("scoping-required")}     color="border-amber-200 text-amber-800 bg-amber-50" />
+        <SummaryCard label="Blokkert"           count={count("blocked")}              color="border-red-200 text-red-800 bg-red-50" />
       </div>
 
       {/* Status legend (from STATUS_DEFINITIONS) */}
