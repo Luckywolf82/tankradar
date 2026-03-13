@@ -1,9 +1,21 @@
 /*
-TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.2
+TANKRADAR PRODUCT ROADMAP — GOVERNOR v4.3
 Canonical Roadmap Manager with Weighted Stability
 
-Last updated:   2026-03-12 (Entry 103 — scoping-required status pass)
-Replaces:       ROADMAP v4.1 (Entry 102 — Roadmap Governor refinement pass)
+Last updated:   2026-03-13 (Entry 104 — acquisition layer roadmap sync pass)
+Replaces:       ROADMAP v4.2 (Entry 103 — scoping-required status pass)
+
+CHANGE LOG vs v4.3:
+  - Added new Phase 3 acquisition-layer features:
+      - radar-mode
+      - likely-refuel-detection
+      - price-sign-ocr
+  - ACTIONABLE_PRIORITY_ORDER updated to include acquisition-layer scoping work
+  - NEXT_ACTIONS recommendedBuildSequence updated with acquisition-layer scoping steps
+  - GOVERNANCE version bumped to 4.3
+  - No phase baseline changes
+  - No scoring weight changes
+  - No frozen files modified
 
 CHANGE LOG vs v4.2:
   - New status level introduced: scoping-required
@@ -367,6 +379,66 @@ export const FEATURES = [
     stabilityAdjustedScore: 3.65,
     displayScore: 18.25,
     dependencies: ["Station-entity", "user-trust-model", "StationReview-entity"],
+    blockers: [],
+  },
+
+  {
+    id: "radar-mode",
+    title: "Radar Mode",
+    phase: 3,
+    category: "crowdsourcing",
+    description: "Driver-as-sensor mode for low-friction fuel data acquisition using contextual station detection and rapid capture flows.",
+    status: "scoping-required",
+    userValueImportance:   4,
+    dataQualityImportance: 5,
+    adminUiImportance:     2,
+    installDriverImportance: 5,
+    implementationCost:    2,
+    rawWeightedScore: 3.55,
+    stabilityNote: "Phase alignment +0.25. Strategically central acquisition-layer concept, but requires dedicated scoping pass before sprint.",
+    stabilityAdjustedScore: 3.80,
+    displayScore: 19.00,
+    dependencies: ["station-matching-engine", "prisrapportering"],
+    blockers: [],
+  },
+
+  {
+    id: "price-sign-ocr",
+    title: "Price sign OCR capture",
+    phase: 3,
+    category: "crowdsourcing",
+    description: "Fast camera capture flow for station price boards with OCR extraction of fuel type and price.",
+    status: "scoping-required",
+    userValueImportance:   4,
+    dataQualityImportance: 5,
+    adminUiImportance:     2,
+    installDriverImportance: 4,
+    implementationCost:    1,
+    rawWeightedScore: 3.35,
+    stabilityNote: "Phase alignment +0.25. High-value acquisition feature, but requires OCR confidence model and fallback design.",
+    stabilityAdjustedScore: 3.60,
+    displayScore: 18.00,
+    dependencies: ["radar-mode"],
+    blockers: [],
+  },
+
+  {
+    id: "likely-refuel-detection",
+    title: "Likely refuel detection",
+    phase: 3,
+    category: "crowdsourcing",
+    description: "Probability engine that estimates when a user is likely stopping to refuel based on station stop behavior, dwell time, and fueling patterns.",
+    status: "scoping-required",
+    userValueImportance:   3,
+    dataQualityImportance: 4,
+    adminUiImportance:     2,
+    installDriverImportance: 4,
+    implementationCost:    2,
+    rawWeightedScore: 3.00,
+    stabilityNote: "Phase alignment +0.25. Needed to avoid over-prompting and make Radar Mode viable.",
+    stabilityAdjustedScore: 3.25,
+    displayScore: 16.25,
+    dependencies: ["radar-mode"],
     blockers: [],
   },
 
@@ -810,20 +882,41 @@ export const ACTIONABLE_PRIORITY_ORDER = [
   },
   {
     rank: 9,
+    id: "radar-mode",
+    status: "scoping-required",
+    adjustedScore: 3.80,
+    action: "SCOPE — define passive acquisition model, prompt timing, consent flow, and acquisition-layer UX before implementation sprint.",
+  },
+  {
+    rank: 10,
+    id: "price-sign-ocr",
+    status: "scoping-required",
+    adjustedScore: 3.60,
+    action: "SCOPE — define OCR capture UX, confidence thresholds, validation/fallback flow, and merge logic with manual price reporting.",
+  },
+  {
+    rank: 11,
+    id: "likely-refuel-detection",
+    status: "scoping-required",
+    adjustedScore: 3.25,
+    action: "SCOPE — define detection heuristics and anti-spam logic so Radar Mode only triggers when refuel probability is high.",
+  },
+  {
+    rank: 12,
     id: "gamification-system",
     status: "build-ready",
     adjustedScore: 3.30,
     action: "BUILD — after fuel-savings-tracker ships. Extends existing ContributionImpactCard + StreakCounter.",
   },
   {
-    rank: 10,
+    rank: 13,
     id: "driver-leaderboard",
     status: "build-ready",
     adjustedScore: 3.30,
     action: "BUILD — after gamification-system. Requires opt-in display + anonymization plan.",
   },
   {
-    rank: 11,
+    rank: 14,
     id: "fuel-price-heatmap",
     status: "partial",
     adjustedScore: 3.00,
@@ -831,7 +924,7 @@ export const ACTIONABLE_PRIORITY_ORDER = [
     priorityNote: "v4.1: Scored down from 3.30 → 3.00. Build after stronger user-value features.",
   },
   {
-    rank: 12,
+    rank: 15,
     id: "tankradar-score",
     status: "dependent",
     adjustedScore: 2.25,
@@ -840,7 +933,7 @@ export const ACTIONABLE_PRIORITY_ORDER = [
 
   // ── PHASE 4 — decision intelligence ──────────────────────────────────────
   {
-    rank: 13,
+    rank: 16,
     id: "fill-historikk",
     status: "build-ready",
     adjustedScore: 3.70,
@@ -848,7 +941,7 @@ export const ACTIONABLE_PRIORITY_ORDER = [
     note: "High adjusted score — could be pulled forward once Phase 3 user features are shipped.",
   },
   {
-    rank: 14,
+    rank: 17,
     id: "bilokonomi-dashboard",
     status: "dependent",
     adjustedScore: 2.40,
@@ -984,10 +1077,13 @@ export const NEXT_ACTIONS = {
     { step: 2, id: "fuel-savings-tracker",               effort: "2–3 days",  score: 3.70, note: "Recommended next ship — zero prerequisites" },
     { step: 3, id: "community-price-verification",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.75, note: "STATUS: scoping-required. Run trust-model + confidence-scoring design pass first, then move to build-ready." },
     { step: 4, id: "community-station-validation",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.65, note: "STATUS: scoping-required. Scoping can overlap with step 3. Shares trust-model prerequisite." },
-    { step: 5, id: "gamification-system",                effort: "2–3 days",  score: 3.30, note: "After fuel-savings-tracker ships" },
-    { step: 6, id: "driver-leaderboard",                 effort: "2–3 days",  score: 3.30, note: "After gamification-system, requires privacy plan" },
-    { step: 7, id: "fill-historikk",                     effort: "1–2 days",  score: 3.70, note: "Phase 4 — pull forward after Phase 3 user features ship" },
-    { step: 8, id: "fuel-price-heatmap",                 effort: "3–4 days",  score: 3.00, note: "Regional MVP only — nice-to-have, build after core features" },
+    { step: 5, id: "radar-mode",                          effort: "scoping: 1–2 days + impl: 4–6 days", score: 3.80, note: "STATUS: scoping-required. Define passive acquisition model before sprint." },
+    { step: 6, id: "price-sign-ocr",                     effort: "scoping: 1 day + impl: 3–5 days", score: 3.60, note: "STATUS: scoping-required. OCR confidence + fallback flow must be scoped first." },
+    { step: 7, id: "likely-refuel-detection",            effort: "scoping: 1 day + impl: 2–4 days", score: 3.25, note: "STATUS: scoping-required. Needs heuristics + anti-spam guardrails." },
+    { step: 8, id: "gamification-system",                effort: "2–3 days",  score: 3.30, note: "After fuel-savings-tracker ships" },
+    { step: 9, id: "driver-leaderboard",                 effort: "2–3 days",  score: 3.30, note: "After gamification-system, requires privacy plan" },
+    { step: 10, id: "fill-historikk",                    effort: "1–2 days",  score: 3.70, note: "Phase 4 — pull forward after Phase 3 user features ship" },
+    { step: 11, id: "fuel-price-heatmap",                effort: "3–4 days",  score: 3.00, note: "Regional MVP only — nice-to-have, build after core features" },
   ],
 };
 
@@ -1067,10 +1163,19 @@ export const NORTH_STAR_FEATURES = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const GOVERNANCE = {
-  version: "4.2",
-  lastUpdated: "2026-03-12",
-  updatedBy: "Roadmap Governor — Entry 103 (v4.2 scoping-required pass)",
-  previousVersion: "4.1 (Entry 102 — Roadmap Governor refinement pass)",
+  version: "4.3",
+  lastUpdated: "2026-03-13",
+  updatedBy: "Roadmap Governor — Entry 104 (v4.3 acquisition layer roadmap sync pass)",
+  previousVersion: "4.2 (Entry 103 — scoping-required status pass)",
+
+  v43Changes: [
+    "1. Added Phase 3 acquisition-layer features: radar-mode, price-sign-ocr, likely-refuel-detection.",
+    "2. ACTIONABLE_PRIORITY_ORDER updated to reflect acquisition-layer scoping work.",
+    "3. NEXT_ACTIONS recommendedBuildSequence updated with acquisition-layer scoping steps.",
+    "4. No phase baseline changes.",
+    "5. No scoring weight changes.",
+    "6. No frozen files modified.",
+  ],
 
   v42Changes: [
     "1. NEW STATUS LEVEL: scoping-required added to STATUS_DEFINITIONS and stabilityContract.",
