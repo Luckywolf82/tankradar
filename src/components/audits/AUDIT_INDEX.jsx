@@ -213,6 +213,42 @@ export const AUDIT_INDEX = {
       focusArea: "queue-clearing workflow, duplicate surface detection, automation vs manual review, StationCandidate approval path, StationReview decision semantics, ChainUnconfirmedManualReviewUI, FAREOMRÅDE bulk operations",
       status: "complete",
       canonicalFor: "Queue-clearing operator workflow; StationCandidateReview as canonical execution surface; SuperAdmin as monitoring/navigation surface"
+    },
+    {
+      id: "product_strategy_alignment_audit_2026_03_13",
+      title: "Product Strategy Alignment Audit — TankRadar Strategic Model Sync",
+      category: "product",
+      location: "src/components/audits/product/PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13.jsx",
+      dateCreated: "2026-03-13",
+      description: "Audit of whether the current idea system and roadmap structure fully reflect the emerging TankRadar strategic model: Driver App → Crowdsourced Data → AI Intelligence → Data Platform. Identifies missing acquisition-layer concepts, feature fragmentation risks, and backend bias in planning. Proposes 4-layer canonical strategic model and recommends idea additions including radar-mode, likely-refuel-detection, price-sign-ocr.",
+      relatesTo: "Roadmap Governor v4.3 (Entry 104)",
+      focusArea: "Strategic model alignment, acquisition layer representation, idea registry completeness, roadmap phase compatibility",
+      status: "proposed",
+      canonicalFor: "Roadmap strategy synchronization — acquisition layer model"
+    },
+    {
+      id: "data_acquisition_model_audit_2026_03_13",
+      title: "Data Acquisition Model Audit — TankRadar Sensor Layer Strategy",
+      category: "product",
+      location: "src/components/audits/product/DATA_ACQUISITION_MODEL_AUDIT_2026_03_13.jsx",
+      dateCreated: "2026-03-13",
+      description: "Audit of the data acquisition model underpinning TankRadar's crowdsourcing strategy. Evaluates passive acquisition vectors (GPS station detection, OCR capture, refuel probability), confidence scoring requirements, and anti-spam design constraints.",
+      relatesTo: "Product Strategy Alignment Audit 2026-03-13; Roadmap Governor v4.3 (Entry 104)",
+      focusArea: "Passive data acquisition mechanics, sensor layer design, confidence scoring, acquisition-layer feature scoping",
+      status: "proposed",
+      canonicalFor: "Data acquisition model design — radar-mode, price-sign-ocr, likely-refuel-detection scoping"
+    },
+    {
+      id: "crowdsourcing_engine_audit_2026_03_13",
+      title: "Crowdsourcing Engine Audit — TankRadar Contribution Loop Maturity",
+      category: "product",
+      location: "src/components/audits/product/CROWDSOURCING_ENGINE_AUDIT_2026_03_13.jsx",
+      dateCreated: "2026-03-13",
+      description: "Audit of TankRadar's crowdsourcing engine maturity across the full contribution lifecycle: trigger → capture → validation → reward → retention. Evaluates current loop effectiveness, identifies acquisition-layer gaps, and positions radar-mode and price-sign-ocr within the broader crowdsourcing strategy.",
+      relatesTo: "Product Strategy Alignment Audit 2026-03-13; Activation Audit (Entry 91); Roadmap Governor v4.3 (Entry 104)",
+      focusArea: "Contribution loop mechanics, acquisition trigger design, crowdsourcing maturity scoring, feature scoping for acquisition layer",
+      status: "proposed",
+      canonicalFor: "Crowdsourcing engine maturity assessment — contribution loop completeness"
     }
   ],
 
@@ -220,13 +256,13 @@ export const AUDIT_INDEX = {
     architecture: 4,
     ui: 5,
     governance: 2,
-    product: 3,
+    product: 6,
     activation: 3,
     data: 0,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 18
+    total: 21
   },
 
   governanceRules: {

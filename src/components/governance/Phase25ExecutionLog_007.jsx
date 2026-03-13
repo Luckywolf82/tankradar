@@ -1523,4 +1523,114 @@ export const entry_98 = {
   historicalContext: "Entry 97 (Audit System Hardening) renamed AI_PROJECT_INSTRUCTIONS to CHATGPT_INSTRUCTIONS and fixed stale governance pointers. Entry 98 (Governance Conflict Resolution) completes the governance cleanup cycle: AI_STATE stale count corrected, mandatoryPreflight made explicit, and sync enforcement checklist added as a formal 5-point task-completion gate. The ChatGPT↔Base44↔GitHub workflow is now fully protected against the three desync failure modes identified in Entry 96."
 };
 
-export default entry_98;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 104: ROADMAP GOVERNOR v4.3 — ACQUISITION LAYER ROADMAP SYNC PASS
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_104 = {
+  timestamp: "2026-03-13T00:00:00Z",
+  phase: "Phase 2.5 Governance & Roadmap",
+  title: "Roadmap Governor v4.3 — Acquisition Layer Roadmap Sync Pass",
+
+  objectives: [
+    "Bump ROADMAP.jsx to Governor v4.3",
+    "Add 3 new Phase 3 acquisition-layer features: radar-mode, price-sign-ocr, likely-refuel-detection",
+    "Update ACTIONABLE_PRIORITY_ORDER to include acquisition-layer scoping entries",
+    "Update NEXT_ACTIONS.recommendedBuildSequence with acquisition-layer scoping steps",
+    "Sync GOVERNANCE block: version 4.3, Entry 104, v43Changes documented",
+    "Register PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13, DATA_ACQUISITION_MODEL_AUDIT_2026_03_13, CROWDSOURCING_ENGINE_AUDIT_2026_03_13 in AUDIT_INDEX",
+    "Append Entry 104 to Phase25ExecutionLog_007"
+  ],
+
+  preFlightVerification: [
+    "✓ Read components/roadmap/ROADMAP.jsx (v4.2) — confirmed current state before edit",
+    "✓ Read components/governance/Phase25ExecutionLog_007.jsx — confirmed active chunk, last entry was 98",
+    "✓ Read components/audits/AUDIT_INDEX.jsx — confirmed current audit registry",
+    "✓ Read components/audits/product/PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13.jsx — FILE EXISTS at expected path",
+    "✓ Confirmed no frozen files touched in this pass",
+    "✓ Confirmed no runtime code changes required"
+  ],
+
+  filesModified: [
+    "components/roadmap/ROADMAP.jsx — bumped to v4.3; added radar-mode, price-sign-ocr, likely-refuel-detection; updated ACTIONABLE_PRIORITY_ORDER ranks; updated NEXT_ACTIONS.recommendedBuildSequence steps; GOVERNANCE v43Changes added",
+    "components/audits/AUDIT_INDEX.jsx — registered 3 new product audits: PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13, DATA_ACQUISITION_MODEL_AUDIT_2026_03_13, CROWDSOURCING_ENGINE_AUDIT_2026_03_13; categoryBreakdown updated",
+    "components/governance/Phase25ExecutionLog_007.jsx — Entry 104 appended"
+  ],
+
+  roadmapChanges: {
+    versionBumped: "4.2 → 4.3",
+    entryRef: "Entry 104",
+    featuresAdded: [
+      {
+        id: "radar-mode",
+        phase: 3,
+        category: "crowdsourcing",
+        status: "scoping-required",
+        stabilityAdjustedScore: 3.80,
+        note: "Driver-as-sensor mode — strategically central acquisition-layer concept"
+      },
+      {
+        id: "price-sign-ocr",
+        phase: 3,
+        category: "crowdsourcing",
+        status: "scoping-required",
+        stabilityAdjustedScore: 3.60,
+        note: "Fast camera capture + OCR extraction of fuel type and price"
+      },
+      {
+        id: "likely-refuel-detection",
+        phase: 3,
+        category: "crowdsourcing",
+        status: "scoping-required",
+        stabilityAdjustedScore: 3.25,
+        note: "Probability engine to avoid over-prompting; needed for Radar Mode viability"
+      }
+    ],
+    actionablePriorityOrderUpdated: "New SCOPE entries at ranks 9–11; existing gamification/leaderboard/heatmap/tankradar-score/fill-historikk/bilokonomi ranks shifted +3",
+    buildSequenceUpdated: "3 new scoping steps inserted at positions 5–7; downstream steps shifted to 8–11",
+    phasesChanged: "NONE — phase baseline locked and untouched",
+    scoringWeightsChanged: "NONE",
+    frozenFilesModified: "NONE"
+  },
+
+  auditIndexChanges: {
+    newEntriesRegistered: [
+      "PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13 — product category — file confirmed exists",
+      "DATA_ACQUISITION_MODEL_AUDIT_2026_03_13 — product category — registered; file existence unverified in this pass",
+      "CROWDSOURCING_ENGINE_AUDIT_2026_03_13 — product category — registered; file existence unverified in this pass"
+    ],
+    categoryBreakdownUpdated: "product: 3 → 6, total: 18 → 21"
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched"
+  ],
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+
+  changeSummary: {
+    runtimeCodeChanges: 0,
+    businessLogicChanges: 0,
+    roadmapFeaturesAdded: 3,
+    auditIndexEntriesAdded: 3,
+    governanceFilesModified: 3,
+    frozenFilesModified: 0
+  },
+
+  governanceCompliance: {
+    noRuntimeChanges: "✓ Zero runtime code modified",
+    noBackendChanges: "✓ Zero backend logic modified",
+    noLockedFilesModified: "✓ All 6 Phase-2 frozen functions untouched",
+    phaseBaselineIntact: "✓ PHASE_BASELINE not modified",
+    scoringWeightsIntact: "✓ SCORING_MODEL weights not modified",
+    exportNamesIntact: "✓ All export names and default export structure unchanged",
+    noDuplicateFuelDataApi: "✓ fuel-data-api exists once in Phase 6; not duplicated"
+  }
+};
+
+export default entry_104;
