@@ -1,0 +1,119 @@
+/* 
+PRODUCT STRATEGY ALIGNMENT AUDIT — TankRadar
+Date: 2026-03-13
+Category: product
+Status: proposed
+
+Purpose:
+Audit whether the current idea system and roadmap structure fully reflect the emerging TankRadar strategic model discussed in product planning:
+Driver App → Crowdsourced Data → AI Intelligence → Data Platform.
+
+Observed repository files:
+- src/components/ideas/IDEA_INDEX.jsx
+- src/components/roadmap/ROADMAP.jsx
+- src/components/admin/RoadmapAdminPanel.jsx
+- src/components/audits/AUDIT_INDEX.jsx
+- src/components/governance/Phase25ExecutionLogIndex.jsx
+
+Context:
+Recent strategy work clarified that TankRadar should likely begin as a driver-facing app to acquire high-frequency fuel price data through low-friction crowdsourcing, then evolve into a fuel intelligence platform with prediction, API access, and commercial analytics.
+
+Observed Behavior:
+1. IDEA_INDEX is currently compact and contains 6 candidate ideas:
+   - route-fuel-intelligence
+   - price-drop-predictor
+   - receipt-import
+   - driver-leaderboard
+   - fuel-savings-tracker
+   - favorite-route-alerts
+
+2. ROADMAP.jsx is more mature than IDEA_INDEX and already includes:
+   - locked phase structure
+   - growth/crowdsourcing features
+   - predictive layer
+   - platform expansion model
+
+3. RoadmapAdminPanel is a read-only rendering layer for ROADMAP.jsx, not a strategic source of truth.
+
+Confirmed Facts:
+- Idea registry is active but limited in scope relative to the current product discussion.
+- Roadmap phase baseline is locked:
+  Phase 1 Data Fundament
+  Phase 2 Core Produkt
+  Phase 3 Growth Engine
+  Phase 4 Decision Intelligence
+  Phase 5 Predictive Layer
+  Phase 6 Platform Expansion
+- Audit system is designed for strategic clarification before implementation.
+
+Structural Risks:
+1. Strategy drift:
+   The roadmap implies broader ambition than the idea registry documents.
+
+2. Missing acquisition model in canonical planning:
+   The driver-as-sensor model is not yet clearly represented as a top-level strategic concept.
+
+3. Feature fragmentation:
+   Important discussed capabilities may be added ad hoc unless first normalized into the idea/audit system.
+
+4. Backend bias:
+   Governance/admin/data quality systems may continue to dominate planning at the expense of explicit user-side growth mechanics.
+
+Key Strategic Insight:
+TankRadar should not only be modeled as a fuel price app.
+It should be modeled as a distributed fuel data acquisition network where the driver app is the sensor layer.
+
+Proposed Canonical Strategic Model:
+1. Driver App Layer
+   - low-friction reporting
+   - nearby value
+   - route relevance
+
+2. Data Acquisition Layer
+   - GPS station passings
+   - likely-refuel detection
+   - OCR price capture
+   - confidence scoring
+
+3. Intelligence Layer
+   - cheapest route
+   - savings tracking
+   - fill timing
+   - local price war detection
+   - prediction
+
+4. Platform Layer
+   - Fuel Data API
+   - fleet insights
+   - analytics dashboards
+   - fuel market index
+
+Recommended Idea Additions:
+- radar-mode
+- passive-station-detection
+- likely-refuel-detection
+- price-sign-ocr
+- passing-confidence-engine
+- fuel-data-api
+- fleet-mode
+- tankradar-fuel-index
+
+Recommended Next Safe Steps:
+1. Add missing strategic ideas to IDEA_INDEX.jsx.
+2. Create a dedicated Data Acquisition Model audit.
+3. Re-score roadmap priority after acquisition model is formalized.
+4. Do not implement Radar Mode directly before the acquisition model is audited.
+
+Conclusion:
+Current roadmap direction is broadly compatible with the strategy discussed, but the idea registry and strategic planning layer are incomplete.
+A strategy synchronization pass is recommended before major roadmap changes.
+*/
+
+export const PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13 = {
+  auditId: "product-strategy-alignment-audit-2026-03-13",
+  category: "product",
+  status: "proposed",
+  canonicalFor: "Roadmap strategy synchronization",
+};
+
+export default PRODUCT_STRATEGY_ALIGNMENT_AUDIT_2026_03_13;
