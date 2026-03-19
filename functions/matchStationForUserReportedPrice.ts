@@ -459,33 +459,34 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
     let candidatePoolSource = 'none';
     let candidatesCount = 0;
 
-    if (matchLat !== null && matchLon !== null) {
-      // GPS available — use bounding-box filter directly via service role.
-      // This avoids a function-to-function invoke (which requires auth token propagation).
-      // Bounding box: ~2 km radius (approx 0.018 degrees lat, lon varies by cos(lat)).
-      const radiusKm = 2.0;
-      const latDelta = radiusKm / 111.0;
-      const lonDelta = radiusKm / (111.0 * Math.max(0.01, Math.cos(matchLat * Math.PI / 180)));
+    if (matchCity && matchLat !== null && matchLon !== null) {
       try {
-        const allNearby = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 500);
-        candidates = allNearby.filter(s =>
-          s.latitude != null && s.longitude != null &&
-          s.latitude  >= matchLat - latDelta && s.latitude  <= matchLat + latDelta &&
-          s.longitude >= matchLon - lonDelta && s.longitude <= matchLon + lonDelta
-        );
-        candidatePoolSource = 'gps_bounding_box';
-      } catch {
-        candidatePoolSource = 'none';
+        const preFilterResult = await base44.functions.invoke('getNearbyStationCandidates', {
+          gps_lat: matchLat,
+          gps_lon: matchLon,
+          city: matchCity,
+          radius_meters: 3000,
+          max_candidates: 20,
+        });
+
+        if (preFilterResult.data.candidates && preFilterResult.data.candidates.length > 0) {
+          candidates = preFilterResult.data.candidates;
+          candidatePoolSource = 'proximity_filter';
+        } else if (preFilterResult.data.fallback_used) {
+          candidates = preFilterResult.data.candidates;
+          candidatePoolSource = 'fallback_full_catalog';
+        }
+      } catch (error) {
+        // Fallback to full city catalog
+        try {
+          candidates = await base44.entities.Station.filter({ city: matchCity });
+          candidatePoolSource = 'fallback_full_catalog_error';
+        } catch {
+          // No candidates available
+          candidatePoolSource = 'none';
+        }
       }
-      candidatesCount = candidates.length;
-    } else if (matchCity) {
-      // No GPS — fall back to city catalog
-      try {
-        candidates = await base44.entities.Station.filter({ city: matchCity });
-        candidatePoolSource = 'city_catalog_fallback';
-      } catch {
-        candidatePoolSource = 'none';
-      }
+
       candidatesCount = candidates.length;
     }
 
@@ -534,10 +535,7 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
           .sort((a, b) => b.score - a.score);
 
         // Top 5 candidates for preview
-        // NOTE: id is included so that resolveFuelPriceObservation bridge can
-        // populate stationId in its canonical response without a second lookup.
         topCandidates = scoredMatches.slice(0, 5).map(m => ({
-          id: m.station.id,
           name: m.station.name,
           chain: m.station.chain,
           city: m.station.city,
@@ -586,26 +584,18 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const payload = await req.json();
     const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude, preview_mode } = payload;
 
-    // EARLY EXIT: Preview mode — no auth required.
-    // This path is read-only and is invoked by resolveFuelPriceObservation bridge
-    // via asServiceRole (no user token available in function-to-function calls).
-    // Preview mode has zero write side-effects — no FuelPrice, no StationCandidate,
-    // no StationReview is created. Unauthenticated access is safe here.
-    // BRIDGE NOTE: This auth exemption exists because resolveFuelPriceObservation
-    // is the enforcing access gate for all external callers. Direct calls to this
-    // endpoint in preview_mode without a token are harmless (read-only).
+    // EARLY EXIT: Preview mode — return read-only metadata only
     if (preview_mode === true) {
       return handlePreviewMode(station_name, station_chain, city, latitude, longitude, base44);
-    }
-
-    // Production write path requires authenticated user
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Use selected station coordinates if available, otherwise fall back to GPS
