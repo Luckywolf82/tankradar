@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     // Using asServiceRole.functions ensures the call succeeds regardless of whether
     // the token is propagated correctly across function-to-function calls.
     // This is safe because preview_mode: true has no write side-effects.
-    const delegateResponse = await base44.asServiceRole.functions.invoke(
+    const delegateResponse = await base44.functions.invoke(
       'matchStationForUserReportedPrice',
       {
         preview_mode:  true,
