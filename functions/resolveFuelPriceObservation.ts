@@ -442,8 +442,8 @@ Deno.serve(async (req) => {
     const delegatePayload = {
       station_name:  station_name,
       station_chain: station_chain,
-      gps_lat:       gps_latitude,
-      gps_lon:       gps_longitude,
+      latitude:      gps_latitude,
+      longitude:     gps_longitude,
       preview_mode:  true,
     };
     // Map locationLabel / city if present
@@ -457,7 +457,7 @@ Deno.serve(async (req) => {
         'matchStationForUserReportedPrice',
         delegatePayload
       );
-      delegatedRaw = delegatedResponse;
+      delegatedRaw = delegatedResponse.data;
     } catch (delegateError) {
       // EXPLICIT ERROR — no fallback to shadow comparator (governance rule: Section X.5 / AA.9)
       return Response.json({
