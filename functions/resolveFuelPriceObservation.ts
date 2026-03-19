@@ -451,7 +451,7 @@ Deno.serve(async (req) => {
 
     let delegatedRaw;
     try {
-      const delegatedResponse = await base44.functions.invoke(
+      const delegatedResponse = await base44.asServiceRole.functions.invoke(
         'matchStationForUserReportedPrice',
         delegatePayload
       );
