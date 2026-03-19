@@ -512,11 +512,15 @@ export default function ContractCompliancePanel() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const response = await base44.functions.invoke('auditFuelPriceContractCompliance', {});
-    if (response.data.error) {
-      setError(response.data.error);
-    } else {
-      setResult(response.data);
+    try {
+      const response = await base44.functions.invoke('auditFuelPriceContractCompliance', {});
+      if (response.data?.error) {
+        setError(response.data.error);
+      } else {
+        setResult(response.data);
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || e.message);
     }
     setLoading(false);
   };
