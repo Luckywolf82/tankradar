@@ -408,6 +408,18 @@ export default function SuperAdmin() {
             </p>
           </div>
 
+          {/* Contract compliance audit */}
+          <div className="border-t pt-5">
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-sm font-semibold text-slate-700">FuelPrice kontraktsvalidering</p>
+              <ModeBadge type="analyse" />
+            </div>
+            <p className="text-xs text-slate-500 mb-3">
+              Kjør en read-only validering av alle FuelPrice-records mot canonical contract v1.3.2. Identifiserer write-gate violations og SRP-bypass-mønstre per kilde.
+            </p>
+            <ContractCompliancePanel />
+          </div>
+
           {/* Datakvalitet og importlenker */}
           <div className="border-t pt-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Import og datakvalitet</p>
