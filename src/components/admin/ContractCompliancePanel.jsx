@@ -126,6 +126,190 @@ function SourceRow({ sourceName, data }) {
   );
 }
 
+// ─── SRP Preview Section ─────────────────────────────────────────────────────
+
+function SrpPreviewSection({ auditResult }) {
+  const [loading, setLoading] = useState(false);
+  const [previewResult, setPreviewResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Sample observation form state
+  const [obs, setObs] = useState({
+    sourceName: "GooglePlaces",
+    parserVersion: "gp_v1",
+    fuelType: "gasoline_95",
+    priceNok: "",
+    priceType: "station_level",
+    sourceFrequency: "near_realtime",
+    station_name: "",
+    station_chain: "",
+    gps_latitude: "",
+    gps_longitude: "",
+    locationLabel: "",
+  });
+
+  const runPreview = async () => {
+    setLoading(true);
+    setError(null);
+    setPreviewResult(null);
+    const observation = {
+      ...obs,
+      priceNok: obs.priceNok ? Number(obs.priceNok) : null,
+      gps_latitude: obs.gps_latitude ? Number(obs.gps_latitude) : null,
+      gps_longitude: obs.gps_longitude ? Number(obs.gps_longitude) : null,
+      fetchedAt: new Date().toISOString(),
+      sourceUpdatedAt: null,
+    };
+    const response = await base44.functions.invoke('resolveFuelPriceObservation', { observation });
+    if (response.data.error) {
+      setError(response.data.error);
+    } else {
+      setPreviewResult(response.data);
+    }
+    setLoading(false);
+  };
+
+  const statusColors = {
+    matched_station_id: "bg-green-50 border-green-300 text-green-800",
+    review_needed_station_match: "bg-amber-50 border-amber-300 text-amber-800",
+    no_safe_station_match: "bg-red-50 border-red-300 text-red-800",
+  };
+
+  if (!auditResult) {
+    return <p className="text-xs text-slate-400 italic">Kjør kontraktsvalidering (steg 1) først for å aktivere preview.</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-800">
+        <p className="font-semibold mb-1">SRP Preview Engine aktiv — srp_preview_v1.0</p>
+        <p>
+          Legg inn en normalisert observasjon og se hva SRP ville returnert — uten at noe lagres.
+          Baseline fra audit: <strong>{auditResult.globalSummary.invalidCount} write-gate violations</strong> funnet på tvers av {auditResult.globalSummary.totalRecords} records.
+        </p>
+      </div>
+
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 font-medium"
+      >
+        <FlaskConical size={13} />
+        {showForm ? "Skjul observasjonsskjema" : "Vis observasjonsskjema"}
+        {showForm ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+      </button>
+
+      {showForm && (
+        <div className="bg-slate-50 border border-slate-200 rounded p-4 space-y-3">
+          <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Normalisert observasjon</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {[
+              { key: "sourceName", label: "sourceName" },
+              { key: "parserVersion", label: "parserVersion" },
+              { key: "fuelType", label: "fuelType" },
+              { key: "priceNok", label: "priceNok (NOK/L)" },
+              { key: "sourceFrequency", label: "sourceFrequency" },
+              { key: "station_name", label: "station_name" },
+              { key: "station_chain", label: "station_chain" },
+              { key: "gps_latitude", label: "gps_latitude" },
+              { key: "gps_longitude", label: "gps_longitude" },
+              { key: "locationLabel", label: "locationLabel" },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <p className="text-xs text-slate-500 mb-0.5 font-mono">{label}</p>
+                <input
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-xs font-mono bg-white"
+                  value={obs[key]}
+                  onChange={e => setObs(prev => ({ ...prev, [key]: e.target.value }))}
+                  placeholder={key}
+                />
+              </div>
+            ))}
+          </div>
+
+          <Button onClick={runPreview} disabled={loading} size="sm" variant="outline" className="gap-2 mt-1">
+            <Eye size={13} className={loading ? "animate-pulse" : ""} />
+            {loading ? "Kjører SRP preview…" : "Forhåndsvis SRP-resolusjon"}
+          </Button>
+          <p className="text-xs text-slate-400">Leser eksisterende stasjoner · Ingen data endres · Returnerer canonical preview-objekt</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-xs text-red-800">{error}</div>
+      )}
+
+      {previewResult && (
+        <div className="space-y-3">
+          {/* Outcome badge */}
+          <div className={`border rounded px-4 py-3 text-xs font-semibold ${statusColors[previewResult.station_match_status] || "bg-slate-50 border-slate-200"}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="uppercase tracking-wider">SRP outcome:</span>
+              <span className="font-mono text-sm">{previewResult.station_match_status}</span>
+            </div>
+            <p>confidenceScore: {previewResult.confidenceScore} · plausibility: {previewResult.plausibilityStatus}</p>
+          </div>
+
+          {/* Routing flags */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {[
+              { label: "wouldCreateFuelPrice", value: previewResult.wouldCreateFuelPrice },
+              { label: "wouldCreateStationCandidate", value: previewResult.wouldCreateStationCandidate },
+              { label: "wouldCreateStationReview", value: previewResult.wouldCreateStationReview },
+              { label: "displayableInNearbyPrices", value: previewResult.displayableInNearbyPrices },
+            ].map(({ label, value }) => (
+              <div key={label} className={`rounded border p-2 text-center text-xs ${value ? "bg-green-50 border-green-200 text-green-800" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
+                <p className="font-mono leading-tight">{label}</p>
+                <p className="font-bold text-sm mt-0.5">{value ? "true" : "false"}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Notes */}
+          {previewResult.confidenceReason && (
+            <div className="text-xs bg-slate-50 border border-slate-200 rounded px-3 py-2">
+              <span className="font-semibold text-slate-600">confidenceReason:</span>{" "}
+              <span className="text-slate-700">{previewResult.confidenceReason}</span>
+            </div>
+          )}
+          {previewResult.station_match_notes && (
+            <div className="text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              <span className="font-semibold text-amber-700">station_match_notes:</span>{" "}
+              <span className="text-amber-800">{previewResult.station_match_notes}</span>
+            </div>
+          )}
+
+          {/* Top candidates */}
+          {previewResult.topCandidateSummaries.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Topp kandidater</p>
+              {previewResult.topCandidateSummaries.map(c => (
+                <div key={c.id} className="flex items-center justify-between text-xs border border-slate-200 rounded px-3 py-1.5 mb-1 bg-white">
+                  <span className="font-medium text-slate-700">{c.name}</span>
+                  <span className="text-slate-500">{c.chain || "—"}</span>
+                  <span className="text-slate-500">{c.distanceMeters != null ? `${c.distanceMeters}m` : "?"}</span>
+                  <span className="font-bold text-slate-800">score: {c.score}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Input warnings */}
+          {previewResult.inputWarnings.length > 0 && (
+            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              <span className="font-semibold">Input warnings:</span> {previewResult.inputWarnings.join(" · ")}
+            </div>
+          )}
+
+          <p className="text-xs text-slate-400">
+            {previewResult.candidatesEvaluated} stasjoner evaluert · {previewResult.candidatesScored} scoret · {previewResult.srpVersion}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
 export default function ContractCompliancePanel() {
