@@ -459,34 +459,33 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
     let candidatePoolSource = 'none';
     let candidatesCount = 0;
 
-    if (matchCity && matchLat !== null && matchLon !== null) {
+    if (matchLat !== null && matchLon !== null) {
+      // GPS available — use bounding-box filter directly via service role.
+      // This avoids a function-to-function invoke (which requires auth token propagation).
+      // Bounding box: ~2 km radius (approx 0.018 degrees lat, lon varies by cos(lat)).
+      const radiusKm = 2.0;
+      const latDelta = radiusKm / 111.0;
+      const lonDelta = radiusKm / (111.0 * Math.max(0.01, Math.cos(matchLat * Math.PI / 180)));
       try {
-        const preFilterResult = await base44.functions.invoke('getNearbyStationCandidates', {
-          gps_lat: matchLat,
-          gps_lon: matchLon,
-          city: matchCity,
-          radius_meters: 3000,
-          max_candidates: 20,
-        });
-
-        if (preFilterResult.data.candidates && preFilterResult.data.candidates.length > 0) {
-          candidates = preFilterResult.data.candidates;
-          candidatePoolSource = 'proximity_filter';
-        } else if (preFilterResult.data.fallback_used) {
-          candidates = preFilterResult.data.candidates;
-          candidatePoolSource = 'fallback_full_catalog';
-        }
-      } catch (error) {
-        // Fallback to full city catalog
-        try {
-          candidates = await base44.entities.Station.filter({ city: matchCity });
-          candidatePoolSource = 'fallback_full_catalog_error';
-        } catch {
-          // No candidates available
-          candidatePoolSource = 'none';
-        }
+        const allNearby = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 500);
+        candidates = allNearby.filter(s =>
+          s.latitude != null && s.longitude != null &&
+          s.latitude  >= matchLat - latDelta && s.latitude  <= matchLat + latDelta &&
+          s.longitude >= matchLon - lonDelta && s.longitude <= matchLon + lonDelta
+        );
+        candidatePoolSource = 'gps_bounding_box';
+      } catch {
+        candidatePoolSource = 'none';
       }
-
+      candidatesCount = candidates.length;
+    } else if (matchCity) {
+      // No GPS — fall back to city catalog
+      try {
+        candidates = await base44.entities.Station.filter({ city: matchCity });
+        candidatePoolSource = 'city_catalog_fallback';
+      } catch {
+        candidatePoolSource = 'none';
+      }
       candidatesCount = candidates.length;
     }
 
