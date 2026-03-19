@@ -587,22 +587,26 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const payload = await req.json();
     const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude, preview_mode } = payload;
 
-    // EARLY EXIT: Preview mode — return read-only metadata only.
-    // Auth check is deferred for preview_mode because this path is also invoked
-    // by resolveFuelPriceObservation bridge via asServiceRole (no user token).
+    // EARLY EXIT: Preview mode — no auth required.
+    // This path is read-only and is invoked by resolveFuelPriceObservation bridge
+    // via asServiceRole (no user token available in function-to-function calls).
     // Preview mode has zero write side-effects — no FuelPrice, no StationCandidate,
-    // no StationReview is created. Service-role access is safe here.
+    // no StationReview is created. Unauthenticated access is safe here.
+    // BRIDGE NOTE: This auth exemption exists because resolveFuelPriceObservation
+    // is the enforcing access gate for all external callers. Direct calls to this
+    // endpoint in preview_mode without a token are harmless (read-only).
     if (preview_mode === true) {
       return handlePreviewMode(station_name, station_chain, city, latitude, longitude, base44);
+    }
+
+    // Production write path requires authenticated user
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Use selected station coordinates if available, otherwise fall back to GPS
