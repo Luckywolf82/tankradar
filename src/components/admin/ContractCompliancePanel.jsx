@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { ShieldAlert, ShieldCheck, AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Eye, Lock, ClipboardCheck } from "lucide-react";
+import { ShieldAlert, ShieldCheck, AlertTriangle, RefreshCw, ChevronDown, ChevronRight, Eye, Lock, ClipboardCheck, FlaskConical } from "lucide-react";
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
