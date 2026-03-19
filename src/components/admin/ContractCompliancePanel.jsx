@@ -233,11 +233,16 @@ function SrpPreviewSection({ auditResult }) {
       fetchedAt: new Date().toISOString(),
       sourceUpdatedAt: null,
     };
-    const response = await base44.functions.invoke('resolveFuelPriceObservation', { observation });
-    if (response.data.error) {
-      setError(response.data.error);
-    } else {
-      setPreviewResult(response.data);
+    try {
+      const response = await base44.functions.invoke('resolveFuelPriceObservation', { observation });
+      if (response.data?.error) {
+        setError(`${response.data.error}${response.data.detail ? ` — ${response.data.detail}` : ""}`);
+      } else {
+        setPreviewResult(response.data);
+      }
+    } catch (e) {
+      const detail = e.response?.data?.error || e.response?.data?.detail || e.message;
+      setError(`Forespørsel feilet: ${detail}`);
     }
     setLoading(false);
   };
