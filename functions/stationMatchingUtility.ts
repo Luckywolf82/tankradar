@@ -186,7 +186,8 @@ function cityGate(obsCity, obsCityConfidence, stnCity) {
     return { passes: true, reason: 'obs_city_null_neutral' };
   }
 
-  if (obsCityConfidence >= 0.85 && obsCity.toLowerCase() !== stnCity.toLowerCase()) {
+  // null-safety: if stnCity is null/undefined, city is unknown — treat as neutral (pass), not a mismatch
+  if (obsCityConfidence >= 0.85 && stnCity && obsCity.toLowerCase() !== stnCity.toLowerCase()) {
     return { passes: false, reason: 'explicit_city_mismatch' };
   }
 

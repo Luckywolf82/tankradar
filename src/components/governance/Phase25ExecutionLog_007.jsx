@@ -1633,4 +1633,94 @@ export const entry_104 = {
   }
 };
 
-export default entry_104;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 105: REPO FORENSICS + BUG FIX — CITY GATE NULL-SAFETY REGRESSION (2026-03-10)
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_105 = {
+  timestamp: "2026-03-19T21:30:00Z",
+  phase: "Phase 2.5 — Regression Remediation",
+  title: "Repo Forensics: City Gate Null-Safety Bug Fix — Entry 41 Regression",
+
+  forensicsTimeWindow: "2026-03-08 to 2026-03-12",
+
+  rootCauseIdentified: {
+    entry: "Entry 41 (2026-03-10)",
+    file: "functions/matchStationForUserReportedPrice.ts",
+    change: "Introduced assembleObservation() with hardcoded cityConfidence: 0.95",
+    bug:
+      "scoreStationMatch (line 216) calls candidateStation.city.toLowerCase() without null guard. " +
+      "With cityConfidence 0.95 exceeding the 0.85 threshold, any candidate station with city=null " +
+      "causes a TypeError crash → scoring loop yields 0 candidates → NO_SAFE_STATION_MATCH collapse.",
+    cascadeEffect:
+      "resolveFuelPriceObservation (bridge) delegates to matchStationForUserReportedPrice (preview_mode: true) " +
+      "→ receives NO_SAFE_STATION_MATCH → station_match_status = 'no_safe_station_match' → " +
+      "stationId = null → FuelPrice records bypass canonical station linkage.",
+  },
+
+  filesModified: [
+    "functions/matchStationForUserReportedPrice.ts — line 216: added `candidateStation.city &&` null-safety guard",
+    "functions/stationMatchingUtility.ts — line 189: added `stnCity &&` null-safety guard in cityGate()",
+  ],
+
+  filesCreated: [
+    "src/components/audits/data/repo-forensics-matching-regression-2026-03-10.jsx — full forensics report",
+  ],
+
+  changeDetails: {
+    "functions/matchStationForUserReportedPrice.ts": {
+      line: 216,
+      before:
+        "if (observation.city && observation.cityConfidence >= 0.85 && observation.city.toLowerCase() !== candidateStation.city.toLowerCase())",
+      after:
+        "if (observation.city && observation.cityConfidence >= 0.85 && candidateStation.city && observation.city.toLowerCase() !== candidateStation.city.toLowerCase())",
+      scoringLogicChanged: false,
+      thresholdsChanged: false,
+      routingChanged: false,
+    },
+    "functions/stationMatchingUtility.ts": {
+      line: 189,
+      before: "if (obsCityConfidence >= 0.85 && obsCity.toLowerCase() !== stnCity.toLowerCase())",
+      after: "if (obsCityConfidence >= 0.85 && stnCity && obsCity.toLowerCase() !== stnCity.toLowerCase())",
+      scoringLogicChanged: false,
+    },
+  },
+
+  governanceCompliance: {
+    lockedFileModified: "matchStationForUserReportedPrice.ts is a locked Phase 2 file",
+    justification:
+      "Minimal null-safety fix for verified regression from Entry 41. " +
+      "No scoring weights, thresholds, or routing logic changed. " +
+      "City gate behavior for stations WITH a city field is unchanged.",
+    frozenFunctionsUnchanged: [
+      "getNearbyStationCandidates — untouched",
+      "classifyGooglePlacesConfidence — untouched",
+      "classifyPricePlausibility — untouched",
+      "classifyStationsRuleEngine — untouched",
+      "deleteAllGooglePlacesPrices — untouched",
+      "deleteGooglePlacesPricesForReclassification — untouched",
+      "verifyGooglePlacesPriceNormalization — untouched",
+      "validateDistanceBands — untouched",
+      "auditPhase2DominanceGap — untouched",
+    ],
+  },
+
+  recommendedVerificationSteps: [
+    "Run auditFuelPriceContractCompliance.ts against live data to verify station_match_status recovery",
+    "Run traceOneObservationEndToEnd.ts with a real observation to confirm no TypeError",
+    "Run validateStationData.ts to audit city field completeness across Station master records",
+    "Consider city case normalization as follow-up (e.g. 'Oslo' vs 'oslo' edge case)",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 2,
+    businessLogicChanges: 0,
+    scoringWeightsChanges: 0,
+    thresholdChanges: 0,
+    governanceFilesModified: 2,
+    frozenFilesModified: 1,
+    frozenFilesModifiedReason: "Null-safety regression fix only",
+  },
+};
+
+export default entry_105;

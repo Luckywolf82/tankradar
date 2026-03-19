@@ -213,7 +213,8 @@ function scoreStationMatch(observation, candidateStation, config = {}) {
   const breakdown = {};
 
   // City gate: explicit-city-only rejection
-  if (observation.city && observation.cityConfidence >= 0.85 && observation.city.toLowerCase() !== candidateStation.city.toLowerCase()) {
+  // null-safety: if candidateStation.city is null/undefined, city is unknown — treat as neutral (pass), not a mismatch
+  if (observation.city && observation.cityConfidence >= 0.85 && candidateStation.city && observation.city.toLowerCase() !== candidateStation.city.toLowerCase()) {
     gateFailures.push('city_mismatch');
     return { score: 0, signals, gateFailures, rawSignalBreakdown: breakdown };
   }
