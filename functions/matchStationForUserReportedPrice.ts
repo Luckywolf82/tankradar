@@ -535,7 +535,10 @@ async function handlePreviewMode(stationName, stationChain, city, latitude, long
           .sort((a, b) => b.score - a.score);
 
         // Top 5 candidates for preview
+        // NOTE: id is included so that resolveFuelPriceObservation bridge can
+        // populate stationId in its canonical response without a second lookup.
         topCandidates = scoredMatches.slice(0, 5).map(m => ({
+          id: m.station.id,
           name: m.station.name,
           chain: m.station.chain,
           city: m.station.city,
