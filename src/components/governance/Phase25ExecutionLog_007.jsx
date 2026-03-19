@@ -1723,4 +1723,67 @@ export const entry_105 = {
   },
 };
 
-export default entry_105;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 106: COMMIT-LEVEL FORENSICS — 12 COMMITS FROM 2026-03-10 (12:49–13:41)
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_106 = {
+  timestamp: "2026-03-19T22:57:00Z",
+  phase: "Phase 2.5 Governance & Infrastructure",
+  title: "Commit-Level Forensics: 12 Commits from 2026-03-10 (12:49–13:41 UTC)",
+
+  forensicsScope: {
+    commitsAnalyzed: 12,
+    timeWindow: "2026-03-10 12:49:15 – 13:41:03 UTC",
+    question: "Which commit introduced the regression: all matches return no_safe_station_match, rawMatchScore=0, dominanceGap=0?",
+    method: "Full diffs for all 12 commits + traced all modifying commits for matching-critical files",
+  },
+
+  keyFindings: [
+    "ALL 12 commits are SAFE or POSSIBLE_IMPACT (latent only) for the matching pipeline.",
+    "matchStationForUserReportedPrice.ts was NOT changed by any of the 12 commits.",
+    "resolveFuelPriceObservation.ts did NOT EXIST during the 12 commits (first created 2026-03-19).",
+    "The actual regression commit is 0800da1 (2026-03-09 19:39:58) — 9+ hours before the window.",
+    "The chainNormalization.ts commits (46b2e62 → a864b27) introduce a broken utility: uno-x normalizes to null. " +
+      "No runtime impact because the matching pipeline uses its own inline normalizeChainName.",
+  ],
+
+  verdictByCommit: [
+    { sha: "4f97251", verdict: "SAFE",            reason: "UI + governance log" },
+    { sha: "5baf4fa", verdict: "SAFE",            reason: "Layout.jsx nav" },
+    { sha: "13a4745", verdict: "SAFE",            reason: "Governance log" },
+    { sha: "a2e838b", verdict: "SAFE",            reason: "checkPriceAlerts.ts archived_duplicate" },
+    { sha: "35015b0", verdict: "SAFE",            reason: "checkPriceAlerts.ts canonicalStationId field" },
+    { sha: "e0c1e79", verdict: "SAFE",            reason: "Governance log" },
+    { sha: "b72675d", verdict: "SAFE",            reason: "SuperAdmin.jsx UI" },
+    { sha: "3990eb8", verdict: "SAFE",            reason: "Governance log" },
+    { sha: "46b2e62", verdict: "POSSIBLE_IMPACT", reason: "chainNormalization.ts recreated with uno-x bug + missing aliases" },
+    { sha: "e619884", verdict: "SAFE",            reason: "chainNormalization.ts: removed module.exports no-op" },
+    { sha: "d2c681e", verdict: "SAFE",            reason: "chainNormalization.ts: added ES module export" },
+    { sha: "a864b27", verdict: "POSSIBLE_IMPACT", reason: "chainNormalization.ts: promoted to HTTP endpoint (broken uno-x still not called)" },
+  ],
+
+  actualRegressionCommit: {
+    sha: "0800da14f105bd84578b7abee729e0b7735d9389",
+    timestamp: "2026-03-09 19:39:58 UTC",
+    cause:
+      "Replaced direct Station.filter({ city }) with admin-gated getNearbyStationCandidates invoke. " +
+      "For non-admin users: getNearbyStationCandidates returns 403. If SDK returns body without throwing, " +
+      "preFilterResult.data.candidates = undefined → candidates stays [] → no_safe_station_match.",
+  },
+
+  filesCreated: [
+    "src/components/audits/data/commit-forensics-no-safe-station-match-regression.jsx",
+  ],
+
+  filesModified: [],
+
+  runtimeCodeChanges: 0,
+
+  governanceCompliance: {
+    noLockedFilesModified: "✓ Zero locked Phase 2 files touched",
+    noRuntimeCodeChanges: "✓ Zero runtime code changes — forensics report only",
+  },
+};
+
+export default entry_106;
