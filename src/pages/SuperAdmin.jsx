@@ -421,6 +421,22 @@ export default function SuperAdmin() {
             description="Produktveikart, historiske rapporter og arkiv. Sekundær informasjon — ikke nødvendig for daglig drift."
           />
 
+          <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
+            <div className="flex items-center gap-2 mb-1">
+              <Archive size={14} className="text-slate-500" />
+              <p className="text-sm font-semibold text-slate-700">Canonical FuelPrice Contract Audit</p>
+              <ModeBadge type="lesemodus" />
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Spec-only arkitekturaudit — Station Resolution Pipeline og FuelPrice kontraktsmatrise (2026-03-19)</p>
+            <Link
+              to="/CanonicalContractAuditReport"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <ExternalLink size={13} />
+              Åpne rapport / last ned PDF
+            </Link>
+          </div>
+
           <div>
             <div className="flex items-center gap-2 mb-3">
               <p className="text-sm font-semibold text-slate-700">Veikart — produktplan</p>
