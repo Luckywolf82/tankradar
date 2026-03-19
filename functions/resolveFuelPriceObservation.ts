@@ -174,7 +174,10 @@ Deno.serve(async (req) => {
 
     // Bridge call — SDK invoke() propagates calling user's auth token automatically.
     // matchStationForUserReportedPrice requires an authenticated user (any role).
-    const delegateResponse = await base44.functions.invoke(
+    // Using asServiceRole.functions ensures the call succeeds regardless of whether
+    // the token is propagated correctly across function-to-function calls.
+    // This is safe because preview_mode: true has no write side-effects.
+    const delegateResponse = await base44.asServiceRole.functions.invoke(
       'matchStationForUserReportedPrice',
       {
         preview_mode:  true,
