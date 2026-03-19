@@ -172,6 +172,8 @@ Deno.serve(async (req) => {
     //   priceNok      → not passed    (price is call-surface concern, not nucleus concern)
     // ════════════════════════════════════════════════════════
 
+    // Bridge call — forward user auth token so the nucleus endpoint can
+    // authenticate. base44.functions.invoke passes the calling user's session.
     const delegateResponse = await base44.functions.invoke(
       'matchStationForUserReportedPrice',
       {
