@@ -451,7 +451,9 @@ Deno.serve(async (req) => {
 
     let delegatedRaw;
     try {
-      const delegatedResponse = await base44.asServiceRole.functions.invoke(
+      // Forward the authenticated request context (user is already admin-validated above).
+      // Using user-scoped invoke so matchStationForUserReportedPrice receives valid auth headers.
+      const delegatedResponse = await base44.functions.invoke(
         'matchStationForUserReportedPrice',
         delegatePayload
       );
