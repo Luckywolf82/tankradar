@@ -597,9 +597,10 @@ Deno.serve(async (req) => {
     const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude, preview_mode } = payload;
 
     // EARLY EXIT: Preview mode — return read-only metadata only.
-    // Preview mode is accessible to any authenticated user (not admin-only)
-    // because it is consumed by resolveFuelPriceObservation bridge as a
-    // service call. No data is written in preview mode.
+    // Auth check is deferred for preview_mode because this path is also invoked
+    // by resolveFuelPriceObservation bridge via asServiceRole (no user token).
+    // Preview mode has zero write side-effects — no FuelPrice, no StationCandidate,
+    // no StationReview is created. Service-role access is safe here.
     if (preview_mode === true) {
       return handlePreviewMode(station_name, station_chain, city, latitude, longitude, base44);
     }
