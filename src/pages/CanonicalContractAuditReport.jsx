@@ -68,7 +68,14 @@ function Ul({ items }) {
 }
 
 export default function CanonicalContractAuditReport() {
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const newWin = window.open(window.location.href, '_blank');
+    if (newWin) {
+      newWin.addEventListener('load', () => newWin.print());
+    } else {
+      window.print();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
