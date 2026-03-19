@@ -288,24 +288,7 @@ export default function ContractCompliancePanel() {
         />
 
         <div className="ml-9">
-          {result ? (
-            <div className="space-y-2">
-              <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-800">
-                <p className="font-semibold mb-1">Preview ikke implementert ennå</p>
-                <p>
-                  Audit er fullført og baseline er etablert ({result.globalSummary.invalidCount} write-gate violations funnet).
-                  SRP resolver preview kommer i neste governance-steg.
-                  Ingen data vil endres i preview-modus.
-                </p>
-              </div>
-              <Button disabled size="sm" variant="outline" className="gap-2 opacity-50 cursor-not-allowed">
-                <Eye size={13} />
-                Forhåndsvis SRP-resolusjon — kommer i neste steg
-              </Button>
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400 italic">Kjør kontraktsvalidering (steg 1) først for å aktivere preview.</p>
-          )}
+          <SrpPreviewSection auditResult={result} />
         </div>
       </div>
 
