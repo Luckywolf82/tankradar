@@ -110,6 +110,7 @@ const dataQualityLinks = [
 ];
 
 const archiveLinks = [
+  { label: "Canonical FuelPrice Contract Audit", page: "CanonicalContractAuditReport", desc: "Spec-only arkitekturaudit — Station Resolution Pipeline og kontraktsmatrise" },
   { label: "Systemstatus (full)", page: "SystemStatus", desc: "Nøkkeltall for data, matching og systemhelse" },
   { label: "Verifikasjonsrapport", page: "VerificationReport_UserReportedEnhancements", desc: "Verifikasjonsrapport user reported" },
   { label: "Implementasjonsrapport", page: "ImplementationReport_UserReportedPolicy", desc: "Implementasjonsrapport" },
