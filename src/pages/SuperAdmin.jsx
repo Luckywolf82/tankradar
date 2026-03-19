@@ -28,6 +28,7 @@ import SystemHealthDashboard from "../components/admin/SystemHealthDashboard";
 import AdminOperationsPanel from "../components/admin/AdminOperationsPanel";
 import MasteringMetrics from "../components/admin/MasteringMetrics";
 import RoadmapAdminPanel from "../components/admin/RoadmapAdminPanel";
+import ContractCompliancePanel from "../components/admin/ContractCompliancePanel";
 
 // ─── Section header helper ────────────────────────────────────────────────────
 

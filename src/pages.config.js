@@ -50,6 +50,7 @@
 import App from './pages/App';
 import BackfillAssessment from './pages/BackfillAssessment';
 import CandidateDiscoveryStatus from './pages/CandidateDiscoveryStatus';
+import CanonicalContractAuditReport from './pages/CanonicalContractAuditReport';
 import ComponentNamingReview from './pages/ComponentNamingReview';
 import ConfidencePolicyReport from './pages/ConfidencePolicyReport';
 import CoverageReport from './pages/CoverageReport';
@@ -91,6 +92,7 @@ export const PAGES = {
     "App": App,
     "BackfillAssessment": BackfillAssessment,
     "CandidateDiscoveryStatus": CandidateDiscoveryStatus,
+    "CanonicalContractAuditReport": CanonicalContractAuditReport,
     "ComponentNamingReview": ComponentNamingReview,
     "ConfidencePolicyReport": ConfidencePolicyReport,
     "CoverageReport": CoverageReport,
