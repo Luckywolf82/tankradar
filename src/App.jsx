@@ -58,6 +58,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/CanonicalContractAuditReport" element={<CanonicalContractAuditReport />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
