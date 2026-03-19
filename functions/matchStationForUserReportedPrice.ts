@@ -596,7 +596,10 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     const { gps_lat, gps_lon, station_name, station_chain, city, latitude, longitude, preview_mode } = payload;
 
-    // EARLY EXIT: Preview mode — return read-only metadata only
+    // EARLY EXIT: Preview mode — return read-only metadata only.
+    // Preview mode is accessible to any authenticated user (not admin-only)
+    // because it is consumed by resolveFuelPriceObservation bridge as a
+    // service call. No data is written in preview mode.
     if (preview_mode === true) {
       return handlePreviewMode(station_name, station_chain, city, latitude, longitude, base44);
     }
