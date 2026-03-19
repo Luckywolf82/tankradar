@@ -172,37 +172,25 @@ Deno.serve(async (req) => {
     //   priceNok      → not passed    (price is call-surface concern, not nucleus concern)
     // ════════════════════════════════════════════════════════
 
-    // Bridge call — forward inbound Authorization header so matchStationForUserReportedPrice
-    // can authenticate the calling user. The SDK invoke() does not propagate headers
-    // across function-to-function calls, so we forward the raw token explicitly.
-    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization') || '';
-    const bridgePayload = {
-      preview_mode:  true,
-      station_name:  station_name,
-      station_chain: station_chain,
-      latitude:      gps_latitude,
-      longitude:     gps_longitude,
-      city:          null,  // not available in source-agnostic interface
-    };
+    // Bridge call — SDK invoke() propagates calling user's auth token automatically.
+    // matchStationForUserReportedPrice requires an authenticated user (any role).
+    const delegateResponse = await base44.functions.invoke(
+      'matchStationForUserReportedPrice',
+      {
+        preview_mode:  true,
+        station_name:  station_name,
+        station_chain: station_chain,
+        latitude:      gps_latitude,
+        longitude:     gps_longitude,
+        city:          null,  // not available in source-agnostic interface
+      }
+    );
 
-    const appId = Deno.env.get('BASE44_APP_ID');
-    const bridgeUrl = `https://api.base44.com/api/apps/${appId}/functions/matchStationForUserReportedPrice`;
-
-    const bridgeRaw = await fetch(bridgeUrl, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': authHeader,
-      },
-      body: JSON.stringify(bridgePayload),
-    });
-
-    if (!bridgeRaw.ok) {
-      const errText = await bridgeRaw.text().catch(() => '');
-      return Response.json({ error: `Bridge delegation failed: HTTP ${bridgeRaw.status} — ${errText}` }, { status: 502 });
+    if (!delegateResponse.data) {
+      return Response.json({ error: 'Bridge delegation returned empty response' }, { status: 502 });
     }
 
-    const bridge = await bridgeRaw.json();
+    const bridge = delegateResponse.data;
 
     // ── Extract nucleus outcome from bridge response ─────────
     const bridgeDecision         = bridge.final_decision         || 'NO_SAFE_STATION_MATCH';
