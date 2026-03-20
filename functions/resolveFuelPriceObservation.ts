@@ -32,6 +32,7 @@ const SPEC_VERSION = "v1.3.2";
 const SCORE_MATCHED = 65;
 const SCORE_REVIEW_THRESHOLD = 35;
 const DOMINANCE_GAP_MIN = 10;
+const CITY_CONFIDENCE_EXPLICIT = 0.85;
 
 const KNOWN_CHAINS = {
   'circle k': ['circle k', 'circlk'],
@@ -366,6 +367,7 @@ Deno.serve(async (req) => {
     const gps_latitude  = obs.gps_latitude != null ? Number(obs.gps_latitude) : null;
     const gps_longitude = obs.gps_longitude != null ? Number(obs.gps_longitude) : null;
     const locationLabel = obs.locationLabel || null;
+    const city          = obs.city || null;
     const reportedByUserId = obs.reportedByUserId || null;
 
     // ── Input validation (soft — produce diagnostics, do not abort) ──
@@ -400,8 +402,8 @@ Deno.serve(async (req) => {
       areaLabel: obsAreaLabel,
       latitude: gps_latitude,
       longitude: gps_longitude,
-      city: null,
-      cityConfidence: 0,
+      city: city,
+      cityConfidence: city ? CITY_CONFIDENCE_EXPLICIT : 0,
     };
 
     // ── Candidate retrieval (read-only) ──────────────────────
@@ -421,11 +423,16 @@ Deno.serve(async (req) => {
         s.longitude >= bbox.minLon && s.longitude <= bbox.maxLon
       );
     } else if (station_name) {
-      // No GPS — fall back to name-only search (limited)
+      // No GPS — fall back to city-scoped search if city provided, otherwise name-only (limited)
       inputWarnings.push('name_only_match_fallback — lower confidence expected');
-      const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 200);
-      // Include all as candidates; scoring will penalise distance=0 (no signal)
-      candidateStations = allStations.slice(0, 50);
+      if (city) {
+        const cityStations = await base44.asServiceRole.entities.Station.filter({ status: 'active', city: city }, '-created_date', 100);
+        candidateStations = cityStations.slice(0, 50);
+      } else {
+        const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 200);
+        // Include all as candidates; scoring will penalise distance=0 (no signal)
+        candidateStations = allStations.slice(0, 50);
+      }
     }
 
     // ── Score candidates ────────────────────────────────────
@@ -553,6 +560,7 @@ Deno.serve(async (req) => {
       locationLabel: locationLabel || obsAreaLabel || null,
       station_name,
       station_chain: station_chain || obsChain || null,
+      city,
       gps_latitude,
       gps_longitude,
 
