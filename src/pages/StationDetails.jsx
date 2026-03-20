@@ -46,7 +46,14 @@ export default function StationDetails() {
   const stationId = params.get("stationId");
 
   const [station, setStation] = useState(null);
-  const [prices, setPrices] = useState([]);
+  // stationHistory — all FuelPrice rows fetched for this station, unfiltered.
+  // Used by chart, observation log, and future advanced analytics so no
+  // historical or diagnostic data is discarded.
+  const [stationHistory, setStationHistory] = useState([]);
+  // displayPrices — station history rows that pass the canonical display-
+  // eligibility contract.  Used only for "Siste kjente priser" and the
+  // trend indicators shown alongside it.
+  const [displayPrices, setDisplayPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [favorites, setFavorites] = useState([]);
@@ -59,10 +66,11 @@ export default function StationDetails() {
       base44.entities.FuelPrice.filter({ stationId }, "-fetchedAt", 200),
     ]).then(([stationRes, pricesRes]) => {
       setStation(stationRes[0] || null);
-      // Apply shared base display-eligibility contract; stationId is already
-      // enforced at query level, so the remaining checks add plausibility,
-      // aggregate-type exclusion, and match-status safety.
-      setPrices(pricesRes.filter(isStationPriceDisplayEligible));
+      // Keep all fetched rows as broader station history (chart, log, analytics).
+      setStationHistory(pricesRes);
+      // Apply the shared canonical display-eligibility contract only for the
+      // current-price display layer ("Siste kjente priser").
+      setDisplayPrices(pricesRes.filter(isStationPriceDisplayEligible));
     }).finally(() => setLoading(false));
 
     base44.auth.isAuthenticated().then(async (auth) => {
@@ -120,17 +128,32 @@ export default function StationDetails() {
     return <div className="max-w-2xl mx-auto p-6 text-slate-500">Fant ikke stasjonen.</div>;
   }
 
-  // Group prices by fuel type — latest per type
+  // ── Display-ready layer ──────────────────────────────────────────────────
+  // Latest display-eligible price per fuel type — "Siste kjente priser".
   const latestByFuel = {};
-  prices.forEach((p) => {
+  displayPrices.forEach((p) => {
     if (!latestByFuel[p.fuelType] || new Date(p.fetchedAt) > new Date(latestByFuel[p.fuelType].fetchedAt)) {
       latestByFuel[p.fuelType] = p;
     }
   });
 
-  // Build chart data: sort by fetchedAt, group by date + fuelType
+  // Price trend shown next to "Siste kjente priser" — uses display-eligible
+  // rows so the indicator reflects the same data the user is looking at.
+  const trendByFuel = {};
+  Object.keys(latestByFuel).forEach((ft) => {
+    const sorted = displayPrices.filter((p) => p.fuelType === ft).sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt));
+    if (sorted.length >= 2) {
+      const diff = sorted[0].priceNok - sorted[1].priceNok;
+      trendByFuel[ft] = diff;
+    }
+  });
+
+  // ── Broader history layer ─────────────────────────────────────────────────
+  // Chart data and observation log use all fetched rows (stationHistory) so
+  // that charting, diagnostics, and future analytics are not limited to the
+  // stricter display-eligibility contract.
   const chartByDate = {};
-  [...prices].sort((a, b) => new Date(a.fetchedAt) - new Date(b.fetchedAt)).forEach((p) => {
+  [...stationHistory].sort((a, b) => new Date(a.fetchedAt) - new Date(b.fetchedAt)).forEach((p) => {
     const dateKey = format(new Date(p.fetchedAt), "dd.MM");
     if (!chartByDate[dateKey]) chartByDate[dateKey] = { date: dateKey };
     // Keep cheapest per fuel per date
@@ -139,17 +162,7 @@ export default function StationDetails() {
     }
   });
   const chartData = Object.values(chartByDate);
-  const fuelTypesInChart = [...new Set(prices.map((p) => p.fuelType))];
-
-  // Price trend (last 2 obs per fuel type)
-  const trendByFuel = {};
-  fuelTypesInChart.forEach((ft) => {
-    const sorted = prices.filter((p) => p.fuelType === ft).sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt));
-    if (sorted.length >= 2) {
-      const diff = sorted[0].priceNok - sorted[1].priceNok;
-      trendByFuel[ft] = diff;
-    }
-  });
+  const fuelTypesInChart = [...new Set(stationHistory.map((p) => p.fuelType))];
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
@@ -286,15 +299,15 @@ export default function StationDetails() {
         </Card>
       )}
 
-      {/* Full price log */}
-      {prices.length > 0 && (
+      {/* Full price log — uses broader station history so all observations are preserved */}
+      {stationHistory.length > 0 && (
         <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Alle observasjoner ({prices.length})</CardTitle>
+            <CardTitle className="text-base">Alle observasjoner ({stationHistory.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
-              {prices.map((p) => {
+              {stationHistory.map((p) => {
                 const src = sourceLabel[p.sourceName] || { text: p.sourceName, color: "bg-slate-100 text-slate-500" };
                 const fetchedText = p.fetchedAt
                   ? format(new Date(p.fetchedAt), "dd.MM.yyyy HH:mm")

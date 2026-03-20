@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -165,18 +165,19 @@ export const NEXT_SAFE_STEP = {
     id: "phase25_step_108",
     title: "FuelFinder Write Contract Completion — plausibilityStatus and station_match_status",
     description:
-      "Entry 107 (Canonical Price Retrieval Contract) completed the UI-layer shared base rule. " +
-      "The next upstream gap identified in Entry 105 (Visibility Contract Audit) is FuelFinder: " +
+      "Entry 108 (StationDetails Data-Layer Split) is complete. " +
+      "The next upstream gap from Entry 105 (Visibility Contract Audit) is FuelFinder: " +
       "fetchFuelFinderStationPrices.ts writes FuelPrice without plausibilityStatus AND without station_match_status. " +
-      "These rows are therefore invisible to the shared isStationPriceDisplayEligible predicate. " +
+      "These rows pass the stationId check in stationHistory but are excluded from displayPrices " +
+      "because plausibilityStatus is not 'realistic_price'. " +
       "This step should add plausibilityStatus classification and station_match_status declaration " +
-      "to the FuelFinder write path, mirroring the GooglePlaces fix from Entry 106. " +
-      "No frozen files involved. No UI changes required — the shared rule will automatically " +
-      "include correctly-written FuelFinder rows once the write path is compliant.",
+      "to the FuelFinder write path so FuelFinder rows become display-eligible. " +
+      "No frozen files involved. No UI changes required — the shared rule and data-layer split " +
+      "will automatically include correctly-written FuelFinder rows in displayPrices once compliant.",
     scope: [
       "Update fetchFuelFinderStationPrices.ts: classify priceNok with plausibility threshold (10–30 NOK/L)",
-      "Update fetchFuelFinderStationPrices.ts: set station_match_status = 'matched_station_id' on FuelPrice writes (FuelFinder rows are already station-matched by query structure)",
-      "No UI changes needed — shared predicate in fuelPriceEligibility.js will include compliant rows automatically",
+      "Update fetchFuelFinderStationPrices.ts: set station_match_status = 'matched_station_id' on FuelPrice writes",
+      "No UI changes needed",
     ],
     complexity: "LOW",
     runtimeImpact: "MINIMAL — only affects write path in FuelFinder adapter",
@@ -184,8 +185,8 @@ export const NEXT_SAFE_STEP = {
     blockingIssues: "NONE",
     frozenFilesImpact: "ZERO — fetchFuelFinderStationPrices.ts is not a frozen Phase 2 file",
     expectedOutcome:
-      "FuelFinder rows become visible in station-based display surfaces (NearbyPrices, StationDetails) " +
-      "once plausibilityStatus and station_match_status are correctly written",
+      "FuelFinder rows become visible in 'Siste kjente priser' (StationDetails displayPrices) " +
+      "and in NearbyPrices once plausibilityStatus and station_match_status are correctly written",
   }
 };
 
