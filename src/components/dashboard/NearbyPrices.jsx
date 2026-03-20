@@ -120,11 +120,11 @@ export default function NearbyPrices({ selectedFuel }) {
       return { ...p, _station: station, _distanceKm: dist };
     }).filter((p) => p._distanceKm <= RADIUS_KM);
 
-    // Deduplicate: keep cheapest price per station (for selected fuel)
+    // Deduplicate: keep freshest price per station (for selected fuel)
     const byStation = {};
     withDistance.forEach((p) => {
       const key = p.stationId;
-      if (!byStation[key] || p.priceNok < byStation[key].priceNok) {
+      if (!byStation[key] || new Date(p.fetchedAt) > new Date(byStation[key].fetchedAt)) {
         byStation[key] = p;
       }
     });
