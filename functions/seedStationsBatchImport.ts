@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
         sourceName,
         sourceStationId,
         normalizedName: name.toLowerCase().trim(),
+        status: 'active',
       };
       
       // Apply chain normalization

@@ -266,7 +266,8 @@ Deno.serve(async (req) => {
           longitude: stationData.longitude,
           sourceName: "FuelFinder",
           normalizedName: normalizedName,
-          sourceStationId: stationData.sourceStationId
+          sourceStationId: stationData.sourceStationId,
+          status: 'active',
         });
         stationId = created.id;
         recordsCreated++;

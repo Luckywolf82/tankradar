@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
         region: approvedCandidate.region,
         sourceName: 'GooglePlaces',
         sourceStationId: approvedCandidate.sourceStationId,
+        status: 'active',
       });
 
       // Update approved candidate

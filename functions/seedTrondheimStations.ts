@@ -123,6 +123,7 @@ Deno.serve(async (req) => {
             longitude: seedStation.longitude,
             sourceName: 'seed_trondheim',
             region: 'Trøndelag',
+            status: 'active',
           });
           inserted++;
           results.push({ name: seedStation.name, status: 'inserted' });

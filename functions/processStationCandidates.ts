@@ -169,6 +169,7 @@ Deno.serve(async (req) => {
           sourceName: candidate.sourceName === 'GooglePlaces' ? 'GooglePlaces' : 'user_reported',
           sourceStationId: candidate.sourceStationId || null,
           normalizedName: candidate.proposedName.toLowerCase().trim(),
+          status: 'active',
         });
         results.auto_confirmed.push({ id: candidate.id, name: candidate.proposedName, chain: result.chain });
 

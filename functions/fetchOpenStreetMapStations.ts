@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
       });
 
       if (existing.length === 0) {
-         await base44.entities.Station.create(station);
+         await base44.entities.Station.create({ ...station, status: 'active' });
          recordsCreated++;
        } else {
          recordsSkipped++;

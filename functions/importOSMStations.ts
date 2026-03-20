@@ -175,6 +175,7 @@ Deno.serve(async (req) => {
         sourceStationId: station.sourceStationId,
         normalizedName: station.normalizedName,
         address: null, // OSM doesn't always have address details
+        status: 'active',
       });
       imported.push(created);
     }
