@@ -18,7 +18,7 @@
  * Nothing has been changed — only wrapped additively.
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const SRP_VERSION = "srp_preview_v1.0";
 const SPEC_VERSION = "v1.3.2";
@@ -412,10 +412,14 @@ Deno.serve(async (req) => {
       geoSearchPerformed = true;
       const bbox = roughBoundingBox(gps_latitude, gps_longitude, GEO_SEARCH_RADIUS_KM);
 
-      // Fetch active stations — read only, no mutation
-      const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 500);
+      // Fetch non-archived stations — read only, no mutation.
+      // Stations are created without an explicit status; only merged duplicates
+      // receive status='archived_duplicate'. Filtering by status='active' would
+      // therefore return 0 rows because no station is ever set to 'active'.
+      const allStations = await base44.asServiceRole.entities.Station.list('-created_date', 500);
 
       candidateStations = allStations.filter(s =>
+        s.status !== 'archived_duplicate' &&
         s.latitude != null && s.longitude != null &&
         s.latitude >= bbox.minLat && s.latitude <= bbox.maxLat &&
         s.longitude >= bbox.minLon && s.longitude <= bbox.maxLon
@@ -423,9 +427,9 @@ Deno.serve(async (req) => {
     } else if (station_name) {
       // No GPS — fall back to name-only search (limited)
       inputWarnings.push('name_only_match_fallback — lower confidence expected');
-      const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 200);
-      // Include all as candidates; scoring will penalise distance=0 (no signal)
-      candidateStations = allStations.slice(0, 50);
+      const allStations = await base44.asServiceRole.entities.Station.list('-created_date', 200);
+      // Include non-archived stations as candidates; scoring will penalise distance=0 (no signal)
+      candidateStations = allStations.filter(s => s.status !== 'archived_duplicate').slice(0, 50);
     }
 
     // ── Score candidates ────────────────────────────────────
