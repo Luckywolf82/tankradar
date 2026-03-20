@@ -67,23 +67,44 @@ export default function NearbyPrices({ selectedFuel }) {
     );
   }, []);
 
-  // Load stations + prices when GPS OK
+  // Load stations, then query FuelPrice per nearby station to avoid global-limit truncation
   useEffect(() => {
-    if (gpsState !== "ok") return;
-    Promise.all([
-      base44.entities.Station.list("-created_date", 2000),
-      base44.entities.FuelPrice.filter(
-        { fuelType: selectedFuel },
-        "-fetchedAt",
-        1000
-      ),
-    ])
-      .then(([stationsData, pricesData]) => {
+    if (gpsState !== "ok" || !userCoords) return;
+    setLoading(true);
+    base44.entities.Station.list("-created_date", 2000)
+      .then((stationsData) => {
         setStations(stationsData);
-        setPrices(pricesData);
+
+        // Determine nearby station IDs up-front so we query only relevant stations.
+        // This mirrors StationDetails' per-stationId query and avoids the global
+        // 1000-row truncation bias that can hide fresh local rows.
+        const nearbyIds = stationsData
+          .filter((s) => s.id && s.latitude && s.longitude)
+          .filter(
+            (s) =>
+              haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <=
+              RADIUS_KM
+          )
+          .map((s) => s.id);
+
+        if (nearbyIds.length === 0) {
+          setPrices([]);
+          setLoading(false);
+          return;
+        }
+
+        return Promise.all(
+          nearbyIds.map((id) =>
+            base44.entities.FuelPrice.filter(
+              { stationId: id, fuelType: selectedFuel },
+              "-fetchedAt",
+              20
+            )
+          )
+        ).then((arrays) => setPrices(arrays.flat()));
       })
       .finally(() => setLoading(false));
-  }, [gpsState, selectedFuel]);
+  }, [gpsState, selectedFuel, userCoords]);
 
   // Compute nearby results whenever data changes
   useEffect(() => {
