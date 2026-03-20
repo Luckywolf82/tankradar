@@ -1757,4 +1757,77 @@ export const entry_105 = {
   },
 };
 
-export default entry_105;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 106: GOOGLEPLACES WRITE CONTRACT COMPLETION — station_match_status
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_106 = {
+  timestamp: "2026-03-20T16:17:00Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "GooglePlaces Write Contract Completion — station_match_status: matched_station_id",
+
+  objectives: [
+    "Complete the GooglePlaces → FuelPrice write contract so that every row written with stationId also has an explicit station_match_status",
+    "Narrow, surgical change: only fetchGooglePlacesPrices.ts; no UI, no other adapters, no frozen files",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=105",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_105 (Visibility Contract Audit)",
+    "✓ Confirmed no frozen Phase 2 files will be modified",
+    "✓ Confirmed this step does NOT touch FuelFinder, UI components, or read logic",
+  ],
+
+  filesChanged: [
+    "functions/fetchGooglePlacesPrices.ts — added station_match_status: 'matched_station_id' to FuelPrice.create payload",
+  ],
+
+  exactCodeChange: {
+    file: "functions/fetchGooglePlacesPrices.ts",
+    location: "FuelPrice.create() call — between plausibilityStatus and rawPayloadSnippet",
+    lineAdded: "station_match_status: \"matched_station_id\",",
+    rationale:
+      "fetchGooglePlacesPrices.ts only writes a FuelPrice row after matchStationToPriceSource() returns a non-null result. " +
+      "A non-null result means chain + geographic proximity matched. " +
+      "The outcome is always a confirmed local match — so the correct declaration is 'matched_station_id'. " +
+      "No review_needed path exists in this adapter.",
+  },
+
+  whySmallestSafeStep:
+    "Only one field added to one write call in one file. " +
+    "No matching thresholds, confidence calculation, dedup logic, or plausibility classifier changed. " +
+    "No UI changed. No other source adapter changed. No frozen file touched.",
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 1,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 0,
+    governanceFilesModified: 2,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noUIChanges: "✓ Zero UI components modified",
+    noOtherAdaptersChanged: "✓ FuelFinder and other adapters untouched",
+    noMatchingLogicChanged: "✓ Matching thresholds, confidence, dedup logic unchanged",
+    narrowScope: "✓ Single field addition in single write call in single file",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_106;
