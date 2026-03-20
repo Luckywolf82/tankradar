@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Fuel, TrendingDown, TrendingUp, Minus, Star } from "lucide-react";
 import SharePriceButton from "@/components/shared/SharePriceButton";
+import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
 import { formatDistanceToNow, format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -58,7 +59,10 @@ export default function StationDetails() {
       base44.entities.FuelPrice.filter({ stationId }, "-fetchedAt", 200),
     ]).then(([stationRes, pricesRes]) => {
       setStation(stationRes[0] || null);
-      setPrices(pricesRes.filter((p) => p.plausibilityStatus === "realistic_price"));
+      // Apply shared base display-eligibility contract; stationId is already
+      // enforced at query level, so the remaining checks add plausibility,
+      // aggregate-type exclusion, and match-status safety.
+      setPrices(pricesRes.filter(isStationPriceDisplayEligible));
     }).finally(() => setLoading(false));
 
     base44.auth.isAuthenticated().then(async (auth) => {
