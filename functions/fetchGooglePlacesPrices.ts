@@ -386,6 +386,7 @@ Deno.serve(async (req) => {
              confidenceScore: matchResult.confidence,
              parserVersion: "gp_v1",
              plausibilityStatus: plausibilityStatus,
+             station_match_status: "matched_station_id",
              rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L | ${plausibilityStatus}`
            });
            mapping.pricesCreated++;
