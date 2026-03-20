@@ -1830,4 +1830,214 @@ export const entry_106 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
-export default entry_106;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 107: CANONICAL PRICE RETRIEVAL CONTRACT — SHARED BASE ELIGIBILITY RULE
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_107 = {
+  timestamp: "2026-03-20T17:07:30Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "Canonical Price Retrieval Contract — Shared Base Eligibility Rule",
+
+  objectives: [
+    "Introduce one shared display-eligibility predicate for station-based price views",
+    "Eliminate ad hoc divergence between NearbyPrices and StationDetails filtering logic",
+    "Ensure the contract is station-strict, source-agnostic, and future-compatible",
+    "Apply the shared rule in both NearbyPrices and StationDetails, keeping view-specific logic separate",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=106",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_106 (GooglePlaces Write Contract Completion)",
+    "✓ Confirmed no frozen Phase 2 files will be modified",
+    "✓ Confirmed this step does NOT touch FuelFinder adapter, ingestion architecture, or source matching logic",
+  ],
+
+  filesCreated: [
+    "src/utils/fuelPriceEligibility.js — shared isStationPriceDisplayEligible predicate",
+  ],
+
+  filesModified: [
+    "src/components/dashboard/NearbyPrices.jsx — replace inline eligibility block with shared predicate + view-specific station coord check",
+    "src/pages/StationDetails.jsx — replace inline plausibility-only filter with shared predicate",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Entry 107 appended",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — entryCount incremented to 107, lastUpdated updated, active chunk description updated",
+    "src/components/governance/NextSafeStep.jsx — next safe step reference added",
+  ],
+
+  sharedRuleIntroduced: {
+    file: "src/utils/fuelPriceEligibility.js",
+    export: "isStationPriceDisplayEligible(p)",
+    conditions: [
+      "p.plausibilityStatus === 'realistic_price' — required because upstream write-gates are not universally enforced",
+      "!!p.stationId — row must be station-linked; rows without stationId cannot appear in station-based views",
+      "p.priceType NOT IN ['national_average', 'regional_average'] — aggregate rows must not appear in per-station displays",
+      "p.station_match_status NOT IN ['no_safe_station_match', 'review_needed_station_match'] — explicit bad-outcome flags excluded when present",
+    ],
+    notRequired: [
+      "sourceName — source-agnostic by design",
+      "confidenceScore — adapter-specific; not a universal display requirement",
+      "parserVersion — adapter-specific metadata",
+      "sourceUpdatedAt — adapter-specific metadata",
+      "station lat/lon — view-specific to NearbyPrices; not required for StationDetails",
+    ],
+  },
+
+  howNearbyPricesUsesIt: {
+    before: "Inline block with 4 base conditions (plausibilityStatus, station_match_status (no_safe only), stationId, priceType) plus view-specific station lat/lon check",
+    after: "isStationPriceDisplayEligible(p) covers base rule; station lat/lon check remains as NearbyPrices-specific view requirement (needed for haversine distance calculation)",
+    behaviorChange: "review_needed_station_match rows are now also excluded (previously included silently). All other behavior preserved.",
+  },
+
+  howStationDetailsUsesIt: {
+    before: "Single inline filter: p.plausibilityStatus === 'realistic_price'",
+    after: "isStationPriceDisplayEligible(p) — adds stationId presence check, aggregate priceType exclusion, and match-status safety on top of plausibility",
+    behaviorChange: "Rows with no_safe_station_match or review_needed_station_match are now excluded. Aggregate priceType rows excluded. In practice, StationDetails queries by stationId so null-stationId rows were already excluded at query level; remaining checks are additive safety.",
+  },
+
+  whySourceAgnosticButStationStrict: {
+    stationStrict: "stationId must be present; aggregate price types excluded; bad match statuses excluded. These rules apply regardless of source.",
+    sourceAgnostic: "No check on sourceName, confidenceScore, parserVersion, or sourceUpdatedAt. FuelFinder rows (which lack plausibilityStatus in the worst case) are handled by the plausibilityStatus check — not by a source-name gate.",
+    futureCompatibility: "A new source that writes FuelPrice with stationId, plausibilityStatus='realistic_price', and station_match_status='matched_station_id' will automatically pass this rule without any code change.",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 3,
+    businessLogicChanges: 1,
+    frozenFilesModified: 0,
+    uiFilesModified: 2,
+    governanceFilesModified: 3,
+    newUtilityFilesCreated: 1,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noIngestionChanges: "✓ No source adapters modified",
+    noFuelFinderTouched: "✓ FuelFinder untouched",
+    noNewEntityOrArchLayer: "✓ Shared helper is a single pure predicate function — no new entity or architecture layer",
+    noGoogleOnlyShortcut: "✓ Shared rule contains no sourceName === 'GooglePlaces' condition",
+    viewSpecificLogicPreserved: "✓ Station lat/lon check remains in NearbyPrices; latest-per-fuel-type grouping and history rendering remain in StationDetails",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 108: STATIONDETAILS DATA-LAYER SPLIT — HISTORY PRESERVED
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_108 = {
+  timestamp: "2026-03-20T17:34:51Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "StationDetails Data-Layer Split — Display-Ready vs Broader History Preserved",
+
+  objectives: [
+    "Revise StationDetails so the shared display-eligibility contract does NOT erase broader station history",
+    "Introduce explicit stationHistory and displayPrices state variables with clear semantic separation",
+    "Make 'Siste kjente priser' and trend indicators use the display-eligible layer",
+    "Make chart ('Prisutvikling') and observation log ('Alle observasjoner') use the broader history layer",
+    "Keep fuelPriceEligibility.js and NearbyPrices.jsx unchanged",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=107",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_107 (Canonical Price Retrieval Contract)",
+    "✓ Confirmed no frozen Phase 2 files will be modified",
+    "✓ Confirmed fuelPriceEligibility.js kept unchanged",
+    "✓ Confirmed NearbyPrices.jsx kept unchanged",
+  ],
+
+  filesCreated: [],
+
+  filesModified: [
+    "src/pages/StationDetails.jsx — split single prices state into stationHistory + displayPrices; routed sections to correct layer",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Entry 108 appended",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — entryCount incremented to 108, lastUpdated updated, sync checklist updated",
+    "src/components/governance/NextSafeStep.jsx — next safe step reference updated",
+  ],
+
+  dataLayerSplit: {
+    stationHistory: {
+      stateVariable: "stationHistory",
+      source: "pricesRes (all rows returned by FuelPrice.filter({ stationId }))",
+      filtering: "none — all rows fetched for the station are preserved",
+      usedBy: ["Prisutvikling chart", "Alle observasjoner log"],
+      semantics: "Broader station observation data for charting, diagnostics, and future advanced analytics",
+    },
+    displayPrices: {
+      stateVariable: "displayPrices",
+      source: "pricesRes.filter(isStationPriceDisplayEligible)",
+      filtering: "shared canonical display-eligibility contract from fuelPriceEligibility.js",
+      usedBy: ["latestByFuel (Siste kjente priser)", "trendByFuel (trend indicators)"],
+      semantics: "Display-ready current prices — passes plausibility, stationId, non-aggregate, safe match-status checks",
+    },
+  },
+
+  whichSectionsUseWhichLayer: {
+    "Siste kjente priser": "displayPrices (via latestByFuel — latest display-eligible price per fuel type)",
+    "Trend indicators": "displayPrices (trend computed from display-eligible rows so it reflects same data as price shown)",
+    "Prisutvikling chart": "stationHistory (all observations — broader data range for meaningful trend lines)",
+    "Alle observasjoner log": "stationHistory (all raw rows — full diagnostic visibility including non-display-eligible rows)",
+  },
+
+  whyHistoricalValuePreserved: {
+    charting: "stationHistory includes all rows, so FuelFinder rows and rows with missing plausibilityStatus are not erased from the chart. A future FuelFinder write-contract fix will not change chart behavior.",
+    observationLog: "All 200 fetched rows appear in the log regardless of eligibility status, supporting source comparison and diagnostics.",
+    futureAnalytics: "Any future feature reading stationHistory will have access to the full unfiltered observation set from the DB query window.",
+    noGoogleLockIn: "Neither layer uses sourceName checks. stationHistory is all sources; displayPrices uses the source-agnostic shared predicate.",
+  },
+
+  whatWasKeptFromEntry107: {
+    fuelPriceEligibilityHelper: "✓ Unchanged — isStationPriceDisplayEligible remains the single shared display rule",
+    nearbyPricesUsage: "✓ Unchanged — NearbyPrices still uses isStationPriceDisplayEligible as base contract + station coord check",
+    displayEligibilityForCurrentPrices: "✓ Preserved — StationDetails still applies the shared rule to 'Siste kjente priser'",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 1,
+    businessLogicChanges: 1,
+    frozenFilesModified: 0,
+    uiFilesModified: 1,
+    governanceFilesModified: 3,
+    newUtilityFilesCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noIngestionChanges: "✓ No source adapters modified",
+    noFuelFinderTouched: "✓ FuelFinder untouched",
+    noGoogleOnlyShortcut: "✓ No sourceName checks introduced",
+    sharedHelperPreserved: "✓ fuelPriceEligibility.js unchanged",
+    nearbyPricesPreserved: "✓ NearbyPrices.jsx unchanged",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_108;

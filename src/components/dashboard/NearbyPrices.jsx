@@ -7,6 +7,7 @@ import { nb } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import SharePriceButton from "@/components/shared/SharePriceButton";
+import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
 
 const RADIUS_KM = 10;
 
@@ -119,16 +120,10 @@ export default function NearbyPrices({ selectedFuel }) {
       if (s.id) stationMap[s.id] = s;
     });
 
-    // Filter prices:
-    // - must be station_level or user_reported with matched_station_id
-    // - must have a stationId linking to a Station with lat/lon
-    // - exclude no_safe_station_match
-    // - exclude suspect prices
+    // Apply shared base display-eligibility contract, then NearbyPrices-specific
+    // view rules: station must exist with valid coordinates for distance calc.
     const eligible = prices.filter((p) => {
-      if (p.plausibilityStatus !== "realistic_price") return false;
-      if (p.station_match_status === "no_safe_station_match") return false;
-      if (!p.stationId) return false;
-      if (p.priceType === "national_average" || p.priceType === "regional_average") return false;
+      if (!isStationPriceDisplayEligible(p)) return false;
       const station = stationMap[p.stationId];
       if (!station || !station.latitude || !station.longitude) return false;
       return true;
