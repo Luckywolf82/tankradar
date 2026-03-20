@@ -6,43 +6,271 @@
  *
  * PURPOSE:
  * Accepts a normalized fuel price observation and returns the canonical SRP
- * resolution result — without writing anything to any entity (except MatchingShadowLog).
+ * resolution result — without writing anything to any entity.
  *
- * ══════════════════════════════════════════════════════════════════
- * BRIDGE ARCHITECTURE — TEMPORARY — Phase 1 (Sections X/Y/Z/AA)
- * ══════════════════════════════════════════════════════════════════
+ * This is the first real runtime artifact of the SRP shared decision engine.
+ * It is preview-only. No mutation paths exist in this function.
  *
- * CURRENT STATE (Phase 1 bridge):
- *   resolveFuelPriceObservation
- *     → delegates to matchStationForUserReportedPrice (preview_mode: true)   ← AUTHORITATIVE
- *     → runs inlined matcher as TEMPORARY SHADOW COMPARATOR only             ← NON-AUTHORITATIVE
- *     → logs comparison outcome to MatchingShadowLog
- *
- * TARGET STATE (Stage 2 — after Phase 1.7 deletion gate is satisfied):
- *   resolveFuelPriceObservation → shared pure nucleus
- *   matchStationForUserReportedPrice → same shared pure nucleus
- *
- * RULES:
- * - Delegated Phase 2 preview result is the SOLE authoritative output
- * - Inlined matcher must NEVER affect the final decision output
- * - Inlined matcher must NEVER be used as fallback if delegated call fails
- * - If delegated call fails, return explicit error — do NOT fall back to shadow
- * - _shadowVerification in response is NON-CONTRACTUAL and temporary
- *
- * RESPONSIBILITIES RETAINED BY THIS FUNCTION (source-agnostic):
- * - Input normalization and validation
- * - inputWarnings collection
- * - Plausibility classification
- * - Canonical output shaping
- * - Routing flag derivation
- * - Admin / read-only access control
- * - Shadow comparison and logging
+ * MATCHING LOGIC:
+ * All Phase 2 matching logic is inlined here (no local imports allowed in Deno
+ * backend functions). The thresholds, scoring weights, dominance-gap behavior,
+ * and outcome semantics are IDENTICAL to stationMatchingUtility.
+ * Nothing has been changed — only wrapped additively.
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-const SRP_VERSION = "srp_preview_v1.1_bridge";
+const SRP_VERSION = "srp_preview_v1.0";
 const SPEC_VERSION = "v1.3.2";
+
+// ════════════════════════════════════════════════════════════
+// INLINED PHASE 2 MATCHING ENGINE
+// Preserved verbatim from stationMatchingUtility governance spec.
+// Do NOT alter thresholds or outcome semantics.
+// ════════════════════════════════════════════════════════════
+
+const SCORE_MATCHED = 65;
+const SCORE_REVIEW_THRESHOLD = 35;
+const DOMINANCE_GAP_MIN = 10;
+
+const KNOWN_CHAINS = {
+  'circle k': ['circle k', 'circlk'],
+  'uno-x': ['uno-x', 'unox'],
+  'shell': ['shell'],
+  'esso': ['esso'],
+  'statoil': ['statoil'],
+  'bp': ['bp'],
+  'neste': ['neste'],
+  'jet': ['jet'],
+};
+
+const AREA_KEYWORDS = [
+  'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
+  'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
+];
+
+function stringSimilarity(s1, s2) {
+  if (s1 === s2) return 1;
+  if (!s1 || !s2) return 0;
+  const longer = s1.length > s2.length ? s1 : s2;
+  const shorter = s1.length > s2.length ? s2 : s1;
+  const editDistance = levenshteinDistance(longer, shorter);
+  return (longer.length - editDistance) / longer.length;
+}
+
+function levenshteinDistance(s1, s2) {
+  const len1 = s1.length, len2 = s2.length;
+  const dp = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+  for (let i = 0; i <= len1; i++) dp[i][0] = i;
+  for (let j = 0; j <= len2; j++) dp[0][j] = j;
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[len1][len2];
+}
+
+function normalizeStr(str) {
+  if (!str) return '';
+  return str.toLowerCase().trim().replace(/[-\s]+/g, ' ').replace(/\s+/g, ' ');
+}
+
+function extractBigrams(str) {
+  const cleaned = str.replace(/\s+/g, '');
+  const bigrams = new Set();
+  for (let i = 0; i < cleaned.length - 1; i++) bigrams.add(cleaned.substr(i, 2));
+  return bigrams;
+}
+
+function bigramSimilarity(name1, name2) {
+  if (!name1 || !name2) return 0;
+  if (name1.toLowerCase() === name2.toLowerCase()) return 1;
+  const n1 = normalizeStr(name1), n2 = normalizeStr(name2);
+  const b1 = extractBigrams(n1), b2 = extractBigrams(n2);
+  if (b1.size === 0 || b2.size === 0) return 0;
+  const intersection = new Set([...b1].filter(x => b2.has(x)));
+  const union = new Set([...b1, ...b2]);
+  return intersection.size / union.size;
+}
+
+function normalizeChainName(rawChain) {
+  if (!rawChain || typeof rawChain !== 'string') return { normalized: null, confidence: 0 };
+  const trimmed = rawChain.toLowerCase().trim();
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      if (trimmed === alias) return { normalized: canonical, confidence: 0.92 };
+    }
+  }
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      const similarity = stringSimilarity(trimmed, alias);
+      if (similarity >= 0.80) return { normalized: canonical, confidence: Math.max(0.50, similarity - 0.30) };
+    }
+  }
+  return { normalized: null, confidence: 0 };
+}
+
+function chainMatch(obsChain, obsChainConfidence, stnChain) {
+  if (!obsChain && !stnChain) return { matches: true, signal: 0, gateFails: false, reason: 'both_chains_null' };
+  if (!obsChain) return { matches: true, signal: 0, gateFails: false, reason: 'obs_chain_null_neutral' };
+  if (!stnChain) return { matches: true, signal: 0, gateFails: false, reason: 'stn_chain_null_neutral' };
+  const normalizedObs = normalizeChainName(obsChain);
+  const normalizedStn = normalizeChainName(stnChain);
+  if (normalizedObs.normalized === normalizedStn.normalized && normalizedObs.normalized) {
+    return { matches: true, signal: 25, gateFails: false, reason: 'exact_match' };
+  }
+  if (normalizedObs.normalized && normalizedStn.normalized) {
+    if ((obsChainConfidence || 0) >= 0.85) {
+      return { matches: false, signal: 0, gateFails: true, reason: 'high_confidence_mismatch' };
+    }
+  }
+  return { matches: true, signal: 0, gateFails: false, reason: 'weak_or_uncertain_chains' };
+}
+
+function parseStationName(rawName) {
+  if (!rawName || typeof rawName !== 'string') {
+    return { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null };
+  }
+  const tokens = rawName.toLowerCase().trim().split(/\s+/);
+  const result = { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null };
+  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS)) {
+    for (const alias of aliases) {
+      const aliasTokens = alias.split(/\s+/);
+      const nameStart = tokens.slice(0, aliasTokens.length).join(' ');
+      if (nameStart === alias) {
+        result.chain = canonical;
+        result.chainConfidence = 0.92;
+        tokens.splice(0, aliasTokens.length);
+        break;
+      }
+    }
+    if (result.chain) break;
+  }
+  for (const token of tokens) {
+    if (AREA_KEYWORDS.includes(token)) {
+      result.locationLabel = token;
+      result.locationLevel = 'area';
+      break;
+    }
+  }
+  return result;
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1000;
+}
+
+function calculateDistanceSignal(meters) {
+  if (meters <= 30) return 30;
+  if (meters <= 75) return 20;
+  if (meters <= 150) return 10;
+  if (meters <= 300) return 5;
+  return 0;
+}
+
+function calculateNameSignal(similarity) {
+  if (similarity >= 0.95) return 30;
+  if (similarity >= 0.85) return 20;
+  if (similarity >= 0.70) return 10;
+  if (similarity >= 0.50) return 5;
+  return 0;
+}
+
+function calculateLocationSignal(parsedLocation, stationAreaLabel) {
+  if (!parsedLocation || !stationAreaLabel) return 0;
+  const pLoc = parsedLocation.toLowerCase().trim();
+  const sArea = stationAreaLabel.toLowerCase().trim();
+  if (pLoc === sArea) return 10;
+  if (pLoc !== sArea) return -15;
+  return 0;
+}
+
+function scoreStationMatch(observation, candidateStation) {
+  const signals = { distance: 0, chain: 0, name: 0, location: 0 };
+  const gateFailures = [];
+  const breakdown = {};
+
+  // City gate
+  if (observation.city && (observation.cityConfidence || 0) >= 0.85) {
+    if (candidateStation.city && observation.city.toLowerCase() !== candidateStation.city.toLowerCase()) {
+      gateFailures.push('city_mismatch');
+      breakdown.cityGate = { passes: false, reason: 'explicit_city_mismatch' };
+      return { score: 0, signals, gateFailures, breakdown };
+    }
+  }
+  breakdown.cityGate = { passes: true, reason: 'city_compatible' };
+
+  // Distance signal
+  if (observation.latitude != null && observation.longitude != null &&
+      candidateStation.latitude != null && candidateStation.longitude != null) {
+    const distance = haversineDistance(
+      observation.latitude, observation.longitude,
+      candidateStation.latitude, candidateStation.longitude
+    );
+    signals.distance = calculateDistanceSignal(distance);
+    breakdown.distance = { meters: Math.round(distance), signal: signals.distance };
+  }
+
+  // Chain signal
+  const chainResult = chainMatch(observation.chain, observation.chainConfidence, candidateStation.chain);
+  breakdown.chain = chainResult;
+  if (chainResult.gateFails) {
+    gateFailures.push('chain_mismatch');
+    return { score: 0, signals, gateFailures, breakdown };
+  }
+  signals.chain = chainResult.signal;
+
+  // Name signal
+  const nameSimilarity = bigramSimilarity(observation.name, candidateStation.name);
+  signals.name = calculateNameSignal(nameSimilarity);
+  breakdown.name = { similarity: Math.round(nameSimilarity * 100) / 100, signal: signals.name };
+
+  // Location/area signal
+  signals.location = calculateLocationSignal(observation.areaLabel, candidateStation.areaLabel);
+  breakdown.location = { signal: signals.location };
+
+  const score = Math.max(0, signals.distance + signals.chain + signals.name + signals.location);
+  return { score, signals, gateFailures, breakdown };
+}
+
+function matchDecision(scores) {
+  if (!scores || scores.length === 0) {
+    return { outcome: 'NO_SAFE_STATION_MATCH', selectedStationId: null, candidatesForReview: [], reason: 'no_candidates' };
+  }
+  const sorted = [...scores].sort((a, b) => b.score - a.score);
+  const top = sorted[0];
+
+  if (sorted.length === 1) {
+    if (top.score >= SCORE_MATCHED) {
+      return { outcome: 'MATCHED_STATION_ID', selectedStationId: top.candidateId, candidatesForReview: [], reason: 'single_candidate_above_threshold' };
+    }
+    if (top.score >= SCORE_REVIEW_THRESHOLD) {
+      return { outcome: 'REVIEW_NEEDED_STATION_MATCH', selectedStationId: null, candidatesForReview: [top.candidateId], reason: 'single_candidate_borderline' };
+    }
+    return { outcome: 'NO_SAFE_STATION_MATCH', selectedStationId: null, candidatesForReview: [], reason: 'single_candidate_below_threshold' };
+  }
+
+  const second = sorted[1];
+  const dominanceGap = top.score - second.score;
+
+  if (top.score >= SCORE_MATCHED && dominanceGap >= DOMINANCE_GAP_MIN) {
+    return { outcome: 'MATCHED_STATION_ID', selectedStationId: top.candidateId, candidatesForReview: [], reason: `multi_candidate_high_confidence_gap_${dominanceGap}` };
+  }
+  if (top.score >= SCORE_MATCHED) {
+    return { outcome: 'REVIEW_NEEDED_STATION_MATCH', selectedStationId: null, candidatesForReview: sorted.slice(0, 3).map(m => m.candidateId), reason: `multi_candidate_insufficient_dominance_gap_${dominanceGap}` };
+  }
+  if (top.score >= SCORE_REVIEW_THRESHOLD) {
+    return { outcome: 'REVIEW_NEEDED_STATION_MATCH', selectedStationId: null, candidatesForReview: sorted.slice(0, 3).map(m => m.candidateId), reason: 'borderline_match_requires_review' };
+  }
+  return { outcome: 'NO_SAFE_STATION_MATCH', selectedStationId: null, candidatesForReview: [], reason: 'no_candidates_above_review_threshold' };
+}
 
 // ════════════════════════════════════════════════════════════
 // PLAUSIBILITY CHECK
@@ -51,13 +279,13 @@ const SPEC_VERSION = "v1.3.2";
 // ════════════════════════════════════════════════════════════
 
 const PLAUSIBILITY_THRESHOLDS = {
-  gasoline_95:    { low: 14.0, high: 26.5 },
-  gasoline_98:    { low: 14.5, high: 27.5 },
-  bensin_95:      { low: 14.0, high: 26.5 },
-  bensin_98:      { low: 14.5, high: 27.5 },
-  diesel:         { low: 13.0, high: 25.5 },
-  diesel_premium: { low: 13.5, high: 26.0 },
-  other:          { low: 5.0,  high: 40.0 },
+  gasoline_95:   { low: 14.0, high: 26.5 },
+  gasoline_98:   { low: 14.5, high: 27.5 },
+  bensin_95:     { low: 14.0, high: 26.5 },
+  bensin_98:     { low: 14.5, high: 27.5 },
+  diesel:        { low: 13.0, high: 25.5 },
+  diesel_premium:{ low: 13.5, high: 26.0 },
+  other:         { low: 5.0,  high: 40.0 },
 };
 
 function classifyPlausibility(fuelType, priceNok) {
@@ -73,303 +301,23 @@ function classifyPlausibility(fuelType, priceNok) {
 // Maps raw match score → normalised confidence [0..1]
 // ════════════════════════════════════════════════════════════
 
-const DOMINANCE_GAP_MIN = 10;
-
 function deriveConfidenceScore(outcome, rawScore, dominanceGap) {
-  if (outcome === 'matched_station_id') {
+  if (outcome === 'MATCHED_STATION_ID') {
     if (rawScore >= 80 && (dominanceGap || 0) >= 20) return 0.92;
     if (rawScore >= 65 && (dominanceGap || 0) >= DOMINANCE_GAP_MIN) return 0.82;
-    return 0.65;
+    return 0.65; // matched but narrow dominance
   }
-  if (outcome === 'review_needed_station_match') {
+  if (outcome === 'REVIEW_NEEDED_STATION_MATCH') {
     if (rawScore >= 55) return 0.45;
     return 0.30;
   }
+  // NO_SAFE_STATION_MATCH
   return 0.15;
 }
 
 // ════════════════════════════════════════════════════════════
-// TEMPORARY SHADOW COMPARATOR — INLINED PHASE 2 MATCHING ENGINE
-//
-// ⚠ TEMPORARY SHADOW COMPARATOR ⚠
-// Scheduled for deletion after Phase 1.5 / 1.6 / 1.7 deletion gate is satisfied.
-// Must NOT be used as decision path or fallback.
-// Must NOT affect the authoritative result returned to callers.
-// The only valid use is shadow comparison and MatchingShadowLog creation.
-//
-// Do NOT alter thresholds, scoring weights, or outcome semantics.
-// ════════════════════════════════════════════════════════════
-
-const SCORE_MATCHED = 65;
-const SCORE_REVIEW_THRESHOLD = 35;
-
-const KNOWN_CHAINS_SHADOW = {
-  'circle k': ['circle k', 'circlk'],
-  'uno-x': ['uno-x', 'unox'],
-  'shell': ['shell'],
-  'esso': ['esso'],
-  'statoil': ['statoil'],
-  'bp': ['bp'],
-  'neste': ['neste'],
-  'jet': ['jet'],
-};
-
-const AREA_KEYWORDS_SHADOW = [
-  'heimdal', 'lade', 'singsås', 'torgata', 'nidaros', 'sentrum',
-  'lerkendal', 'moholt', 'bakklandet', 'ranheim', 'leinstrand',
-];
-
-function shadow_normalizeStr(str) {
-  if (!str) return '';
-  return str.toLowerCase().trim().replace(/[-\s]+/g, ' ').replace(/\s+/g, ' ');
-}
-
-function shadow_extractBigrams(str) {
-  const cleaned = str.replace(/\s+/g, '');
-  const bigrams = new Set();
-  for (let i = 0; i < cleaned.length - 1; i++) bigrams.add(cleaned.substr(i, 2));
-  return bigrams;
-}
-
-function shadow_bigramSimilarity(name1, name2) {
-  if (!name1 || !name2) return 0;
-  if (name1.toLowerCase() === name2.toLowerCase()) return 1;
-  const n1 = shadow_normalizeStr(name1), n2 = shadow_normalizeStr(name2);
-  const b1 = shadow_extractBigrams(n1), b2 = shadow_extractBigrams(n2);
-  if (b1.size === 0 || b2.size === 0) return 0;
-  const intersection = new Set([...b1].filter(x => b2.has(x)));
-  const union = new Set([...b1, ...b2]);
-  return intersection.size / union.size;
-}
-
-function shadow_levenshteinDistance(s1, s2) {
-  const len1 = s1.length, len2 = s2.length;
-  const dp = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
-  for (let i = 0; i <= len1; i++) dp[i][0] = i;
-  for (let j = 0; j <= len2; j++) dp[0][j] = j;
-  for (let i = 1; i <= len1; i++) {
-    for (let j = 1; j <= len2; j++) {
-      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
-    }
-  }
-  return dp[len1][len2];
-}
-
-function shadow_stringSimilarity(s1, s2) {
-  if (s1 === s2) return 1;
-  if (!s1 || !s2) return 0;
-  const longer = s1.length > s2.length ? s1 : s2;
-  const shorter = s1.length > s2.length ? s2 : s1;
-  return (longer.length - shadow_levenshteinDistance(longer, shorter)) / longer.length;
-}
-
-function shadow_normalizeChainName(rawChain) {
-  if (!rawChain || typeof rawChain !== 'string') return { normalized: null, confidence: 0 };
-  const trimmed = rawChain.toLowerCase().trim();
-  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS_SHADOW)) {
-    for (const alias of aliases) {
-      if (trimmed === alias) return { normalized: canonical, confidence: 0.92 };
-    }
-  }
-  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS_SHADOW)) {
-    for (const alias of aliases) {
-      const similarity = shadow_stringSimilarity(trimmed, alias);
-      if (similarity >= 0.80) return { normalized: canonical, confidence: Math.max(0.50, similarity - 0.30) };
-    }
-  }
-  return { normalized: null, confidence: 0 };
-}
-
-function shadow_parseStationName(rawName) {
-  if (!rawName || typeof rawName !== 'string') {
-    return { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null };
-  }
-  const tokens = rawName.toLowerCase().trim().split(/\s+/);
-  const result = { chain: null, chainConfidence: 0, locationLabel: null, locationLevel: null };
-  for (const [canonical, aliases] of Object.entries(KNOWN_CHAINS_SHADOW)) {
-    for (const alias of aliases) {
-      const aliasTokens = alias.split(/\s+/);
-      const nameStart = tokens.slice(0, aliasTokens.length).join(' ');
-      if (nameStart === alias) {
-        result.chain = canonical;
-        result.chainConfidence = 0.92;
-        tokens.splice(0, aliasTokens.length);
-        break;
-      }
-    }
-    if (result.chain) break;
-  }
-  for (const token of tokens) {
-    if (AREA_KEYWORDS_SHADOW.includes(token)) {
-      result.locationLabel = token;
-      result.locationLevel = 'area';
-      break;
-    }
-  }
-  return result;
-}
-
-function shadow_haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1000;
-}
-
-function shadow_calculateDistanceSignal(meters) {
-  if (meters <= 30) return 30;
-  if (meters <= 75) return 20;
-  if (meters <= 150) return 10;
-  if (meters <= 300) return 5;
-  return 0;
-}
-
-function shadow_calculateNameSignal(similarity) {
-  if (similarity >= 0.95) return 30;
-  if (similarity >= 0.85) return 20;
-  if (similarity >= 0.70) return 10;
-  if (similarity >= 0.50) return 5;
-  return 0;
-}
-
-function shadow_chainMatch(obsChain, obsChainConfidence, stnChain) {
-  if (!obsChain && !stnChain) return { signal: 0, gateFails: false };
-  if (!obsChain) return { signal: 0, gateFails: false };
-  if (!stnChain) return { signal: 0, gateFails: false };
-  const normalizedObs = shadow_normalizeChainName(obsChain);
-  const normalizedStn = shadow_normalizeChainName(stnChain);
-  if (normalizedObs.normalized === normalizedStn.normalized && normalizedObs.normalized) {
-    return { signal: 25, gateFails: false };
-  }
-  if (normalizedObs.normalized && normalizedStn.normalized) {
-    if ((obsChainConfidence || 0) >= 0.85) {
-      return { signal: 0, gateFails: true };
-    }
-  }
-  return { signal: 0, gateFails: false };
-}
-
-function shadow_scoreStation(obs, stn) {
-  // City gate
-  if (obs.city && (obs.cityConfidence || 0) >= 0.85) {
-    if (stn.city && obs.city.toLowerCase() !== stn.city.toLowerCase()) {
-      return { score: 0, gateFailure: 'city_mismatch' };
-    }
-  }
-  let score = 0;
-  // Distance signal
-  if (obs.latitude != null && obs.longitude != null && stn.latitude != null && stn.longitude != null) {
-    const dist = shadow_haversineDistance(obs.latitude, obs.longitude, stn.latitude, stn.longitude);
-    score += shadow_calculateDistanceSignal(dist);
-  }
-  // Chain gate + signal
-  const chainResult = shadow_chainMatch(obs.chain, obs.chainConfidence, stn.chain);
-  if (chainResult.gateFails) return { score: 0, gateFailure: 'chain_mismatch' };
-  score += chainResult.signal;
-  // Name signal
-  const nameSim = shadow_bigramSimilarity(obs.name, stn.name);
-  score += shadow_calculateNameSignal(nameSim);
-  // Location signal (no confidence gate in shadow — known divergence from delegated path)
-  if (obs.areaLabel && stn.areaLabel) {
-    const pLoc = obs.areaLabel.toLowerCase().trim();
-    const sArea = stn.areaLabel.toLowerCase().trim();
-    if (pLoc === sArea) score += 10;
-    else score -= 15;
-  }
-  return { score: Math.max(0, score), gateFailure: null };
-}
-
-function shadow_matchDecision(scoredCandidates) {
-  if (!scoredCandidates || scoredCandidates.length === 0) {
-    return { outcome: 'no_safe_station_match', selectedStationId: null, candidates: [], rawMatchScore: 0, dominanceGap: 0 };
-  }
-  const sorted = [...scoredCandidates].sort((a, b) => b.score - a.score);
-  const top = sorted[0];
-  const rawMatchScore = top.score;
-  const second = sorted[1] || null;
-  const dominanceGap = second ? top.score - second.score : top.score;
-
-  if (sorted.length === 1) {
-    if (top.score >= SCORE_MATCHED)
-      return { outcome: 'matched_station_id', selectedStationId: top.candidateId, candidates: [top.candidateId], rawMatchScore, dominanceGap };
-    if (top.score >= SCORE_REVIEW_THRESHOLD)
-      return { outcome: 'review_needed_station_match', selectedStationId: null, candidates: [top.candidateId], rawMatchScore, dominanceGap };
-    return { outcome: 'no_safe_station_match', selectedStationId: null, candidates: [], rawMatchScore, dominanceGap };
-  }
-
-  if (top.score >= SCORE_MATCHED && dominanceGap >= DOMINANCE_GAP_MIN)
-    return { outcome: 'matched_station_id', selectedStationId: top.candidateId, candidates: [top.candidateId], rawMatchScore, dominanceGap };
-  if (top.score >= SCORE_MATCHED)
-    return { outcome: 'review_needed_station_match', selectedStationId: null, candidates: sorted.slice(0, 3).map(c => c.candidateId), rawMatchScore, dominanceGap };
-  if (top.score >= SCORE_REVIEW_THRESHOLD)
-    return { outcome: 'review_needed_station_match', selectedStationId: null, candidates: sorted.slice(0, 3).map(c => c.candidateId), rawMatchScore, dominanceGap };
-  return { outcome: 'no_safe_station_match', selectedStationId: null, candidates: [], rawMatchScore, dominanceGap };
-}
-
-// ════════════════════════════════════════════════════════════
-// SHADOW COMPARISON HELPER
-// Classifies mismatch into one of the five Phase 1.6 categories.
-// Simple and deterministic — no scoring logic, only field comparison.
-// ════════════════════════════════════════════════════════════
-
-function classifyShadowComparison(delegated, shadow) {
-  // 1. Outcome mismatch — highest priority
-  if (delegated.station_match_status !== shadow.station_match_status) {
-    return { status: 'mismatch', category: 'OUTCOME_MISMATCH' };
-  }
-
-  // 2. Station selection mismatch (both matched but selected different station)
-  if (
-    delegated.station_match_status === 'matched_station_id' &&
-    shadow.station_match_status === 'matched_station_id' &&
-    delegated.stationId !== shadow.stationId
-  ) {
-    return { status: 'mismatch', category: 'STATION_SELECTION_MISMATCH' };
-  }
-
-  // 3. Candidate set mismatch (same outcome, different review candidate lists)
-  const dCandidates = (delegated.station_match_candidates || []).slice().sort().join(',');
-  const sCandidates = (shadow.station_match_candidates || []).slice().sort().join(',');
-  if (dCandidates !== sCandidates) {
-    return { status: 'mismatch', category: 'CANDIDATE_SET_MISMATCH' };
-  }
-
-  // 4. Score mismatch (same outcome and candidates, different raw scores)
-  if (delegated.rawMatchScore !== shadow.rawMatchScore || delegated.dominanceGap !== shadow.dominanceGap) {
-    return { status: 'mismatch', category: 'SCORE_MISMATCH' };
-  }
-
-  // 5. Explainability mismatch — same outcome + scores but different top candidate identity
-  if (delegated.topCandidateId !== shadow.topCandidateId) {
-    return { status: 'mismatch', category: 'EXPLAINABILITY_MISMATCH' };
-  }
-
-  return { status: 'match', category: null };
-}
-
-// ════════════════════════════════════════════════════════════
-// OBSERVATION FINGERPRINT
-// Lightweight, non-cryptographic fingerprint for log deduplication.
-// ════════════════════════════════════════════════════════════
-
-function observationFingerprint(station_name, station_chain, gps_latitude, gps_longitude) {
-  const raw = [
-    (station_name || '').toLowerCase().trim(),
-    (station_chain || '').toLowerCase().trim(),
-    gps_latitude != null ? Math.round(gps_latitude * 1000) : 'null',
-    gps_longitude != null ? Math.round(gps_longitude * 1000) : 'null',
-  ].join('|');
-  // Simple hash: sum of char codes with position weighting
-  let h = 0;
-  for (let i = 0; i < raw.length; i++) h = (h * 31 + raw.charCodeAt(i)) >>> 0;
-  return h.toString(16).padStart(8, '0');
-}
-
-// ════════════════════════════════════════════════════════════
 // CANDIDATE PROXIMITY FILTER
+// Fetch active stations and filter by bounding box (~2 km) before scoring.
 // ════════════════════════════════════════════════════════════
 
 const GEO_SEARCH_RADIUS_KM = 2.0;
@@ -400,29 +348,31 @@ Deno.serve(async (req) => {
     const obs = body.observation || {};
 
     // ── Input normalization ─────────────────────────────────
-    const sourceName        = obs.sourceName || null;
-    const parserVersion     = obs.parserVersion || null;
-    const fuelType          = obs.fuelType || null;
-    const priceNok          = obs.priceNok != null ? Number(obs.priceNok) : null;
-    const priceType         = obs.priceType || 'station_level';
-    const fetchedAt         = obs.fetchedAt || obs.observedAt || new Date().toISOString();
-    const sourceUpdatedAt   = obs.sourceUpdatedAt || null;
-    const sourceFrequency   = obs.sourceFrequency || null;
+    // Tolerate incomplete / noisy input — never throw on missing optional fields.
+
+    const sourceName      = obs.sourceName || null;
+    const parserVersion   = obs.parserVersion || null;
+    const fuelType        = obs.fuelType || null;
+    const priceNok        = obs.priceNok != null ? Number(obs.priceNok) : null;
+    const priceType       = obs.priceType || 'station_level';
+    const fetchedAt       = obs.fetchedAt || obs.observedAt || new Date().toISOString();
+    const sourceUpdatedAt = obs.sourceUpdatedAt || null;
+    const sourceFrequency = obs.sourceFrequency || null;
     const rawPayloadSnippet = obs.rawPayloadSnippet || null;
 
-    // Station / location context
+    // Station / location context (nullable)
     const station_name  = obs.station_name || null;
     const station_chain = obs.station_chain || null;
-    const gps_latitude  = obs.gps_latitude  != null ? Number(obs.gps_latitude)  : null;
+    const gps_latitude  = obs.gps_latitude != null ? Number(obs.gps_latitude) : null;
     const gps_longitude = obs.gps_longitude != null ? Number(obs.gps_longitude) : null;
     const locationLabel = obs.locationLabel || null;
     const reportedByUserId = obs.reportedByUserId || null;
 
-    // ── Input validation ────────────────────────────────────
+    // ── Input validation (soft — produce diagnostics, do not abort) ──
     const inputWarnings = [];
-    if (!sourceName)    inputWarnings.push('missing_sourceName');
+    if (!sourceName) inputWarnings.push('missing_sourceName');
     if (!parserVersion) inputWarnings.push('missing_parserVersion');
-    if (!fuelType)      inputWarnings.push('missing_fuelType');
+    if (!fuelType) inputWarnings.push('missing_fuelType');
     if (priceNok == null || isNaN(priceNok)) inputWarnings.push('missing_or_invalid_priceNok');
     if (!sourceFrequency) inputWarnings.push('missing_sourceFrequency');
     if (gps_latitude == null || gps_longitude == null) inputWarnings.push('missing_gps_coordinates — geo-matching disabled');
@@ -432,228 +382,165 @@ Deno.serve(async (req) => {
       ? classifyPlausibility(fuelType, priceNok)
       : 'suspect_price_low';
 
-    // ══════════════════════════════════════════════════════
-    // STEP 1 — BRIDGE: Delegate to matchStationForUserReportedPrice (preview_mode: true)
-    // This is the AUTHORITATIVE path. Its result is the sole source of truth.
-    // If this call fails, return an explicit error — DO NOT fall back to shadow.
-    // ══════════════════════════════════════════════════════
+    // ── Parse station name for chain/area signals ───────────
+    const parsedName = parseStationName(station_name);
+    const obsChain = station_chain
+      ? normalizeChainName(station_chain).normalized
+      : parsedName.chain;
+    const obsChainConfidence = station_chain
+      ? normalizeChainName(station_chain).confidence
+      : parsedName.chainConfidence;
+    const obsAreaLabel = parsedName.locationLabel;
 
-    // Map source-agnostic observation input → matchStationForUserReportedPrice payload
-    const delegatePayload = {
-      station_name:  station_name,
-      station_chain: station_chain,
-      latitude:      gps_latitude,
-      longitude:     gps_longitude,
-      preview_mode:  true,
+    // ── Build observation object for scoring ────────────────
+    const scoringObs = {
+      name: station_name,
+      chain: obsChain,
+      chainConfidence: obsChainConfidence,
+      areaLabel: obsAreaLabel,
+      latitude: gps_latitude,
+      longitude: gps_longitude,
+      city: null,
+      cityConfidence: 0,
     };
-    // Map locationLabel / city if present
-    if (locationLabel) delegatePayload.city = locationLabel;
 
-    let delegatedRaw;
-    try {
-      // Forward the authenticated request context (user is already admin-validated above).
-      // Using user-scoped invoke so matchStationForUserReportedPrice receives valid auth headers.
-      const delegatedResponse = await base44.functions.invoke(
-        'matchStationForUserReportedPrice',
-        delegatePayload
+    // ── Candidate retrieval (read-only) ──────────────────────
+    let candidateStations = [];
+    let geoSearchPerformed = false;
+
+    if (gps_latitude != null && gps_longitude != null) {
+      geoSearchPerformed = true;
+      const bbox = roughBoundingBox(gps_latitude, gps_longitude, GEO_SEARCH_RADIUS_KM);
+
+      // Fetch active stations — read only, no mutation
+      const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 500);
+
+      candidateStations = allStations.filter(s =>
+        s.latitude != null && s.longitude != null &&
+        s.latitude >= bbox.minLat && s.latitude <= bbox.maxLat &&
+        s.longitude >= bbox.minLon && s.longitude <= bbox.maxLon
       );
-      delegatedRaw = delegatedResponse.data;
-    } catch (delegateError) {
-      // EXPLICIT ERROR — no fallback to shadow comparator (governance rule: Section X.5 / AA.9)
-      return Response.json({
-        error: 'Delegated Phase 2 preview call failed — no fallback permitted',
-        detail: delegateError.message,
-        _bridgeNote: 'Phase 1 bridge architecture: delegated path failure returns error, not shadow result'
-      }, { status: 502 });
+    } else if (station_name) {
+      // No GPS — fall back to name-only search (limited)
+      inputWarnings.push('name_only_match_fallback — lower confidence expected');
+      const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 200);
+      // Include all as candidates; scoring will penalise distance=0 (no signal)
+      candidateStations = allStations.slice(0, 50);
     }
 
-    // Normalize delegated output into canonical SRP fields
-    // matchStationForUserReportedPrice preview mode returns:
-    //   final_decision, top_candidates[0].name, dominance_gap
-    // Map to canonical SRP field names:
-    const delegatedDecision = delegatedRaw?.final_decision || 'NO_SAFE_STATION_MATCH';
+    // ── Score candidates ────────────────────────────────────
+    const scoredCandidates = candidateStations
+      .map(stn => {
+        const result = scoreStationMatch(scoringObs, {
+          name: stn.name,
+          chain: stn.chain,
+          areaLabel: stn.areaLabel,
+          latitude: stn.latitude,
+          longitude: stn.longitude,
+          city: stn.city,
+        });
+        return {
+          candidateId: stn.id,
+          candidateName: stn.name,
+          candidateChain: stn.chain || null,
+          candidateCity: stn.city || null,
+          score: result.score,
+          breakdown: result.breakdown,
+          gateFailures: result.gateFailures,
+          distanceMeters: (gps_latitude != null && stn.latitude != null)
+            ? Math.round(haversineDistance(gps_latitude, gps_longitude, stn.latitude, stn.longitude))
+            : null,
+        };
+      })
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score);
 
-    let station_match_status;
-    if (delegatedDecision === 'MATCHED_STATION_ID') {
-      station_match_status = 'matched_station_id';
-    } else if (delegatedDecision === 'REVIEW_NEEDED_STATION_MATCH') {
-      station_match_status = 'review_needed_station_match';
-    } else {
-      station_match_status = 'no_safe_station_match';
-    }
+    // ── Match decision ───────────────────────────────────────
+    // Reuses locked Phase 2 matchDecision semantics verbatim.
+    const decisionInput = scoredCandidates.map(c => ({ candidateId: c.candidateId, score: c.score }));
+    const decision = matchDecision(decisionInput);
 
-    // delegated preview mode does not return a stationId directly (returns name only)
-    // stationId is null in preview mode per matchStationForUserReportedPrice contract
-    const stationId = null;
-    const delegatedTopCandidates = delegatedRaw?.top_candidates || [];
-    const delegatedTopCandidateName = delegatedTopCandidates[0]?.name || null;
-    const delegatedRawMatchScore = delegatedTopCandidates[0]?.final_score || 0;
-    const delegatedDominanceGap = delegatedRaw?.dominance_gap || 0;
-    const delegatedCandidateNames = delegatedTopCandidates.map(c => c.name);
+    const topCandidate = scoredCandidates[0] || null;
+    const secondCandidate = scoredCandidates[1] || null;
+    const dominanceGap = (topCandidate && secondCandidate)
+      ? topCandidate.score - secondCandidate.score
+      : topCandidate ? topCandidate.score : 0;
 
-    // Outcome-specific fields
+    const rawMatchScore = topCandidate ? topCandidate.score : 0;
+    const confidenceScore = deriveConfidenceScore(decision.outcome, rawMatchScore, dominanceGap);
+
+    // ── Outcome-specific field population ───────────────────
+    let stationId = null;
+    let station_match_status = null;
     let station_match_candidates = [];
     let station_match_notes = null;
+    let confidenceReason = null;
     let matchedStationSummary = null;
 
-    if (station_match_status === 'matched_station_id') {
-      matchedStationSummary = delegatedTopCandidates[0] ? {
-        name: delegatedTopCandidates[0].name,
-        chain: delegatedTopCandidates[0].chain,
-        city: delegatedTopCandidates[0].city,
-        score: delegatedTopCandidates[0].final_score,
-        distanceKm: delegatedTopCandidates[0].distance_km,
+    if (decision.outcome === 'MATCHED_STATION_ID') {
+      station_match_status = 'matched_station_id';
+      stationId = decision.selectedStationId;
+      matchedStationSummary = topCandidate ? {
+        id: topCandidate.candidateId,
+        name: topCandidate.candidateName,
+        chain: topCandidate.candidateChain,
+        city: topCandidate.candidateCity,
+        score: topCandidate.score,
+        distanceMeters: topCandidate.distanceMeters,
       } : null;
-    } else if (station_match_status === 'review_needed_station_match') {
-      station_match_candidates = delegatedCandidateNames.slice(0, 3);
-      station_match_notes = `Delegated Phase 2 preview: ambiguous match. Top score=${delegatedRawMatchScore}, dominanceGap=${delegatedDominanceGap}`;
+      confidenceReason = `Phase 2 match: score=${rawMatchScore}, dominanceGap=${dominanceGap}, reason=${decision.reason}`;
+      station_match_notes = null;
+
+    } else if (decision.outcome === 'REVIEW_NEEDED_STATION_MATCH') {
+      station_match_status = 'review_needed_station_match';
+      stationId = null;
+      station_match_candidates = decision.candidatesForReview;
+      station_match_notes = `Ambiguous match — ${decision.reason}. Top score=${rawMatchScore}, dominanceGap=${dominanceGap}. Requires curator review.`;
+      confidenceReason = `Phase 2 borderline: score=${rawMatchScore}, reason=${decision.reason}`;
+
     } else {
-      station_match_notes = `Delegated Phase 2 preview: no safe match. Reason: ${delegatedDecision}`;
+      // NO_SAFE_STATION_MATCH
+      station_match_status = 'no_safe_station_match';
+      stationId = null;
+      station_match_candidates = [];
+      const searchContext = geoSearchPerformed
+        ? `Searched ${candidateStations.length} stations within ${GEO_SEARCH_RADIUS_KM}km radius`
+        : 'No GPS provided — name-only search with limited candidates';
+      station_match_notes = `No safe match found. ${searchContext}. Reason: ${decision.reason}. Observation preserved for candidate creation.`;
+      confidenceReason = `Phase 2 no-match: score=${rawMatchScore}, reason=${decision.reason}`;
     }
 
-    const confidenceScore = deriveConfidenceScore(station_match_status, delegatedRawMatchScore, delegatedDominanceGap);
-    const confidenceReason = `Delegated Phase 2 preview: score=${delegatedRawMatchScore}, gap=${delegatedDominanceGap}, outcome=${station_match_status}`;
+    // ── Routing flags (preview only — no actual mutation) ────
+    const wouldCreateFuelPrice =
+      station_match_status === 'matched_station_id' && plausibilityStatus === 'realistic_price';
+    const wouldCreateStationReview =
+      station_match_status === 'review_needed_station_match';
+    const wouldCreateStationCandidate =
+      station_match_status === 'no_safe_station_match';
+    const displayableInNearbyPrices =
+      wouldCreateFuelPrice && stationId != null;
 
-    // ── Routing flags (preview only — no mutation) ──────────
-    const wouldCreateFuelPrice       = station_match_status === 'matched_station_id' && plausibilityStatus === 'realistic_price';
-    const wouldCreateStationReview   = station_match_status === 'review_needed_station_match';
-    const wouldCreateStationCandidate = station_match_status === 'no_safe_station_match';
-    const displayableInNearbyPrices  = wouldCreateFuelPrice && stationId != null;
+    // ── Top candidate summaries for UI ──────────────────────
+    const topCandidateSummaries = scoredCandidates.slice(0, 5).map(c => ({
+      id: c.candidateId,
+      name: c.candidateName,
+      chain: c.candidateChain,
+      city: c.candidateCity,
+      score: c.score,
+      distanceMeters: c.distanceMeters,
+      breakdown: c.breakdown,
+    }));
 
-    // ══════════════════════════════════════════════════════
-    // STEP 2 — SHADOW COMPARATOR (inlined matcher, secondary only)
-    //
-    // ⚠ TEMPORARY SHADOW COMPARATOR ⚠
-    // Runs AFTER authoritative result is determined.
-    // Result is used ONLY for comparison logging.
-    // Must NEVER influence the response returned to callers.
-    // ══════════════════════════════════════════════════════
-
-    let shadowResult = null;
-    try {
-      // Fetch station candidates for shadow scoring (same bounding-box approach)
-      let shadowCandidateStations = [];
-      if (gps_latitude != null && gps_longitude != null) {
-        const bbox = roughBoundingBox(gps_latitude, gps_longitude, GEO_SEARCH_RADIUS_KM);
-        const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' }, '-created_date', 500);
-        shadowCandidateStations = allStations.filter(s =>
-          s.latitude != null && s.longitude != null &&
-          s.latitude >= bbox.minLat && s.latitude <= bbox.maxLat &&
-          s.longitude >= bbox.minLon && s.longitude <= bbox.maxLon
-        );
-      }
-
-      // Parse observation for shadow scoring
-      const parsedName = shadow_parseStationName(station_name);
-      const shadowObsChain = station_chain
-        ? shadow_normalizeChainName(station_chain).normalized
-        : parsedName.chain;
-      const shadowObsChainConfidence = station_chain
-        ? shadow_normalizeChainName(station_chain).confidence
-        : parsedName.chainConfidence;
-
-      const shadowObs = {
-        name: station_name,
-        chain: shadowObsChain,
-        chainConfidence: shadowObsChainConfidence,
-        areaLabel: parsedName.locationLabel,
-        latitude: gps_latitude,
-        longitude: gps_longitude,
-        city: null,         // known divergence: shadow unconditionally sets city: null
-        cityConfidence: 0,
-      };
-
-      const shadowScored = shadowCandidateStations
-        .map(stn => {
-          const result = shadow_scoreStation(shadowObs, {
-            name: stn.name,
-            chain: stn.chain,
-            areaLabel: stn.areaLabel,
-            latitude: stn.latitude,
-            longitude: stn.longitude,
-            city: stn.city,
-          });
-          return { candidateId: stn.id, candidateName: stn.name, score: result.score };
-        })
-        .filter(c => c.score > 0)
-        .sort((a, b) => b.score - a.score);
-
-      const shadowDecision = shadow_matchDecision(shadowScored);
-      shadowResult = {
-        station_match_status: shadowDecision.outcome,
-        stationId: shadowDecision.selectedStationId,
-        rawMatchScore: shadowDecision.rawMatchScore,
-        dominanceGap: shadowDecision.dominanceGap,
-        station_match_candidates: shadowDecision.candidates || [],
-        topCandidateId: shadowScored[0]?.candidateId || null,
-        topCandidateName: shadowScored[0]?.candidateName || null,
-      };
-    } catch (_shadowErr) {
-      // Shadow failure is logged as a note but must NOT affect authoritative output
-      shadowResult = { error: 'shadow_comparator_failed', detail: _shadowErr.message };
-    }
-
-    // ── Comparison ──────────────────────────────────────────
-    const delegatedForComparison = {
-      station_match_status,
-      stationId,
-      rawMatchScore: delegatedRawMatchScore,
-      dominanceGap: delegatedDominanceGap,
-      station_match_candidates: delegatedCandidateNames.slice(0, 3),
-      topCandidateId: null, // preview mode returns names not IDs
-    };
-
-    const comparisonResult = shadowResult && !shadowResult.error
-      ? classifyShadowComparison(delegatedForComparison, {
-          station_match_status: shadowResult.station_match_status,
-          stationId: shadowResult.stationId,
-          rawMatchScore: shadowResult.rawMatchScore,
-          dominanceGap: shadowResult.dominanceGap,
-          station_match_candidates: shadowResult.station_match_candidates,
-          topCandidateId: shadowResult.topCandidateId,
-        })
-      : { status: 'mismatch', category: 'OUTCOME_MISMATCH' }; // shadow failure = cannot confirm match
-
-    // ══════════════════════════════════════════════════════
-    // STEP 3 — LOG to MatchingShadowLog
-    // Minimal fields only — no full payloads, no raw source data.
-    // ══════════════════════════════════════════════════════
-
-    try {
-      await base44.asServiceRole.entities.MatchingShadowLog.create({
-        timestamp: new Date().toISOString(),
-        sourceName: sourceName || 'unknown',
-        parserVersion: parserVersion || 'unknown',
-        comparisonStatus: comparisonResult.status,
-        mismatchCategory: comparisonResult.category || null,
-        delegated_station_match_status: station_match_status,
-        shadow_station_match_status: shadowResult?.station_match_status || null,
-        delegated_stationId: null, // preview mode limitation
-        shadow_stationId: shadowResult?.stationId || null,
-        delegated_rawMatchScore: delegatedRawMatchScore,
-        shadow_rawMatchScore: shadowResult?.rawMatchScore || null,
-        delegated_dominanceGap: delegatedDominanceGap,
-        shadow_dominanceGap: shadowResult?.dominanceGap || null,
-        topCandidateId_delegated: delegatedTopCandidateName, // name used, ID unavailable from preview
-        topCandidateId_shadow: shadowResult?.topCandidateName || null,
-        observationFingerprint: observationFingerprint(station_name, station_chain, gps_latitude, gps_longitude),
-      });
-    } catch (_logErr) {
-      // Log failure must not affect the authoritative response
-      inputWarnings.push('shadow_log_write_failed: ' + _logErr.message);
-    }
-
-    // ── Build authoritative preview result ──────────────────
-    // ONLY the delegated Phase 2 result is returned as authoritative.
+    // ── Preview result object ────────────────────────────────
     const previewResult = {
       // Meta
       previewMode: true,
       srpVersion: SRP_VERSION,
       contractVersionReference: SPEC_VERSION,
       resolvedAt: new Date().toISOString(),
-      note: "SRP preview-only — no records created, updated, or deleted. Bridge architecture: delegated to matchStationForUserReportedPrice.",
+      note: "SRP preview-only — no records created, updated, or deleted",
 
-      // Canonical SRP outcome (from delegated path only)
+      // Canonical SRP outcome
       station_match_status,
       stationId,
       confidenceScore,
@@ -662,10 +549,10 @@ Deno.serve(async (req) => {
       station_match_notes,
       plausibilityStatus,
 
-      // Observation context
-      locationLabel: locationLabel || null,
+      // Preserved observation context
+      locationLabel: locationLabel || obsAreaLabel || null,
       station_name,
-      station_chain,
+      station_chain: station_chain || obsChain || null,
       gps_latitude,
       gps_longitude,
 
@@ -675,7 +562,7 @@ Deno.serve(async (req) => {
       wouldCreateStationReview,
       displayableInNearbyPrices,
 
-      // Input echo
+      // Input echo (for side-by-side comparison)
       inputObservation: {
         sourceName,
         parserVersion,
@@ -689,38 +576,17 @@ Deno.serve(async (req) => {
         reportedByUserId,
       },
 
-      // Match details (from delegated path)
+      // Match details
       matchedStationSummary,
-      topCandidateSummaries: delegatedTopCandidates.slice(0, 5),
-      rawMatchScore: delegatedRawMatchScore,
-      dominanceGap: delegatedDominanceGap,
+      topCandidateSummaries,
+      rawMatchScore,
+      dominanceGap,
 
       // Diagnostics
+      geoSearchPerformed,
+      candidatesEvaluated: candidateStations.length,
+      candidatesScored: scoredCandidates.length,
       inputWarnings,
-
-      // ── NON-CONTRACTUAL SHADOW VERIFICATION FIELD ──────
-      // TEMPORARY — Phase 1 bridge architecture only.
-      // Scheduled for removal upon Phase 1.7 deletion gate satisfaction.
-      // Callers MUST NOT depend on this field for any core behavior.
-      _shadowVerification: {
-        _contractStatus: "non-contractual — temporary shadow verification field. Scheduled for removal upon deletion gate satisfaction. Callers must not depend on this field.",
-        status: comparisonResult.status,
-        mismatchCategory: comparisonResult.category || null,
-        delegatedResult: {
-          station_match_status,
-          stationId,
-          rawMatchScore: delegatedRawMatchScore,
-          dominanceGap: delegatedDominanceGap,
-          station_match_candidates: delegatedCandidateNames.slice(0, 3),
-        },
-        shadowResult: shadowResult && !shadowResult.error ? {
-          station_match_status: shadowResult.station_match_status,
-          stationId: shadowResult.stationId,
-          rawMatchScore: shadowResult.rawMatchScore,
-          dominanceGap: shadowResult.dominanceGap,
-          station_match_candidates: shadowResult.station_match_candidates,
-        } : { error: shadowResult?.error || 'unavailable', detail: shadowResult?.detail || null },
-      },
     };
 
     return Response.json(previewResult);
