@@ -1633,4 +1633,128 @@ export const entry_104 = {
   }
 };
 
-export default entry_104;
+export const entry_105 = {
+  timestamp: "2026-03-20T14:10:00Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "Visibility Contract Audit — FuelPrice Display Ownership Forensics",
+
+  objectives: [
+    "Determine whether 'display-ready fuel price visibility' is owned by the upstream pipeline or UI-layer components",
+    "Map all visibility/eligibility enforcement points across upstream and UI layers",
+    "Identify which UI-layer checks are redundant vs required given actual upstream guarantees",
+    "Find the first proven contract breach between intended and actual runtime behavior",
+    "Produce canonical audit document for reference before any fix sprint",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=104",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_104 (Roadmap Governor v4.3)",
+    "✓ Confirmed no frozen Phase 2 files will be modified in this audit entry",
+    "✓ Confirmed this is a read-only analysis pass — zero runtime code changes",
+  ],
+
+  filesInspected: [
+    "src/components/dashboard/NearbyPrices.jsx — start file; 5-condition UI eligibility filter",
+    "src/pages/StationDetails.jsx — start file; 1-condition plausibility-only filter",
+    "src/components/dashboard/RecentPricesFeed.jsx — most complete UI filter (plausibility + priceType + both match statuses)",
+    "src/components/dashboard/LiveMarketStats.jsx — plausibility-only filter",
+    "src/components/dashboard/SmartFillIndicator.jsx — plausibility + source filter",
+    "src/components/dashboard/RegionalStats.jsx — plausibility + priceType filter",
+    "src/components/dashboard/ObservedMarketStatistics.jsx — intentionally shows all three match-status buckets",
+    "functions/fetchGooglePlacesPrices.ts — writes FuelPrice WITHOUT station_match_status (first breach)",
+    "functions/fetchFuelFinderStationPrices.ts — writes FuelPrice WITHOUT station_match_status AND plausibilityStatus",
+    "functions/classifyPricePlausibility.ts — FROZEN; threshold 10–40 NOK/L",
+    "functions/matchStationForUserReportedPrice.ts — FROZEN; only MATCHED_STATION_ID writes FuelPrice",
+    "functions/resolveFuelPriceObservation.ts — SRP preview; computes displayableInNearbyPrices but does not persist it",
+    "functions/STATION_MATCHING_SPECIFICATION.ts — intended contract source",
+    "functions/USER_REPORTED_CONFIDENCE_POLICY.ts — PROPOSED visibility rules (not yet implemented)",
+    "functions/auditFuelPriceContractCompliance.ts — own contract auditor confirms breach pattern",
+    "functions/checkPriceDropAlerts.ts — backend re-filters plausibility defensively",
+    "src/components/governance/BASE44_PROJECT_INSTRUCTIONS.jsx — governance rules",
+  ],
+
+  filesCreated: [
+    "src/components/audits/data/visibility-contract-audit-2026-03-20.jsx — canonical audit document",
+  ],
+
+  filesModified: [
+    "src/components/audits/AUDIT_INDEX.jsx — registered new audit; updated data: 0→1, total: 21→22; lastUpdated timestamp",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Entry 105 appended",
+  ],
+
+  keyFindings: {
+    intendedOwner: "Upstream pipeline (SRP + classifiers)",
+    actualOwner: "Split — upstream owns intent; UI layer owns runtime reality",
+    answer: "C — Mixed/unclear due to contract inconsistency",
+
+    intendedContract:
+      "Only FuelPrice rows with station_match_status === 'matched_station_id' AND plausibilityStatus === 'realistic_price' " +
+      "are intended as display-ready. STATION_MATCHING_SPECIFICATION, USER_REPORTED_CONFIDENCE_POLICY, " +
+      "and auditFuelPriceContractCompliance all converge on this rule. " +
+      "resolveFuelPriceObservation even computes 'displayableInNearbyPrices' explicitly in the SRP preview.",
+
+    firstProvenBreach:
+      "fetchGooglePlacesPrices.ts writes FuelPrice with stationId but WITHOUT station_match_status. " +
+      "auditFuelPriceContractCompliance.ts classifies this as STATIONID_SET_WITHOUT_DECLARED_OUTCOME = INVALID_WRITE_GATE_VIOLATION.",
+
+    secondaryBreaches: [
+      "fetchFuelFinderStationPrices.ts writes without station_match_status AND without plausibilityStatus",
+      "Three different plausibility classifiers with divergent thresholds: frozen (10–40), GooglePlaces local (10–30), SRP fuel-type-specific (13–25.5)",
+      "NearbyPrices excludes 'no_safe_station_match' but not 'review_needed_station_match'",
+      "StationDetails checks only plausibilityStatus — ignores station_match_status entirely",
+      "RecentPricesFeed is the only component excluding both problematic match statuses",
+    ],
+
+    uiFiltersRequired: true,
+    uiFiltersRequiredReason:
+      "Because upstream write paths do not enforce the intended gate, suspect and unmatched prices exist in FuelPrice. " +
+      "UI filters are currently necessary compensation — not redundant duplication.",
+
+    uiFiltersInconsistent: true,
+    uiFiltersInconsistencyReason:
+      "Three display components reading the same entity apply three different effective filter sets, " +
+      "producing different data visible on different screens for the same underlying records.",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched (read-only inspection only)",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched (read-only inspection only)",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 0,
+    businessLogicChanges: 0,
+    auditFilesCreated: 1,
+    auditIndexEntriesAdded: 1,
+    governanceFilesModified: 2,
+    frozenFilesModified: 0,
+  },
+
+  governanceCompliance: {
+    noRuntimeChanges: "✓ Zero runtime code modified",
+    noBackendChanges: "✓ Zero backend logic modified",
+    noLockedFilesModified: "✓ All 10 frozen files untouched",
+    auditOnlyPass: "✓ Read-only analysis per problem statement directive",
+  },
+
+  nextSafeStep: {
+    recommendation: "Visibility contract fix sprint — address the three breach points identified in this audit",
+    proposedScope: [
+      "1. Update fetchGooglePlacesPrices.ts to set station_match_status = 'matched_station_id' on FuelPrice writes",
+      "2. Update fetchFuelFinderStationPrices.ts to set station_match_status = 'matched_station_id' AND plausibilityStatus on FuelPrice writes",
+      "3. Standardize UI filter rules across NearbyPrices, StationDetails, and RecentPricesFeed to use a shared eligibility predicate",
+    ],
+    frozenFileRisk: "Items 1 and 2 do NOT modify frozen files — they modify non-frozen adapter functions",
+    prerequisite: "Explicit user approval before implementing any fix — this entry is analysis only",
+  },
+};
+
+export default entry_105;

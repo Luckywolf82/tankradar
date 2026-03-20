@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-12T10:00:00Z",
+  lastUpdated: "2026-03-20T14:00:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -249,6 +249,19 @@ export const AUDIT_INDEX = {
       focusArea: "Contribution loop mechanics, acquisition trigger design, crowdsourcing maturity scoring, feature scoping for acquisition layer",
       status: "proposed",
       canonicalFor: "Crowdsourcing engine maturity assessment — contribution loop completeness"
+    },
+
+    {
+      id: "visibility_contract_audit",
+      title: "FuelPrice Visibility Contract Audit",
+      category: "data",
+      location: "src/components/audits/data/visibility-contract-audit-2026-03-20.jsx",
+      dateCreated: "2026-03-20",
+      description: "Contract-forensics pass determining whether 'display-ready fuel price visibility' is owned by the upstream ingestion/matching/curation pipeline or by UI-layer components (NearbyPrices, StationDetails). Maps all visibility/eligibility enforcement points, identifies redundant vs required UI checks, and locates the first proven contract breach.",
+      relatesTo: "Entry 105 — Visibility Contract Audit",
+      focusArea: "FuelPrice entity purpose (raw vs display-ready), upstream write-gate completeness, UI filter redundancy, station_match_status and plausibilityStatus enforcement consistency",
+      status: "complete",
+      canonicalFor: "Display visibility contract ownership — FuelPrice pipeline vs UI layer"
     }
   ],
 
@@ -258,11 +271,11 @@ export const AUDIT_INDEX = {
     governance: 2,
     product: 6,
     activation: 3,
-    data: 0,
+    data: 1,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 21
+    total: 22
   },
 
   governanceRules: {
