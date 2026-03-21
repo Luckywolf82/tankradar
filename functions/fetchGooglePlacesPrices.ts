@@ -390,6 +390,7 @@ Deno.serve(async (req) => {
 
     // Log fetch
     await base44.asServiceRole.entities.FetchLog.create({
+
       sourceName: "GooglePlaces",
       startedAt: startedAt,
       finishedAt: new Date().toISOString(),
