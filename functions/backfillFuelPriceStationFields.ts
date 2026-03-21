@@ -33,14 +33,18 @@ Deno.serve(async (req) => {
     }
 
     // Support dry-run mode via ?dryRun=true
+    // Support batching via ?limit=75&offset=0
     const url = new URL(req.url);
     const dryRun = url.searchParams.get('dryRun') === 'true';
+    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '', 10) || 75, 1), 200);
+    const offset = Math.max(parseInt(url.searchParams.get('offset') || '', 10) || 0, 0);
 
-    // ── 1. Load all FuelPrice rows ──────────────────────────────────────────
-    const allPrices = await base44.entities.FuelPrice.list();
+    // ── 1. Load a batch of FuelPrice rows (pagination-safe) ────────────────
+    const batch = await base44.entities.FuelPrice.list('-created_date', limit, offset);
+    const scanned = batch.length;
 
     // ── 2. Identify candidates: stationId present, at least one field missing ─
-    const candidates = allPrices.filter((p) => {
+    const candidates = batch.filter((p) => {
       if (!p.stationId) return false;
       return (
         !p.station_name ||
@@ -67,12 +71,17 @@ Deno.serve(async (req) => {
     // ── 4. Apply backfill ────────────────────────────────────────────────────
     const results = {
       dryRun,
+      limit,
+      offset,
+      scanned,
       candidatesFound: candidates.length,
       stationsResolved: Object.keys(stationCache).length,
       stationsMissing: 0,
       updated: 0,
       skipped: 0,
       errors: 0,
+      hasMore: scanned === limit,
+      nextOffset: offset + scanned,
       fieldStats: {
         station_name: 0,
         station_chain: 0,
@@ -159,12 +168,13 @@ Deno.serve(async (req) => {
       }
     }
 
+    const moreLabel = results.hasMore ? ` — more rows available (next offset: ${results.nextOffset})` : ' — end of dataset';
     return Response.json({
       success: true,
       ...results,
       summary: dryRun
-        ? `DRY RUN: would update ${results.updated} of ${results.candidatesFound} candidate rows`
-        : `Updated ${results.updated} of ${results.candidatesFound} candidate rows (${results.errors} errors, ${results.skipped} skipped)`,
+        ? `DRY RUN (offset=${offset}, limit=${limit}): scanned ${scanned} rows, would update ${results.updated} of ${results.candidatesFound} candidates${moreLabel}`
+        : `Live (offset=${offset}, limit=${limit}): scanned ${scanned} rows, updated ${results.updated} of ${results.candidatesFound} candidates (${results.errors} errors, ${results.skipped} skipped)${moreLabel}`,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

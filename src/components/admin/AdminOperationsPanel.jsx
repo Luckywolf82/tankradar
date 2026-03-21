@@ -27,6 +27,8 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
   const [mergePreviewResult, setMergePreviewResult] = useState(null);
   const [backfillResult, setBackfillResult] = useState(null);
   const [backfillLoading, setBackfillLoading] = useState(false);
+  const [backfillBatchSize, setBackfillBatchSize] = useState(75);
+  const [backfillOffset, setBackfillOffset] = useState(0);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -340,12 +342,37 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           isExpanded={expandedSections.maintenance}
         >
           <div className="space-y-3">
+            <div className="flex gap-2 items-center text-xs text-gray-600">
+              <label className="whitespace-nowrap">Batch size:</label>
+              <input
+                type="number"
+                min={1}
+                max={200}
+                value={backfillBatchSize}
+                onChange={(e) => setBackfillBatchSize(Math.min(200, Math.max(1, Number(e.target.value) || 75)))}
+                className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+              />
+              <label className="whitespace-nowrap">Offset:</label>
+              <input
+                type="number"
+                min={0}
+                value={backfillOffset}
+                onChange={(e) => setBackfillOffset(Math.max(0, Number(e.target.value) || 0))}
+                className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+              />
+              <button
+                onClick={() => setBackfillOffset(0)}
+                className="text-xs text-gray-500 hover:text-gray-800 underline"
+              >
+                Reset
+              </button>
+            </div>
             <OperationButton
               onClick={async () => {
                 setBackfillLoading(true);
                 setBackfillResult(null);
                 try {
-                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: true });
+                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: true, limit: backfillBatchSize, offset: backfillOffset });
                   setBackfillResult(result.data);
                 } catch (e) {
                   console.error('[Backfill DryRun] Failed:', e);
@@ -369,13 +396,25 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-1 text-blue-800 mb-2">
+                      <div>offset: <strong>{backfillResult.offset}</strong></div>
+                      <div>limit: <strong>{backfillResult.limit}</strong></div>
+                      <div>scanned: <strong>{backfillResult.scanned}</strong></div>
                       <div>candidatesFound: <strong>{backfillResult.candidatesFound}</strong></div>
                       <div>updated: <strong>{backfillResult.updated}</strong></div>
                       <div>skipped: <strong>{backfillResult.skipped}</strong></div>
                       <div>errors: <strong>{backfillResult.errors}</strong></div>
+                      <div>hasMore: <strong>{backfillResult.hasMore ? `yes (next: ${backfillResult.nextOffset})` : 'no'}</strong></div>
                     </div>
                     {backfillResult.summary && (
                       <div className="text-blue-700 mb-2 italic">{backfillResult.summary}</div>
+                    )}
+                    {backfillResult.hasMore && (
+                      <button
+                        onClick={() => setBackfillOffset(backfillResult.nextOffset)}
+                        className="text-xs text-blue-600 hover:text-blue-900 underline mr-3"
+                      >
+                        Set offset → {backfillResult.nextOffset}
+                      </button>
                     )}
                     {backfillResult.sampleUpdated?.length > 0 && (
                       <div className="mb-1">
@@ -423,8 +462,11 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
                 setBackfillLoading(true);
                 setBackfillResult(null);
                 try {
-                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: false });
+                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: false, limit: backfillBatchSize, offset: backfillOffset });
                   setBackfillResult(result.data);
+                  if (result.data?.nextOffset != null) {
+                    setBackfillOffset(result.data.nextOffset);
+                  }
                 } catch (e) {
                   console.error('[Backfill Apply] Failed:', e);
                   setBackfillResult({ error: e.message });
