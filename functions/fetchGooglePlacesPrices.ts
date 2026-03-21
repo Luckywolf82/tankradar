@@ -215,11 +215,6 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
     if (!apiKey) {
@@ -227,7 +222,7 @@ Deno.serve(async (req) => {
     }
 
     // Load all existing stations from OSM (station master)
-    let allStations = await base44.entities.Station.list();
+    let allStations = await base44.asServiceRole.entities.Station.list();
     
     // If no stations, use test fixture
     if (allStations.length === 0) {
