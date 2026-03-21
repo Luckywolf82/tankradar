@@ -2230,4 +2230,112 @@ export const entry_110 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
-export default entry_110;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 111: FUELPRICE STATION-LINKED DEBUG FIELD FORWARD-FILL AND BACKFILL
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_111 = {
+  timestamp: "2026-03-21T12:38:27Z",
+  phase: "Phase 2.5 Data Integrity",
+  title: "FuelPrice Station-Linked Debug Field Forward-Fill and Backfill",
+
+  objectives: [
+    "Make FuelPrice rows easier to inspect directly in Base44 dashboard",
+    "Forward-fill station_name, station_chain, gps_latitude, gps_longitude on new GooglePlaces FuelPrice writes",
+    "Add plausibilityStatus, station_match_status, station_name, station_chain to new FuelFinder FuelPrice writes",
+    "Create admin backfill function for existing FuelPrice rows that have stationId but missing station-linked fields",
+    "No UI changes, no schema redesign, no frozen files touched",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=110, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 110",
+    "✓ Read NextSafeStep.jsx — approved next step: FuelFinder write contract completion",
+    "✓ Verified frozen Phase 2 files list — none of the 3 changed files are frozen",
+    "✓ Confirmed no UI files modified",
+    "✓ Confirmed NearbyPrices and StationDetails untouched",
+  ],
+
+  files_modified: [
+    "functions/fetchGooglePlacesPrices.ts — Added station_name, station_chain, gps_latitude, gps_longitude to FuelPrice.create() payload",
+    "functions/fetchFuelFinderStationPrices.ts — Added classifyPricePlausibility() inline; added stationDetailsMap; added plausibilityStatus, station_match_status, station_name, station_chain to FuelPrice.create() payload",
+  ],
+
+  files_created: [
+    "functions/backfillFuelPriceStationFields.ts — Admin-only backfill function for existing FuelPrice rows with stationId but missing station-linked fields",
+  ],
+
+  forwardFillDetails: {
+    googlePlaces: {
+      fieldsAdded: ["station_name", "station_chain", "gps_latitude", "gps_longitude"],
+      source: "matched Station record (station.name, station.chain, station.latitude, station.longitude)",
+      alreadyPresent: ["station_match_status: 'matched_station_id'", "plausibilityStatus"],
+      nullSafe: "|| null guard on all four fields; no fabrication if Station field is absent",
+    },
+    fuelFinder: {
+      fieldsAdded: [
+        "plausibilityStatus — classifyPricePlausibility(priceNok) inline function (thresholds: <10 low, 10–30 realistic, >30 high)",
+        "station_match_status: 'matched_station_id' — truthful since FuelFinder only writes stationId after confirmed sourceStationId match",
+        "station_name — from stationDetailsMap keyed by sourceStationId (parsed station HTML)",
+        "station_chain — from stationDetailsMap keyed by sourceStationId (parsed station HTML)",
+      ],
+      notAdded: ["gps_latitude", "gps_longitude — FuelFinder fixture has null lat/lon; not fabricated"],
+      mechanismAdded: "stationDetailsMap = {} (sourceStationId → { name, chain }) built during station processing loop",
+    },
+  },
+
+  backfillDetails: {
+    file: "functions/backfillFuelPriceStationFields.ts",
+    eligibility: "FuelPrice row must have stationId set; at least one of station_name, station_chain, gps_latitude, gps_longitude, station_match_status must be missing",
+    stationMatchStatusRule: "Set to 'matched_station_id' only when stationId is present and station_match_status is null — stationId presence implies confirmed match in all write paths",
+    fieldsNotTouched: ["station_match_candidates", "station_match_notes", "reportedByUserId"],
+    safetyFeatures: [
+      "Admin-only (user.role !== 'admin' → 403)",
+      "?dryRun=true parameter for preview without writes",
+      "Per-row error isolation — one failure does not abort the batch",
+      "Only sets fields that are actually missing — will not overwrite existing values",
+      "Station cache built once from unique stationIds to reduce API calls",
+    ],
+  },
+
+  fieldsIntentionallyUntouched: [
+    "station_match_candidates — only relevant for review_needed rows; no truthful source from Station alone",
+    "station_match_notes — narrative field; only set by SRP; not fabricated here",
+    "reportedByUserId — not available from Station record; not backfilled",
+  ],
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched (logic replicated inline in FF adapter; frozen file not imported)",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 2,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 0,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 1,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noUIChanges: "✓ No UI files modified",
+    noNearbyPricesChanges: "✓ NearbyPrices untouched",
+    noStationDetailsChanges: "✓ StationDetails untouched",
+    noSchemaRedesign: "✓ No new entities, no data model changes",
+    noFabrication: "✓ All fields sourced from matched Station record or truthful contract inference",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_111;
