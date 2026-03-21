@@ -354,32 +354,16 @@ Deno.serve(async (req) => {
           const sourceUpdatedAt = fuelPrice.updateTime || null;
           const fetchedAtNow = new Date().toISOString();
 
-          // Check for exact duplicate: same price, same sourceUpdatedAt
-          // This avoids storing identical observations from repeated fetches
-          const lastObservation = await base44.entities.FuelPrice.filter(
-            {
-              stationId: station.id,
-              fuelType: fuelType,
-              sourceName: "GooglePlaces"
-            },
-            "-created_date",
-            1
-          );
-
-          if (lastObservation.length > 0) {
-            const last = lastObservation[0];
-            // Deduplication: skip if identical price + sourceUpdatedAt
-            if (
-              last.priceNok === priceNok &&
-              last.sourceUpdatedAt === sourceUpdatedAt
-            ) {
-              mapping.pricesSkipped++;
-              continue;
-            }
+          // In-memory deduplication: skip if identical observation already stored
+          const dedupKey = `${station.id}|${fuelType}|${sourceUpdatedAt}|${priceNok}`;
+          if (dedupSet.has(dedupKey)) {
+            mapping.pricesSkipped++;
+            continue;
           }
+          dedupSet.add(dedupKey);
 
           // Immutable observation: create new FuelPrice post for this observation
-           await base44.entities.FuelPrice.create({
+           await base44.asServiceRole.entities.FuelPrice.create({
              stationId: station.id,
              fuelType: fuelType,
              priceNok: priceNok,
