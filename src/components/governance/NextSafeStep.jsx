@@ -74,7 +74,7 @@ export const NEXT_SAFE_STEP = {
     blockingIssues: "NONE",
     frozenFilesImpact: "ZERO — no Phase 2 matching engine files modified",
     expectedOutcome: "Enhanced activation flow; estimated +25–50% LogPrice tap-through from repositioning + copy; +25% repeat submissions from streak feature"
-  }
+  },
 
   governanceRule: {
     preflightOrder: [
@@ -206,19 +206,7 @@ export const NEXT_SAFE_STEP = {
     completedDate: "2026-03-21T13:02:52Z",
   },
 
-  completedEntry115: {
-    id: "phase25_step_115",
-    title: "NearbyPrices Radius Configurable from Admin — COMPLETE",
-    description:
-      "Entry 115 replaced the hardcoded RADIUS_KM = 10 constant in NearbyPrices.jsx with a " +
-      "localStorage-backed getNearbyRadiusKm() helper (key: tankradar_nearby_radius_km, default: 10). " +
-      "AdminOperationsPanel.jsx gained a new INNSTILLINGER collapsible section with a number input " +
-      "(1–200 km), reset button, reload button, and active-value display. Value is persisted to localStorage on every change. " +
-      "Safe fallback to 10 km on absent, invalid, or storage-error conditions. " +
-      "No matching logic, ingestion, StationDetails, resolver, or frozen files touched.",
-    status: "complete",
-    completedDate: "2026-03-21T17:30:00Z",
-  },
+  completedEntry114: {
     id: "phase25_step_114",
     title: "Strict Matched-Station Eligibility for NearbyPrices Only — COMPLETE",
     description:
