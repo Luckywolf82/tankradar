@@ -166,11 +166,11 @@ export const EXECUTION_LOG_METADATA = {
     failureProtocol:
       "If any checkpoint fails: STOP. Do not proceed. Fix the desync before generating next prompt.",
     currentStatus: {
-      checkpoint1: "✓ entryCount=111, sealed chunks cover 1–81 (81 entries), active chunk 87–111 (25 entries), preamble entries 82–86 (5 entries) = 111 total entries",
+      checkpoint1: "✓ entryCount=112, sealed chunks cover 1–81 (81 entries), active chunk 87–112 (26 entries), preamble entries 82–86 (5 entries) = 112 total entries",
       checkpoint2: "✓ Only Phase25ExecutionLog_007.jsx marked ACTIVE",
       checkpoint3: "✓ activeChunk = 'Phase25ExecutionLog_007.jsx' matches ACTIVE chunk",
       checkpoint4: "✓ Chunk ranges are contiguous",
-      checkpoint5: "✓ NextSafeStep: Entry 111 complete (FuelPrice station-linked debug field forward-fill and backfill); next step is ongoing data quality improvements"
+      checkpoint5: "✓ NextSafeStep: Entry 112 complete (admin UI trigger for backfillFuelPriceStationFields); next step is ongoing data quality improvements"
     }
   }
 };
