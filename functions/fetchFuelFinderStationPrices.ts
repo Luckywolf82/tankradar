@@ -166,6 +166,15 @@ function normalizeFuelType(fuelStr) {
   return "gasoline_95";
 }
 
+// Classify price plausibility using the same thresholds as fetchGooglePlacesPrices.ts
+// Norwegian fuel prices realistically range 10–30 NOK/L
+function classifyPricePlausibility(priceNok) {
+  if (priceNok === null || priceNok === undefined) return null;
+  if (priceNok < 10) return "suspect_price_low";
+  if (priceNok > 30) return "suspect_price_high";
+  return "realistic_price";
+}
+
 function normalizeStationName(name) {
   return (name || "").toLowerCase().trim();
 }
@@ -240,8 +249,15 @@ Deno.serve(async (req) => {
 
     // Process stations: create or match via sourceStationId
     const stationMap = {}; // sourceStationId -> Station.id
+    const stationDetailsMap = {}; // sourceStationId -> { name, chain }
     for (const stationData of stations) {
       if (!stationData.name || !stationData.sourceStationId) continue;
+
+      // Track name/chain for use in FuelPrice writes below
+      stationDetailsMap[stationData.sourceStationId] = {
+        name: stationData.name,
+        chain: stationData.chain || null,
+      };
 
       const normalizedName = normalizeStationName(stationData.name);
 
@@ -297,6 +313,8 @@ Deno.serve(async (req) => {
       });
 
       if (existing.length === 0) {
+        const stationDetail = stationDetailsMap[priceData.sourceStationId] || {};
+        const plausibilityStatus = classifyPricePlausibility(priceData.priceNok);
         await base44.asServiceRole.entities.FuelPrice.create({
           stationId: matchedStationId,
           locationLabel: null,
@@ -310,6 +328,10 @@ Deno.serve(async (req) => {
           sourceFrequency: "unknown",
           confidenceScore: 0.6,
           parserVersion: "ff_no_v1",
+          plausibilityStatus: plausibilityStatus,
+          station_match_status: "matched_station_id",
+          station_name: stationDetail.name || null,
+          station_chain: stationDetail.chain || null,
           rawPayloadSnippet: `${priceData.fuelType}: ${priceData.priceNok} NOK/L`
         });
         recordsCreated++;

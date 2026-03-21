@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -180,6 +180,19 @@ export const NEXT_SAFE_STEP = {
       "No runtime changes. Next approved step remains FuelFinder write contract completion.",
     status: "complete",
     completedDate: "2026-03-21T11:31:25Z",
+  },
+
+  completedEntry111: {
+    id: "phase25_step_111",
+    title: "FuelPrice Station-Linked Debug Field Forward-Fill and Backfill — COMPLETE",
+    description:
+      "Entry 111 completed the station-linked field gap on FuelPrice rows. " +
+      "fetchGooglePlacesPrices.ts now writes station_name, station_chain, gps_latitude, gps_longitude alongside existing station_match_status and plausibilityStatus. " +
+      "fetchFuelFinderStationPrices.ts now writes plausibilityStatus, station_match_status, station_name, station_chain (inline classifyPricePlausibility + stationDetailsMap). " +
+      "New backfillFuelPriceStationFields.ts admin function backfills existing rows (stationId present, station fields missing) with admin-only + dryRun safety. " +
+      "No UI changes, no schema changes, no frozen files touched.",
+    status: "complete",
+    completedDate: "2026-03-21T12:38:27Z",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

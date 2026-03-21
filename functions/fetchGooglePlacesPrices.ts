@@ -387,6 +387,10 @@ Deno.serve(async (req) => {
              parserVersion: "gp_v1",
              plausibilityStatus: plausibilityStatus,
              station_match_status: "matched_station_id",
+             station_name: station.name || null,
+             station_chain: station.chain || null,
+             gps_latitude: station.latitude || null,
+             gps_longitude: station.longitude || null,
              rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L | ${plausibilityStatus}`
            });
            mapping.pricesCreated++;
