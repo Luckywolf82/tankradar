@@ -21,7 +21,7 @@ export default function ContributionImpactCard() {
       const fetchedReports = await base44.entities.FuelPrice.filter(
         { sourceName: "user_reported", reportedByUserId: user.email },
         "-fetchedAt",
-        500
+        50
       );
       setReports(fetchedReports);
       setReportCount(fetchedReports.length);
