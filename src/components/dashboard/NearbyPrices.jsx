@@ -66,6 +66,7 @@ export default function NearbyPrices({ selectedFuel }) {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nearbyResults, setNearbyResults] = useState([]);
+  const [staleFallbackResults, setStaleFallbackResults] = useState([]);
   const [debugInfo, setDebugInfo] = useState(null);
   // DEBUG-only: number of station IDs sent to FuelPrice fetch (set in fetch effect)
   const [nearbyIdsCount, setNearbyIdsCount] = useState(null);
@@ -136,6 +137,7 @@ export default function NearbyPrices({ selectedFuel }) {
     // Early exit when prerequisites are missing
     if (!userCoords || !stations.length || !prices.length) {
       setNearbyResults([]);
+      setStaleFallbackResults([]);
 
       // --- DEBUG: classify early-termination reason ---
       if (DEBUG_NEARBY) {
@@ -165,6 +167,7 @@ export default function NearbyPrices({ selectedFuel }) {
           latest_per_station_count: 0,
           fresh_after_7_day_filter: 0,
           final_sorted_count: 0,
+          stale_fallback_count: 0,
           // If stations were queried but nothing came back → fetch-level failure
           strongestGateLabel:
             terminationReason === "NO_FUELPRICE_ROWS_FETCHED"
@@ -222,6 +225,14 @@ export default function NearbyPrices({ selectedFuel }) {
     });
 
     setNearbyResults(sorted.slice(0, 8));
+
+    // Stale fallback: when no fresh results exist but stale-but-valid rows do,
+    // show last-known nearby prices sorted by distance (nearest first).
+    const staleFallback =
+      fresh.length === 0 && latestArr.length > 0
+        ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
+        : [];
+    setStaleFallbackResults(staleFallback);
 
     // --- DEBUG: full pipeline instrumentation ---
     if (DEBUG_NEARBY) {
@@ -342,6 +353,7 @@ export default function NearbyPrices({ selectedFuel }) {
         latest_per_station_count: latestArr.length,
         fresh_after_7_day_filter: fresh.length,
         final_sorted_count: sorted.slice(0, 8).length,
+        stale_fallback_count: staleFallback.length,
         strongestGateLabel: strongestGate?.label ?? null,
         strongestGateDrop: maxDrop,
         sampleExcluded: strongestGate ? strongestGate.excluded.slice(0, 5) : [],
@@ -400,18 +412,18 @@ export default function NearbyPrices({ selectedFuel }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {nearbyResults.length === 0 ? (
+        {nearbyResults.length === 0 && staleFallbackResults.length === 0 ? (
           <div className="text-sm text-slate-400 py-3">
             {prices.length === 0
               ? "Ingen priser funnet i nærheten akkurat nå"
-              : `For lite datagrunnlag i området (${radiusKm} km radius)`}
+              : `Ingen priser funnet innen ${radiusKm} km`}
             {DEBUG_NEARBY && (
               <div className="mt-1 text-xs text-amber-600 font-mono">
                 [DEBUG] terminate: {debugInfo?.terminationReason ?? "?"} | raw rows: {prices.length} | nearby ids: {debugInfo?.nearby_station_ids_count ?? "?"}
               </div>
             )}
           </div>
-        ) : (
+        ) : nearbyResults.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {nearbyResults.map((p, i) => {
               const src = sourceLabel[p.sourceName] || { text: p.sourceName, color: "bg-slate-100 text-slate-500" };
@@ -463,6 +475,67 @@ export default function NearbyPrices({ selectedFuel }) {
                 </div>
               );
             })}
+          </div>
+        ) : (
+          /* Stale fallback — no fresh prices, but last-known nearby prices exist */
+          <div>
+            <div className="flex items-center gap-2 mb-2 pb-1 border-b border-amber-100">
+              <Clock size={13} className="text-amber-500" />
+              <span className="text-xs font-semibold text-amber-700">Siste kjente priser nær deg</span>
+              <span className="text-xs text-amber-500">(ikke ferske priser)</span>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {staleFallbackResults.map((p) => {
+                const src = sourceLabel[p.sourceName] || { text: p.sourceName, color: "bg-slate-100 text-slate-500" };
+                const distText = p._distanceKm < 1
+                  ? `${Math.round(p._distanceKm * 1000)} m`
+                  : `${p._distanceKm.toFixed(1)} km`;
+                const updatedText = p.fetchedAt
+                  ? formatDistanceToNow(new Date(p.fetchedAt), { addSuffix: true, locale: nb })
+                  : null;
+
+                return (
+                  <div key={p.id} className="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50 rounded-lg px-1 -mx-1 transition-colors" onClick={() => navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">
+                        {p._station.name}
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                        <span className="text-xs text-slate-500 flex items-center gap-0.5">
+                          <MapPin size={10} /> {distText}
+                        </span>
+                        {p._station.chain && (
+                          <span className="text-xs text-slate-400">{p._station.chain}</span>
+                        )}
+                        {updatedText && (
+                          <span className="text-xs text-slate-400 flex items-center gap-0.5">
+                            <Clock size={10} /> {updatedText}
+                          </span>
+                        )}
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${src.color}`}>
+                          {src.text}
+                        </span>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                          Eldre pris
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 flex items-center gap-1">
+                      <SharePriceButton
+                        stationId={p.stationId}
+                        stationName={p._station.name}
+                        priceNok={p.priceNok}
+                        fuelType={p.fuelType}
+                      />
+                      <div>
+                        <p className="text-lg font-bold text-amber-700">{p.priceNok.toFixed(2)}</p>
+                        <p className="text-xs text-slate-400">kr/l</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
         {nearbyResults.length > 0 && nearbyResults.length < 3 && (
@@ -543,6 +616,7 @@ export default function NearbyPrices({ selectedFuel }) {
                 <div>G. latest_per_station_count: <span className="font-semibold">{debugInfo.latest_per_station_count}</span></div>
                 <div>H. fresh_after_7_day_filter: <span className="font-semibold">{debugInfo.fresh_after_7_day_filter}</span></div>
                 <div>I. final_sorted_count: <span className="font-semibold">{debugInfo.final_sorted_count}</span></div>
+                <div>J. stale_fallback_count: <span className={`font-semibold ${debugInfo.stale_fallback_count > 0 ? "text-amber-600" : ""}`}>{debugInfo.stale_fallback_count}</span></div>
               </div>
             )}
 
