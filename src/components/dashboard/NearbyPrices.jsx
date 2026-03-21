@@ -13,7 +13,18 @@ import {
   isFreshEnoughForNearbyRanking,
 } from "@/utils/currentPriceResolver";
 
-const RADIUS_KM = 10;
+const NEARBY_RADIUS_DEFAULT_KM = 10;
+const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
+
+function getNearbyRadiusKm() {
+  try {
+    const raw = localStorage.getItem(NEARBY_RADIUS_STORAGE_KEY);
+    const val = parseFloat(raw);
+    return isFinite(val) && val > 0 ? val : NEARBY_RADIUS_DEFAULT_KM;
+  } catch {
+    return NEARBY_RADIUS_DEFAULT_KM;
+  }
+}
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -45,6 +56,7 @@ const fuelTypeLabel = {
 
 export default function NearbyPrices({ selectedFuel }) {
   const navigate = useNavigate();
+  const radiusKm = getNearbyRadiusKm();
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
   const [stations, setStations] = useState([]);
@@ -88,7 +100,7 @@ export default function NearbyPrices({ selectedFuel }) {
           .filter(
             (s) =>
               haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <=
-              RADIUS_KM
+              radiusKm
           )
           .map((s) => s.id);
 
@@ -142,7 +154,7 @@ export default function NearbyPrices({ selectedFuel }) {
       const station = stationMap[p.stationId];
       const dist = haversineKm(userCoords.lat, userCoords.lon, station.latitude, station.longitude);
       return { ...p, _station: station, _distanceKm: dist };
-    }).filter((p) => p._distanceKm <= RADIUS_KM);
+    }).filter((p) => p._distanceKm <= radiusKm);
 
     // Use shared resolver: latest display-eligible row per station
     const byStation = resolveLatestPerStation(withDistance);
@@ -209,7 +221,7 @@ export default function NearbyPrices({ selectedFuel }) {
         <CardTitle className="text-base flex items-center gap-2">
           <Navigation size={16} className="text-blue-500" />
           Billigste nær deg
-          <span className="ml-auto text-xs font-normal text-slate-400">innen {RADIUS_KM} km</span>
+          <span className="ml-auto text-xs font-normal text-slate-400">innen {radiusKm} km</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -217,7 +229,7 @@ export default function NearbyPrices({ selectedFuel }) {
           <div className="text-sm text-slate-400 py-3">
             {prices.length === 0
               ? "Ingen priser funnet i nærheten akkurat nå"
-              : `For lite datagrunnlag i området (${RADIUS_KM} km radius)`}
+              : `For lite datagrunnlag i området (${radiusKm} km radius)`}
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -275,7 +287,7 @@ export default function NearbyPrices({ selectedFuel }) {
         )}
         {nearbyResults.length > 0 && nearbyResults.length < 3 && (
           <p className="text-xs text-slate-400 mt-2 border-t border-slate-100 pt-2">
-            Kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med {fuelTypeLabel[selectedFuel] || selectedFuel}-pris funnet innen {RADIUS_KM} km.
+            Kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med {fuelTypeLabel[selectedFuel] || selectedFuel}-pris funnet innen {radiusKm} km.
           </p>
         )}
       </CardContent>

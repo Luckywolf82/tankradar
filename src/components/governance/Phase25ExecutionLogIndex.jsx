@@ -9,8 +9,8 @@ export const EXECUTION_LOG_METADATA = {
   system: "Phase 2.5 Execution Tracking",
   purpose: "Governance audit trail for TankRadar station matching and duplicate remediation",
   status: "active",
-  lastUpdated: "2026-03-21T16:18:34Z",
-  entryCount: 114, // Entry 114: Strict matched-station eligibility for NearbyPrices only
+  lastUpdated: "2026-03-21T17:30:00Z",
+  entryCount: 115, // Entry 115: NearbyPrices radius configurable from admin
   
   // Chunk mapping: exact entry ranges in each file
   chunks: [
@@ -52,9 +52,9 @@ export const EXECUTION_LOG_METADATA = {
     },
     {
       fileName: "Phase25ExecutionLog_007.jsx",
-      entries: "87–114",
+      entries: "87–115",
       status: "ACTIVE (append new entries here)",
-      description: "Audit system expansion, governance audits, publishability audit, pre-submission cleanup, activation audit, activation improvements implementation, activation impact review, gamification layer implementation, engagement impact review, governance workflow coherence audit, audit system hardening pass, governance conflict resolution pass, roadmap governor v4.3, visibility contract audit, GooglePlaces write contract completion, canonical price retrieval contract, StationDetails data-layer split, canonical current-price resolver + NearbyPrices freshness policy, execution log metadata sync fix, FuelPrice station-linked debug field forward-fill and backfill, admin UI trigger for backfillFuelPriceStationFields, batch-safe backfillFuelPriceStationFields fix 504 timeout, strict matched-station eligibility for NearbyPrices only"
+      description: "Audit system expansion, governance audits, publishability audit, pre-submission cleanup, activation audit, activation improvements implementation, activation impact review, gamification layer implementation, engagement impact review, governance workflow coherence audit, audit system hardening pass, governance conflict resolution pass, roadmap governor v4.3, visibility contract audit, GooglePlaces write contract completion, canonical price retrieval contract, StationDetails data-layer split, canonical current-price resolver + NearbyPrices freshness policy, execution log metadata sync fix, FuelPrice station-linked debug field forward-fill and backfill, admin UI trigger for backfillFuelPriceStationFields, batch-safe backfillFuelPriceStationFields fix 504 timeout, strict matched-station eligibility for NearbyPrices only, NearbyPrices radius configurable from admin"
     }
   ],
 
@@ -166,11 +166,11 @@ export const EXECUTION_LOG_METADATA = {
     failureProtocol:
       "If any checkpoint fails: STOP. Do not proceed. Fix the desync before generating next prompt.",
     currentStatus: {
-      checkpoint1: "✓ entryCount=114, sealed chunks cover 1–81 (81 entries), active chunk 87–114 (28 entries), preamble entries 82–86 (5 entries) = 114 total entries",
+      checkpoint1: "✓ entryCount=115, sealed chunks cover 1–81 (81 entries), active chunk 87–115 (29 entries), preamble entries 82–86 (5 entries) = 115 total entries",
       checkpoint2: "✓ Only Phase25ExecutionLog_007.jsx marked ACTIVE",
       checkpoint3: "✓ activeChunk = 'Phase25ExecutionLog_007.jsx' matches ACTIVE chunk",
       checkpoint4: "✓ Chunk ranges are contiguous",
-      checkpoint5: "✓ NextSafeStep: Entry 114 complete (strict matched-station eligibility for NearbyPrices only); next step is ongoing data quality improvements"
+      checkpoint5: "✓ NextSafeStep: Entry 115 complete (NearbyPrices radius configurable from admin); next step is ongoing data quality improvements"
     }
   }
 };

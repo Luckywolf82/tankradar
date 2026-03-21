@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Zap, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Zap, ChevronDown, ChevronUp, AlertTriangle, Settings } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,7 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
     dataQuality: false,
     analysis: false,
     maintenance: false,
+    tuning: false,
     dangerZone: false,
   });
   const [confirmModal, setConfirmModal] = useState(null);
@@ -29,6 +30,25 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
   const [backfillLoading, setBackfillLoading] = useState(false);
   const [backfillBatchSize, setBackfillBatchSize] = useState(75);
   const [backfillOffset, setBackfillOffset] = useState(0);
+
+  const NEARBY_RADIUS_STORAGE_KEY = 'tankradar_nearby_radius_km';
+  const [nearbyRadiusKm, setNearbyRadiusKm] = useState(() => {
+    try {
+      const raw = localStorage.getItem(NEARBY_RADIUS_STORAGE_KEY);
+      const val = parseFloat(raw);
+      return isFinite(val) && val > 0 ? val : 10;
+    } catch {
+      return 10;
+    }
+  });
+
+  const saveNearbyRadius = (val) => {
+    const safe = isFinite(val) && val > 0 ? val : 10;
+    setNearbyRadiusKm(safe);
+    try {
+      localStorage.setItem(NEARBY_RADIUS_STORAGE_KEY, String(safe));
+    } catch { /* ignore */ }
+  };
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -445,6 +465,52 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
                 <button onClick={() => setBackfillResult(null)} className="text-xs text-gray-500 hover:text-gray-900 underline mt-2">Lukk</button>
               </div>
             )}
+          </div>
+        </CollapsibleSection>
+
+        {/* INNSTILLINGER */}
+        <CollapsibleSection
+          title="INNSTILLINGER"
+          icon={Settings}
+          section="tuning"
+          isExpanded={expandedSections.tuning}
+        >
+          <div className="space-y-3">
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs font-semibold text-yellow-900 mb-2">⚙ Tuning: NearbyPrices radius</p>
+              <div className="flex gap-2 items-center flex-wrap text-xs text-gray-600 mb-2">
+                <label className="whitespace-nowrap font-medium">NearbyPrices radiusKm:</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={200}
+                  step={1}
+                  value={nearbyRadiusKm}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    saveNearbyRadius(isFinite(val) && val > 0 ? val : 10);
+                  }}
+                  className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+                />
+                <span className="text-xs text-gray-500">km (default: 10)</span>
+                <button
+                  onClick={() => saveNearbyRadius(10)}
+                  className="text-xs text-gray-500 hover:text-gray-800 underline"
+                >
+                  Reset
+                </button>
+              </div>
+              <p className="text-xs text-yellow-700">
+                Aktiv verdi: <strong>{nearbyRadiusKm} km</strong>.{" "}
+                <button
+                  onClick={() => window.location.reload()}
+                  className="underline hover:text-yellow-900"
+                >
+                  Last inn på nytt
+                </button>{" "}
+                for at Nearby bruker ny verdi.
+              </p>
+            </div>
           </div>
         </CollapsibleSection>
 

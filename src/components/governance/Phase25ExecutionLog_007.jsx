@@ -2622,4 +2622,109 @@ export const entry_114 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
-export default entry_114;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 115: NEARBY RADIUS CONFIGURABLE FROM ADMIN
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_115 = {
+  timestamp: "2026-03-21T17:30:00Z",
+  phase: "Phase 2.5 Admin-Configurable Tuning",
+  title: "NearbyPrices Radius Configurable from Admin",
+
+  objectives: [
+    "Replace hardcoded RADIUS_KM = 10 in NearbyPrices with a localStorage-backed configurable value",
+    "Expose a single NearbyPrices radiusKm control in the admin panel (INNSTILLINGER section)",
+    "Default remains 10 km when config is absent, invalid, or empty",
+    "Only positive numeric values accepted; safe fallback on any localStorage error",
+    "No matching logic, ingestion, StationDetails, or frozen files touched",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=114, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 114",
+    "✓ Read NextSafeStep.jsx — completedEntries includes 114",
+    "✓ Verified frozen Phase 2 files list — no frozen files affected by this change",
+    "✓ Confirmed StationDetails.jsx not modified",
+  ],
+
+  files_read: [
+    "src/components/dashboard/NearbyPrices.jsx — reviewed RADIUS_KM usage (4 sites)",
+    "src/components/admin/AdminOperationsPanel.jsx — reviewed existing localStorage pattern (batch size/offset)",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — verified tail entry",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — read entryCount + activeChunk",
+    "src/components/governance/NextSafeStep.jsx — read completedEntries",
+  ],
+
+  files_modified: [
+    "src/components/dashboard/NearbyPrices.jsx — Replaced RADIUS_KM constant with getNearbyRadiusKm() helper reading from localStorage (key: tankradar_nearby_radius_km); fallback = 10; radiusKm local var used in all 4 original RADIUS_KM sites",
+    "src/components/admin/AdminOperationsPanel.jsx — Added Settings import; tuning: false to expandedSections; nearbyRadiusKm state with localStorage read/write; saveNearbyRadius() helper; INNSTILLINGER collapsible section with radius input, reset button, and active-value display",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 115",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 115, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry115, added 115 to completedEntries",
+  ],
+
+  implementation: {
+    storageKey: "tankradar_nearby_radius_km (localStorage)",
+    defaultValue: "10 km (used when key is absent, value is NaN, or value is ≤ 0)",
+    nearbyPricesChange: {
+      file: "src/components/dashboard/NearbyPrices.jsx",
+      before: "const RADIUS_KM = 10;",
+      after: "getNearbyRadiusKm() helper reads localStorage; radiusKm local var replaces all RADIUS_KM references",
+      fallback: "Returns NEARBY_RADIUS_DEFAULT_KM (10) on any error or invalid value",
+      displayClarity: "Header badge, empty-state message, and low-count footer all show active radiusKm value",
+    },
+    adminChange: {
+      file: "src/components/admin/AdminOperationsPanel.jsx",
+      section: "INNSTILLINGER (new collapsible section, yellow-themed, Settings icon)",
+      control: "Number input (1–200 km), Reset button, active-value display",
+      persistence: "localStorage.setItem(tankradar_nearby_radius_km, value) on every change",
+      reloadNote: "App page must be reloaded for NearbyPrices to pick up new radius",
+    },
+    scopeLimit: "Only radiusKm added — no freshness control, match-status toggles, or other nearby knobs",
+  },
+
+  successCriteria: {
+    noHardcodedRadius: "✓ RADIUS_KM constant removed; all sites use getNearbyRadiusKm()",
+    adminCanSet: "✓ Admin sets radius via INNSTILLINGER section in AdminOperationsPanel",
+    defaultRemains10: "✓ getNearbyRadiusKm() returns 10 when localStorage key absent or invalid",
+    nearbyStillWorks: "✓ Safe try/catch wraps localStorage read; no breakage if storage unavailable",
+    scopeLimit: "✓ Only radiusKm parameterized — no other knobs added",
+    noFrozenFilesTouched: "✓ All 10 frozen Phase 2 files untouched",
+    stationDetailsUnchanged: "✓ StationDetails.jsx not modified",
+    ingestionUnchanged: "✓ No ingestion or write-path changes",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 2,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 2,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noMatchingLogicChanges: "✓ Matching, ingestion, StationDetails, and currentPriceResolver unchanged",
+    singleParameterOnly: "✓ Only radiusKm added — no other parameterization",
+    defaultSafe: "✓ Fallback to 10 km on any missing/invalid config",
+    adminOnly: "✓ Control lives in admin-only AdminOperationsPanel",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_115;
