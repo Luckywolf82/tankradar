@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -204,6 +204,18 @@ export const NEXT_SAFE_STEP = {
       "section behind the existing confirmation modal. No backfill logic changed. No frozen files touched.",
     status: "complete",
     completedDate: "2026-03-21T13:02:52Z",
+  },
+
+  completedEntry114: {
+    id: "phase25_step_114",
+    title: "Strict Matched-Station Eligibility for NearbyPrices Only — COMPLETE",
+    description:
+      "Entry 114 tightened NearbyPrices eligibility to require station_match_status === 'matched_station_id'. " +
+      "isStationPriceDisplayEligible gained an optional { requireMatchedStationId } flag; default behaviour unchanged. " +
+      "NearbyPrices passes { requireMatchedStationId: true }; StationDetails remains on the default call. " +
+      "No ingestion, resolver, stationHistory, or frozen file changes.",
+    status: "complete",
+    completedDate: "2026-03-21T16:18:34Z",
   },
 
   completedEntry113: {

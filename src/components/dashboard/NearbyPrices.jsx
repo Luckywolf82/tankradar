@@ -124,10 +124,14 @@ export default function NearbyPrices({ selectedFuel }) {
       if (s.id) stationMap[s.id] = s;
     });
 
-    // Apply shared base display-eligibility contract, then NearbyPrices-specific
-    // view rules: station must exist with valid coordinates for distance calc.
+    // Apply shared base display-eligibility contract with strict matched-station
+    // requirement (NearbyPrices only — not applied in StationDetails).
+    // This ensures current nearby ranking only uses rows that have an explicit
+    // confirmed station match (station_match_status === "matched_station_id").
+    // Then apply NearbyPrices-specific view rule: station must exist with valid
+    // coordinates for distance calc.
     const eligible = prices.filter((p) => {
-      if (!isStationPriceDisplayEligible(p)) return false;
+      if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
       const station = stationMap[p.stationId];
       if (!station || !station.latitude || !station.longitude) return false;
       return true;
