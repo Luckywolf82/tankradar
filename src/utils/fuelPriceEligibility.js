@@ -14,6 +14,10 @@
  *  - Match-status-safe: rows explicitly flagged as unmatched or unsafe are
  *    excluded when the flag is present; rows without the flag (e.g. FuelFinder)
  *    are not additionally blocked by this rule alone.
+ *  - Strict matched-station opt-in: NearbyPrices passes
+ *    { requireMatchedStationId: true } to restrict current nearby ranking to
+ *    rows with an explicit confirmed match.  Other views do not pass this flag
+ *    and continue with the default (softer) eligibility behaviour.
  *
  * View-specific logic (radius filtering, latest-per-fuel-type grouping, sorting,
  * chart data construction, station coordinate checks) must run AFTER this base
@@ -31,9 +35,15 @@ const EXCLUDED_MATCH_STATUSES = new Set([
  * contract for station-based price views.
  *
  * @param {object} p - A FuelPrice entity row.
+ * @param {object} [options]
+ * @param {boolean} [options.requireMatchedStationId=false] - When true, the row
+ *   must have station_match_status === "matched_station_id".  Use this for
+ *   NearbyPrices ("Billigste nær deg") to restrict current nearby ranking to
+ *   rows with an explicit confirmed station match.  Do NOT pass this option
+ *   from StationDetails or other views — the default behaviour is unchanged.
  * @returns {boolean}
  */
-export function isStationPriceDisplayEligible(p) {
+export function isStationPriceDisplayEligible(p, options = {}) {
   // Must have a plausible price (upstream write-gates are not yet universally
   // enforced, so suspect rows exist in the database).
   if (p.plausibilityStatus !== "realistic_price") return false;
@@ -51,6 +61,13 @@ export function isStationPriceDisplayEligible(p) {
   // (e.g. FuelFinder rows pre-contract-fix) are not excluded by this check
   // alone — the stationId presence check above already provides a basic gate.
   if (EXCLUDED_MATCH_STATUSES.has(p.station_match_status)) return false;
+
+  // Strict mode (opt-in, NearbyPrices only): require an explicit confirmed
+  // station match.  This prevents legacy or partially-backfilled rows that
+  // lack station_match_status from leaking into current nearby ranking.
+  if (options.requireMatchedStationId && p.station_match_status !== "matched_station_id") {
+    return false;
+  }
 
   return true;
 }

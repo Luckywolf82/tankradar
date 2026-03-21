@@ -2519,3 +2519,107 @@ export const entry_113 = {
 
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 114: STRICT MATCHED-STATION ELIGIBILITY FOR NEARBY ONLY
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_114 = {
+  timestamp: "2026-03-21T16:18:34Z",
+  phase: "Phase 2.5 Display-Eligibility Hardening",
+  title: "Strict Matched-Station Eligibility for NearbyPrices Only",
+
+  objectives: [
+    "Tighten NearbyPrices eligibility to require station_match_status === 'matched_station_id'",
+    "Keep StationDetails on unchanged (softer) eligibility — no matched_station_id requirement there",
+    "Add requireMatchedStationId option to isStationPriceDisplayEligible without breaking default behaviour",
+    "Prevent legacy or partially-backfilled rows from leaking into current nearby ranking",
+    "No changes to ingestion, resolvers, stationHistory, or frozen files",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=113, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 113",
+    "✓ Read NextSafeStep.jsx — completedEntries includes 113",
+    "✓ Verified frozen Phase 2 files list — no frozen files affected by this change",
+    "✓ Confirmed StationDetails.jsx uses default isStationPriceDisplayEligible() call — unchanged",
+  ],
+
+  files_read: [
+    "src/utils/fuelPriceEligibility.js — reviewed eligibility contract and design principles",
+    "src/components/dashboard/NearbyPrices.jsx — reviewed eligibility call site and filter logic",
+    "src/pages/StationDetails.jsx — confirmed default (no-option) eligibility call; no change needed",
+    "src/utils/currentPriceResolver.js — confirmed resolver semantics unchanged",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — verified tail entry",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — read entryCount + activeChunk",
+    "src/components/governance/NextSafeStep.jsx — read completedEntries",
+  ],
+
+  files_modified: [
+    "src/utils/fuelPriceEligibility.js — Added options param with requireMatchedStationId flag; updated JSDoc and design-principles header; default behaviour unchanged",
+    "src/components/dashboard/NearbyPrices.jsx — Pass { requireMatchedStationId: true } to isStationPriceDisplayEligible in the nearby filter; updated inline comment",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 114",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 114, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry114, added 114 to completedEntries",
+  ],
+
+  implementation: {
+    eligibilityChange: {
+      file: "src/utils/fuelPriceEligibility.js",
+      change: "isStationPriceDisplayEligible(p) → isStationPriceDisplayEligible(p, options = {})",
+      newGuard: "if (options.requireMatchedStationId && p.station_match_status !== 'matched_station_id') return false;",
+      defaultBehaviourPreserved: "options defaults to {} so all existing callers without the second arg are unaffected",
+    },
+    nearbyChange: {
+      file: "src/components/dashboard/NearbyPrices.jsx",
+      before: "isStationPriceDisplayEligible(p)",
+      after:  "isStationPriceDisplayEligible(p, { requireMatchedStationId: true })",
+      effect: "NearbyPrices now requires explicit confirmed station match; rows without station_match_status === 'matched_station_id' are excluded from nearby ranking",
+    },
+    stationDetailsUnchanged: "StationDetails.jsx still calls isStationPriceDisplayEligible(p) with no options — default behaviour unchanged",
+    resolverUnchanged: "No changes to currentPriceResolver.js, freshness thresholds, or latest-resolution logic",
+    ingestionUnchanged: "No changes to any fetch/write path function",
+  },
+
+  successCriteria: {
+    nearbyPricesStrict: "✓ NearbyPrices only ranks rows with explicit matched_station_id",
+    stationDetailsUnchanged: "✓ StationDetails behaviour stays unchanged",
+    stationHistoryUnchanged: "✓ stationHistory unchanged (no filter tightened on historical rows)",
+    noIngestionChanges: "✓ No ingestion or write-path changes",
+    noFrozenFilesTouched: "✓ No frozen files touched",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 2,
+    businessLogicChanges: 1,
+    frozenFilesModified: 0,
+    uiFilesModified: 1,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    defaultEligibilityPreserved: "✓ isStationPriceDisplayEligible default call unchanged for all non-Nearby consumers",
+    stationDetailsUnchanged: "✓ StationDetails.jsx not modified",
+    stationHistoryUnchanged: "✓ stationHistory query and usage not modified",
+    resolverUnchanged: "✓ currentPriceResolver.js not modified",
+    ingestionUnchanged: "✓ No write-path or ingestion files modified",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_114;
