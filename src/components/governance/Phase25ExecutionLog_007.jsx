@@ -2727,4 +2727,134 @@ export const entry_115 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
-export default entry_115;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 116: CANONICAL FUNCTION AUDIT — CORE RUNTIME PIPELINE
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_116 = {
+  timestamp: "2026-03-21T20:45:00Z",
+  phase: "Phase 2.5 Structural Audit",
+  title: "Canonical Function Audit — Core Runtime Pipeline",
+
+  objectives: [
+    "Perform a repository-wide canonical-function audit focused on the core runtime pipeline",
+    "Classify every relevant function/file as CANONICAL, LEGACY, OVERLAPPING, or UNKNOWN",
+    "Identify all FuelPrice write paths and their contract compliance status",
+    "Separate user-reported price matching from source/station price matching",
+    "Map all active read paths (NearbyPrices, StationDetails, currentPriceResolver, fuelPriceEligibility)",
+    "Identify loop-drift patterns (inline duplications, historical iterations left in repo)",
+    "Produce a pre-cleanup canonical reference map before any further refactoring decisions",
+    "No code changes — read-only audit only",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=115, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 115",
+    "✓ Read NextSafeStep.jsx — completedEntries includes 115",
+    "✓ Read AI_PROJECT_INSTRUCTIONS.jsx — deprecated; redirects to CHATGPT_INSTRUCTIONS.jsx",
+    "✓ Read AUDIT_SYSTEM_GUIDE.jsx — audit format, storage rules, category definitions",
+    "✓ Verified frozen Phase 2 files list — audit is read-only; no frozen files touched",
+    "✓ Confirmed this is an audit entry — no code changes, no runtime modifications",
+  ],
+
+  files_read: [
+    "functions/fetchFuelFinderStationPrices.ts",
+    "functions/fetchGooglePlacesPrices.ts",
+    "functions/fetchNorwayFuelPrices.ts",
+    "functions/fetchDailyAverages.ts",
+    "functions/runGooglePlacesFetchAutomation.ts",
+    "functions/fetchGooglePlacesRealMatching.ts",
+    "functions/freshGooglePlacesMatchingRound.ts",
+    "functions/resolveFuelPriceObservation.ts",
+    "functions/matchStationForUserReportedPrice.ts",
+    "functions/stationMatchingUtility.ts",
+    "functions/importOSMStations.ts",
+    "functions/seedStationsBatchImport.ts",
+    "functions/processStationCandidates.ts",
+    "functions/createStationCandidateFromUserReportedPrice.ts",
+    "functions/runStationReviewPipeline.ts",
+    "functions/detectStationDuplicates.ts",
+    "functions/mergeDuplicateStation.ts",
+    "functions/mergeDuplicateStations.ts",
+    "src/utils/currentPriceResolver.js",
+    "src/utils/fuelPriceEligibility.js",
+    "src/components/dashboard/NearbyPrices.jsx",
+    "src/pages/StationDetails.jsx",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx",
+    "src/components/governance/Phase25ExecutionLog_007.jsx",
+    "src/components/governance/NextSafeStep.jsx",
+    "src/components/governance/AI_PROJECT_INSTRUCTIONS.jsx",
+    "src/components/audits/AUDIT_SYSTEM_GUIDE.jsx",
+    "src/components/audits/data/visibility-contract-audit-2026-03-20.jsx",
+  ],
+
+  files_modified: [
+    "src/components/audits/data/canonical-function-audit-2026-03-21.jsx — Created (new audit file)",
+    "src/components/audits/AUDIT_INDEX.jsx — Added canonical_function_audit entry; data count 1→2; total 22→23; lastUpdated bumped",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 116",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 116, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry116 + safe next step recommendation",
+  ],
+
+  auditFindings: {
+
+    primaryLoopDriftPattern: "GooglePlaces FuelPrice write path was independently developed in 4 separate files: fetchGooglePlacesPrices.ts (canonical), runGooglePlacesFetchAutomation.ts (overlapping), fetchGooglePlacesRealMatching.ts (legacy), freshGooglePlacesMatchingRound.ts (legacy). Each contains an inline duplicate of the matching function. Only the canonical version writes station_match_status.",
+
+    canonicalWritePaths: [
+      "fetchFuelFinderStationPrices.ts — fully contract-compliant (stationId, plausibilityStatus, station_match_status, station_name, station_chain)",
+      "fetchGooglePlacesPrices.ts — fully contract-compliant (same fields)",
+      "resolveFuelPriceObservation.ts — user-reported, strictest write gate",
+      "fetchDailyAverages.ts — national_average rows only, intentionally excluded from station views",
+    ],
+
+    overlappingOrLegacyWritePaths: [
+      "runGooglePlacesFetchAutomation.ts — missing station_match_status; scheduling status unknown",
+      "fetchGooglePlacesRealMatching.ts — missing station_match_status; likely not scheduled",
+      "freshGooglePlacesMatchingRound.ts — missing station_match_status; 'Production' misnomer; likely not scheduled",
+      "fetchNorwayFuelPrices.ts — ANWB source with entirely different field schema (price, fuel_type, station_name vs priceNok, fuelType, stationId); rows unreachable by any display surface",
+    ],
+
+    canonicalReadPaths: [
+      "NearbyPrices.jsx — strict eligibility (requireMatchedStationId: true) + 7-day freshness gate",
+      "StationDetails.jsx — soft eligibility (default), no freshness gate",
+      "src/utils/fuelPriceEligibility.js — isStationPriceDisplayEligible (canonical base eligibility)",
+      "src/utils/currentPriceResolver.js — resolveLatestPerStation, resolveLatestPerFuelType, isFreshEnoughForNearbyRanking",
+    ],
+
+    matchingFunctionSeparation: "User-reported matching (matchStationForUserReportedPrice.ts — FROZEN, Phase 2 engine with dual-requirement gate score ≥65) is CATEGORICALLY DIFFERENT from source/station matching (matchStationToPriceSource in fetchGooglePlacesPrices.ts — chain inference + proximity <500m). These are NOT collapsed.",
+
+    stationCreationPaths: [
+      "importOSMStations.ts — CANONICAL (OSM bulk seed)",
+      "seedStationsBatchImport.ts — CANONICAL (admin manual seed)",
+      "fetchFuelFinderStationPrices.ts — CANONICAL (FuelFinder runtime inline creation)",
+      "processStationCandidates.ts — OVERLAPPING/DISABLED (Station.create() commented out)",
+    ],
+
+    safeNextStep: "Confirm scheduling status of overlapping GP write paths (read-only investigation, no code changes). This unblocks safe deprecation of runGooglePlacesFetchAutomation.ts, fetchGooglePlacesRealMatching.ts, freshGooglePlacesMatchingRound.ts, and/or fetchNorwayFuelPrices.ts.",
+
+  },
+
+  changeSummary: {
+    runtimeCodeChanges: 0,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 0,
+    governanceFilesModified: 3,
+    newAuditFilesCreated: 1,
+    auditIndexUpdated: 1,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noRuntimeChanges: "✓ Zero runtime code changes — read-only audit",
+    auditStoredInRepo: "✓ Audit file created at src/components/audits/data/canonical-function-audit-2026-03-21.jsx",
+    auditIndexUpdated: "✓ AUDIT_INDEX.jsx updated with new entry",
+    roadmapExcluded: "✓ Roadmap files and content explicitly excluded from cleanup recommendations",
+    userReportedAndSourceMatchingSeparate: "✓ User-reported and source-price matching classified as categorically different — not collapsed",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_116;

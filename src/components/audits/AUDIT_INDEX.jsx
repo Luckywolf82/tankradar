@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-20T14:00:00Z",
+  lastUpdated: "2026-03-21T20:45:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -262,6 +262,19 @@ export const AUDIT_INDEX = {
       focusArea: "FuelPrice entity purpose (raw vs display-ready), upstream write-gate completeness, UI filter redundancy, station_match_status and plausibilityStatus enforcement consistency",
       status: "complete",
       canonicalFor: "Display visibility contract ownership — FuelPrice pipeline vs UI layer"
+    },
+
+    {
+      id: "canonical_function_audit",
+      title: "Canonical Function Audit — Core Runtime Pipeline",
+      category: "data",
+      location: "src/components/audits/data/canonical-function-audit-2026-03-21.jsx",
+      dateCreated: "2026-03-21",
+      description: "Repository-wide canonical-function audit of the core runtime pipeline.  Classifies every relevant function/file as CANONICAL, LEGACY, OVERLAPPING, or UNKNOWN.  Covers station master/identity, FuelPrice write paths, matching functions (user-reported vs source/station), current-price read paths, and loop-drift patterns.  Excludes roadmap content.",
+      relatesTo: "Entry 116 — Canonical Function Audit",
+      focusArea: "FuelPrice write path duplication (4 GP variants), matching function inline duplication, ANWB legacy schema, read path canonical layer (currentPriceResolver + fuelPriceEligibility), station creation paths",
+      status: "complete",
+      canonicalFor: "Runtime pipeline canonical-path map — pre-cleanup reference"
     }
   ],
 
@@ -271,11 +284,11 @@ export const AUDIT_INDEX = {
     governance: 2,
     product: 6,
     activation: 3,
-    data: 1,
+    data: 2,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 22
+    total: 23
   },
 
   governanceRules: {
