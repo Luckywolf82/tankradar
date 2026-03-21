@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -157,11 +157,24 @@ export const NEXT_SAFE_STEP = {
     frozenFilesImpact: "ZERO"
   },
 
+  nextSafeStepEntry109: {
+    id: "phase25_step_109",
+    title: "Canonical Current-Price Resolver + NearbyPrices Freshness Policy — COMPLETE",
+    description:
+      "Entry 109 introduced src/utils/currentPriceResolver.js as the shared resolver for latest/current price. " +
+      "NearbyPrices now uses resolveLatestPerStation + isFreshEnoughForNearbyRanking (7-day threshold). " +
+      "StationDetails uses resolveLatestPerFuelType with no freshness filtering. " +
+      "stationHistory and all downstream chart/log consumers are unchanged. " +
+      "Next recommended step remains FuelFinder write contract completion (Entry 108 scope).",
+    status: "complete",
+    completedDate: "2026-03-21T11:04:08Z",
+  },
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // NEXT SAFE STEP (ENTRY 108) — FUELFINDER WRITE CONTRACT COMPLETION
+  // NEXT SAFE STEP (ENTRY 110) — FUELFINDER WRITE CONTRACT COMPLETION
   // ═══════════════════════════════════════════════════════════════════════════
 
-  nextSafeStepEntry108: {
+  nextSafeStepEntry110: {
     id: "phase25_step_108",
     title: "FuelFinder Write Contract Completion — plausibilityStatus and station_match_status",
     description:
