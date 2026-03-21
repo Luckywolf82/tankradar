@@ -260,6 +260,17 @@ Deno.serve(async (req) => {
       pricesSkipped: 0
     };
 
+    // Pre-load recent GooglePlaces prices to deduplicate in-memory (avoids per-record DB queries)
+    const recentPrices = await base44.asServiceRole.entities.FuelPrice.filter(
+      { sourceName: "GooglePlaces" },
+      "-created_date",
+      500
+    );
+    // Build a dedup lookup: key = stationId|fuelType|sourceUpdatedAt|priceNok
+    const dedupSet = new Set(
+      recentPrices.map(p => `${p.stationId}|${p.fuelType}|${p.sourceUpdatedAt}|${p.priceNok}`)
+    );
+
     // Fetch from each test location
     for (const [locationKey, location] of Object.entries(TEST_LOCATIONS)) {
       const googleResult = await fetchGooglePlacesData(apiKey, location);
