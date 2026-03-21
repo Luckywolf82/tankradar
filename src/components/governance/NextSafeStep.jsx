@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -230,6 +230,24 @@ export const NEXT_SAFE_STEP = {
       "No matching logic, ingestion, StationDetails, resolver, or frozen files touched.",
     status: "complete",
     completedDate: "2026-03-21T17:30:00Z",
+  },
+
+  completedEntry116: {
+    id: "phase25_step_116",
+    title: "Deduplication-Freshness Trap Fix — FuelFinder and GooglePlaces — COMPLETE",
+    description:
+      "Entry 116 fixed the root cause of NearbyPrices returning zero results at all radii. " +
+      "Forensic gate-by-gate elimination map identified two concurrent deduplication bugs: " +
+      "(A) FuelFinder existence-based dedup ('if existing.length === 0') permanently blocked new " +
+      "compliant rows for stations with pre-Entry 111 legacy rows (lacking plausibilityStatus), " +
+      "causing Gate 3 failure. " +
+      "(B) GooglePlaces permanent null-sourceUpdatedAt dedup (null===null always fires when Google " +
+      "provides no updateTime) prevented fetchedAt from refreshing, causing Gate 9 (7-day freshness) failure. " +
+      "Fix: replaced both dedup strategies with a 23-hour recency window so fetchedAt refreshes daily " +
+      "and new compliant rows are created for previously-locked stations. " +
+      "No UI, eligibility, resolver, schema, or frozen file changes.",
+    status: "complete",
+    completedDate: "2026-03-21T17:42:00Z",
   },
 
   completedEntry113: {

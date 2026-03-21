@@ -305,14 +305,24 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Check if this price already exists
+      // Recency-based deduplication: skip only when a recent observation (<23 h)
+      // already exists for this station+fuelType+source.  The original
+      // existence-based check ("skip if any row exists") was a permanent
+      // dedup trap — once a row was written, fetchedAt never refreshed,
+      // rows aged past the 7-day NearbyPrices freshness gate, and all
+      // FuelFinder stations disappeared from nearby results.
+      const FUELFINDER_DEDUP_WINDOW_MS = 23 * 60 * 60 * 1000;
       const existing = await base44.asServiceRole.entities.FuelPrice.filter({
         stationId: matchedStationId,
         fuelType: priceData.fuelType,
         sourceName: "FuelFinder"
       });
+      const recentDuplicate = existing.some((row) => {
+        if (!row.fetchedAt) return false;
+        return Date.now() - new Date(row.fetchedAt).getTime() < FUELFINDER_DEDUP_WINDOW_MS;
+      });
 
-      if (existing.length === 0) {
+      if (!recentDuplicate) {
         const stationDetail = stationDetailsMap[priceData.sourceStationId] || {};
         const plausibilityStatus = classifyPricePlausibility(priceData.priceNok);
         await base44.asServiceRole.entities.FuelPrice.create({

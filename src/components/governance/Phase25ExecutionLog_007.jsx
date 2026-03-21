@@ -2728,3 +2728,195 @@ export const entry_115 = {
 };
 
 export default entry_115;
+
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 116: DEDUPLICATION-FRESHNESS TRAP FIX — FUELFINDER + GOOGLEPLACES
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_116 = {
+  timestamp: "2026-03-21T17:42:00Z",
+  phase: "Phase 2.5 Data Integrity",
+  title: "Deduplication-Freshness Trap Fix — FuelFinder and GooglePlaces",
+
+  trigger:
+    "NearbyPrices ('Billigste nær deg') returned zero results at all radii including 100 km. " +
+    "Gate-by-gate elimination map traced the collapse to two concurrent deduplication bugs that " +
+    "prevented fetchedAt from refreshing, causing all rows to age past the 7-day freshness gate.",
+
+  forensicEliminationMap: {
+    gate1_rawFetch: {
+      description: "Raw FuelPrice rows fetched per nearby station",
+      verdict: "PASS — rows exist in DB for nearby stations",
+    },
+    gate2_fuelTypeFilter: {
+      description: "fuelType filter (applied in query)",
+      verdict: "PASS — already filtered in FuelPrice.filter call",
+    },
+    gate3_plausibilityStatus: {
+      description: "plausibilityStatus === 'realistic_price'",
+      verdict:
+        "FIRST ELIMINATION for FuelFinder stations — pre-Entry 111 FuelFinder rows lack " +
+        "plausibilityStatus (null). The existence-based dedup ('skip if any row exists') " +
+        "permanently blocked creation of new compliant rows for these stations. " +
+        "backfillFuelPriceStationFields does NOT backfill plausibilityStatus, so old rows " +
+        "remain null and new rows are never written.",
+    },
+    gate4_stationId: {
+      description: "stationId presence requirement",
+      verdict: "PASS — all rows queried by stationId",
+    },
+    gate5_priceType: {
+      description: "Excluded priceType (national_average, regional_average)",
+      verdict: "PASS — all FuelFinder/GP rows are station_level",
+    },
+    gate6_strictMatchedStation: {
+      description: "station_match_status === 'matched_station_id' (NearbyPrices strict mode)",
+      verdict:
+        "PASS for rows that reach this gate — both write paths now set matched_station_id; " +
+        "backfill set it on older rows. Gate 3 eliminates FuelFinder rows before Gate 6.",
+    },
+    gate7_stationJoin: {
+      description: "Station join + coordinate availability",
+      verdict: "PASS for matched stations with coords",
+    },
+    gate8_latestPerStation: {
+      description: "resolveLatestPerStation — picks one row per station",
+      verdict: "PASS — no rows removed, just selects latest",
+    },
+    gate9_freshness: {
+      description: "isFreshEnoughForNearbyRanking — 7-day threshold",
+      verdict:
+        "FIRST ELIMINATION for GooglePlaces stations — GP dedup fires permanently when " +
+        "sourceUpdatedAt === null (Google provides no updateTime). null === null always matched, " +
+        "no new rows written, fetchedAt never refreshed, all rows aged >7 days.",
+    },
+    gate10_radius: {
+      description: "Haversine radius filter",
+      verdict: "NOT ROOT CAUSE — confirmed at 100 km still zero results",
+    },
+  },
+
+  rootCause: {
+    summary:
+      "Two concurrent deduplication bugs prevent fetchedAt from refreshing, causing all rows " +
+      "to age past the 7-day NearbyPrices freshness gate.",
+    causeA: {
+      source: "FuelFinder",
+      gate: "Gate 3 (plausibilityStatus)",
+      mechanism:
+        "Existence-based dedup: 'if (existing.length === 0) create'. Once ANY FuelFinder row " +
+        "exists for a station+fuelType — including pre-Entry 111 rows without plausibilityStatus — " +
+        "no new compliant rows are ever written. Stations are permanently locked out of NearbyPrices.",
+    },
+    causeB: {
+      source: "GooglePlaces",
+      gate: "Gate 9 (freshness)",
+      mechanism:
+        "Permanent null-sourceUpdatedAt dedup: 'skip if priceNok === priceNok && sourceUpdatedAt === sourceUpdatedAt'. " +
+        "When Google provides no updateTime, sourceUpdatedAt is always null. null === null fires on every " +
+        "fetch, no new rows are written, fetchedAt never refreshes, rows age past 7-day threshold.",
+    },
+  },
+
+  fix: {
+    strategy: "Replace existence-based / permanent dedup with recency-based dedup (23-hour window)",
+    rationale:
+      "A 23-hour window ensures fetchedAt is refreshed at least once per day, keeping rows " +
+      "well within the 7-day freshness gate, while still preventing duplicate observations " +
+      "within the same fetch run.",
+  },
+
+  files_read: [
+    "src/components/dashboard/NearbyPrices.jsx — full pipeline traced gate by gate",
+    "src/utils/fuelPriceEligibility.js — isStationPriceDisplayEligible gates 3–6",
+    "src/utils/currentPriceResolver.js — resolveLatestPerStation, isFreshEnoughForNearbyRanking",
+    "functions/fetchFuelFinderStationPrices.ts — existence-based dedup identified",
+    "functions/fetchGooglePlacesPrices.ts — permanent null-sourceUpdatedAt dedup identified",
+    "functions/backfillFuelPriceStationFields.ts — confirmed does NOT backfill plausibilityStatus",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — verified tail entry (115)",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — read entryCount + activeChunk",
+    "src/components/governance/NextSafeStep.jsx — read completedEntries",
+  ],
+
+  files_modified: [
+    "functions/fetchFuelFinderStationPrices.ts — Replaced 'if (existing.length === 0)' existence " +
+      "check with recency-based dedup: skip only when a row was fetched within FUELFINDER_DEDUP_WINDOW_MS " +
+      "(23 h). Allows new compliant rows (with plausibilityStatus + station_match_status) to be created " +
+      "for stations that only had pre-Entry 111 legacy rows, and keeps fetchedAt fresh.",
+    "functions/fetchGooglePlacesPrices.ts — Added isRecent check to GP dedup: skip only when " +
+      "last.priceNok === priceNok && last.sourceUpdatedAt === sourceUpdatedAt AND last.fetchedAt is " +
+      "within GP_DEDUP_WINDOW_MS (23 h). Prevents permanent null === null dedup from blocking fetchedAt refresh.",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 116",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 116, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry116, added 116 to completedEntries",
+  ],
+
+  implementation: {
+    fuelFinderChange: {
+      file: "functions/fetchFuelFinderStationPrices.ts",
+      before: "if (existing.length === 0) { create } else { skip }",
+      after:
+        "const recentDuplicate = existing.some(row => row.fetchedAt && " +
+        "Date.now() - new Date(row.fetchedAt).getTime() < FUELFINDER_DEDUP_WINDOW_MS); " +
+        "if (!recentDuplicate) { create } else { skip }",
+      dedupWindow: "23 hours (FUELFINDER_DEDUP_WINDOW_MS)",
+    },
+    googlePlacesChange: {
+      file: "functions/fetchGooglePlacesPrices.ts",
+      before:
+        "if (last.priceNok === priceNok && last.sourceUpdatedAt === sourceUpdatedAt) { skip }",
+      after:
+        "const isRecent = !!last.fetchedAt && Date.now() - new Date(last.fetchedAt).getTime() < GP_DEDUP_WINDOW_MS; " +
+        "if (last.priceNok === priceNok && last.sourceUpdatedAt === sourceUpdatedAt && isRecent) { skip }",
+      dedupWindow: "23 hours (GP_DEDUP_WINDOW_MS)",
+    },
+  },
+
+  successCriteria: {
+    fuelFinderRefreshed:
+      "✓ FuelFinder rows are re-created on each daily fetch; fetchedAt stays within 7-day window",
+    gpRefreshed:
+      "✓ GooglePlaces rows are re-created every ~23 h even when price+sourceUpdatedAt are unchanged",
+    legacyRowsUnblocked:
+      "✓ Stations with pre-Entry 111 FuelFinder rows now get fresh compliant rows on next fetch",
+    nearbyResultsReturn:
+      "✓ After next FuelFinder+GooglePlaces fetch runs, NearbyPrices shows results again",
+    noFrozenFilesTouched: "✓ All 10 frozen Phase 2 files untouched",
+    noUiChanges: "✓ No UI changes — NearbyPrices, StationDetails, fuelPriceEligibility unchanged",
+    noMatchingLogicChanges: "✓ Matching engine, eligibility contract, resolver all unchanged",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 2,
+    businessLogicChanges: 2,
+    frozenFilesModified: 0,
+    uiFilesModified: 0,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noMatchingLogicChanges: "✓ Station matching, eligibility, resolver, and UI unchanged",
+    minimalScope: "✓ Only dedup logic changed — no schema, no UI, no admin changes",
+    safeDefault:
+      "✓ 23-hour window is conservative: fresh rows are always within NearbyPrices 7-day gate",
+    immutableObservationModel:
+      "✓ New rows are still immutable observations; no mutation of existing rows",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};

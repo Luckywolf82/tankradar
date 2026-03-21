@@ -362,10 +362,20 @@ Deno.serve(async (req) => {
 
           if (lastObservation.length > 0) {
             const last = lastObservation[0];
-            // Deduplication: skip if identical price + sourceUpdatedAt
+            // Deduplication: skip if identical price + sourceUpdatedAt AND the
+            // last observation is recent (<23 h).  Without the recency check,
+            // when Google provides no updateTime (sourceUpdatedAt === null)
+            // this dedup fires permanently (null === null), fetchedAt never
+            // refreshes, and rows age past the 7-day NearbyPrices freshness
+            // gate — producing zero nearby results even at 100 km radius.
+            const GP_DEDUP_WINDOW_MS = 23 * 60 * 60 * 1000;
+            const isRecent =
+              !!last.fetchedAt &&
+              Date.now() - new Date(last.fetchedAt).getTime() < GP_DEDUP_WINDOW_MS;
             if (
               last.priceNok === priceNok &&
-              last.sourceUpdatedAt === sourceUpdatedAt
+              last.sourceUpdatedAt === sourceUpdatedAt &&
+              isRecent
             ) {
               mapping.pricesSkipped++;
               continue;
