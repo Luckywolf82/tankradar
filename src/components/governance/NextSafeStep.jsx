@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -230,6 +230,55 @@ export const NEXT_SAFE_STEP = {
       "No matching logic, ingestion, StationDetails, resolver, or frozen files touched.",
     status: "complete",
     completedDate: "2026-03-21T17:30:00Z",
+  },
+
+  completedEntry116: {
+    id: "phase25_step_116",
+    title: "Canonical Function Audit — Core Runtime Pipeline — COMPLETE",
+    description:
+      "Entry 116 performed a repository-wide canonical-function audit of the core runtime pipeline. " +
+      "Classified every relevant function/file as CANONICAL, LEGACY, OVERLAPPING, or UNKNOWN. " +
+      "Key findings: (1) fetchGooglePlacesPrices.ts and fetchFuelFinderStationPrices.ts are the two canonical source write paths; " +
+      "(2) GP matching function duplicated inline in 4 files — only fetchGooglePlacesPrices.ts is contract-compliant; " +
+      "(3) fetchNorwayFuelPrices.ts (ANWB) uses a different field schema — rows unreachable by all display surfaces; " +
+      "(4) runGooglePlacesFetchAutomation.ts, fetchGooglePlacesRealMatching.ts, freshGooglePlacesMatchingRound.ts are overlapping/legacy; " +
+      "(5) Read paths (NearbyPrices, StationDetails, currentPriceResolver, fuelPriceEligibility) are all canonical after Entries 107–115. " +
+      "No code changes — read-only audit. Audit stored at src/components/audits/data/canonical-function-audit-2026-03-21.jsx.",
+    status: "complete",
+    completedDate: "2026-03-21T20:45:00Z",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NEXT SAFE STEP (ENTRY 117) — CONFIRM SCHEDULING STATUS OF OVERLAPPING GP PATHS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  nextSafeStepEntry117: {
+    id: "phase25_step_117",
+    title: "Confirm Scheduling Status of Overlapping GP Write Paths (Read-Only Investigation)",
+    description:
+      "Entry 116 (Canonical Function Audit) identified 4 overlapping/legacy FuelPrice write paths " +
+      "whose scheduling status is UNKNOWN: runGooglePlacesFetchAutomation.ts, fetchGooglePlacesRealMatching.ts, " +
+      "freshGooglePlacesMatchingRound.ts, and fetchNorwayFuelPrices.ts. " +
+      "Before any cleanup action, confirm whether these functions are actively scheduled in production. " +
+      "Method: check Base44 scheduled-function configuration, or query FetchLog records for recent invocations of these functions. " +
+      "This is a READ-ONLY investigation — no code changes in this step. " +
+      "Output: a scheduling confirmation table that classifies each overlapping path as: " +
+      "(A) not scheduled → safe deprecation candidate, or " +
+      "(B) currently scheduled → must add station_match_status before deprecating.",
+    scope: [
+      "Check scheduled-function config for runGooglePlacesFetchAutomation, fetchGooglePlacesRealMatching, freshGooglePlacesMatchingRound, fetchNorwayFuelPrices",
+      "Query FetchLog for recent invocations of these source names",
+      "Record findings as a scheduling-status table in the execution log entry",
+      "No code changes in this step",
+    ],
+    complexity: "LOW",
+    runtimeImpact: "ZERO — read-only investigation",
+    estimatedEffort: "15–30 minutes",
+    blockingIssues: "NONE",
+    frozenFilesImpact: "ZERO",
+    expectedOutcome:
+      "Clear scheduling-status classification for each overlapping GP write path, " +
+      "unblocking safe deprecation or targeted contract-fix decisions for Entry 118+.",
   },
 
   completedEntry113: {
