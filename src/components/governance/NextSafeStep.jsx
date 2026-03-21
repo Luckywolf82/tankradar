@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -204,6 +204,20 @@ export const NEXT_SAFE_STEP = {
       "section behind the existing confirmation modal. No backfill logic changed. No frozen files touched.",
     status: "complete",
     completedDate: "2026-03-21T13:02:52Z",
+  },
+
+  completedEntry113: {
+    id: "phase25_step_113",
+    title: "Batch-Safe backfillFuelPriceStationFields — Fix 504 Timeout — COMPLETE",
+    description:
+      "Entry 113 resolved the 504 timeout caused by an unbounded FuelPrice.list() call in backfillFuelPriceStationFields. " +
+      "function now accepts limit (default 75, max 200) and offset (default 0) pagination params. " +
+      "Loads only one page of FuelPrice rows per invocation via list('-created_date', limit, offset). " +
+      "Response now includes scanned, hasMore, nextOffset for progress tracking. " +
+      "Admin UI updated with batch size + offset inputs, 'Set offset' quick-link, and auto-advance after live run. " +
+      "dryRun safety and idempotency fully preserved. No backfill logic, frozen files, or admin permissions changed.",
+    status: "complete",
+    completedDate: "2026-03-21T14:03:00Z",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

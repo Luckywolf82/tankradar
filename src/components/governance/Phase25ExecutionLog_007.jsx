@@ -2425,3 +2425,97 @@ export const entry_112 = {
 };
 
 export default entry_112;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 113: BATCH-SAFE backfillFuelPriceStationFields (FIX 504 TIMEOUT)
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_113 = {
+  timestamp: "2026-03-21T14:03:00Z",
+  phase: "Phase 2.5 Admin Tooling",
+  title: "Batch-Safe backfillFuelPriceStationFields — Fix 504 Timeout",
+
+  objectives: [
+    "Resolve 504 timeout caused by unbounded FuelPrice.list() call in backfillFuelPriceStationFields",
+    "Add limit (default 75, max 200) and offset pagination parameters to the function",
+    "Return scanned, hasMore, nextOffset in every response for progress tracking",
+    "Update admin UI to expose batch size + offset inputs with step-by-step execution support",
+    "Preserve full dryRun safety and idempotent behavior across batches",
+    "No changes to backfill logic, frozen files, or admin permissions",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=112, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 112",
+    "✓ Read NextSafeStep.jsx — completedEntries includes 112",
+    "✓ Verified frozen Phase 2 files list — backfillFuelPriceStationFields.ts is not frozen",
+    "✓ Confirmed this is a runtime constraint fix, not a logic change",
+  ],
+
+  files_read: [
+    "functions/backfillFuelPriceStationFields.ts — reviewed full function to locate unbounded list() call",
+    "src/components/admin/AdminOperationsPanel.jsx — reviewed existing backfill trigger UI",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — verified tail entry",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — read entryCount + activeChunk",
+    "src/components/governance/NextSafeStep.jsx — read completedEntries",
+  ],
+
+  files_modified: [
+    "functions/backfillFuelPriceStationFields.ts — Replaced FuelPrice.list() with FuelPrice.list('-created_date', limit, offset); added limit/offset params; added scanned/hasMore/nextOffset to response",
+    "src/components/admin/AdminOperationsPanel.jsx — Added batch size + offset inputs; dry-run and live buttons pass limit/offset; result panel shows scanned/hasMore/nextOffset + 'Set offset' quick-link; live run auto-advances offset",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 113",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 113, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry113, added 113 to completedEntries",
+  ],
+
+  implementation: {
+    rootCause: "FuelPrice.list() with no arguments loads ALL rows in a single request, causing 504 timeout on realistic datasets",
+    fix: "Replaced with FuelPrice.list('-created_date', limit, offset) — loads one page at a time",
+    limitParam: "Default 75, max 200, NaN-safe (invalid input falls back to default)",
+    offsetParam: "Default 0, NaN-safe, enables cursor-based step-by-step pagination",
+    newResponseFields: "scanned (rows loaded from DB), hasMore (scanned === limit), nextOffset (offset + scanned)",
+    dryRun: "Fully preserved — dryRun=true reports what would be updated per batch, no writes",
+    idempotency: "Preserved — only rows with missing fields are updated; rows already complete are skipped",
+    adminUI: [
+      "Batch size input (1–200, default 75) and offset input shared between dry-run and live buttons",
+      "Reset button sets offset back to 0",
+      "Result panel adds scanned, offset, limit, hasMore rows to stats grid",
+      "'Set offset → N' quick-link shown when hasMore=true",
+      "Live Apply auto-advances offset to nextOffset after successful run",
+    ],
+  },
+
+  backfillLogicChanges: "NONE — field eligibility, update payload construction, station cache, and per-row error isolation all unchanged",
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 1,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 1,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noBackfillLogicChanges: "✓ Eligibility filter, update payload, station cache all unchanged",
+    adminOnly: "✓ Function rejects non-admin with 403; UI lives in admin-only SuperAdmin page",
+    dryRunPreserved: "✓ dryRun=true supported and tested across batches",
+    idempotent: "✓ Safe to run multiple times; no duplicate overwrites",
+    noAdminPermissionChanges: "✓ No admin role or permission changes",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
