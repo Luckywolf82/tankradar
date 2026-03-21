@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Activity, CheckCircle, XCircle, Clock, PauseCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { nb } from "date-fns/locale";
 
-const SOURCES = ["GooglePlaces", "FuelFinder", "GlobalPetrolPrices", "user_reported"];
+const SOURCES = ["GooglePlaces", "GlobalPetrolPrices", "user_reported"];
+
+// TEMPORARILY DISABLED sources — preserved for possible later reuse but not
+// writing FuelPrice rows. Displayed separately so their inactive status is
+// immediately visible in the admin panel.
+const INACTIVE_SOURCES = ["FuelFinder"];
 
 export default function DataSourceStatus() {
   const [logs, setLogs] = useState([]);
@@ -89,6 +94,31 @@ export default function DataSourceStatus() {
             );
           })}
         </div>
+        {INACTIVE_SOURCES.length > 0 && (
+          <div className="mt-4 border-t pt-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+              Midlertidig deaktivert
+            </p>
+            <div className="divide-y divide-slate-100">
+              {INACTIVE_SOURCES.map(source => (
+                <div key={source} className="py-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <PauseCircle size={14} className="text-amber-400" />
+                      <span className="text-sm font-medium text-slate-500">{source}</span>
+                    </div>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                      DEAKTIVERT
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 pl-5">
+                    Skriver ikke FuelPrice-rader. Kode bevart for mulig senere gjenbruk.
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <p className="text-xs text-slate-400 mt-3 border-t pt-3">
           Hva betyr dette? Denne statusen leses fra FetchLog. Kilde-sannhetskilden er SourceRegistry.
         </p>
