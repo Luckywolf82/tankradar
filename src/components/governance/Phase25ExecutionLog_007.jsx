@@ -2338,4 +2338,90 @@ export const entry_111 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 112: ADMIN TRIGGER FOR backfillFuelPriceStationFields
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_112 = {
+  timestamp: "2026-03-21T13:02:52Z",
+  phase: "Phase 2.5 Admin Tooling",
+  title: "Admin UI Trigger for backfillFuelPriceStationFields",
+
+  objectives: [
+    "Expose existing backfillFuelPriceStationFields function via authenticated admin UI",
+    "Support dryRun=true preview before executing live write",
+    "Display candidatesFound, updated, skipped, errors, sampleUpdated, sampleSkipped, sampleErrors in UI",
+    "Keep trigger admin-only, no public exposure",
+    "No changes to backfill logic or frozen files",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — entryCount=111, ACTIVE chunk=Phase25ExecutionLog_007.jsx",
+    "✓ Read Phase25ExecutionLog_007.jsx — confirmed tail at Entry 111",
+    "✓ Read NextSafeStep.jsx — completedEntries includes 111",
+    "✓ Verified frozen Phase 2 files list — AdminOperationsPanel.jsx is not frozen",
+    "✓ Confirmed backfillFuelPriceStationFields.ts logic untouched",
+  ],
+
+  files_read: [
+    "functions/backfillFuelPriceStationFields.ts — reviewed auth, dryRun, response shape",
+    "src/components/admin/AdminOperationsPanel.jsx — identified insertion points for dry-run + apply buttons",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — verified tail entry",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — read entryCount + activeChunk",
+    "src/components/governance/NextSafeStep.jsx — read completedEntries",
+  ],
+
+  files_modified: [
+    "src/components/admin/AdminOperationsPanel.jsx — Added VEDLIKEHOLD section with dry-run button + result display; added Apply button in FAREOMRÅDE",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Added Entry 112",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — Bumped entryCount to 112, updated lastUpdated + chunk description",
+    "src/components/governance/NextSafeStep.jsx — Added completedEntry112",
+  ],
+
+  implementation: {
+    uiChanges: "AdminOperationsPanel.jsx",
+    newSection: "VEDLIKEHOLD (collapsed by default)",
+    dryRunTrigger: "Button in VEDLIKEHOLD section → base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: true })",
+    realRunTrigger: "Button in FAREOMRÅDE section → base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: false }) — requires confirmation modal",
+    resultDisplay: "Inline card below dry-run button showing: dryRun flag, candidatesFound, updated, skipped, errors, summary string, sampleUpdated, sampleSkipped, sampleErrors",
+    auth: "Admin-only — backfillFuelPriceStationFields.ts rejects non-admin with 403; UI lives in admin-only SuperAdmin page",
+    noPublicExposure: "All existing admin route protection unchanged",
+  },
+
+  backfillLogicChanges: "NONE — functions/backfillFuelPriceStationFields.ts untouched",
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 1,
+    businessLogicChanges: 0,
+    frozenFilesModified: 0,
+    uiFilesModified: 1,
+    governanceFilesModified: 3,
+    newFunctionsCreated: 0,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noBackfillLogicChanges: "✓ backfillFuelPriceStationFields.ts logic untouched",
+    adminOnly: "✓ Trigger lives in SuperAdmin page; function rejects non-admin with 403",
+    noPublicExposure: "✓ No public routes added",
+    dryRunSupported: "✓ Dry-run button in VEDLIKEHOLD section",
+    resultInspectable: "✓ candidatesFound, updated, skipped, errors, sampleUpdated, sampleSkipped, sampleErrors all displayed",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
 export default entry_111;
