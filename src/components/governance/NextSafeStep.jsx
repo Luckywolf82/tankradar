@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -193,6 +193,17 @@ export const NEXT_SAFE_STEP = {
       "No UI changes, no schema changes, no frozen files touched.",
     status: "complete",
     completedDate: "2026-03-21T12:38:27Z",
+  },
+
+  completedEntry112: {
+    id: "phase25_step_112",
+    title: "Admin UI Trigger for backfillFuelPriceStationFields — COMPLETE",
+    description:
+      "Entry 112 added a VEDLIKEHOLD (Maintenance) section to AdminOperationsPanel.jsx with a dry-run button " +
+      "and result display for backfillFuelPriceStationFields. A live-run Apply button was added to the FAREOMRÅDE " +
+      "section behind the existing confirmation modal. No backfill logic changed. No frozen files touched.",
+    status: "complete",
+    completedDate: "2026-03-21T13:02:52Z",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════

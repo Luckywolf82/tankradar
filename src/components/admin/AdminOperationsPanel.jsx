@@ -18,12 +18,15 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
     operations: true,
     dataQuality: false,
     analysis: false,
+    maintenance: false,
     dangerZone: false,
   });
   const [confirmModal, setConfirmModal] = useState(null);
   const [ruleEngineResult, setRuleEngineResult] = useState(null);
   const [geocodeResult, setGeocodeResult] = useState(null);
   const [mergePreviewResult, setMergePreviewResult] = useState(null);
+  const [backfillResult, setBackfillResult] = useState(null);
+  const [backfillLoading, setBackfillLoading] = useState(false);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -329,6 +332,83 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           </div>
         </CollapsibleSection>
 
+        {/* VEDLIKEHOLD */}
+        <CollapsibleSection
+          title="VEDLIKEHOLD"
+          icon={Zap}
+          section="maintenance"
+          isExpanded={expandedSections.maintenance}
+        >
+          <div className="space-y-3">
+            <OperationButton
+              onClick={async () => {
+                setBackfillLoading(true);
+                setBackfillResult(null);
+                try {
+                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: true });
+                  setBackfillResult(result.data);
+                } catch (e) {
+                  console.error('[Backfill DryRun] Failed:', e);
+                  setBackfillResult({ error: e.message });
+                } finally {
+                  setBackfillLoading(false);
+                }
+              }}
+              loading={backfillLoading}
+            >
+              Dry Run: backfill stasjonsfelt på FuelPrice
+            </OperationButton>
+
+            {backfillResult && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs font-mono">
+                <div className="font-semibold text-blue-900 mb-2">
+                  {backfillResult.dryRun ? '⚠ DRY RUN — ingen skriving' : '✓ Kjørt live'}
+                </div>
+                {backfillResult.error ? (
+                  <div className="text-red-700">{backfillResult.error}</div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-1 text-blue-800 mb-2">
+                      <div>candidatesFound: <strong>{backfillResult.candidatesFound}</strong></div>
+                      <div>updated: <strong>{backfillResult.updated}</strong></div>
+                      <div>skipped: <strong>{backfillResult.skipped}</strong></div>
+                      <div>errors: <strong>{backfillResult.errors}</strong></div>
+                    </div>
+                    {backfillResult.summary && (
+                      <div className="text-blue-700 mb-2 italic">{backfillResult.summary}</div>
+                    )}
+                    {backfillResult.sampleUpdated?.length > 0 && (
+                      <div className="mb-1">
+                        <div className="font-semibold text-blue-900">sampleUpdated ({backfillResult.sampleUpdated.length}):</div>
+                        {backfillResult.sampleUpdated.map((row, i) => (
+                          <div key={i} className="text-blue-700 pl-2">{row.priceId} [{row.sourceName}] → {row.fieldsSet?.join(', ')}</div>
+                        ))}
+                      </div>
+                    )}
+                    {backfillResult.sampleSkipped?.length > 0 && (
+                      <div className="mb-1">
+                        <div className="font-semibold text-blue-900">sampleSkipped ({backfillResult.sampleSkipped.length}):</div>
+                        {backfillResult.sampleSkipped.map((row, i) => (
+                          <div key={i} className="text-blue-700 pl-2">{row.priceId} — {row.reason}</div>
+                        ))}
+                      </div>
+                    )}
+                    {backfillResult.sampleErrors?.length > 0 && (
+                      <div className="mb-1">
+                        <div className="font-semibold text-red-700">sampleErrors ({backfillResult.sampleErrors.length}):</div>
+                        {backfillResult.sampleErrors.map((row, i) => (
+                          <div key={i} className="text-red-600 pl-2">{row.priceId} — {row.error}</div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                <button onClick={() => setBackfillResult(null)} className="text-xs text-gray-500 hover:text-gray-900 underline mt-2">Lukk</button>
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+
         {/* FAREOMRÅDE */}
         <CollapsibleSection
           title="⚠ FAREOMRÅDE"
@@ -338,6 +418,26 @@ export default function AdminOperationsPanel({ onLoadCandidates }) {
           isDanger={true}
         >
           <div className="space-y-3">
+            <OperationButton
+              onClick={() => executeWithConfirmation(async () => {
+                setBackfillLoading(true);
+                setBackfillResult(null);
+                try {
+                  const result = await base44.functions.invoke('backfillFuelPriceStationFields', { dryRun: false });
+                  setBackfillResult(result.data);
+                } catch (e) {
+                  console.error('[Backfill Apply] Failed:', e);
+                  setBackfillResult({ error: e.message });
+                } finally {
+                  setBackfillLoading(false);
+                }
+              }, true)}
+              loading={backfillLoading}
+              isDanger={true}
+            >
+              Apply: backfill stasjonsfelt på FuelPrice (live)
+            </OperationButton>
+
             <OperationButton
               onClick={() => executeWithConfirmation(async () => {
                 setAutoProcessing(true);
