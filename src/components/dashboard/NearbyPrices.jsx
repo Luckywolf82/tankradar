@@ -8,6 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import SharePriceButton from "@/components/shared/SharePriceButton";
 import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
+import {
+  resolveLatestPerStation,
+  isFreshEnoughForNearbyRanking,
+} from "@/utils/currentPriceResolver";
 
 const RADIUS_KM = 10;
 
@@ -136,17 +140,18 @@ export default function NearbyPrices({ selectedFuel }) {
       return { ...p, _station: station, _distanceKm: dist };
     }).filter((p) => p._distanceKm <= RADIUS_KM);
 
-    // Deduplicate: keep freshest price per station (for selected fuel)
-    const byStation = {};
-    withDistance.forEach((p) => {
-      const key = p.stationId;
-      if (!byStation[key] || new Date(p.fetchedAt) > new Date(byStation[key].fetchedAt)) {
-        byStation[key] = p;
-      }
-    });
+    // Use shared resolver: latest display-eligible row per station
+    const byStation = resolveLatestPerStation(withDistance);
+
+    // NearbyPrices freshness policy: exclude very old rows from ranking so
+    // they do not appear as "current nearby cheapest".  A fresh user_reported
+    // row still wins; a 12-day-old row does not dominate the ranking.
+    // stationHistory in StationDetails is unaffected — this filter only applies
+    // to Nearby ranking and NOT to the display of last-known prices.
+    const fresh = Object.values(byStation).filter(isFreshEnoughForNearbyRanking);
 
     // Sort: cheapest first, then nearest
-    const sorted = Object.values(byStation).sort((a, b) => {
+    const sorted = fresh.sort((a, b) => {
       if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
       return a._distanceKm - b._distanceKm;
     });

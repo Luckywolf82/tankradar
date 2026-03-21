@@ -2040,4 +2040,113 @@ export const entry_108 = {
   githubVisibility: "Confirmed visible in GitHub after publish",
 };
 
-export default entry_108;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 109: CANONICAL CURRENT-PRICE RESOLVER + NEARBY FRESHNESS POLICY
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_109 = {
+  timestamp: "2026-03-21T11:04:08Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "Canonical Current-Price Resolver + NearbyPrices Freshness Policy",
+
+  objectives: [
+    "Introduce one shared resolver utility for determining latest/current display-eligible price",
+    "Expose a simple freshness helper callers can opt into — no global age exclusion by default",
+    "Refactor NearbyPrices to use the shared resolver + apply Nearby-specific freshness policy",
+    "Refactor StationDetails current-price section to use the shared resolver without freshness filtering",
+    "Keep stationHistory fully preserved and unchanged",
+    "Keep display-ready vs historical split explicit in code",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=108",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_108 (StationDetails Data-Layer Split)",
+    "✓ Confirmed no frozen Phase 2 files will be modified",
+    "✓ Confirmed fuelPriceEligibility.js kept unchanged",
+    "✓ Confirmed stationHistory split in StationDetails remains intact",
+  ],
+
+  filesCreated: [
+    "src/utils/currentPriceResolver.js — shared resolver: resolveLatestPerFuelType, resolveLatestPerStation, resolveLatestPerStationAndFuelType, isFreshEnoughForNearbyRanking, NEARBY_FRESHNESS_MAX_AGE_MS",
+  ],
+
+  filesModified: [
+    "src/components/dashboard/NearbyPrices.jsx — import shared resolver; replace inline byStation deduplication with resolveLatestPerStation; apply isFreshEnoughForNearbyRanking after resolution",
+    "src/pages/StationDetails.jsx — import resolveLatestPerFuelType; replace inline latestByFuel computation with shared resolver; no freshness filtering applied",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Entry 109 appended",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — entryCount incremented to 109, lastUpdated updated, sync checklist updated",
+    "src/components/governance/NextSafeStep.jsx — completedEntries updated, next safe step added",
+  ],
+
+  sharedResolverIntroduced: {
+    file: "src/utils/currentPriceResolver.js",
+    exports: {
+      NEARBY_FRESHNESS_MAX_AGE_MS: "Default freshness threshold: 7 days. Adjust here to change Nearby policy globally.",
+      isFreshEnoughForNearbyRanking: "Opt-in freshness gate for Nearby ranking. Views showing last-known price (StationDetails) must NOT call this.",
+      resolveLatestPerFuelType: "Latest eligible row per fuelType for a single station — used by StationDetails.",
+      resolveLatestPerStation: "Latest eligible row per stationId across multiple stations — used by NearbyPrices.",
+      resolveLatestPerStationAndFuelType: "Latest eligible row per (stationId, fuelType) pair — available for future cross-station multi-fuel scenarios.",
+    },
+    designPrinciples: [
+      "Recency-based: latest = greatest fetchedAt among display-eligible rows",
+      "No global age exclusion by default — callers opt in to freshness",
+      "Source-agnostic: no sourceName preference or check",
+    ],
+  },
+
+  nearbyPricesBehavior: {
+    latestResolution: "resolveLatestPerStation(withDistance) — one latest display-eligible row per station",
+    freshnessPolicy: "isFreshEnoughForNearbyRanking applied after latest resolution — rows older than 7 days excluded from ranking",
+    rationale: "Prevents a 12-day-old user_reported row from dominating 'Billigste nær deg'; a fresh user_reported row still wins; a 6-hour-old Google row is valid",
+    historyUnaffected: "This filter touches only Nearby ranking output — stationHistory in StationDetails is completely unaffected",
+  },
+
+  stationDetailsBehavior: {
+    latestResolution: "resolveLatestPerFuelType(displayPrices) — one latest display-eligible row per fuelType",
+    freshnessPolicy: "NONE — StationDetails always shows last reported eligible price regardless of age",
+    stationHistoryPreserved: "stationHistory state variable unchanged; chart and observation log continue using all fetched rows",
+  },
+
+  howHistoryIsPreserved: {
+    stationHistory: "All rows returned by FuelPrice.filter({ stationId }) stored without any filtering",
+    chart: "Prisutvikling chart reads stationHistory — unaffected",
+    observationLog: "Alle observasjoner reads stationHistory — unaffected",
+    nearbyRows: "Old rows remain in the database and visible in StationDetails; they are only excluded from Nearby ranking",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 3,
+    businessLogicChanges: 2,
+    frozenFilesModified: 0,
+    uiFilesModified: 2,
+    governanceFilesModified: 3,
+    newUtilityFilesCreated: 1,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noIngestionChanges: "✓ No source adapters modified",
+    noFuelFinderTouched: "✓ FuelFinder untouched",
+    noGoogleOnlyShortcut: "✓ Freshness uses recency (fetchedAt), not sourceName",
+    sharedEligibilityPreserved: "✓ fuelPriceEligibility.js unchanged",
+    stationHistoryPreserved: "✓ stationHistory state variable and all downstream consumers unchanged",
+    viewSpecificBehaviorMaintained: "✓ StationDetails shows last known price; NearbyPrices applies freshness gate",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};
+
+export default entry_109;
