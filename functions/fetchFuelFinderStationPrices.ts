@@ -185,6 +185,42 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // TEMPORARILY DISABLED: FuelFinder is not an active FuelPrice source.
+    //
+    // Reason: FuelFinder contributes very little useful data and adds extra
+    // complexity to the FuelPrice write surface. It has been deactivated to
+    // reduce the active data pipeline to its core operational flow:
+    //   Station master data → source price ingest → station matching
+    //   → FuelPrice write contract → current-price read path
+    //
+    // Status: INACTIVE / NON-CANONICAL
+    // Parser, station-matching, and FuelPrice write code below is preserved
+    // intact for possible later reuse. No FuelPrice rows are written while
+    // this guard is active.
+    //
+    // To re-enable: remove or comment out this early-return block.
+    {
+      const fetchLog = await base44.asServiceRole.entities.FetchLog.create({
+        sourceName: "FuelFinder",
+        startedAt: startedAt,
+        finishedAt: new Date().toISOString(),
+        success: true,
+        httpStatus: null,
+        stationsFound: 0,
+        pricesFound: 0,
+        recordsCreated: 0,
+        recordsSkipped: 0,
+        parserVersion: "ff_no_v1",
+        errorMessage: null,
+        notes: "DEACTIVATED: FuelFinder is temporarily disabled as an active FuelPrice source. No FuelPrice rows written. Remove the early-return guard in fetchFuelFinderStationPrices.ts to re-enable."
+      });
+      return Response.json({
+        deactivated: true,
+        message: "FuelFinder is temporarily disabled as an active FuelPrice source. No data written.",
+        fetchLogId: fetchLog.id
+      });
+    }
+
     // Check for test mode (for fixture parsing)
     let testMode = false;
     try {
