@@ -96,7 +96,7 @@ export const NEXT_SAFE_STEP = {
   implementationDate: "2026-03-11T22:00:00Z",
   governanceAuditEntry: 91,
   implementationEntry: 92,
-  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114],
+  completedEntries: [82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115],
   readyForNextStep: true,
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -206,7 +206,19 @@ export const NEXT_SAFE_STEP = {
     completedDate: "2026-03-21T13:02:52Z",
   },
 
-  completedEntry114: {
+  completedEntry115: {
+    id: "phase25_step_115",
+    title: "NearbyPrices Radius Configurable from Admin — COMPLETE",
+    description:
+      "Entry 115 replaced the hardcoded RADIUS_KM = 10 constant in NearbyPrices.jsx with a " +
+      "localStorage-backed getNearbyRadiusKm() helper (key: tankradar_nearby_radius_km, default: 10). " +
+      "AdminOperationsPanel.jsx gained a new INNSTILLINGER collapsible section with a number input " +
+      "(1–200 km), reset button, reload button, and active-value display. Value is persisted to localStorage on every change. " +
+      "Safe fallback to 10 km on absent, invalid, or storage-error conditions. " +
+      "No matching logic, ingestion, StationDetails, resolver, or frozen files touched.",
+    status: "complete",
+    completedDate: "2026-03-21T17:30:00Z",
+  },
     id: "phase25_step_114",
     title: "Strict Matched-Station Eligibility for NearbyPrices Only — COMPLETE",
     description:
@@ -216,6 +228,20 @@ export const NEXT_SAFE_STEP = {
       "No ingestion, resolver, stationHistory, or frozen file changes.",
     status: "complete",
     completedDate: "2026-03-21T16:18:34Z",
+  },
+
+  completedEntry115: {
+    id: "phase25_step_115",
+    title: "NearbyPrices Radius Configurable from Admin — COMPLETE",
+    description:
+      "Entry 115 replaced the hardcoded RADIUS_KM = 10 constant in NearbyPrices.jsx with a " +
+      "localStorage-backed getNearbyRadiusKm() helper (key: tankradar_nearby_radius_km, default: 10). " +
+      "AdminOperationsPanel.jsx gained a new INNSTILLINGER collapsible section with a number input " +
+      "(1–200 km), reset button, reload button, and active-value display. Value is persisted to localStorage on every change. " +
+      "Safe fallback to 10 km on absent, invalid, or storage-error conditions. " +
+      "No matching logic, ingestion, StationDetails, resolver, or frozen files touched.",
+    status: "complete",
+    completedDate: "2026-03-21T17:30:00Z",
   },
 
   completedEntry113: {
