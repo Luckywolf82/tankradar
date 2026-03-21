@@ -17,9 +17,16 @@ import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
+const FUEL_OPTIONS = [
+  { value: "diesel", label: "Diesel" },
+  { value: "gasoline_95", label: "Bensin 95" },
+  { value: "gasoline_98", label: "Bensin 98" },
+];
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [pumpModeActive, setPumpModeActive] = useState(false);
+  const [selectedFuel, setSelectedFuel] = useState("diesel");
   const { scrollRef, restoreScroll } = useTabState("Dashboard");
 
   useEffect(() => {
@@ -62,12 +69,29 @@ export default function Dashboard() {
               {/* Contribution Impact — user's reporting stats */}
               <ContributionImpactCard />
 
+              {/* Fuel selector — controls nearby radar and route savings */}
+              <div className="flex rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
+                {FUEL_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSelectedFuel(opt.value)}
+                    className={`flex-1 py-2 px-1 text-xs font-medium transition-colors ${
+                      selectedFuel === opt.value
+                        ? "bg-blue-600 text-white"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
               {/* Route Savings — cheapest alternative station */}
-              <RouteSavingsCard selectedFuel="diesel" />
+              <RouteSavingsCard selectedFuel={selectedFuel} />
 
               {/* Dashboard Grid — organized layout */}
               <DashboardGrid columns={1}>
-                <RadarCard selectedFuel="diesel" />
+                <RadarCard selectedFuel={selectedFuel} />
                 <ActiveAlertsPreview />
               </DashboardGrid>
             </div>
