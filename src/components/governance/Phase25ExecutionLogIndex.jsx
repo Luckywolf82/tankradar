@@ -9,8 +9,8 @@ export const EXECUTION_LOG_METADATA = {
   system: "Phase 2.5 Execution Tracking",
   purpose: "Governance audit trail for TankRadar station matching and duplicate remediation",
   status: "active",
-  lastUpdated: "2026-03-20T17:34:51Z",
-  entryCount: 108, // Entry 108: StationDetails Data-Layer Split — Display-Ready vs Broader History Preserved
+  lastUpdated: "2026-03-21T10:14:06Z",
+  entryCount: 109, // Entry 109: Canonical Current-Price Resolver with View-Specific Freshness
   
   // Chunk mapping: exact entry ranges in each file
   chunks: [
@@ -54,7 +54,7 @@ export const EXECUTION_LOG_METADATA = {
       fileName: "Phase25ExecutionLog_007.jsx",
       entries: "87–106",
       status: "ACTIVE (append new entries here)",
-      description: "Audit system expansion, governance audits, publishability audit, pre-submission cleanup, activation audit, activation improvements implementation, activation impact review, gamification layer implementation, engagement impact review, governance workflow coherence audit, audit system hardening pass, governance conflict resolution pass, roadmap governor v4.3, visibility contract audit, GooglePlaces write contract completion, canonical price retrieval contract, StationDetails data-layer split"
+      description: "Audit system expansion, governance audits, publishability audit, pre-submission cleanup, activation audit, activation improvements implementation, activation impact review, gamification layer implementation, engagement impact review, governance workflow coherence audit, audit system hardening pass, governance conflict resolution pass, roadmap governor v4.3, visibility contract audit, GooglePlaces write contract completion, canonical price retrieval contract, StationDetails data-layer split, canonical current-price resolver with view-specific freshness"
     }
   ],
 
@@ -166,11 +166,11 @@ export const EXECUTION_LOG_METADATA = {
     failureProtocol:
       "If any checkpoint fails: STOP. Do not proceed. Fix the desync before generating next prompt.",
     currentStatus: {
-      checkpoint1: "✓ entryCount=108, sealed chunks cover 1–81, active chunk 87–108 = 108 entries (note: entries 82–86 in Phase25ExecutionLog_007 preamble section)",
+      checkpoint1: "✓ entryCount=109, sealed chunks cover 1–81, active chunk 87–109 = 109 entries (note: entries 82–86 in Phase25ExecutionLog_007 preamble section)",
       checkpoint2: "✓ Only Phase25ExecutionLog_007.jsx marked ACTIVE",
       checkpoint3: "✓ activeChunk = 'Phase25ExecutionLog_007.jsx' matches ACTIVE chunk",
       checkpoint4: "✓ Chunk ranges are contiguous",
-      checkpoint5: "✓ NextSafeStep: Entry 108 complete (StationDetails data-layer split); next step is FuelFinder write contract completion"
+      checkpoint5: "✓ NextSafeStep: Entry 109 complete (canonical current-price resolver); next step is FuelFinder write contract completion"
     }
   }
 };

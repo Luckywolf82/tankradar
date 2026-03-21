@@ -2041,3 +2041,121 @@ export const entry_108 = {
 };
 
 export default entry_108;
+// ────────────────────────────────────────────────────────────────────────────
+// ENTRY 109: CANONICAL CURRENT-PRICE RESOLVER WITH VIEW-SPECIFIC FRESHNESS
+// ────────────────────────────────────────────────────────────────────────────
+
+export const entry_109 = {
+  timestamp: "2026-03-21T10:14:06Z",
+  phase: "Phase 2.5 Governance & Data Integrity",
+  title: "Canonical Current-Price Resolver with View-Specific Freshness",
+
+  objectives: [
+    "Introduce one shared resolver for determining the current/latest price per station and fuel type",
+    "Unify how 'latest' is computed across NearbyPrices and StationDetails",
+    "Expose optional freshness filtering for views that require it (NearbyPrices), without imposing it globally",
+    "Allow StationDetails to always show last reported price regardless of age",
+    "Allow NearbyPrices to exclude stale prices from ranking without removing them from history",
+    "Keep freshness threshold explicit in code and easy to adjust",
+  ],
+
+  preFlight_verification: [
+    "✓ Read Phase25ExecutionLogIndex.jsx — active chunk: Phase25ExecutionLog_007.jsx, entryCount=108",
+    "✓ Read Phase25ExecutionLog_007.jsx — last entry was entry_108 (StationDetails Data-Layer Split)",
+    "✓ Read NextSafeStep.jsx — nextSafeStepEntry108 defines FuelFinder write contract as next step; this entry implements the resolver step from the problem statement",
+    "✓ Confirmed no frozen Phase 2 files will be modified",
+    "✓ Confirmed ingestion and source adapters are untouched",
+  ],
+
+  filesCreated: [
+    "src/utils/currentPriceResolver.js — shared resolver: getLatestPerStationFuel, getLatestPerFuel, getLatestPerStation, isFresh, NEARBY_FRESHNESS_THRESHOLD_MS",
+  ],
+
+  filesModified: [
+    "src/components/dashboard/NearbyPrices.jsx — import getLatestPerStation + isFresh from shared resolver; replace inline eligibility-filter + deduplication block with resolver call + freshness filter",
+    "src/pages/StationDetails.jsx — import getLatestPerFuel from shared resolver; replace inline latestByFuel computation with shared resolver call (no freshness filter)",
+    "src/components/governance/Phase25ExecutionLog_007.jsx — Entry 109 appended",
+    "src/components/governance/Phase25ExecutionLogIndex.jsx — entryCount incremented to 109, lastUpdated updated, sync checklist updated",
+    "src/components/governance/NextSafeStep.jsx — nextSafeStepEntry109 added",
+  ],
+
+  sharedResolverIntroduced: {
+    file: "src/utils/currentPriceResolver.js",
+    exports: [
+      "NEARBY_FRESHNESS_THRESHOLD_MS — explicit freshness cut-off constant (default: 7 days); easy to adjust",
+      "isFresh(row, thresholdMs) — returns true when fetchedAt is within thresholdMs; source-agnostic, recency-only",
+      "getLatestPerStationFuel(rows) — latest eligible row per (stationId, fuelType) pair; no freshness filter",
+      "getLatestPerFuel(rows) — latest eligible row per fuelType; intended for single-station views; no freshness filter",
+      "getLatestPerStation(rows, selectedFuel?) — latest eligible row per stationId; intended for multi-station ranking; no freshness filter",
+    ],
+    baseEligibility: "isStationPriceDisplayEligible applied internally by each resolver function; callers do not need to pre-filter",
+    noGlobalFreshness: "Freshness is opt-in; no resolver function excludes rows by age — callers apply isFresh() if needed",
+    sourceAgnostic: "No source-specific logic; isFresh relies on fetchedAt recency only",
+  },
+
+  howNearbyPricesUsesResolver: {
+    resolverCall: "getLatestPerStation(prices, selectedFuel) — returns latest eligible price per station; eligibility handled by resolver",
+    freshnessPolicy: "isFresh(p) applied to each resolved entry; rows older than NEARBY_FRESHNESS_THRESHOLD_MS (7 days) are excluded from ranking",
+    stationCoordCheck: "Retained as NearbyPrices-specific view rule — station must have lat/lon for haversine calculation",
+    radiusFilter: "Retained as NearbyPrices-specific view rule — station must be within RADIUS_KM",
+    sortingLogic: "Unchanged — cheapest first, then nearest",
+    historyPreserved: "Old rows remain in the database; freshness filter only affects which rows appear in 'Billigste nær deg' ranking; stationHistory in StationDetails is never touched by NearbyPrices",
+    inlineBlockRemoved: "Removed separate eligible[] filter + byStation deduplication loop; replaced with single resolver call",
+  },
+
+  howStationDetailsUsesResolver: {
+    resolverCall: "getLatestPerFuel(displayPrices) — returns latest eligible price per fuel type; eligibility handled by resolver",
+    noFreshnessFilter: "isFresh() is NOT called — last reported price is always visible regardless of age",
+    displayPricesRetained: "displayPrices state variable (stationHistory.filter(isStationPriceDisplayEligible)) retained; used for trendByFuel calculation",
+    stationHistoryUntouched: "stationHistory state is unchanged — chart and observation log still use unfiltered broader history",
+    behaviorChange: "latestByFuel computation is now delegated to shared resolver; result is identical to previous inline logic",
+  },
+
+  howHistoryRemainPreserved: {
+    stationHistory: "All rows returned by FuelPrice.filter({ stationId }) remain in stationHistory; no row is discarded",
+    chartData: "Prisutvikling chart reads from stationHistory — unaffected by resolver or freshness changes",
+    observationLog: "Alle observasjoner reads from stationHistory — all 200 fetched rows remain visible",
+    nearbyPricesIsolation: "Freshness filter in NearbyPrices is local to that component's ranking computation; it does not touch any shared state or the DB",
+  },
+
+  freshnessThresholdDesign: {
+    constant: "NEARBY_FRESHNESS_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000 (7 days)",
+    location: "Exported from src/utils/currentPriceResolver.js — single place to change",
+    rationale: "7 days excludes the 12-day-old example from ranking while including the 6-hour-old example; both user_reported and GooglePlaces rows subject to same rule",
+    sourceAgnostic: "isFresh relies solely on fetchedAt timestamp; no source-name check",
+  },
+
+  lockedPhase2FilesStatus: [
+    "✓ matchStationForUserReportedPrice — untouched",
+    "✓ auditPhase2DominanceGap — untouched",
+    "✓ getNearbyStationCandidates — untouched",
+    "✓ validateDistanceBands — untouched",
+    "✓ classifyStationsRuleEngine — untouched",
+    "✓ classifyGooglePlacesConfidence — untouched",
+    "✓ classifyPricePlausibility — untouched",
+    "✓ deleteAllGooglePlacesPrices — untouched",
+    "✓ deleteGooglePlacesPricesForReclassification — untouched",
+    "✓ verifyGooglePlacesPriceNormalization — untouched",
+  ],
+
+  changeSummary: {
+    runtimeCodeChanges: 3,
+    businessLogicChanges: 2,
+    frozenFilesModified: 0,
+    uiFilesModified: 2,
+    governanceFilesModified: 3,
+    newUtilityFilesCreated: 1,
+  },
+
+  governanceCompliance: {
+    noFrozenFilesModified: "✓ All 10 frozen Phase 2 files untouched",
+    noIngestionChanges: "✓ No source adapters modified",
+    noFuelFinderTouched: "✓ FuelFinder untouched",
+    noGoogleOnlyLogic: "✓ No sourceName === 'GooglePlaces' condition introduced anywhere",
+    noHistoricalDataRemoved: "✓ stationHistory untouched; NearbyPrices freshness filter is local ranking-only",
+    freshnessExplicit: "✓ NEARBY_FRESHNESS_THRESHOLD_MS is a named constant in a single place; easy to adjust",
+    viewSpecificLogicPreserved: "✓ Station coord check + radius filter remain in NearbyPrices; trend calculation + history layers remain in StationDetails",
+  },
+
+  githubVisibility: "Confirmed visible in GitHub after publish",
+};

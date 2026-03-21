@@ -7,7 +7,7 @@ import { nb } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import SharePriceButton from "@/components/shared/SharePriceButton";
-import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
+import { getLatestPerStation, isFresh } from "@/utils/currentPriceResolver";
 
 const RADIUS_KM = 10;
 
@@ -120,33 +120,28 @@ export default function NearbyPrices({ selectedFuel }) {
       if (s.id) stationMap[s.id] = s;
     });
 
-    // Apply shared base display-eligibility contract, then NearbyPrices-specific
-    // view rules: station must exist with valid coordinates for distance calc.
-    const eligible = prices.filter((p) => {
-      if (!isStationPriceDisplayEligible(p)) return false;
-      const station = stationMap[p.stationId];
-      if (!station || !station.latitude || !station.longitude) return false;
-      return true;
-    });
+    // Use shared resolver to get the latest display-eligible price per station.
+    // getLatestPerStation applies isStationPriceDisplayEligible internally —
+    // no need to re-apply the base eligibility check here.
+    const latestByStation = getLatestPerStation(prices, selectedFuel);
 
-    // Compute distance and filter by radius
-    const withDistance = eligible.map((p) => {
-      const station = stationMap[p.stationId];
-      const dist = haversineKm(userCoords.lat, userCoords.lon, station.latitude, station.longitude);
-      return { ...p, _station: station, _distanceKm: dist };
-    }).filter((p) => p._distanceKm <= RADIUS_KM);
-
-    // Deduplicate: keep freshest price per station (for selected fuel)
-    const byStation = {};
-    withDistance.forEach((p) => {
-      const key = p.stationId;
-      if (!byStation[key] || new Date(p.fetchedAt) > new Date(byStation[key].fetchedAt)) {
-        byStation[key] = p;
-      }
-    });
+    // NearbyPrices-specific view rules applied after shared resolution:
+    //  1. Station must exist with valid coordinates for distance calculation.
+    //  2. Station must be within RADIUS_KM.
+    //  3. Freshness policy: prices older than the threshold are excluded from
+    //     ranking so stale data does not dominate "Billigste nær deg".
+    //     This only affects ranking — old rows are never removed from history.
+    const withDistance = Object.values(latestByStation)
+      .map((p) => {
+        const station = stationMap[p.stationId];
+        if (!station || !station.latitude || !station.longitude) return null;
+        const dist = haversineKm(userCoords.lat, userCoords.lon, station.latitude, station.longitude);
+        return { ...p, _station: station, _distanceKm: dist };
+      })
+      .filter((p) => p !== null && p._distanceKm <= RADIUS_KM && isFresh(p));
 
     // Sort: cheapest first, then nearest
-    const sorted = Object.values(byStation).sort((a, b) => {
+    const sorted = withDistance.sort((a, b) => {
       if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
       return a._distanceKm - b._distanceKm;
     });

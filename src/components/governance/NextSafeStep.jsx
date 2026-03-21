@@ -187,6 +187,38 @@ export const NEXT_SAFE_STEP = {
     expectedOutcome:
       "FuelFinder rows become visible in 'Siste kjente priser' (StationDetails displayPrices) " +
       "and in NearbyPrices once plausibilityStatus and station_match_status are correctly written",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NEXT SAFE STEP (ENTRY 109) — CANONICAL CURRENT-PRICE RESOLVER (COMPLETE)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  nextSafeStepEntry109: {
+    id: "phase25_step_109",
+    title: "FuelFinder Write Contract Completion — plausibilityStatus and station_match_status",
+    description:
+      "Entry 109 (Canonical Current-Price Resolver with View-Specific Freshness) is complete. " +
+      "The shared resolver (src/utils/currentPriceResolver.js) is now in place. " +
+      "NearbyPrices applies freshness filtering (NEARBY_FRESHNESS_THRESHOLD_MS = 7 days) after resolution. " +
+      "StationDetails uses the resolver without freshness so last reported price is always visible. " +
+      "The remaining upstream gap is FuelFinder: fetchFuelFinderStationPrices.ts writes FuelPrice " +
+      "without plausibilityStatus AND without station_match_status, so FuelFinder rows are excluded " +
+      "from displayPrices and from NearbyPrices ranking. " +
+      "This step should add plausibilityStatus classification and station_match_status declaration " +
+      "to the FuelFinder write path so FuelFinder rows become display-eligible.",
+    scope: [
+      "Update fetchFuelFinderStationPrices.ts: classify priceNok with plausibility threshold (10–30 NOK/L)",
+      "Update fetchFuelFinderStationPrices.ts: set station_match_status = 'matched_station_id' on FuelPrice writes",
+      "No UI changes needed — shared resolver and data-layer split will include compliant rows automatically",
+    ],
+    complexity: "LOW",
+    runtimeImpact: "MINIMAL — only affects write path in FuelFinder adapter",
+    estimatedEffort: "1–2 hours",
+    blockingIssues: "NONE",
+    frozenFilesImpact: "ZERO — fetchFuelFinderStationPrices.ts is not a frozen Phase 2 file",
+    expectedOutcome:
+      "FuelFinder rows become visible in 'Siste kjente priser' and in NearbyPrices ranking " +
+      "once plausibilityStatus and station_match_status are correctly written",
   }
 };
 

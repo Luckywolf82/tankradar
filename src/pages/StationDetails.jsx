@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Fuel, TrendingDown, TrendingUp, Minus, Star } from "lucide-react";
 import SharePriceButton from "@/components/shared/SharePriceButton";
 import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
+import { getLatestPerFuel } from "@/utils/currentPriceResolver";
 import { formatDistanceToNow, format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -130,12 +131,9 @@ export default function StationDetails() {
 
   // ── Display-ready layer ──────────────────────────────────────────────────
   // Latest display-eligible price per fuel type — "Siste kjente priser".
-  const latestByFuel = {};
-  displayPrices.forEach((p) => {
-    if (!latestByFuel[p.fuelType] || new Date(p.fetchedAt) > new Date(latestByFuel[p.fuelType].fetchedAt)) {
-      latestByFuel[p.fuelType] = p;
-    }
-  });
+  // Uses shared resolver: no freshness filter applied so the last reported
+  // price is always visible even if it is older.
+  const latestByFuel = getLatestPerFuel(displayPrices);
 
   // Price trend shown next to "Siste kjente priser" — uses display-eligible
   // rows so the indicator reflects the same data the user is looking at.
