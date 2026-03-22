@@ -82,27 +82,35 @@ function runNearbyPipeline(rowsWithStation, userCoords, radiusKm, pathLabel = "p
   const latestArr = Object.values(byStation);
 
   // ── FRESHNESS DIAGNOSTICS ─────────────────────────────────────────────────
-  // Dev-only: logs the actual fetchedAt values and why each row passes/fails
-  // freshness. Remove once root cause is confirmed.
+  // Dev-only: logs actual fetchedAt values and freshness evaluation per row.
+  // Remove once root cause is confirmed and parity is proven.
   const now = Date.now();
-  console.group(`[TankRadar][${pathLabel}] Freshness diagnostic — ${latestArr.length} candidate(s)`);
+  console.group(`[TankRadar][${pathLabel}] Freshness diagnostic — ${latestArr.length} candidate(s) | input=${rowsWithStation.length} eligible=${eligible.length} inRadius=${withDistance.length}`);
   latestArr.forEach((row) => {
     const fetchedAt = row.fetchedAt;
     const parsedMs = fetchedAt ? new Date(fetchedAt).getTime() : null;
-    const ageMs = parsedMs ? now - parsedMs : null;
+    const ageMs = parsedMs != null ? now - parsedMs : null;
     const ageHours = ageMs != null ? (ageMs / 3_600_000).toFixed(1) : "N/A";
     const isFresh = isFreshEnoughForNearbyRanking(row);
-    const maxDays = 7;
+    // Also log updated_date to detect the "updated_date is recent but fetchedAt is old" pattern
     console.log(
-      `  stationId=${row.stationId} | fetchedAt=${fetchedAt ?? "NULL"} | type=${typeof fetchedAt}` +
-      ` | parsedMs=${parsedMs ?? "NaN"} | ageHours=${ageHours} | maxDays=${maxDays} | isFresh=${isFresh}` +
-      ` | station_match_status=${row.station_match_status} | plausibilityStatus=${row.plausibilityStatus}` +
-      ` | priceType=${row.priceType}`
+      `  stationId=${row.stationId}` +
+      ` | fetchedAt=${fetchedAt ?? "NULL"} (type=${typeof fetchedAt})` +
+      ` | updated_date=${row.updated_date ?? "N/A"}` +
+      ` | ageHours=${ageHours}` +
+      ` | isFresh=${isFresh}` +
+      ` | match=${row.station_match_status}` +
+      ` | plausibility=${row.plausibilityStatus}` +
+      ` | priceType=${row.priceType}` +
+      ` | priceNok=${row.priceNok}`
     );
   });
   if (latestArr.length === 0) {
-    console.log("  (no candidates reached latestArr — check eligibility and radius)");
-    console.log(`  input rows=${rowsWithStation.length}, eligible=${eligible.length}, within radius=${withDistance.length}`);
+    console.warn("  No candidates in latestArr. Check eligibility gate and radius.");
+    // Sample a few ineligible rows to reveal why they were dropped
+    rowsWithStation.slice(0, 3).forEach((r) => {
+      console.log(`  [SAMPLE ineligible] stationId=${r.stationId} match=${r.station_match_status} plausibility=${r.plausibilityStatus} priceType=${r.priceType} fetchedAt=${r.fetchedAt} _station.lat=${r._station?.latitude}`);
+    });
   }
   console.groupEnd();
   // ── END DIAGNOSTICS ───────────────────────────────────────────────────────
