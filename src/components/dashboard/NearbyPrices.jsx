@@ -149,10 +149,10 @@ export default function NearbyPrices({ selectedFuel }) {
     const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
 
     const sorted = [...fresh].sort((a, b) => {
-    if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
-    return a._distanceKm - b._distanceKm;
+      if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
+      return a._distanceKm - b._distanceKm;
     });
-
+    
     setNearbyResults(sorted.slice(0, 8));
 
     const staleFallback =
