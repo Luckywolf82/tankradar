@@ -2,20 +2,30 @@ import { base44 } from "@/api/base44Client";
 
 /**
  * Fetches fuel prices for a list of station IDs and a selected fuel type.
- * Uses a single broad query then filters client-side to avoid per-station API calls.
+ * Makes 2 targeted requests (station_level + user_reported) then filters
+ * client-side by nearby station IDs. Avoids per-station requests that cause
+ * rate limiting.
  */
-export async function fetchFuelPricesByStationsAndFuel({ stationIds, selectedFuel, limit = 20 }) {
+export async function fetchFuelPricesByStationsAndFuel({ stationIds, selectedFuel }) {
   if (!stationIds || stationIds.length === 0) return [];
 
   const stationIdSet = new Set(stationIds);
 
-  const filter = {};
-  if (selectedFuel && selectedFuel !== "all") {
-    filter.fuelType = selectedFuel;
-  }
+  const fuelFilter = selectedFuel && selectedFuel !== "all" ? { fuelType: selectedFuel } : {};
 
-  // Single query — fetch recent prices, then filter by nearby station IDs client-side
-  const rows = await base44.entities.FuelPrice.filter(filter, "-fetchedAt", 500);
+  const [stationLevelRows, userReportedRows] = await Promise.all([
+    base44.entities.FuelPrice.filter(
+      { ...fuelFilter, priceType: "station_level" },
+      "-fetchedAt",
+      500
+    ).catch(() => []),
+    base44.entities.FuelPrice.filter(
+      { ...fuelFilter, priceType: "user_reported" },
+      "-fetchedAt",
+      200
+    ).catch(() => []),
+  ]);
 
-  return rows.filter((p) => p.stationId && stationIdSet.has(p.stationId));
+  const all = [...stationLevelRows, ...userReportedRows];
+  return all.filter((p) => p.stationId && stationIdSet.has(p.stationId));
 }
