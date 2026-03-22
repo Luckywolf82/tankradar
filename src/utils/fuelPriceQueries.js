@@ -1,39 +1,128 @@
-
 import { base44 } from "@/api/base44Client";
+import { normalizeFuelType } from "@/utils/fuelTypeUtils";
 
 /**
- * Henter FuelPrice-rader for flere stasjoner og én drivstofftype.
- * Fletter alle resultater i én liste.
- * @param {{ stationIds: string[], fuelType: string, limit?: number }} params
- * @returns {Promise<object[]>} Løfter til liste av FuelPrice-objekter.
+ * Canonical FuelPrice read helpers.
+ *
+ * Scope:
+ * - read-path only
+ * - centralize query shape only
+ * - no new business rules
+ * - no eligibility logic
+ * - no freshness logic
+ * - no ranking logic
+ * - no hidden fallback across data granularities
  */
-export async function fetchFuelPricesByStationsAndFuel({ stationIds, fuelType, limit = 20 }) {
-  // TODO: Tilpass base44 API hvis nødvendig (for eksempel endre metode eller parameternavn).
+
+/**
+ * Fetch all FuelPrice rows for one station, newest first.
+ *
+ * Intended use:
+ * - StationDetails broader station history
+ * - Other single-station read paths that need station-level FuelPrice rows
+ *
+ * Behavior preserved:
+ * - same query shape as existing StationDetails read path
+ * - same sort order
+ * - same default limit
+ */
+export async function fetchFuelPricesByStation({ stationId, limit = 200 } = {}) {
+  if (!stationId) return [];
+
+  return base44.entities.FuelPrice.filter(
+    { stationId },
+    "-fetchedAt",
+    limit
+  );
+}
+
+/**
+ * Fetch FuelPrice rows for one station and one selected fuel type, newest first.
+ *
+ * Intended use:
+ * - station-level fuel-specific display paths
+ *
+ * Notes:
+ * - selectedFuel is normalized here, not at the call site
+ * - returns [] if stationId or selectedFuel is missing
+ */
+export async function fetchFuelPricesByStationAndFuel({
+  stationId,
+  selectedFuel,
+  limit = 20,
+} = {}) {
+  if (!stationId || !selectedFuel) return [];
+
+  const fuelType = normalizeFuelType(selectedFuel);
+  if (!fuelType) return [];
+
+  return base44.entities.FuelPrice.filter(
+    { stationId, fuelType },
+    "-fetchedAt",
+    limit
+  );
+}
+
+/**
+ * Fetch FuelPrice rows for multiple stations and one selected fuel type.
+ *
+ * Intended use:
+ * - NearbyPrices and similar multi-station station-price display paths
+ *
+ * Behavior preserved:
+ * - same per-station query pattern currently used by NearbyPrices
+ * - same sort order
+ * - same default per-station limit
+ *
+ * Important:
+ * - centralizes query shape only
+ * - does not apply eligibility filtering
+ * - does not apply freshness filtering
+ * - does not rank results
+ */
+export async function fetchFuelPricesByStationsAndFuel({
+  stationIds,
+  selectedFuel,
+  limit = 20,
+} = {}) {
+  if (!Array.isArray(stationIds) || stationIds.length === 0 || !selectedFuel) {
+    return [];
+  }
+
+  const normalizedIds = stationIds.filter(Boolean);
+  if (normalizedIds.length === 0) return [];
+
+  const fuelType = normalizeFuelType(selectedFuel);
+  if (!fuelType) return [];
+
   const results = await Promise.all(
-    stationIds.map((id) =>
+    normalizedIds.map((stationId) =>
       base44.entities.FuelPrice.filter(
-        { stationId: id, fuelType },
+        { stationId, fuelType },
         "-fetchedAt",
         limit
       )
     )
   );
-  // Flat liste med resultater fra alle stasjoner
+
   return results.flat();
 }
 
 /**
- * Henter FuelPrice-rader for én stasjon (alle drivstofftyper).
- * Returnerer (som aktuell bruker gjorde: omvendt sortert på fetchedAt).
- * @param {{ stationId: string, limit?: number }} params
- * @returns {Promise<object[]>} Liste av FuelPrice-objekter for stasjonen.
+ * Fetch recent realistic FuelPrice rows, newest first.
+ *
+ * Intended use:
+ * - feeds such as RecentPricesFeed before canonical eligibility is applied
+ *
+ * Important:
+ * - this is not the display-eligibility layer
+ * - callers must still apply isStationPriceDisplayEligible(...)
+ *   plus any view-specific constraints like nearby station membership
  */
-export async function fetchFuelPricesByStation({ stationId, limit = 200 }) {
-  // TODO: Hvis Base44 krever annen syntaks, juster her.
-  const prices = await base44.entities.FuelPrice.filter(
-    { stationId },
+export async function fetchRecentRealisticFuelPrices({ limit = 200 } = {}) {
+  return base44.entities.FuelPrice.filter(
+    { plausibilityStatus: "realistic_price" },
     "-fetchedAt",
     limit
   );
-  return prices;
 }
