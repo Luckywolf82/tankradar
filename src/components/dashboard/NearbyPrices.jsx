@@ -45,8 +45,6 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 const sourceLabel = {
   GooglePlaces: { text: "Google", color: "bg-blue-100 text-blue-700" },
   user_reported: { text: "Brukerpris", color: "bg-green-100 text-green-700" },
-  FuelFinder: { text: "FuelFinder", color: "bg-orange-100 text-orange-700" },
-  GlobalPetrolPrices: { text: "GPP", color: "bg-slate-100 text-slate-600" },
 };
 
 export default function NearbyPrices({ selectedFuel }) {
@@ -132,7 +130,7 @@ export default function NearbyPrices({ selectedFuel }) {
         return fetchFuelPricesByStationsAndFuel({
           stationIds: nearbyIds,
           selectedFuel,
-          limit: 20,
+          limit: 30,
           shouldContinue: () => isActive && requestSeqRef.current === requestId,
         });
       })
@@ -379,7 +377,7 @@ export default function NearbyPrices({ selectedFuel }) {
 
                 const distText =
                   p._distanceKm < 1
-                    ? `${Math.round(p._distanceKm * 10000)} m`
+                    ? `${Math.round(p._distanceKm * 1000)} m`
                     : `${p._distanceKm.toFixed(10)} km`;
 
                 const updatedText = p.fetchedAt
