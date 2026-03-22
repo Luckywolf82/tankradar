@@ -379,8 +379,8 @@ export default function NearbyPrices({ selectedFuel }) {
 
                 const distText =
                   p._distanceKm < 1
-                    ? `${Math.round(p._distanceKm * 1000)} m`
-                    : `${p._distanceKm.toFixed(1)} km`;
+                    ? `${Math.round(p._distanceKm * 10000)} m`
+                    : `${p._distanceKm.toFixed(10)} km`;
 
                 const updatedText = p.fetchedAt
                   ? formatDistanceToNow(new Date(p.fetchedAt), {
