@@ -13,6 +13,25 @@ import {
   isFreshEnoughForNearbyRanking,
 } from "@/utils/currentPriceResolver";
 
+const normalizeFuel = (f) => {
+  if (!f) return f;
+
+  const map = {
+    bensin: "gasoline_95",
+    "bensin 95": "gasoline_95",
+    "95": "gasoline_95",
+    gasoline_95: "gasoline_95",
+
+    "98": "gasoline_98",
+    gasoline_98: "gasoline_98",
+
+    diesel: "diesel",
+    diesel_premium: "diesel_premium"
+  };
+
+  return map[f.toLowerCase()] || f;
+};
+
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
 
@@ -119,10 +138,12 @@ export default function NearbyPrices({ selectedFuel }) {
           return;
         }
 
+        const normalizedFuel = normalizeFuel(selectedFuel);
+
         return Promise.all(
           nearbyIds.map((id) =>
             base44.entities.FuelPrice.filter(
-              { stationId: id, fuelType: selectedFuel },
+              { stationId: id, fuelType: normalizedFuel },
               "-fetchedAt",
               20
             )
