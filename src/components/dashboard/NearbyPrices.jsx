@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Navigation, Clock } from "lucide-react";
@@ -8,17 +8,13 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import SharePriceButton from "@/components/shared/SharePriceButton";
 import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
-import {
-  resolveLatestPerStation,
-  isFreshEnoughForNearbyRanking,
-} from "@/utils/currentPriceResolver";
+import { resolveLatestPerStation, isFreshEnoughForNearbyRanking } from "@/utils/currentPriceResolver";
 import { getFuelTypeLabel } from "@/utils/fuelTypeUtils";
 import { fetchFuelPricesByStationsAndFuel } from "@/utils/fuelPriceQueries";
 
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
-const NEARBY_RADIUS_OPTIONS = [2, 5, 10, 20, 50];
-const MAX_NEARBY_STATIONS_FOR_PRICE_FETCH = 8;
+const NEARBY_RADIUS_OPTIONS = [2, 5, 10, 20, 30];
 
 function getNearbyRadiusKm() {
   try {
@@ -45,14 +41,14 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 const sourceLabel = {
   GooglePlaces: { text: "Google", color: "bg-blue-100 text-blue-700" },
   user_reported: { text: "Brukerpris", color: "bg-green-100 text-green-700" },
+  FuelFinder: { text: "FuelFinder", color: "bg-orange-100 text-orange-700" },
+  GlobalPetrolPrices: { text: "GPP", color: "bg-slate-100 text-slate-600" },
 };
 
 export default function NearbyPrices({ selectedFuel }) {
   const navigate = useNavigate();
-  const requestSeqRef = useRef(0);
-
   const [radiusKm, setRadiusKm] = useState(getNearbyRadiusKm());
-  const [gpsState, setGpsState] = useState("pending");
+  const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
   const [stations, setStations] = useState([]);
   const [prices, setPrices] = useState([]);
@@ -86,72 +82,33 @@ export default function NearbyPrices({ selectedFuel }) {
   useEffect(() => {
     if (gpsState !== "ok" || !userCoords) return;
 
-    const requestId = ++requestSeqRef.current;
-    let isActive = true;
-
     setLoading(true);
 
     base44.entities.Station.list("-created_date", 2000)
       .then((stationsData) => {
-        if (!isActive || requestSeqRef.current !== requestId) return null;
+        setStations(stationsData);
 
-        const stationsWithDistance = stationsData
+        const nearbyIds = stationsData
           .filter((s) => s.id && s.latitude && s.longitude)
-          .map((s) => ({
-            ...s,
-            _distanceKm: haversineKm(
-              userCoords.lat,
-              userCoords.lon,
-              s.latitude,
-              s.longitude
-            ),
-          }))
-          .filter((s) => s._distanceKm <= radiusKm)
-          .sort((a, b) => a._distanceKm - b._distanceKm);
-
-        const limitedStations = stationsWithDistance.slice(
-          0,
-          MAX_NEARBY_STATIONS_FOR_PRICE_FETCH
-        );
-
-        if (!isActive || requestSeqRef.current !== requestId) return null;
-
-        setStations(limitedStations);
-
-        const nearbyIds = limitedStations.map((s) => s.id);
+          .filter(
+            (s) =>
+              haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm
+          )
+          .map((s) => s.id);
 
         if (nearbyIds.length === 0) {
-          if (isActive && requestSeqRef.current === requestId) {
-            setPrices([]);
-          }
-          return null;
+          setPrices([]);
+          setLoading(false);
+          return;
         }
 
         return fetchFuelPricesByStationsAndFuel({
           stationIds: nearbyIds,
           selectedFuel,
-          limit: 30,
-          shouldContinue: () => isActive && requestSeqRef.current === requestId,
-        });
+          limit: 20,
+        }).then((rows) => setPrices(rows));
       })
-      .then((rows) => {
-        if (!rows) return;
-        if (!isActive || requestSeqRef.current !== requestId) return;
-        setPrices(rows);
-      })
-      .catch((err) => {
-        if (!isActive || requestSeqRef.current !== requestId) return;
-        console.error("NearbyPrices fetch failed", err);
-        setPrices([]);
-      })
-      .finally(() => {
-        if (!isActive || requestSeqRef.current !== requestId) return;
-        setLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
+      .finally(() => setLoading(false));
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
   useEffect(() => {
@@ -167,9 +124,7 @@ export default function NearbyPrices({ selectedFuel }) {
     });
 
     const eligible = prices.filter((p) => {
-      if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) {
-        return false;
-      }
+      if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
       const station = stationMap[p.stationId];
       if (!station || !station.latitude || !station.longitude) return false;
       return true;
@@ -193,7 +148,7 @@ export default function NearbyPrices({ selectedFuel }) {
 
     const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
 
-    const sorted = [...fresh].sort((a, b) => {
+    const sorted = fresh.sort((a, b) => {
       if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
       return a._distanceKm - b._distanceKm;
     });
@@ -202,9 +157,7 @@ export default function NearbyPrices({ selectedFuel }) {
 
     const staleFallback =
       fresh.length === 0 && latestArr.length > 0
-        ? [...latestArr]
-            .sort((a, b) => a._distanceKm - b._distanceKm)
-            .slice(0, 8)
+        ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
         : [];
 
     setStaleFallbackResults(staleFallback);
@@ -304,9 +257,7 @@ export default function NearbyPrices({ selectedFuel }) {
                 <div
                   key={p.id}
                   className="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50 rounded-lg px-1 -mx-1 transition-colors"
-                  onClick={() =>
-                    navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))
-                  }
+                  onClick={() => navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))}
                 >
                   <span className="text-sm font-bold text-slate-400 w-4 text-center">
                     {i + 1}
@@ -332,9 +283,7 @@ export default function NearbyPrices({ selectedFuel }) {
                         </span>
                       )}
 
-                      <span
-                        className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${src.color}`}
-                      >
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${src.color}`}>
                         {src.text}
                       </span>
                     </div>
@@ -348,9 +297,7 @@ export default function NearbyPrices({ selectedFuel }) {
                       fuelType={p.fuelType}
                     />
                     <div>
-                      <p className="text-lg font-bold text-green-700">
-                        {p.priceNok.toFixed(2)}
-                      </p>
+                      <p className="text-lg font-bold text-green-700">{p.priceNok.toFixed(2)}</p>
                       <p className="text-xs text-slate-400">kr/l</p>
                     </div>
                   </div>
@@ -378,7 +325,7 @@ export default function NearbyPrices({ selectedFuel }) {
                 const distText =
                   p._distanceKm < 1
                     ? `${Math.round(p._distanceKm * 1000)} m`
-                    : `${p._distanceKm.toFixed(10)} km`;
+                    : `${p._distanceKm.toFixed(1)} km`;
 
                 const updatedText = p.fetchedAt
                   ? formatDistanceToNow(new Date(p.fetchedAt), {
@@ -391,9 +338,7 @@ export default function NearbyPrices({ selectedFuel }) {
                   <div
                     key={p.id}
                     className="flex items-center gap-3 py-3 cursor-pointer hover:bg-slate-50 rounded-lg px-1 -mx-1 transition-colors"
-                    onClick={() =>
-                      navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))
-                    }
+                    onClick={() => navigate(createPageUrl(`StationDetails?stationId=${p.stationId}`))}
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-800 truncate">
@@ -415,9 +360,7 @@ export default function NearbyPrices({ selectedFuel }) {
                           </span>
                         )}
 
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${src.color}`}
-                        >
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${src.color}`}>
                           {src.text}
                         </span>
 
@@ -435,9 +378,7 @@ export default function NearbyPrices({ selectedFuel }) {
                         fuelType={p.fuelType}
                       />
                       <div>
-                        <p className="text-lg font-bold text-amber-700">
-                          {p.priceNok.toFixed(2)}
-                        </p>
+                        <p className="text-lg font-bold text-amber-700">{p.priceNok.toFixed(2)}</p>
                         <p className="text-xs text-slate-400">kr/l</p>
                       </div>
                     </div>
@@ -450,8 +391,7 @@ export default function NearbyPrices({ selectedFuel }) {
 
         {nearbyResults.length > 0 && nearbyResults.length < 3 && (
           <p className="text-xs text-slate-400 mt-2 border-t border-slate-100 pt-2">
-            Kun {nearbyResults.length} stasjon
-            {nearbyResults.length !== 1 ? "er" : ""} med{" "}
+            Kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med{" "}
             {getFuelTypeLabel(selectedFuel)}-pris funnet innen {radiusKm} km.
           </p>
         )}
