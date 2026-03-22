@@ -1,3 +1,6 @@
+// DATA SOURCE INVARIANT:
+// NearbyPrices MUST read from CurrentStationPrices only.
+// Legacy FuelPrice path is deprecated and must not be reintroduced.
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
