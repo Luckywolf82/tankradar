@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
         gasoline_95_confidenceScore: confidenceScore ?? null,
         gasoline_95_plausibilityStatus: plausibilityStatus || null,
         gasoline_95_stationMatchStatus: station_match_status || null,
+        gasoline_95_priceType: fuelPrice.priceType || null,
       };
     } else {
       fuelPatch = {
@@ -90,6 +91,7 @@ Deno.serve(async (req) => {
         diesel_confidenceScore: confidenceScore ?? null,
         diesel_plausibilityStatus: plausibilityStatus || null,
         diesel_stationMatchStatus: station_match_status || null,
+        diesel_priceType: fuelPrice.priceType || null,
       };
     }
 

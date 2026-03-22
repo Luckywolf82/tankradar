@@ -186,6 +186,7 @@ Deno.serve(async (req) => {
         patch.gasoline_95_confidenceScore = g95Row.confidenceScore ?? null;
         patch.gasoline_95_plausibilityStatus = g95Row.plausibilityStatus || null;
         patch.gasoline_95_stationMatchStatus = g95Row.station_match_status || null;
+        patch.gasoline_95_priceType = g95Row.priceType || null;
       }
 
       if (dslRow) {
@@ -194,6 +195,7 @@ Deno.serve(async (req) => {
         patch.diesel_confidenceScore = dslRow.confidenceScore ?? null;
         patch.diesel_plausibilityStatus = dslRow.plausibilityStatus || null;
         patch.diesel_stationMatchStatus = dslRow.station_match_status || null;
+        patch.diesel_priceType = dslRow.priceType || null;
       }
 
       const existingRow = existingByStationId[stationId];
