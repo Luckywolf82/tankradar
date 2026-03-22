@@ -14,6 +14,8 @@ import { normalizeFuelType } from "@/utils/fuelTypeUtils";
  * - no hidden fallback across data granularities
  */
 
+const REQUEST_DELAY_MS = 250;
+
 /**
  * Fetch all FuelPrice rows for one station, newest first.
  */
@@ -51,7 +53,7 @@ export async function fetchFuelPricesByStationAndFuel({
  * Fetch FuelPrice rows for multiple stations and one selected fuel type.
  *
  * Important:
- * - intentionally conservative to reduce 429 rate-limit bursts
+ * - intentionally sequential to reduce 429 risk
  * - no eligibility logic
  * - no freshness logic
  * - no ranking logic
@@ -85,8 +87,7 @@ export async function fetchFuelPricesByStationsAndFuel({
       console.error("FuelPrice fetch failed for station", stationId, err);
     }
 
-    // Small pause to reduce rate-limit bursts when many nearby stations exist.
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY_MS));
   }
 
   return results;
