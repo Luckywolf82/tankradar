@@ -59,7 +59,7 @@ const sourceLabel = {
 // Both paths converge here. Input rows must already have _station attached.
 // No eligibility/resolver/freshness logic is changed — identical to legacy path.
 // ─────────────────────────────────────────────────────────────────────────────
-function runNearbyPipeline(rowsWithStation, userCoords, radiusKm) {
+function runNearbyPipeline(rowsWithStation, userCoords, radiusKm, pathLabel = "path") {
   const eligible = rowsWithStation.filter((p) => {
     if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
     if (!p._station?.latitude || !p._station?.longitude) return false;
@@ -80,6 +80,33 @@ function runNearbyPipeline(rowsWithStation, userCoords, radiusKm) {
 
   const byStation = resolveLatestPerStation(withDistance);
   const latestArr = Object.values(byStation);
+
+  // ── FRESHNESS DIAGNOSTICS ─────────────────────────────────────────────────
+  // Dev-only: logs the actual fetchedAt values and why each row passes/fails
+  // freshness. Remove once root cause is confirmed.
+  const now = Date.now();
+  console.group(`[TankRadar][${pathLabel}] Freshness diagnostic — ${latestArr.length} candidate(s)`);
+  latestArr.forEach((row) => {
+    const fetchedAt = row.fetchedAt;
+    const parsedMs = fetchedAt ? new Date(fetchedAt).getTime() : null;
+    const ageMs = parsedMs ? now - parsedMs : null;
+    const ageHours = ageMs != null ? (ageMs / 3_600_000).toFixed(1) : "N/A";
+    const isFresh = isFreshEnoughForNearbyRanking(row);
+    const maxDays = 7;
+    console.log(
+      `  stationId=${row.stationId} | fetchedAt=${fetchedAt ?? "NULL"} | type=${typeof fetchedAt}` +
+      ` | parsedMs=${parsedMs ?? "NaN"} | ageHours=${ageHours} | maxDays=${maxDays} | isFresh=${isFresh}` +
+      ` | station_match_status=${row.station_match_status} | plausibilityStatus=${row.plausibilityStatus}` +
+      ` | priceType=${row.priceType}`
+    );
+  });
+  if (latestArr.length === 0) {
+    console.log("  (no candidates reached latestArr — check eligibility and radius)");
+    console.log(`  input rows=${rowsWithStation.length}, eligible=${eligible.length}, within radius=${withDistance.length}`);
+  }
+  console.groupEnd();
+  // ── END DIAGNOSTICS ───────────────────────────────────────────────────────
+
   const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
 
   const sorted = [...fresh].sort((a, b) => {
