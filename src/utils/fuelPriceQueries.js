@@ -14,15 +14,19 @@ import { normalizeFuelType } from "@/utils/fuelTypeUtils";
  * - no hidden fallback across data granularities
  */
 
-const REQUEST_DELAY_MS = 250;
+const BATCH_SIZE = 5;
 
 /**
  * Fetch all FuelPrice rows for one station, newest first.
  */
-export async function fetchFuelPricesByStation({ stationId, limit = 200 } = {}) {
+export async function fetchFuelPricesByStation({ stationId, limit = 250 } = {}) {
   if (!stationId) return [];
 
-  return base44.entities.FuelPrice.filter({ stationId }, "-fetchedAt", limit);
+  return base44.entities.FuelPrice.filter(
+    { stationId },
+    "-fetchedAt",
+    limit
+  );
 }
 
 /**
@@ -47,25 +51,18 @@ export async function fetchFuelPricesByStationAndFuel({
 
 /**
  * Fetch FuelPrice rows for multiple stations and one selected fuel type.
- *
- * Important:
- * - intentionally sequential to reduce 429 risk
- * - supports early stop through shouldContinue()
- * - no eligibility logic
- * - no freshness logic
- * - no ranking logic
+ * Uses small batches to reduce 429 risk.
  */
 export async function fetchFuelPricesByStationsAndFuel({
   stationIds,
   selectedFuel,
   limit = 20,
-  shouldContinue = () => true,
 } = {}) {
   if (!Array.isArray(stationIds) || stationIds.length === 0 || !selectedFuel) {
     return [];
   }
 
-  const normalizedIds = [...new Set(stationIds.filter(Boolean))];
+  const normalizedIds = stationIds.filter(Boolean);
   if (normalizedIds.length === 0) return [];
 
   const fuelType = normalizeFuelType(selectedFuel);
@@ -73,24 +70,24 @@ export async function fetchFuelPricesByStationsAndFuel({
 
   const results = [];
 
-  for (const stationId of normalizedIds) {
-    if (!shouldContinue()) break;
+  for (let i = 0; i < normalizedIds.length; i += BATCH_SIZE) {
+    const batch = normalizedIds.slice(i, i + BATCH_SIZE);
 
     try {
-      const rows = await base44.entities.FuelPrice.filter(
-        { stationId, fuelType },
-        "-fetchedAt",
-        limit
+      const batchResults = await Promise.all(
+        batch.map((stationId) =>
+          base44.entities.FuelPrice.filter(
+            { stationId, fuelType },
+            "-fetchedAt",
+            limit
+          )
+        )
       );
 
-      if (!shouldContinue()) break;
-      results.push(...rows);
+      results.push(...batchResults.flat());
     } catch (err) {
-      console.error("FuelPrice fetch failed for station", stationId, err);
+      console.error("FuelPrice batch fetch failed", err);
     }
-
-    if (!shouldContinue()) break;
-    await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY_MS));
   }
 
   return results;
@@ -99,7 +96,7 @@ export async function fetchFuelPricesByStationsAndFuel({
 /**
  * Fetch recent realistic FuelPrice rows, newest first.
  */
-export async function fetchRecentRealisticFuelPrices({ limit = 200 } = {}) {
+export async function fetchRecentRealisticFuelPrices({ limit = 250 } = {}) {
   return base44.entities.FuelPrice.filter(
     { plausibilityStatus: "realistic_price" },
     "-fetchedAt",
