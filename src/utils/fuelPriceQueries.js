@@ -1,53 +1,36 @@
 import { base44 } from "@/api/base44Client";
 import { normalizeFuelType } from "@/utils/fuelTypeUtils";
 
-const BATCH_SIZE = 5; // trygt nivå (kan justeres senere)
+/**
+ * Canonical FuelPrice read helpers.
+ *
+ * Scope:
+ * - read-path only
+ * - centralize query shape only
+ * - no new business rules
+ * - no eligibility logic
+ * - no freshness logic
+ * - no ranking logic
+ * - no hidden fallback across data granularities
+ */
 
-export async function fetchFuelPricesByStationsAndFuel({
-  stationIds,
-  selectedFuel,
-  limit = 20,
-}) {
-  if (!stationIds?.length) return [];
+const BATCH_SIZE = 5;
 
-  const fuelType = normalizeFuelType(selectedFuel);
+/**
+ * Fetch all FuelPrice rows for one station, newest first.
+ */
+export async function fetchFuelPricesByStation({ stationId, limit = 200 } = {}) {
+  if (!stationId) return [];
 
-  const results = [];
-
-  // loop i batches i stedet for Promise.all på alt
-  for (let i = 0; i < stationIds.length; i += BATCH_SIZE) {
-    const batch = stationIds.slice(i, i + BATCH_SIZE);
-
-    try {
-      const batchResults = await Promise.all(
-        batch.map((stationId) =>
-          base44.entities.FuelPrice.filter(
-            { stationId, fuelType },
-            "-fetchedAt",
-            limit
-          )
-        )
-      );
-
-      results.push(...batchResults.flat());
-    } catch (err) {
-      console.error("FuelPrice batch fetch failed", err);
-      // fortsett videre – ikke stopp hele Nearby
-    }
-  }
-
-  return results;
+  return base44.entities.FuelPrice.filter(
+    { stationId },
+    "-fetchedAt",
+    limit
+  );
 }
 
 /**
  * Fetch FuelPrice rows for one station and one selected fuel type, newest first.
- *
- * Intended use:
- * - station-level fuel-specific display paths
- *
- * Notes:
- * - selectedFuel is normalized here, not at the call site
- * - returns [] if stationId or selectedFuel is missing
  */
 export async function fetchFuelPricesByStationAndFuel({
   stationId,
@@ -68,20 +51,7 @@ export async function fetchFuelPricesByStationAndFuel({
 
 /**
  * Fetch FuelPrice rows for multiple stations and one selected fuel type.
- *
- * Intended use:
- * - NearbyPrices and similar multi-station station-price display paths
- *
- * Behavior preserved:
- * - same per-station query pattern currently used by NearbyPrices
- * - same sort order
- * - same default per-station limit
- *
- * Important:
- * - centralizes query shape only
- * - does not apply eligibility filtering
- * - does not apply freshness filtering
- * - does not rank results
+ * Uses small batches to reduce 429 risk.
  */
 export async function fetchFuelPricesByStationsAndFuel({
   stationIds,
@@ -98,29 +68,33 @@ export async function fetchFuelPricesByStationsAndFuel({
   const fuelType = normalizeFuelType(selectedFuel);
   if (!fuelType) return [];
 
-  const results = await Promise.all(
-    normalizedIds.map((stationId) =>
-      base44.entities.FuelPrice.filter(
-        { stationId, fuelType },
-        "-fetchedAt",
-        limit
-      )
-    )
-  );
+  const results = [];
 
-  return results.flat();
+  for (let i = 0; i < normalizedIds.length; i += BATCH_SIZE) {
+    const batch = normalizedIds.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchResults = await Promise.all(
+        batch.map((stationId) =>
+          base44.entities.FuelPrice.filter(
+            { stationId, fuelType },
+            "-fetchedAt",
+            limit
+          )
+        )
+      );
+
+      results.push(...batchResults.flat());
+    } catch (err) {
+      console.error("FuelPrice batch fetch failed", err);
+    }
+  }
+
+  return results;
 }
 
 /**
  * Fetch recent realistic FuelPrice rows, newest first.
- *
- * Intended use:
- * - feeds such as RecentPricesFeed before canonical eligibility is applied
- *
- * Important:
- * - this is not the display-eligibility layer
- * - callers must still apply isStationPriceDisplayEligible(...)
- *   plus any view-specific constraints like nearby station membership
  */
 export async function fetchRecentRealisticFuelPrices({ limit = 200 } = {}) {
   return base44.entities.FuelPrice.filter(
