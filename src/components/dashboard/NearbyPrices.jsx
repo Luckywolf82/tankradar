@@ -146,6 +146,23 @@ export default function NearbyPrices({ selectedFuel }) {
     const byStation = resolveLatestPerStation(withDistance);
     const latestArr = Object.values(byStation);
 
+    console.log("DEBUG latestArr fetchedAt", latestArr.map((p) => ({
+  stationId: p.stationId,
+  fetchedAt: p.fetchedAt,
+  priceNok: p.priceNok,
+})));
+    console.log("DEBUG freshness result", latestArr.map((p) => {
+  const parsedDate = p.fetchedAt ? new Date(p.fetchedAt) : null;
+  const valid = parsedDate && !Number.isNaN(parsedDate.getTime());
+
+  return {
+    stationId: p.stationId,
+    fetchedAt: p.fetchedAt,
+    parsed: valid ? parsedDate.toISOString() : "invalid",
+    ageMs: valid ? Date.now() - parsedDate.getTime() : null,
+    isFresh: isFreshEnoughForNearbyRanking(p),
+  };
+}));
     const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
 
     const sorted = fresh.sort((a, b) => {
