@@ -76,7 +76,16 @@ function runNearbyPipeline(rowsWithStation, userCoords, radiusKm, pathLabel = "p
         p._station.longitude
       ),
     }))
-    .filter((p) => p._distanceKm <= radiusKm);
+    .filter((p) => p._distanceKm <= radiusKm)
+    // Guard: rows without a parseable fetchedAt cannot win resolveLatestPerStation
+    // correctly (new Date(null) = epoch-0, which beats any null-initiated comparison).
+    // Exclude them here so they cannot displace rows with valid timestamps.
+    // These rows still appear in staleFallback only if NO valid-timestamp rows exist.
+    .filter((p) => {
+      if (!p.fetchedAt) return false;
+      const t = new Date(p.fetchedAt).getTime();
+      return Number.isFinite(t) && t > 0;
+    });
 
   const byStation = resolveLatestPerStation(withDistance);
   const latestArr = Object.values(byStation);
