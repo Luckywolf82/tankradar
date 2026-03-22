@@ -15,6 +15,24 @@ import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
 const FUEL_TYPES = ["bensin_95", "bensin_98", "diesel", "diesel_premium"];
 
+// Write-time only: strict canonical mapping for FuelPrice.fuelType
+// Only these two canonical values are allowed to be written.
+// Any incoming key not in this map is rejected at write-time.
+const WRITE_TIME_FUEL_MAP = {
+  bensin_95: "gasoline_95",
+  bensin: "gasoline_95",
+  "95": "gasoline_95",
+  gasoline_95: "gasoline_95",
+  petrol: "gasoline_95",
+  diesel: "diesel",
+  dsl: "diesel",
+};
+
+function normalizeFuelTypeForWrite(input) {
+  if (!input) return null;
+  return WRITE_TIME_FUEL_MAP[String(input).toLowerCase().trim()] || null;
+}
+
 function emptyPrices() {
   return Object.fromEntries(FUEL_TYPES.map(k => [k, { price: "", enabled: false, aiDetected: false }]));
 }
@@ -146,7 +164,6 @@ export default function LogPrice() {
     setSubmitError(null);
     setShowSuccess(true); // Show optimistic success immediately
     
-    const today = stationInfo.date_observed;
     const now = new Date().toISOString();
     
     try {
@@ -171,6 +188,13 @@ export default function LogPrice() {
       const entries = FUEL_TYPES
         .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
         .map(k => {
+          // Write-time canonical enforcement: reject non-canonical fuelType values
+          const canonicalFuelType = normalizeFuelTypeForWrite(k);
+          if (!canonicalFuelType) {
+            console.error("Invalid fuelType in logPrice:", k);
+            return null;
+          }
+
           const priceNok = parseFloat(detectedPrices[k].price);
           
           // Determine confidence score and reason based on match status
@@ -186,7 +210,7 @@ export default function LogPrice() {
           }
           
           const entry = {
-            fuelType: k,
+            fuelType: canonicalFuelType,
             priceNok: priceNok,
             priceType: "user_reported",
             sourceName: "user_reported",
@@ -238,7 +262,8 @@ export default function LogPrice() {
           ].filter(Boolean).join(' | ');
 
           return entry;
-        });
+        })
+        .filter(Boolean); // Remove null entries from rejected non-canonical fuelTypes
       
       // Attach reportedByUserId if user is logged in
       let reporterUserId = null;
