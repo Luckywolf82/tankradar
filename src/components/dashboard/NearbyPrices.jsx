@@ -36,8 +36,10 @@ const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
 const NEARBY_RADIUS_OPTIONS = [2, 5, 10, 20, 50];
 
-// Toggle to expose the pipeline debug panel (set to false to hide)
-const DEBUG_NEARBY = true;
+// Enable the pipeline debug panel via localStorage:
+//   localStorage.setItem("tankradar_debug_nearby", "true")
+const DEBUG_NEARBY =
+  localStorage.getItem("tankradar_debug_nearby") === "true";
 
 function getNearbyRadiusKm() {
   try {
