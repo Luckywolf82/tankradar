@@ -1,4 +1,4 @@
-// src/utils/fuelTypeUtils.js
+
 
 /**
  * Konverterer brukerinput eller UI-valgt drivstofftype til kanonisk fuelType-streng.
