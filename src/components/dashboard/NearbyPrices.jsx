@@ -146,23 +146,6 @@ export default function NearbyPrices({ selectedFuel }) {
     const byStation = resolveLatestPerStation(withDistance);
     const latestArr = Object.values(byStation);
 
-    console.log("DEBUG latestArr fetchedAt", latestArr.map((p) => ({
-  stationId: p.stationId,
-  fetchedAt: p.fetchedAt,
-  priceNok: p.priceNok,
-})));
-    console.log("DEBUG freshness result", latestArr.map((p) => {
-  const parsedDate = p.fetchedAt ? new Date(p.fetchedAt) : null;
-  const valid = parsedDate && !Number.isNaN(parsedDate.getTime());
-
-  return {
-    stationId: p.stationId,
-    fetchedAt: p.fetchedAt,
-    parsed: valid ? parsedDate.toISOString() : "invalid",
-    ageMs: valid ? Date.now() - parsedDate.getTime() : null,
-    isFresh: isFreshEnoughForNearbyRanking(p),
-  };
-}));
     const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
 
     const sorted = fresh.sort((a, b) => {
@@ -177,25 +160,9 @@ export default function NearbyPrices({ selectedFuel }) {
         ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
         : [];
 
-    console.log("NEARBY_DEBUG branch inputs", {
-  latestCount: latestArr.length,
-  freshCount: fresh.length,
-  nearbyCount: sorted.slice(0, 8).length,
-  staleCount: staleFallback.length,
-});
     setStaleFallbackResults(staleFallback);
   }, [userCoords, stations, prices, radiusKm]);
 
-  console.log("NEARBY_DEBUG render branch", {
-  nearbyResultsCount: nearbyResults.length,
-  staleFallbackResultsCount: staleFallbackResults.length,
-  showing:
-    nearbyResults.length > 0
-      ? "fresh"
-      : staleFallbackResults.length > 0
-        ? "stale"
-        : "empty",
-});
   if (gpsState === "denied" || gpsState === "unavailable") {
     return (
       <Card className="shadow-sm">
