@@ -124,16 +124,26 @@ function runNearbyPipeline(rowsWithStation, userCoords, radiusKm, pathLabel = "p
   console.groupEnd();
   // ── END DIAGNOSTICS ───────────────────────────────────────────────────────
 
-  const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
+  // FIXED: wrap in arrow fn to prevent filter() from passing (element, index, array)
+  // to isFreshEnoughForNearbyRanking. Without the wrapper, `index` (0, 1, 2…) overrides
+  // the default maxAgeMs parameter, making every row fail freshness.
+  const fresh = latestArr.filter((row) => isFreshEnoughForNearbyRanking(row));
 
   const sorted = [...fresh].sort((a, b) => {
     if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
     return a._distanceKm - b._distanceKm;
   });
 
+  // Fallback only triggers when NO rows pass freshness (genuinely > 7 days old).
+  // Sort by price first (cheapest = most useful), distance as tiebreaker.
   const staleFallbackResults =
     fresh.length === 0 && latestArr.length > 0
-      ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
+      ? [...latestArr]
+          .sort((a, b) => {
+            if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
+            return a._distanceKm - b._distanceKm;
+          })
+          .slice(0, 8)
       : [];
 
   return {
