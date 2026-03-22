@@ -157,7 +157,9 @@ Deno.serve(async (req) => {
     }
 
     // Load all active stations once
-    const allStations = await base44.asServiceRole.entities.Station.filter({ status: 'active' });
+    // Fetch all non-archived stations (status: 'active' or null/unset — default is active)
+    const allStationsRaw = await base44.asServiceRole.entities.Station.list('-created_date', 2000);
+    const allStations = allStationsRaw.filter(s => s.status !== 'archived_duplicate');
     const validStations = allStations.filter(s => s.latitude != null && s.longitude != null);
 
     let matched = 0, reviewNeeded = 0, noMatch = 0, errors = 0;
