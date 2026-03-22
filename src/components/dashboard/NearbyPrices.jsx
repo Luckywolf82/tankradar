@@ -336,8 +336,8 @@ export default function NearbyPrices({ selectedFuel }) {
       cspStale = result.staleFallbackResults;
     }
 
-    // ── PARITY CHECK (dev console only) ──────────────────────────────────────
-    if (stations.length && cspRows.length) {
+    // ── PARITY CHECK (dev console only — requires ENABLE_NEARBY_PARITY_DEBUG) ──
+    if (ENABLE_NEARBY_PARITY_DEBUG && stations.length && cspRows.length) {
       logParityReport(oldNearby, cspNearby, oldStale, cspStale);
     }
 
