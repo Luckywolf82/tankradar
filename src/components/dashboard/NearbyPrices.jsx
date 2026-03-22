@@ -11,6 +11,15 @@ import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
 import { resolveLatestPerStation, isFreshEnoughForNearbyRanking } from "@/utils/currentPriceResolver";
 import { getFuelTypeLabel } from "@/utils/fuelTypeUtils";
 import { fetchFuelPricesByStationsAndFuel } from "@/utils/fuelPriceQueries";
+import { adaptCurrentStationPriceRows } from "@/utils/currentStationPricesAdapter";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VERIFICATION FLAG
+// Flip to true ONLY after confirming parity in browser console.
+// When true, NearbyPrices reads from CurrentStationPrices instead of
+// the legacy Station + FuelPrice two-query path.
+// ─────────────────────────────────────────────────────────────────────────────
+const USE_CSP_PATH = false;
 
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
@@ -45,17 +54,125 @@ const sourceLabel = {
   GlobalPetrolPrices: { text: "GPP", color: "bg-slate-100 text-slate-600" },
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED PIPELINE
+// Both paths converge here. Input rows must already have _station attached.
+// No eligibility/resolver/freshness logic is changed — identical to legacy path.
+// ─────────────────────────────────────────────────────────────────────────────
+function runNearbyPipeline(rowsWithStation, userCoords, radiusKm) {
+  const eligible = rowsWithStation.filter((p) => {
+    if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
+    if (!p._station?.latitude || !p._station?.longitude) return false;
+    return true;
+  });
+
+  const withDistance = eligible
+    .map((p) => ({
+      ...p,
+      _distanceKm: haversineKm(
+        userCoords.lat,
+        userCoords.lon,
+        p._station.latitude,
+        p._station.longitude
+      ),
+    }))
+    .filter((p) => p._distanceKm <= radiusKm);
+
+  const byStation = resolveLatestPerStation(withDistance);
+  const latestArr = Object.values(byStation);
+  const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
+
+  const sorted = [...fresh].sort((a, b) => {
+    if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
+    return a._distanceKm - b._distanceKm;
+  });
+
+  const staleFallbackResults =
+    fresh.length === 0 && latestArr.length > 0
+      ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
+      : [];
+
+  return {
+    nearbyResults: sorted.slice(0, 8),
+    staleFallbackResults,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARITY CHECKER — console output only, invisible to users
+// ─────────────────────────────────────────────────────────────────────────────
+function logParityReport(oldNearby, cspNearby, oldStale, cspStale) {
+  const oldIds = oldNearby.map((p) => p.stationId);
+  const cspIds = cspNearby.map((p) => p.stationId);
+
+  const onlyInOld = oldIds.filter((id) => !cspIds.includes(id));
+  const onlyInCSP = cspIds.filter((id) => !oldIds.includes(id));
+
+  const priceMismatches = cspNearby
+    .map((csp) => {
+      const old = oldNearby.find((o) => o.stationId === csp.stationId);
+      if (!old) return null;
+      if (Math.abs(old.priceNok - csp.priceNok) > 0.001) {
+        return { stationId: csp.stationId, oldPrice: old.priceNok, cspPrice: csp.priceNok };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  const fetchedAtMismatches = cspNearby
+    .map((csp) => {
+      const old = oldNearby.find((o) => o.stationId === csp.stationId);
+      if (!old) return null;
+      if (old.fetchedAt !== csp.fetchedAt) {
+        return { stationId: csp.stationId, oldFetchedAt: old.fetchedAt, cspFetchedAt: csp.fetchedAt };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  const orderMatch = JSON.stringify(oldIds) === JSON.stringify(cspIds);
+
+  const parityPassed =
+    onlyInOld.length === 0 &&
+    onlyInCSP.length === 0 &&
+    priceMismatches.length === 0 &&
+    orderMatch;
+
+  console.group("[TankRadar] NearbyPrices parity check");
+  console.log(
+    `Old path: ${oldNearby.length} results, ${oldStale.length} stale`,
+    "| CSP path:", cspNearby.length, "results,", cspStale.length, "stale"
+  );
+  if (onlyInOld.length) console.warn("  Only in OLD path:", onlyInOld);
+  if (onlyInCSP.length) console.warn("  Only in CSP path:", onlyInCSP);
+  if (priceMismatches.length) console.warn("  Price mismatches:", priceMismatches);
+  if (fetchedAtMismatches.length) console.info("  fetchedAt differs (expected if CSP has newer data):", fetchedAtMismatches.length, "stations");
+  if (!orderMatch) console.warn("  Ranking order differs. Old:", oldIds, "| CSP:", cspIds);
+  console.log("  PARITY:", parityPassed ? "✅ PASSED — safe to flip USE_CSP_PATH = true" : "❌ FAILED — investigate before switching");
+  console.groupEnd();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export default function NearbyPrices({ selectedFuel }) {
   const navigate = useNavigate();
   const [radiusKm, setRadiusKm] = useState(getNearbyRadiusKm());
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
+
+  // Old path raw data
   const [stations, setStations] = useState([]);
   const [prices, setPrices] = useState([]);
+
+  // CSP path raw data (verification shadow)
+  const [cspRows, setCspRows] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [nearbyResults, setNearbyResults] = useState([]);
   const [staleFallbackResults, setStaleFallbackResults] = useState([]);
 
+  // GPS acquisition — unchanged
   useEffect(() => {
     if (!navigator.geolocation) {
       setGpsState("unavailable");
@@ -65,10 +182,7 @@ export default function NearbyPrices({ selectedFuel }) {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserCoords({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-        });
+        setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         setGpsState("ok");
       },
       () => {
@@ -79,26 +193,23 @@ export default function NearbyPrices({ selectedFuel }) {
     );
   }, []);
 
+  // Data fetch — both paths in parallel
   useEffect(() => {
     if (gpsState !== "ok" || !userCoords) return;
 
     setLoading(true);
 
-    base44.entities.Station.list("-created_date", 2000)
+    const oldPath = base44.entities.Station.list("-created_date", 2000)
       .then((stationsData) => {
         setStations(stationsData);
 
         const nearbyIds = stationsData
           .filter((s) => s.id && s.latitude && s.longitude)
-          .filter(
-            (s) =>
-              haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm
-          )
+          .filter((s) => haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm)
           .map((s) => s.id);
 
         if (nearbyIds.length === 0) {
           setPrices([]);
-          setLoading(false);
           return;
         }
 
@@ -107,61 +218,75 @@ export default function NearbyPrices({ selectedFuel }) {
           selectedFuel,
           limit: 20,
         }).then((rows) => setPrices(rows));
-      })
-      .finally(() => setLoading(false));
+      });
+
+    // CSP path — single query, all stations (filter by distance in processing)
+    const cspPath = base44.entities.CurrentStationPrices.list()
+      .then((rows) => setCspRows(rows));
+
+    Promise.all([oldPath, cspPath]).finally(() => setLoading(false));
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
+  // Processing — both pipelines run, results compared, active path drives display
   useEffect(() => {
-    if (!userCoords || !stations.length || !prices.length) {
+    if (!userCoords) {
       setNearbyResults([]);
       setStaleFallbackResults([]);
       return;
     }
 
-    const stationMap = {};
-    stations.forEach((s) => {
-      if (s.id) stationMap[s.id] = s;
-    });
+    // ── OLD PATH ──────────────────────────────────────────────────────────────
+    let oldNearby = [];
+    let oldStale = [];
 
-    const eligible = prices.filter((p) => {
-      if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
-      const station = stationMap[p.stationId];
-      if (!station || !station.latitude || !station.longitude) return false;
-      return true;
-    });
+    if (stations.length && prices.length) {
+      const stationMap = {};
+      stations.forEach((s) => { if (s.id) stationMap[s.id] = s; });
 
-    const withDistance = eligible
-      .map((p) => {
-        const station = stationMap[p.stationId];
-        const dist = haversineKm(
-          userCoords.lat,
-          userCoords.lon,
-          station.latitude,
-          station.longitude
-        );
-        return { ...p, _station: station, _distanceKm: dist };
-      })
-      .filter((p) => p._distanceKm <= radiusKm);
+      const oldRowsWithStation = prices
+        .filter((p) => {
+          const s = stationMap[p.stationId];
+          return s && s.latitude && s.longitude;
+        })
+        .map((p) => ({ ...p, _station: stationMap[p.stationId] }));
 
-    const byStation = resolveLatestPerStation(withDistance);
-    const latestArr = Object.values(byStation);
+      const result = runNearbyPipeline(oldRowsWithStation, userCoords, radiusKm);
+      oldNearby = result.nearbyResults;
+      oldStale = result.staleFallbackResults;
+    }
 
-    const fresh = latestArr.filter(isFreshEnoughForNearbyRanking);
+    // ── CSP PATH (verification shadow) ───────────────────────────────────────
+    let cspNearby = [];
+    let cspStale = [];
 
-    const sorted = fresh.sort((a, b) => {
-      if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
-      return a._distanceKm - b._distanceKm;
-    });
+    if (cspRows.length) {
+      // Adapter already embeds _station from CSP fields
+      const adapted = adaptCurrentStationPriceRows(cspRows, selectedFuel);
 
-    setNearbyResults(sorted.slice(0, 8));
+      // Pre-filter to rows with coordinates before pipeline (mirrors old path's stationMap check)
+      const withCoords = adapted.filter(
+        (p) => p._station?.latitude != null && p._station?.longitude != null
+      );
 
-    const staleFallback =
-      fresh.length === 0 && latestArr.length > 0
-        ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
-        : [];
+      const result = runNearbyPipeline(withCoords, userCoords, radiusKm);
+      cspNearby = result.nearbyResults;
+      cspStale = result.staleFallbackResults;
+    }
 
-    setStaleFallbackResults(staleFallback);
-  }, [userCoords, stations, prices, radiusKm]);
+    // ── PARITY CHECK (dev console only) ──────────────────────────────────────
+    if (stations.length && cspRows.length) {
+      logParityReport(oldNearby, cspNearby, oldStale, cspStale);
+    }
+
+    // ── ACTIVE PATH ───────────────────────────────────────────────────────────
+    // USE_CSP_PATH = false → display driven by old path (no user-visible change).
+    // Flip to true after parity confirmed in console.
+    setNearbyResults(USE_CSP_PATH ? cspNearby : oldNearby);
+    setStaleFallbackResults(USE_CSP_PATH ? cspStale : oldStale);
+
+  }, [userCoords, stations, prices, cspRows, radiusKm, selectedFuel]);
+
+  // ── RENDER (unchanged) ─────────────────────────────────────────────────────
 
   if (gpsState === "denied" || gpsState === "unavailable") {
     return (
