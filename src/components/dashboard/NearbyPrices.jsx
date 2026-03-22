@@ -177,6 +177,12 @@ export default function NearbyPrices({ selectedFuel }) {
         ? [...latestArr].sort((a, b) => a._distanceKm - b._distanceKm).slice(0, 8)
         : [];
 
+    console.log("NEARBY_DEBUG branch inputs", {
+  latestCount: latestArr.length,
+  freshCount: fresh.length,
+  nearbyCount: sorted.slice(0, 8).length,
+  staleCount: staleFallback.length,
+});
     setStaleFallbackResults(staleFallback);
   }, [userCoords, stations, prices, radiusKm]);
 
