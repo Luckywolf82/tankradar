@@ -5,15 +5,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
  *
  * Called by entity automation on FuelPrice create/update.
  *
+ * INVARIANT: ONE row per stationId.
+ *
  * Rules:
  * - Only rows with a valid stationId are processed.
  * - Only rows with plausibilityStatus = "realistic_price" are processed.
  * - Only fuelType "gasoline_95" or "diesel" are handled.
- * - gasoline_95 fields are updated only from gasoline_95 rows (diesel block untouched).
- * - diesel fields are updated only from diesel rows (gasoline_95 block untouched).
- * - Station metadata (name, chain, lat, lon) is fetched from Station catalog and stored
- *   so future Nearby reads need only CurrentStationPrices — no separate Station lookup.
- * - One row per stationId is maintained (upsert pattern).
+ * - gasoline_95 block updated only from gasoline_95 rows (diesel block untouched).
+ * - diesel block updated only from diesel rows (gasoline_95 block untouched).
+ * - Station metadata snapshotted from Station catalog so Nearby needs no separate lookup.
+ * - If a race condition produces duplicate rows (two concurrent creates), the duplicate
+ *   is detected immediately and self-healed: extra rows are merged into the oldest row
+ *   and deleted.
  * - FuelPrice history is never touched.
  */
 
@@ -52,13 +55,12 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
-    // Fetch station metadata from Station catalog for the station-level fields.
-    // These are snapshotted so Nearby reads need only CurrentStationPrices.
+    // Snapshot station metadata from Station catalog.
     let stationMeta = {};
     try {
-      const station = await base44.asServiceRole.entities.Station.filter({ id: stationId });
-      if (station && station.length > 0) {
-        const s = station[0];
+      const stationRows = await base44.asServiceRole.entities.Station.filter({ id: stationId });
+      if (stationRows && stationRows.length > 0) {
+        const s = stationRows[0];
         stationMeta = {
           stationName: s.name || null,
           stationChain: s.chain || null,
@@ -70,10 +72,8 @@ Deno.serve(async (req) => {
       // Non-fatal: station metadata will remain as previously stored or null
     }
 
-    // Find existing CurrentStationPrices row for this stationId
-    const existing = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId });
-
-    // Build fuel-specific patch — only the block for the incoming fuelType
+    // Build fuel-specific patch — only the block for the incoming fuelType.
+    // The other fuel block is untouched (not present in patch = not overwritten by Base44 update).
     let fuelPatch;
     if (fuelType === 'gasoline_95') {
       fuelPatch = {
@@ -84,7 +84,6 @@ Deno.serve(async (req) => {
         gasoline_95_stationMatchStatus: station_match_status || null,
       };
     } else {
-      // diesel
       fuelPatch = {
         diesel_price: priceNok,
         diesel_fetchedAt: fetchedAt || now,
@@ -101,13 +100,57 @@ Deno.serve(async (req) => {
       updatedAt: now,
     };
 
+    // UPSERT with post-write deduplication guard.
+    // Find all existing rows for this stationId (should be 0 or 1; >1 signals a race condition).
+    const existing = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId });
+
+    let action;
+    let canonicalRowId;
+
     if (existing && existing.length > 0) {
-      await base44.asServiceRole.entities.CurrentStationPrices.update(existing[0].id, patch);
-      return Response.json({ action: 'updated', stationId, fuelType, rowId: existing[0].id });
+      // UPDATE the canonical row (oldest by created_date to be deterministic)
+      const sorted = [...existing].sort((a, b) => new Date(a.created_date || 0) - new Date(b.created_date || 0));
+      canonicalRowId = sorted[0].id;
+      await base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, patch);
+      action = 'updated';
+
+      // SELF-HEAL: if a race condition created extras, merge their complementary fuel block
+      // into the canonical row and delete the extras.
+      if (sorted.length > 1) {
+        const extras = sorted.slice(1);
+        const mergePatch = {};
+        for (const extra of extras) {
+          // Take the complementary fuel block from the extra if canonical is missing it
+          if (fuelType === 'gasoline_95' && extra.diesel_price && !sorted[0].diesel_price) {
+            mergePatch.diesel_price = extra.diesel_price;
+            mergePatch.diesel_fetchedAt = extra.diesel_fetchedAt;
+            mergePatch.diesel_confidenceScore = extra.diesel_confidenceScore;
+            mergePatch.diesel_plausibilityStatus = extra.diesel_plausibilityStatus;
+            mergePatch.diesel_stationMatchStatus = extra.diesel_stationMatchStatus;
+          }
+          if (fuelType === 'diesel' && extra.gasoline_95_price && !sorted[0].gasoline_95_price) {
+            mergePatch.gasoline_95_price = extra.gasoline_95_price;
+            mergePatch.gasoline_95_fetchedAt = extra.gasoline_95_fetchedAt;
+            mergePatch.gasoline_95_confidenceScore = extra.gasoline_95_confidenceScore;
+            mergePatch.gasoline_95_plausibilityStatus = extra.gasoline_95_plausibilityStatus;
+            mergePatch.gasoline_95_stationMatchStatus = extra.gasoline_95_stationMatchStatus;
+          }
+          await base44.asServiceRole.entities.CurrentStationPrices.delete(extra.id);
+        }
+        if (Object.keys(mergePatch).length > 0) {
+          await base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, { ...mergePatch, updatedAt: now });
+        }
+        action = `updated+healed_${extras.length}_duplicates`;
+      }
+
     } else {
+      // CREATE the first (and only) row for this stationId
       const created = await base44.asServiceRole.entities.CurrentStationPrices.create({ stationId, ...patch });
-      return Response.json({ action: 'created', stationId, fuelType, rowId: created.id });
+      canonicalRowId = created.id;
+      action = 'created';
     }
+
+    return Response.json({ action, stationId, fuelType, rowId: canonicalRowId });
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
