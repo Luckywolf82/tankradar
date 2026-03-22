@@ -22,11 +22,7 @@ const REQUEST_DELAY_MS = 250;
 export async function fetchFuelPricesByStation({ stationId, limit = 200 } = {}) {
   if (!stationId) return [];
 
-  return base44.entities.FuelPrice.filter(
-    { stationId },
-    "-fetchedAt",
-    limit
-  );
+  return base44.entities.FuelPrice.filter({ stationId }, "-fetchedAt", limit);
 }
 
 /**
@@ -54,6 +50,7 @@ export async function fetchFuelPricesByStationAndFuel({
  *
  * Important:
  * - intentionally sequential to reduce 429 risk
+ * - supports early stop through shouldContinue()
  * - no eligibility logic
  * - no freshness logic
  * - no ranking logic
@@ -62,6 +59,7 @@ export async function fetchFuelPricesByStationsAndFuel({
   stationIds,
   selectedFuel,
   limit = 20,
+  shouldContinue = () => true,
 } = {}) {
   if (!Array.isArray(stationIds) || stationIds.length === 0 || !selectedFuel) {
     return [];
@@ -76,17 +74,22 @@ export async function fetchFuelPricesByStationsAndFuel({
   const results = [];
 
   for (const stationId of normalizedIds) {
+    if (!shouldContinue()) break;
+
     try {
       const rows = await base44.entities.FuelPrice.filter(
         { stationId, fuelType },
         "-fetchedAt",
         limit
       );
+
+      if (!shouldContinue()) break;
       results.push(...rows);
     } catch (err) {
       console.error("FuelPrice fetch failed for station", stationId, err);
     }
 
+    if (!shouldContinue()) break;
     await new Promise((resolve) => setTimeout(resolve, REQUEST_DELAY_MS));
   }
 
