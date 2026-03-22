@@ -227,7 +227,6 @@ export default function NearbyPrices({ selectedFuel }) {
       </CardHeader>
 
       <CardContent>
-          <div className="hidden">nearby-version-check-1</div>
         {nearbyResults.length === 0 && staleFallbackResults.length === 0 ? (
           <div className="text-sm text-slate-400 py-3">
             {prices.length === 0
