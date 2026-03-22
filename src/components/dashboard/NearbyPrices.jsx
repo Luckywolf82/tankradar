@@ -257,32 +257,37 @@ export default function NearbyPrices({ selectedFuel }) {
 
     setLoading(true);
 
-    const oldPath = base44.entities.Station.list("-created_date", 2000)
-      .then((stationsData) => {
-        setStations(stationsData);
-
-        const nearbyIds = stationsData
-          .filter((s) => s.id && s.latitude && s.longitude)
-          .filter((s) => haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm)
-          .map((s) => s.id);
-
-        if (nearbyIds.length === 0) {
-          setPrices([]);
-          return;
-        }
-
-        return fetchFuelPricesByStationsAndFuel({
-          stationIds: nearbyIds,
-          selectedFuel,
-          limit: 20,
-        }).then((rows) => setPrices(rows));
-      });
-
-    // CSP path — single query, all stations (filter by distance in processing)
+    // CSP path — single query, always fetched
     const cspPath = base44.entities.CurrentStationPrices.list()
       .then((rows) => setCspRows(rows));
 
-    Promise.all([oldPath, cspPath]).finally(() => setLoading(false));
+    if (ENABLE_NEARBY_PARITY_DEBUG) {
+      // Old path — only fetched when parity debug is active
+      const oldPath = base44.entities.Station.list("-created_date", 2000)
+        .then((stationsData) => {
+          setStations(stationsData);
+
+          const nearbyIds = stationsData
+            .filter((s) => s.id && s.latitude && s.longitude)
+            .filter((s) => haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm)
+            .map((s) => s.id);
+
+          if (nearbyIds.length === 0) {
+            setPrices([]);
+            return;
+          }
+
+          return fetchFuelPricesByStationsAndFuel({
+            stationIds: nearbyIds,
+            selectedFuel,
+            limit: 20,
+          }).then((rows) => setPrices(rows));
+        });
+
+      Promise.all([oldPath, cspPath]).finally(() => setLoading(false));
+    } else {
+      cspPath.finally(() => setLoading(false));
+    }
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
   // Processing — both pipelines run, results compared, active path drives display
