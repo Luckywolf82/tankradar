@@ -138,12 +138,18 @@ Deno.serve(async (req) => {
       500
     );
 
-    // Keep only records that need matching and have GPS data
+    // Keep only records that need matching and have GPS data.
+    // Also include recent no_safe_station_match records (last 30 days) to retry them,
+    // since the inline matcher at submission time may have failed due to city gate mismatch.
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const toProcess = allUnmatched
-      .filter(p =>
-        (p.station_match_status == null || p.station_match_status === 'review_needed_station_match') &&
-        p.gps_latitude != null && p.gps_longitude != null
-      )
+      .filter(p => {
+        if (!p.gps_latitude || !p.gps_longitude) return false;
+        if (p.station_match_status == null || p.station_match_status === 'review_needed_station_match') return true;
+        // Retry recent no_safe_station_match records
+        if (p.station_match_status === 'no_safe_station_match' && p.created_date >= thirtyDaysAgo) return true;
+        return false;
+      })
       .slice(0, BATCH_SIZE);
 
     if (toProcess.length === 0) {
