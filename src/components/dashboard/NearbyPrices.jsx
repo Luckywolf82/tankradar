@@ -491,7 +491,7 @@ export default function NearbyPrices({ selectedFuel }) {
               <span className="text-xs font-semibold text-amber-700">
                 Siste kjente priser nær deg
               </span>
-              <span className="text-xs text-amber-500">(ikke ferske priser)</span>
+              <span className="text-xs text-amber-500">(eldre data — over 7 dager)</span>
             </div>
 
             <div className="divide-y divide-slate-100">
@@ -512,6 +512,16 @@ export default function NearbyPrices({ selectedFuel }) {
                       locale: nb,
                     })
                   : null;
+
+                // Dynamic age label — only shown for genuinely old prices (> 7 days fallback)
+                const ageLabel = (() => {
+                  if (!p.fetchedAt) return null;
+                  const ageMs = Date.now() - new Date(p.fetchedAt).getTime();
+                  const ageDays = ageMs / (24 * 3_600_000);
+                  if (ageDays > 7) return { text: "Eldre pris", color: "bg-amber-100 text-amber-700" };
+                  if (ageDays > 1) return { text: "Ikke helt oppdatert", color: "bg-yellow-50 text-yellow-700" };
+                  return null; // < 24h — no label needed
+                })();
 
                 return (
                   <div
@@ -543,9 +553,11 @@ export default function NearbyPrices({ selectedFuel }) {
                           {src.text}
                         </span>
 
-                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
-                          Eldre pris
-                        </span>
+                        {ageLabel && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${ageLabel.color}`}>
+                            {ageLabel.text}
+                          </span>
+                        )}
                       </div>
                     </div>
 
