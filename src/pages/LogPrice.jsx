@@ -17,7 +17,6 @@ const FUEL_TYPES = ["bensin_95", "bensin_98", "diesel", "diesel_premium"];
 
 // Write-time only: strict canonical mapping for FuelPrice.fuelType
 // Only these two canonical values are allowed to be written.
-// Any incoming key not in this map is rejected at write-time.
 const WRITE_TIME_FUEL_MAP = {
   bensin_95: "gasoline_95",
   bensin: "gasoline_95",
@@ -69,6 +68,38 @@ function guessChain(name) {
   if (n.includes("yx")) return "YX";
   if (n.includes("best")) return "Best";
   return "";
+}
+
+/**
+ * SAFE SHORT-CIRCUIT MATCH DECISION
+ *
+ * Returns a matched_station_id result when all three conditions hold:
+ * 1. User explicitly selected a verified Station catalog entry (has a real station_id)
+ * 2. Source is confirmed as station_catalog (not a Google Places guess)
+ * 3. GPS confirms the user is within 500m of the selected station
+ *
+ * This is NOT lowering matching standards. It combines:
+ * - explicit user selection (high-confidence user signal)
+ * - verified catalog ID (provenance confirmed)
+ * - GPS proximity ≤500m (physical confirmation)
+ *
+ * If any condition is missing, falls through to full remote matching.
+ */
+function tryDirectCatalogMatch(stationInfo) {
+  if (
+    stationInfo.station_id &&
+    stationInfo.selectedSource === 'station_catalog' &&
+    stationInfo.selectedCandidateDistanceM != null &&
+    stationInfo.selectedCandidateDistanceM <= 500
+  ) {
+    return {
+      status: 'matched_station_id',
+      stationId: stationInfo.station_id,
+      candidates: [stationInfo.station_id],
+      reason: 'explicit_catalog_selection_gps_confirmed',
+    };
+  }
+  return null;
 }
 
 export default function LogPrice() {
@@ -167,22 +198,26 @@ export default function LogPrice() {
     const now = new Date().toISOString();
     
     try {
-      // Attempt station matching
-      let matchResult = null;
-      try {
-        const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
-          gps_lat: window.__gpsLat,
-          gps_lon: window.__gpsLon,
-          latitude: stationInfo.latitude, // Selected station coordinates (if available)
-          longitude: stationInfo.longitude,
-          station_name: stationInfo.station_name,
-          station_chain: stationInfo.station_chain,
-          city: stationInfo.city
-        });
-        matchResult = matchRes.data;
-      } catch (err) {
-        // Matching error, continue without stationId
-        matchResult = { status: 'no_safe_station_match', stationId: null };
+      // STATION MATCHING
+      // Fast path: user explicitly selected a known catalog station with GPS confirmation.
+      // Slow path: remote matching function for all other cases.
+      let matchResult = tryDirectCatalogMatch(stationInfo);
+
+      if (!matchResult) {
+        try {
+          const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
+            gps_lat: window.__gpsLat,
+            gps_lon: window.__gpsLon,
+            latitude: stationInfo.latitude,
+            longitude: stationInfo.longitude,
+            station_name: stationInfo.station_name,
+            station_chain: stationInfo.station_chain,
+            city: stationInfo.city
+          });
+          matchResult = matchRes.data;
+        } catch (err) {
+          matchResult = { status: 'no_safe_station_match', stationId: null };
+        }
       }
       
       const entries = FUEL_TYPES
@@ -259,6 +294,7 @@ export default function LogPrice() {
             stationInfo.userConfirmedSuggestedStation != null ? `confirmed=${stationInfo.userConfirmedSuggestedStation}` : null,
             stationInfo.userCorrectedChain ? `correctedChain=${stationInfo.userCorrectedChain}` : null,
             stationInfo.userClarificationReason ? `clarification=${stationInfo.userClarificationReason}` : null,
+            matchResult?.reason ? `matchReason=${matchResult.reason}` : null,
           ].filter(Boolean).join(' | ');
 
           return entry;
@@ -312,7 +348,6 @@ export default function LogPrice() {
     setSubmitError(null);
   };
 
-  // Repeat on same station: keep all stationInfo, reset only price/image fields
   const resetForRepeat = () => {
     setStep("photo");
     setImageUrl(null);
@@ -365,7 +400,6 @@ export default function LogPrice() {
           </>
         )}
         
-        {/* Optimistic Success Feedback */}
         <OptimisticSuccess 
           show={showSuccess} 
           isLoading={submitting}
