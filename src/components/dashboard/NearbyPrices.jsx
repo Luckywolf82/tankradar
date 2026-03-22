@@ -186,6 +186,16 @@ export default function NearbyPrices({ selectedFuel }) {
     setStaleFallbackResults(staleFallback);
   }, [userCoords, stations, prices, radiusKm]);
 
+  console.log("NEARBY_DEBUG render branch", {
+  nearbyResultsCount: nearbyResults.length,
+  staleFallbackResultsCount: staleFallbackResults.length,
+  showing:
+    nearbyResults.length > 0
+      ? "fresh"
+      : staleFallbackResults.length > 0
+        ? "stale"
+        : "empty",
+});
   if (gpsState === "denied" || gpsState === "unavailable") {
     return (
       <Card className="shadow-sm">
