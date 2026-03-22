@@ -86,6 +86,7 @@ export default function NearbyPrices({ selectedFuel }) {
     try { localStorage.setItem(NEARBY_RADIUS_STORAGE_KEY, String(km)); } catch {}
   };
 
+  // Get GPS
   useEffect(() => {
     if (!navigator.geolocation) {
       setGpsState("unavailable");
@@ -105,6 +106,7 @@ export default function NearbyPrices({ selectedFuel }) {
     );
   }, []);
 
+  // Load stations then query FuelPrice per nearby station
   useEffect(() => {
     if (gpsState !== "ok" || !userCoords) return;
     setLoading(true);
@@ -132,6 +134,7 @@ export default function NearbyPrices({ selectedFuel }) {
       .finally(() => setLoading(false));
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
+  // Compute nearby results
   useEffect(() => {
     if (!userCoords || !stations.length || !prices.length) {
       setNearbyResults([]);
