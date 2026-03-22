@@ -34,6 +34,7 @@ const normalizeFuel = (f) => {
 
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
+const NEARBY_RADIUS_OPTIONS = [2, 5, 10, 20, 50];
 
 // Toggle to expose the pipeline debug panel (set to false to hide)
 const DEBUG_NEARBY = true;
@@ -78,7 +79,7 @@ const fuelTypeLabel = {
 
 export default function NearbyPrices({ selectedFuel }) {
   const navigate = useNavigate();
-  const radiusKm = getNearbyRadiusKm();
+  const [radiusKm, setRadiusKm] = useState(getNearbyRadiusKm());
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
   const [stations, setStations] = useState([]);
@@ -151,7 +152,7 @@ export default function NearbyPrices({ selectedFuel }) {
         ).then((arrays) => setPrices(arrays.flat()));
       })
       .finally(() => setLoading(false));
-  }, [gpsState, selectedFuel, userCoords]);
+  }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
   // Compute nearby results whenever data changes
   useEffect(() => {
@@ -429,7 +430,20 @@ export default function NearbyPrices({ selectedFuel }) {
         <CardTitle className="text-base flex items-center gap-2">
           <Navigation size={16} className="text-blue-500" />
           Billigste nær deg
-          <span className="ml-auto text-xs font-normal text-slate-400">innen {radiusKm} km</span>
+          <select
+            value={radiusKm}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              localStorage.setItem(NEARBY_RADIUS_STORAGE_KEY, String(val));
+              setRadiusKm(val);
+            }}
+            aria-label="Velg søkeradius i kilometer"
+            className="ml-auto text-xs font-normal text-slate-500 bg-transparent border border-slate-200 rounded px-1.5 py-0.5 cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+          >
+            {NEARBY_RADIUS_OPTIONS.map((km) => (
+              <option key={km} value={km}>innen {km} km</option>
+            ))}
+          </select>
         </CardTitle>
       </CardHeader>
       <CardContent>
