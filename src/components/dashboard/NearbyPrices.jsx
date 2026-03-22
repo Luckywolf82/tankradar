@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Navigation, Clock } from "lucide-react";
@@ -47,6 +47,8 @@ const sourceLabel = {
 
 export default function NearbyPrices({ selectedFuel }) {
   const navigate = useNavigate();
+  const requestSeqRef = useRef(0);
+
   const [radiusKm, setRadiusKm] = useState(getNearbyRadiusKm());
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
   const [userCoords, setUserCoords] = useState(null);
@@ -82,10 +84,15 @@ export default function NearbyPrices({ selectedFuel }) {
   useEffect(() => {
     if (gpsState !== "ok" || !userCoords) return;
 
+    const requestId = ++requestSeqRef.current;
+    let isActive = true;
+
     setLoading(true);
 
     base44.entities.Station.list("-created_date", 2000)
       .then((stationsData) => {
+        if (!isActive || requestSeqRef.current !== requestId) return null;
+
         setStations(stationsData);
 
         const nearbyIds = stationsData
@@ -97,18 +104,36 @@ export default function NearbyPrices({ selectedFuel }) {
           .map((s) => s.id);
 
         if (nearbyIds.length === 0) {
-          setPrices([]);
-          setLoading(false);
-          return;
+          if (isActive && requestSeqRef.current === requestId) {
+            setPrices([]);
+          }
+          return null;
         }
 
         return fetchFuelPricesByStationsAndFuel({
           stationIds: nearbyIds,
           selectedFuel,
           limit: 20,
-        }).then((rows) => setPrices(rows));
+        });
       })
-      .finally(() => setLoading(false));
+      .then((rows) => {
+        if (!rows) return;
+        if (!isActive || requestSeqRef.current !== requestId) return;
+        setPrices(rows);
+      })
+      .catch((err) => {
+        if (!isActive || requestSeqRef.current !== requestId) return;
+        console.error("NearbyPrices fetch failed", err);
+        setPrices([]);
+      })
+      .finally(() => {
+        if (!isActive || requestSeqRef.current !== requestId) return;
+        setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
 
   useEffect(() => {
@@ -152,7 +177,7 @@ export default function NearbyPrices({ selectedFuel }) {
       if (a.priceNok !== b.priceNok) return a.priceNok - b.priceNok;
       return a._distanceKm - b._distanceKm;
     });
-    
+
     setNearbyResults(sorted.slice(0, 8));
 
     const staleFallback =
