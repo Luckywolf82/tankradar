@@ -9,25 +9,8 @@ import { createPageUrl } from "@/utils";
 import SharePriceButton from "@/components/shared/SharePriceButton";
 import { isStationPriceDisplayEligible } from "@/utils/fuelPriceEligibility";
 import { resolveLatestPerStation, isFreshEnoughForNearbyRanking } from "@/utils/currentPriceResolver";
-
-const normalizeFuel = (f) => {
-  if (!f) return f;
-
-  const map = {
-    bensin: "gasoline_95",
-    "bensin 95": "gasoline_95",
-    "95": "gasoline_95",
-    gasoline_95: "gasoline_95",
-
-    "98": "gasoline_98",
-    gasoline_98: "gasoline_98",
-
-    diesel: "diesel",
-    diesel_premium: "diesel_premium",
-  };
-
-  return map[f.toLowerCase()] || f;
-};
+import { getFuelTypeLabel } from "@/utils/fuelTypeUtils";
+import { fetchFuelPricesByStationsAndFuel } from "@/utils/fuelPriceQueries";
 
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
@@ -60,15 +43,6 @@ const sourceLabel = {
   user_reported: { text: "Brukerpris", color: "bg-green-100 text-green-700" },
   FuelFinder: { text: "FuelFinder", color: "bg-orange-100 text-orange-700" },
   GlobalPetrolPrices: { text: "GPP", color: "bg-slate-100 text-slate-600" },
-};
-
-const fuelTypeLabel = {
-  gasoline_95: "Bensin 95",
-  gasoline_98: "Bensin 98",
-  diesel: "Diesel",
-  bensin_95: "Bensin 95",
-  bensin_98: "Bensin 98",
-  diesel_premium: "Diesel+",
 };
 
 export default function NearbyPrices({ selectedFuel }) {
@@ -128,17 +102,11 @@ export default function NearbyPrices({ selectedFuel }) {
           return;
         }
 
-        const normalizedFuel = normalizeFuel(selectedFuel);
-
-        return Promise.all(
-          nearbyIds.map((id) =>
-            base44.entities.FuelPrice.filter(
-              { stationId: id, fuelType: normalizedFuel },
-              "-fetchedAt",
-              20
-            )
-          )
-        ).then((arrays) => setPrices(arrays.flat()));
+        return fetchFuelPricesByStationsAndFuel({
+          stationIds: nearbyIds,
+          selectedFuel,
+          limit: 20,
+        }).then((rows) => setPrices(rows));
       })
       .finally(() => setLoading(false));
   }, [gpsState, selectedFuel, userCoords, radiusKm]);
@@ -424,7 +392,7 @@ export default function NearbyPrices({ selectedFuel }) {
         {nearbyResults.length > 0 && nearbyResults.length < 3 && (
           <p className="text-xs text-slate-400 mt-2 border-t border-slate-100 pt-2">
             Kun {nearbyResults.length} stasjon{nearbyResults.length !== 1 ? "er" : ""} med{" "}
-            {fuelTypeLabel[selectedFuel] || selectedFuel}-pris funnet innen {radiusKm} km.
+            {getFuelTypeLabel(selectedFuel)}-pris funnet innen {radiusKm} km.
           </p>
         )}
       </CardContent>
