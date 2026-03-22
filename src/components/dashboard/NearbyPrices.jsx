@@ -15,6 +15,7 @@ import { fetchFuelPricesByStationsAndFuel } from "@/utils/fuelPriceQueries";
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
 const NEARBY_RADIUS_OPTIONS = [2, 5, 10, 20, 50];
+const MAX_NEARBY_STATIONS_FOR_PRICE_FETCH = 12;
 
 function getNearbyRadiusKm() {
   try {
@@ -50,7 +51,7 @@ export default function NearbyPrices({ selectedFuel }) {
   const requestSeqRef = useRef(0);
 
   const [radiusKm, setRadiusKm] = useState(getNearbyRadiusKm());
-  const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied | unavailable
+  const [gpsState, setGpsState] = useState("pending");
   const [userCoords, setUserCoords] = useState(null);
   const [stations, setStations] = useState([]);
   const [prices, setPrices] = useState([]);
@@ -93,15 +94,28 @@ export default function NearbyPrices({ selectedFuel }) {
       .then((stationsData) => {
         if (!isActive || requestSeqRef.current !== requestId) return null;
 
-        setStations(stationsData);
-
-        const nearbyIds = stationsData
+        const stationsWithDistance = stationsData
           .filter((s) => s.id && s.latitude && s.longitude)
-          .filter(
-            (s) =>
-              haversineKm(userCoords.lat, userCoords.lon, s.latitude, s.longitude) <= radiusKm
-          )
-          .map((s) => s.id);
+          .map((s) => ({
+            ...s,
+            _distanceKm: haversineKm(
+              userCoords.lat,
+              userCoords.lon,
+              s.latitude,
+              s.longitude
+            ),
+          }))
+          .filter((s) => s._distanceKm <= radiusKm)
+          .sort((a, b) => a._distanceKm - b._distanceKm);
+
+        const limitedStations = stationsWithDistance.slice(
+          0,
+          MAX_NEARBY_STATIONS_FOR_PRICE_FETCH
+        );
+
+        setStations(limitedStations);
+
+        const nearbyIds = limitedStations.map((s) => s.id);
 
         if (nearbyIds.length === 0) {
           if (isActive && requestSeqRef.current === requestId) {
