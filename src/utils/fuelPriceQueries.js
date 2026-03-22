@@ -1,39 +1,42 @@
 import { base44 } from "@/api/base44Client";
 import { normalizeFuelType } from "@/utils/fuelTypeUtils";
 
-/**
- * Canonical FuelPrice read helpers.
- *
- * Scope:
- * - read-path only
- * - centralize query shape only
- * - no new business rules
- * - no eligibility logic
- * - no freshness logic
- * - no ranking logic
- * - no hidden fallback across data granularities
- */
+const BATCH_SIZE = 5; // trygt nivå (kan justeres senere)
 
-/**
- * Fetch all FuelPrice rows for one station, newest first.
- *
- * Intended use:
- * - StationDetails broader station history
- * - Other single-station read paths that need station-level FuelPrice rows
- *
- * Behavior preserved:
- * - same query shape as existing StationDetails read path
- * - same sort order
- * - same default limit
- */
-export async function fetchFuelPricesByStation({ stationId, limit = 200 } = {}) {
-  if (!stationId) return [];
+export async function fetchFuelPricesByStationsAndFuel({
+  stationIds,
+  selectedFuel,
+  limit = 20,
+}) {
+  if (!stationIds?.length) return [];
 
-  return base44.entities.FuelPrice.filter(
-    { stationId },
-    "-fetchedAt",
-    limit
-  );
+  const fuelType = normalizeFuelType(selectedFuel);
+
+  const results = [];
+
+  // loop i batches i stedet for Promise.all på alt
+  for (let i = 0; i < stationIds.length; i += BATCH_SIZE) {
+    const batch = stationIds.slice(i, i + BATCH_SIZE);
+
+    try {
+      const batchResults = await Promise.all(
+        batch.map((stationId) =>
+          base44.entities.FuelPrice.filter(
+            { stationId, fuelType },
+            "-fetchedAt",
+            limit
+          )
+        )
+      );
+
+      results.push(...batchResults.flat());
+    } catch (err) {
+      console.error("FuelPrice batch fetch failed", err);
+      // fortsett videre – ikke stopp hele Nearby
+    }
+  }
+
+  return results;
 }
 
 /**
