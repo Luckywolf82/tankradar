@@ -19,7 +19,11 @@ import { adaptCurrentStationPriceRows } from "@/utils/currentStationPricesAdapte
 // When true, NearbyPrices reads from CurrentStationPrices instead of
 // the legacy Station + FuelPrice two-query path.
 // ─────────────────────────────────────────────────────────────────────────────
-const USE_CSP_PATH = false;
+const USE_CSP_PATH = true;
+
+// Set to true ONLY when you need to re-run parity checks in the browser console.
+// When false, the old Station + FuelPrice path is never fetched — eliminating 429s.
+const ENABLE_NEARBY_PARITY_DEBUG = false;
 
 const NEARBY_RADIUS_DEFAULT_KM = 10;
 const NEARBY_RADIUS_STORAGE_KEY = "tankradar_nearby_radius_km";
