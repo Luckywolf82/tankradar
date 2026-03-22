@@ -277,7 +277,7 @@ export default function NearbyPrices({ selectedFuel }) {
         })
         .map((p) => ({ ...p, _station: stationMap[p.stationId] }));
 
-      const result = runNearbyPipeline(oldRowsWithStation, userCoords, radiusKm);
+      const result = runNearbyPipeline(oldRowsWithStation, userCoords, radiusKm, "OLD");
       oldNearby = result.nearbyResults;
       oldStale = result.staleFallbackResults;
     }
@@ -295,7 +295,7 @@ export default function NearbyPrices({ selectedFuel }) {
         (p) => p._station?.latitude != null && p._station?.longitude != null
       );
 
-      const result = runNearbyPipeline(withCoords, userCoords, radiusKm);
+      const result = runNearbyPipeline(withCoords, userCoords, radiusKm, "CSP");
       cspNearby = result.nearbyResults;
       cspStale = result.staleFallbackResults;
     }
