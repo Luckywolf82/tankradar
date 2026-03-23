@@ -71,6 +71,55 @@ function PumpInsightLine({ insight }) {
 }
 
 /**
+ * Returns case-specific CTA text and support text based on pumpInsight.type.
+ *
+ * Certainty rules:
+ * - High certainty (among_cheapest, cheaper_alternative_exists) → lead with insight, minimal support
+ * - Low certainty (missing/stale/insufficient) → honest "helps YOU compare now" framing
+ * - No insight yet → neutral fallback
+ */
+function resolveCopy(insightType) {
+  switch (insightType) {
+    case "missing_station_price":
+      return {
+        headline: "Ingen oppdatert pris på denne stasjonen akkurat nå",
+        support: "Registrer prisen her for å få en mer treffsikker sammenligning med en gang.",
+        cta: "Registrer pris nå",
+      };
+    case "stale_station_price":
+      return {
+        headline: "Prisen her kan være utdatert",
+        support: "Oppdater prisen for å se et mer nøyaktig sammenligningsgrunnlag.",
+        cta: "Oppdater pris nå",
+      };
+    case "cheaper_alternative_exists":
+      return {
+        headline: null, // insight.text already shown via PumpInsightLine
+        support: "Oppdater prisen her hvis du vil gjøre sammenligningen enda mer presis.",
+        cta: "Registrer pris her nå",
+      };
+    case "among_cheapest":
+      return {
+        headline: null, // insight.text already shown via PumpInsightLine
+        support: "Hold prisene rundt deg oppdatert.",
+        cta: "Registrer pris her nå",
+      };
+    case "insufficient_fresh_nearby_data":
+      return {
+        headline: "Vi har for få ferske priser i området akkurat nå",
+        support: "Registrer prisen her for å gjøre prisbildet rundt deg bedre.",
+        cta: "Registrer pris nå",
+      };
+    default:
+      return {
+        headline: null,
+        support: "Registrer prisen her – så blir sammenligningen rundt deg mer treffsikker.",
+        cta: "Registrer pris her nå",
+      };
+  }
+}
+
+/**
  * PumpModeCard — shown when user is within 150m of a known station.
  *
  * Props:
@@ -80,17 +129,11 @@ function PumpInsightLine({ insight }) {
  *   pumpInsight            — { type, text } — certainty-aware insight derived
  *                            in parent from CurrentStationPrices context
  *                            (optional — card works without it)
- *
- * Future-ready optional props (kept for backwards compat):
- *   contributionImpactText
- *   lastLoggedAt
  */
 export default function PumpModeCard({
   onActivate,
   onStationDetected,
   pumpInsight,
-  contributionImpactText,
-  lastLoggedAt,
 }) {
   const [station, setStation] = useState(null);
   const [distKm, setDistKm] = useState(null);
