@@ -97,6 +97,26 @@ export default function DuplicateStationGroup({ group, index }) {
 
   const summary = computeDifferenceSummary();
 
+  const handleMerge = async () => {
+    if (!confirmed) return;
+    const dupIds = group.stations.map(s => s.id).filter(id => id !== canonicalId);
+    setMerging(true);
+    setMergeError(null);
+    setMergeResult(null);
+    const res = await base44.functions.invoke("executeDuplicateMerge", {
+      canonical_station_id: canonicalId,
+      duplicate_station_ids: dupIds,
+      curator_confirmation: true,
+      notes: mergeNotes.trim() || "Utført via DuplicateStationGroup",
+    });
+    setMerging(false);
+    if (res.data?.success) {
+      setMergeResult(res.data);
+    } else {
+      setMergeError(res.data?.error ?? "Ukjent feil fra executeDuplicateMerge");
+    }
+  };
+
   return (
     <Card className={`${styles.bg} border-2 ${styles.border} mb-3`}>
       <CardContent className="pt-4">
