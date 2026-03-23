@@ -27,7 +27,7 @@ export default function StationSearchPicker({ onSelectCanonical, onAddDuplicate,
     if (q.trim().length < 2) { setResults([]); setOpen(false); return; }
     setLoading(true);
     try {
-      const all = await base44.entities.Station.filter({ status: "active" }, "name", 200);
+      const all = await base44.entities.Station.filter({ status: "active" }, "name", 2000);
       const lower = q.toLowerCase();
       const filtered = all.filter(s =>
         (s.name || "").toLowerCase().includes(lower) ||
