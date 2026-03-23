@@ -212,6 +212,24 @@ Deno.serve(async (req) => {
       allStations = testStations;
     }
 
+    // ── SINGLE UPFRONT DEDUP LOAD ────────────────────────────────────────────
+    // Load all existing GooglePlaces FuelPrice rows once. Dedup is done in
+    // memory instead of one entity query per observation (avoids 429s).
+    const existingGPPrices = await db.entities.FuelPrice.filter(
+      { sourceName: "GooglePlaces" },
+      "-created_date",
+      2000
+    );
+    // Build a lookup key: stationId|fuelType → most recent { priceNok, sourceUpdatedAt }
+    const dedupMap = {};
+    for (const row of existingGPPrices) {
+      const key = `${row.stationId}|${row.fuelType}`;
+      if (!dedupMap[key]) {
+        dedupMap[key] = { priceNok: row.priceNok, sourceUpdatedAt: row.sourceUpdatedAt };
+      }
+    }
+    // ── END DEDUP LOAD ───────────────────────────────────────────────────────
+
     const stats = {
       // API-nivå tracking
       totalGooglePlacesResults: 0,
