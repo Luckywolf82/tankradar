@@ -206,7 +206,9 @@ export default function SavingsSummaryCard({ selectedFuel, pumpModeActive = fals
               <span className="font-bold text-slate-800">{spreadText} kr/l</span>{" "}
               blant {stationCount} stasjon{stationCount !== 1 ? "er" : ""} i nærheten.
             </p>
-            {isMeaningful && (
+            {/* Only show savings amount when PumpMode is NOT active.
+                When PumpMode is active, PumpModeCard is the authority for savings. */}
+            {isMeaningful && !pumpModeActive && (
               <p className="text-xs text-slate-500 mt-1">
                 Å velge riktig stasjon kan gi opptil ca{" "}
                 <span className="font-semibold text-green-700">{maxSaving} kr</span>{" "}
