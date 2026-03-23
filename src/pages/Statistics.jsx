@@ -76,6 +76,10 @@ export default function Statistics() {
             </div>
 
             <div className="mb-6">
+              <NationalFuelBarometer />
+            </div>
+
+            <div className="mb-6">
               <HistoricalSSBTrend ssbData={ssbData} selectedFuel={selectedFuel} loading={loading} />
             </div>
 
