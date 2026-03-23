@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Fuel, MapPin, ChevronRight, TrendingDown } from "lucide-react";
+import { Fuel, MapPin, ChevronRight, TrendingDown, Flame, AlertCircle, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -25,16 +25,70 @@ function distLabel(km) {
 }
 
 /**
+ * Renders the certainty-aware insight line above the CTA.
+ *
+ * pumpInsight = { type: string, text: string }
+ *
+ * Supported types:
+ *   "among_cheapest"               → green, fire icon
+ *   "cheaper_alternative_exists"   → amber, savings icon
+ *   "missing_station_price"        → slate, help icon — logging prompt
+ *   "insufficient_fresh_nearby_data" → slate, help icon — logging prompt
+ */
+function PumpInsightLine({ insight }) {
+  if (!insight) return null;
+
+  const config = {
+    among_cheapest: {
+      icon: <Flame size={12} className="shrink-0 text-green-600" />,
+      className: "bg-green-50 border border-green-100 text-green-800",
+    },
+    cheaper_alternative_exists: {
+      icon: <TrendingDown size={12} className="shrink-0 text-amber-600" />,
+      className: "bg-amber-50 border border-amber-100 text-amber-800",
+    },
+    missing_station_price: {
+      icon: <HelpCircle size={12} className="shrink-0 text-slate-400" />,
+      className: "bg-slate-50 border border-slate-200 text-slate-600",
+    },
+    insufficient_fresh_nearby_data: {
+      icon: <HelpCircle size={12} className="shrink-0 text-slate-400" />,
+      className: "bg-slate-50 border border-slate-200 text-slate-600",
+    },
+  };
+
+  const { icon, className } = config[insight.type] ?? {
+    icon: <AlertCircle size={12} className="shrink-0 text-slate-400" />,
+    className: "bg-slate-50 border border-slate-200 text-slate-600",
+  };
+
+  return (
+    <div className={`flex items-start gap-1.5 text-xs rounded-lg px-2.5 py-1.5 mb-3 ${className}`}>
+      {icon}
+      <span>{insight.text}</span>
+    </div>
+  );
+}
+
+/**
  * PumpModeCard — shown when user is within 150m of a known station.
  *
- * Optional future props (not required now):
- *   estimatedSavingsText  — e.g. "Du sparte ~45 kr sist uke"
- *   contributionImpactText — e.g. "23 brukere brukte prisene dine"
- *   lastLoggedAt          — ISO date string of user's last log at this station
+ * Props:
+ *   onActivate(bool)       — called when pump mode is activated or hidden
+ *   onStationDetected(id)  — called with the detected stationId, used by
+ *                            parent to derive pumpInsight via usePumpInsight
+ *   pumpInsight            — { type, text } — certainty-aware insight derived
+ *                            in parent from CurrentStationPrices context
+ *                            (optional — card works without it)
+ *
+ * Future-ready optional props (kept for backwards compat):
+ *   contributionImpactText
+ *   lastLoggedAt
  */
 export default function PumpModeCard({
   onActivate,
-  estimatedSavingsText,
+  onStationDetected,
+  pumpInsight,
   contributionImpactText,
   lastLoggedAt,
 }) {
@@ -69,6 +123,7 @@ export default function PumpModeCard({
         const nearest = nearby[0];
         setStation(nearest);
         onActivate?.(true);
+        onStationDetected?.(nearest.id);
         setDistKm(nearest._distKm);
       },
       () => { setStep("hidden"); onActivate?.(false); },
@@ -102,25 +157,21 @@ export default function PumpModeCard({
           </span>
         </div>
 
-        {/* Motivational context */}
-        <div className="mb-3 px-1">
-          {/* Optional savings hook — only rendered when prop is provided, never calculated here */}
-          {estimatedSavingsText && (
-            <div className="mb-2 flex items-center gap-1.5 text-xs text-green-700 font-medium bg-green-50 border border-green-100 rounded-lg px-2.5 py-1.5">
-              <TrendingDown size={12} className="shrink-0" />
-              {estimatedSavingsText}
-            </div>
-          )}
+        {/* Certainty-aware insight — only shown when derived from real data */}
+        <PumpInsightLine insight={pumpInsight} />
 
-          <p className="text-xs text-slate-600 leading-relaxed">
+        {/* Fallback motivational text — shown only when no insight is available */}
+        {!pumpInsight && (
+          <p className="text-xs text-slate-600 leading-relaxed mb-3 px-1">
             Registrer prisen her – så blir prisene rundt deg mer treffsikre neste gang du fyller.
           </p>
-          {contributionImpactText && (
-            <p className="mt-1 text-xs text-slate-400">{contributionImpactText}</p>
-          )}
-        </div>
+        )}
 
-        {/* Primary CTA */}
+        {contributionImpactText && (
+          <p className="text-xs text-slate-400 mb-3 px-1">{contributionImpactText}</p>
+        )}
+
+        {/* Primary CTA — unchanged */}
         <Link to={createPageUrl("LogPrice")}>
           <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2 text-sm">
             Registrer prisen her nå
