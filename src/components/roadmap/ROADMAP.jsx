@@ -1220,10 +1220,24 @@ export const NORTH_STAR_FEATURES = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const GOVERNANCE = {
-  version: "4.3",
-  lastUpdated: "2026-03-13",
-  updatedBy: "Roadmap Governor — Entry 104 (v4.3 acquisition layer roadmap sync pass)",
-  previousVersion: "4.2 (Entry 103 — scoping-required status pass)",
+  version: "4.4",
+  lastUpdated: "2026-03-23",
+  updatedBy: "Roadmap Governor — Entry 105 (v4.4 CSP migration + NearbyPrices stabilization pass)",
+  previousVersion: "4.3 (Entry 104 — acquisition layer roadmap sync pass)",
+
+  v44Changes: [
+    "1. billigste-drivstoff-naerheten: status active → stabilized. stabilizationNotes added (CSP migration, 429 fix, freshness bug, sorting, parity).",
+    "2. NEW ENTRY: current-read-model-csp (phase 1, system, completed). Documents CSP as canonical read model.",
+    "3. NEW ENTRY: nearby-cleanup-post-migration (phase 1, tech-debt, pending, priority low).",
+    "4. national-fuel-barometer note updated: enhanced after initial ship, integrated into Statistics page, used on Dashboard and Statistics surfaces.",
+    "5. COMPLETED_TRACE: current-read-model-csp and billigste-drivstoff-naerheten entries added.",
+    "6. national-fuel-barometer COMPLETED_TRACE note updated with enhanced scope.",
+    "7. recommendedBuildSequence: fuel-savings-tracker moved to step 1, admin-operations-panel-integration to step 2.",
+    "8. STATUS_DEFINITIONS: 'stabilized' should be added — feature is live and no longer in active iteration but not fully retired.",
+    "9. No phase baseline changes.",
+    "10. No scoring weight changes.",
+    "11. No frozen files modified.",
+  ],
 
   v43Changes: [
     "1. Added Phase 3 acquisition-layer features: radar-mode, price-sign-ocr, likely-refuel-detection.",
