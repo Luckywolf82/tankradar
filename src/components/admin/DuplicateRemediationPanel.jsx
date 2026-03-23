@@ -103,6 +103,29 @@ export default function DuplicateRemediationPanel() {
   const [mergeNotes, setMergeNotes] = useState("");
   const [previewCanonicalId, setPreviewCanonicalId] = useState("");
   const [previewDuplicateIds, setPreviewDuplicateIds] = useState("");
+
+  // Station search state
+  const [canonicalStation, setCanonicalStation] = useState(null);
+  const [duplicateStations, setDuplicateStations] = useState([]);
+
+  const handleSelectCanonical = (station) => {
+    setCanonicalStation(station);
+    setPreviewCanonicalId(station.id);
+    setPreviewResult(null);
+  };
+  const handleAddDuplicate = (station) => {
+    if (duplicateStations.find(s => s.id === station.id)) return;
+    const updated = [...duplicateStations, station];
+    setDuplicateStations(updated);
+    setPreviewDuplicateIds(updated.map(s => s.id).join(", "));
+    setPreviewResult(null);
+  };
+  const handleRemoveDuplicate = (id) => {
+    const updated = duplicateStations.filter(s => s.id !== id);
+    setDuplicateStations(updated);
+    setPreviewDuplicateIds(updated.map(s => s.id).join(", "));
+    setPreviewResult(null);
+  };
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewResult, setPreviewResult] = useState(null);
   const [previewError, setPreviewError] = useState(null);
