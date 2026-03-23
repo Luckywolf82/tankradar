@@ -16,6 +16,7 @@ import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
 import { usePumpInsight } from "@/hooks/usePumpInsight";
+import SavingsSummaryCard from "../components/dashboard/SavingsSummaryCard";
 
 const FUEL_OPTIONS = [
   { value: "diesel", label: "Diesel" },
