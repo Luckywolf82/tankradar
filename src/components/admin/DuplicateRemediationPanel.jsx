@@ -155,18 +155,28 @@ export default function DuplicateRemediationPanel() {
 
   const handleExecuteMerge = async () => {
     if (!confirmed) return;
+    const canonicalId = previewCanonicalId.trim();
+    const dupIds = previewDuplicateIds.split(",").map(s => s.trim()).filter(Boolean);
+    if (!canonicalId || dupIds.length === 0) {
+      setError("Legg inn kanonisk ID og duplikat-IDer i feltet over først.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
     const res = await base44.functions.invoke("executeDuplicateMerge", {
-      canonical_station_id: DEMO_CANONICAL_ID,
-      duplicate_station_ids: DEMO_DUPLICATE_IDS,
+      canonical_station_id: canonicalId,
+      duplicate_station_ids: dupIds,
       curator_confirmation: true,
-      notes: "Utført via DuplicateRemediationPanel Fase 4C",
+      notes: mergeNotes.trim() || "Utført via DuplicateRemediationPanel",
     });
     setLoading(false);
     if (res.data && res.data.success) {
       setResult(res.data);
+      setConfirmed(false);
+      // Refresh audit log
+      const logs = await base44.entities.StationMergeLog.list();
+      setAuditHistory(logs || []);
     } else {
       setError(res.data?.error ?? "Ukjent feil fra executeDuplicateMerge");
     }
