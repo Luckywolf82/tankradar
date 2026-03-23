@@ -71,10 +71,11 @@ export function adaptCurrentStationPriceRow(cspRow, fuelType) {
 
     // Station object shape expected by NearbyPrices render + distance calculation
     _station: {
-      name:      cspRow.stationName  || null,
-      chain:     cspRow.stationChain || null,
-      latitude:  cspRow.latitude     ?? null,
-      longitude: cspRow.longitude    ?? null,
+      name:      cspRow.stationName   || null,
+      chain:     cspRow.stationChain  || null,
+      status:    cspRow.stationStatus || 'active',
+      latitude:  cspRow.latitude      ?? null,
+      longitude: cspRow.longitude     ?? null,
     },
   };
 }
