@@ -7,11 +7,6 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const PUMP_RADIUS_KM = 0.15; // 150m — "at pump" threshold
-const FUEL_TYPES = [
-  { key: "gasoline_95", label: "Bensin 95" },
-  { key: "gasoline_98", label: "Bensin 98" },
-  { key: "diesel",      label: "Diesel" },
-];
 
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
