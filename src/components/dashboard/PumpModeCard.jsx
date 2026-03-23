@@ -123,7 +123,7 @@ export default function PumpModeCard({
         {/* Primary CTA */}
         <Link to={createPageUrl("LogPrice")}>
           <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2 text-sm">
-            Registrer pris her
+            Registrer prisen her nå
             <ChevronRight size={15} />
           </Button>
         </Link>
