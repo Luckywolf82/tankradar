@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
       recordsCreated: stats.fuelPricesCreated,
       recordsSkipped: stats.fuelPricesDeduplicated + stats.fuelPricesSkipped,
       parserVersion: "gp_v1",
-      notes: `API=${stats.totalGooglePlacesResults} with_prices=${stats.stationsWithPriceData} matched=${stats.observationsMatched} high=${stats.highConfidenceObservations} review=${stats.reviewNeededObservations} created=${stats.fuelPricesCreated} dedup=${stats.fuelPricesDeduplicated}`
+      notes: `API=${stats.totalGooglePlacesResults} with_prices=${stats.stationsWithPriceData} matched=${stats.observationsMatched} high=${stats.highConfidenceObservations} review=${stats.reviewNeededObservations} created=${stats.fuelPricesCreated} dedup=${stats.fuelPricesDeduplicated} (batch_created)`
     });
 
     return Response.json({
