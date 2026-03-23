@@ -65,7 +65,11 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       }
 
       // Merge and tag results: Station catalog entries get id, GP results get place_id
-      const catalogWithTag = allStations.map(s => ({
+      // Filter out archived_duplicate stations — they should never appear in price logging
+      const activeStations = allStations.filter(s => s.status !== 'archived_duplicate');
+      console.log(`[StationPicker] Active stations (excl. archived_duplicate): ${activeStations.length}`);
+
+      const catalogWithTag = activeStations.map(s => ({
         ...s,
         _source: 'station_catalog',
         _stationType: s.stationType || 'standard'
