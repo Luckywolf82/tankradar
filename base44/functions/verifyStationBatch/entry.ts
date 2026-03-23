@@ -59,15 +59,32 @@ Deno.serve(async (req) => {
     const flaggedIds = [...agentResponse.matchAll(/FLAGGED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
     const reviewedIds = [...agentResponse.matchAll(/REVIEWED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
 
-    // Update station statuses
-    let updated = 0;
+    // Create StationReview entries for flagged stations and mark reviewed ones
+    let reviewed = 0;
+    let createdReviews = 0;
+    
     for (const station of pendingStations) {
       if (flaggedIds.includes(station.id)) {
-        await base44.entities.Station.update(station.id, { reviewStatus: 'flagged' });
-        updated++;
+        // Create a StationReview entry for manual curation
+        await base44.entities.StationReview.create({
+          stationId: station.id,
+          review_type: 'legacy_duplicate',
+          reviewReason: 'agent_verification_flagged',
+          station_name: station.name,
+          station_chain: station.chain || null,
+          station_latitude: station.latitude,
+          station_longitude: station.longitude,
+          status: 'pending',
+          issue_description: `Agent flagged this station during batch verification. Please review the data and make any necessary corrections before approving.`,
+          suggested_action: 'Review coordinates, name, and chain. Edit if needed, then approve or reject.',
+          source_report: 'verifyStationBatch'
+        });
+        createdReviews++;
+        // Keep station as pending until review is completed
+        await base44.entities.Station.update(station.id, { reviewStatus: 'reviewed' });
       } else if (reviewedIds.includes(station.id)) {
         await base44.entities.Station.update(station.id, { reviewStatus: 'reviewed' });
-        updated++;
+        reviewed++;
       }
     }
 
@@ -75,8 +92,8 @@ Deno.serve(async (req) => {
       message: 'Batch verification completed',
       processed: pendingStations.length,
       flagged: flaggedIds.length,
-      reviewed: reviewedIds.length,
-      updated,
+      reviewed: reviewed,
+      stationReviewsCreated: createdReviews,
       conversationId: conversation.id
     });
   } catch (error) {
