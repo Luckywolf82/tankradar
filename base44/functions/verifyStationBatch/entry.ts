@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
     const messages = updatedConversation.messages || [];
     const agentResponse = messages.find(m => m.role === 'assistant')?.content || '';
     
+    console.log('Agent response:', agentResponse);
+    console.log('Messages:', JSON.stringify(messages, null, 2));
+    
     const flaggedIds = [...agentResponse.matchAll(/FLAGGED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
     const reviewedIds = [...agentResponse.matchAll(/REVIEWED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
 
