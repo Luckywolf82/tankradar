@@ -83,7 +83,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 15);
 
-      console.log(`[StationPicker] Combined results within 10km radius: ${nearbyWithDistance.length}`);
+      console.log(`[StationPicker] Combined results within 500m radius: ${nearbyWithDistance.length}`);
       setStations(nearbyWithDistance);
 
       if (nearbyWithDistance.length === 0) {
