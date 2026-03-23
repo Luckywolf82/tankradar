@@ -114,6 +114,19 @@ Deno.serve(async (req) => {
       // UPDATE the canonical row (oldest by created_date to be deterministic)
       const sorted = [...existing].sort((a, b) => new Date(a.created_date || 0) - new Date(b.created_date || 0));
       canonicalRowId = sorted[0].id;
+      const canonical = sorted[0];
+
+      // STALENESS GUARD: Only update fuel block if incoming fetchedAt is newer than stored fetchedAt.
+      // This prevents older backfill events from overwriting fresher data.
+      const existingFetchedAt = fuelType === 'gasoline_95'
+        ? canonical.gasoline_95_fetchedAt
+        : canonical.diesel_fetchedAt;
+      const incomingFetchedAt = fetchedAt || now;
+
+      if (existingFetchedAt && new Date(incomingFetchedAt) <= new Date(existingFetchedAt)) {
+        return Response.json({ skipped: true, reason: `stale_price: incoming ${incomingFetchedAt} <= existing ${existingFetchedAt}`, stationId, fuelType });
+      }
+
       await base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, patch);
       action = 'updated';
 
