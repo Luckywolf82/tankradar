@@ -96,51 +96,12 @@ export default function PumpModeCard({ onActivate }) {
           </span>
         </div>
 
-        {/* Fuel price inputs */}
-        <div className="space-y-2 mb-4">
-          {FUEL_TYPES.map((f) => (
-            <div key={f.key} className="flex items-center gap-3">
-              <span className="text-sm text-slate-700 w-24 shrink-0">{f.label}</span>
-              <div className="relative flex-1">
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="10"
-                  max="30"
-                  placeholder="—"
-                  value={prices[f.key]}
-                  onChange={(e) => {
-                    setPrices((prev) => ({ ...prev, [f.key]: e.target.value }));
-                    setError(null);
-                  }}
-                  disabled={step === "submitting"}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent disabled:opacity-50"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
-                  kr/l
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
-
-        <Button
-          onClick={handleSubmit}
-          disabled={step === "submitting"}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2"
-        >
-          {step === "submitting" ? (
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>
-              <Fuel size={15} />
-              Rapporter priser
-            </>
-          )}
-        </Button>
+        <Link to={createPageUrl("LogPrice")}>
+          <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2">
+            <Camera size={15} />
+            Ta bilde av prisskiltet
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );
