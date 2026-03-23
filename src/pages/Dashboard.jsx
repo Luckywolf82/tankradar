@@ -91,6 +91,9 @@ export default function Dashboard() {
                 ))}
               </div>
 
+              {/* Savings Summary — local price spread estimate */}
+              <SavingsSummaryCard selectedFuel={selectedFuel} />
+
               {/* Route Savings — cheapest alternative station */}
               <RouteSavingsCard selectedFuel={selectedFuel} />
 
