@@ -15,6 +15,7 @@ import DashboardGrid from "../components/layout/DashboardGrid";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
+import { usePumpInsight } from "@/hooks/usePumpInsight";
 
 const FUEL_OPTIONS = [
   { value: "diesel", label: "Diesel" },
