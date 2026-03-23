@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Fuel, MapPin, CheckCircle } from "lucide-react";
+import { Fuel, MapPin, Camera } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 const PUMP_RADIUS_KM = 0.15; // 150m — "at pump" threshold
 const FUEL_TYPES = [
