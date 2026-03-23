@@ -65,21 +65,7 @@ export default function PumpModeCard({ onActivate }) {
         onActivate?.(true);
         setDistKm(nearest._distKm);
 
-        // Prefill latest known prices for this station
-        const recentPrices = await base44.entities.FuelPrice.filter(
-          { stationId: nearest.id },
-          "-fetchedAt",
-          50
-        );
 
-        const prefill = { gasoline_95: "", gasoline_98: "", diesel: "" };
-        for (const fp of recentPrices) {
-          const key = fp.fuelType;
-          if (key in prefill && !prefill[key] && fp.priceNok) {
-            prefill[key] = fp.priceNok.toFixed(2);
-          }
-        }
-        setPrices(prefill);
       },
       () => { setStep("hidden"); onActivate?.(false); },
       { timeout: 8000, maximumAge: 60000 }
