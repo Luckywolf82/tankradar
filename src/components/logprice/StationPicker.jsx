@@ -39,8 +39,10 @@ export default function StationPicker({ onSelectStation, onSkip }) {
       setUserLocation({ latitude, longitude });
       console.log(`[StationPicker] Location obtained: lat=${latitude.toFixed(4)}, lon=${longitude.toFixed(4)}`);
 
-      // Fetch only active Station catalog entries — filter server-side to exclude archived_duplicate
-      const allStations = await base44.entities.Station.filter({ status: 'active' });
+      // Fetch all stations and exclude only explicit archived_duplicate.
+      // Stations seeded before status field was introduced may have status=null and must still be visible.
+      const allStationsRaw = await base44.entities.Station.list('-created_date', 2000);
+      const allStations = allStationsRaw.filter(s => s.status !== 'archived_duplicate');
       console.log(`[StationPicker] Active stations in catalog: ${allStations.length}`);
 
       // Fetch Google Places results (read-only discovery for picker display only)
