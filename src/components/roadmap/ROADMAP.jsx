@@ -842,7 +842,9 @@ export const COMPLETED_TRACE = [
   { id: "station-matching-engine",    phase: 1, status: "completed", note: "Matching engine ships. Conservative strategy confirmed." },
   { id: "station-candidate-pipeline", phase: 1, status: "completed", note: "Candidate ingestion + classification pipeline live." },
   { id: "prisrapportering",           phase: 2, status: "completed", note: "4-step LogPrice flow live. Core crowdsourcing loop operational." },
-  { id: "national-fuel-barometer",    phase: 2, status: "completed", completedDate: "2026-03-12", note: "Shipped. Component: components/dashboard/NationalFuelBarometer.jsx. Bensin/Diesel toggle, 3-band bar, SSBData historical comparison." },
+  { id: "national-fuel-barometer",    phase: 2, status: "completed", completedDate: "2026-03-12", note: "Shipped. Component: components/dashboard/NationalFuelBarometer.jsx. Bensin/Diesel toggle, 3-band bar, SSBData historical comparison. Enhanced after initial ship — integrated into Statistics page. Used on Dashboard and Statistics surfaces." },
+  { id: "current-read-model-csp",    phase: 1, status: "completed", completedDate: "2026-03-23", note: "CurrentStationPrices introduced as canonical read model. Resolved FuelPrice query explosion (429). Separated operational read layer from historical data layer." },
+  { id: "billigste-drivstoff-naerheten", phase: 2, status: "stabilized", note: "Migrated to CSP. 429 resolved. Freshness bug fixed. Sorting corrected. Parity verified." },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
