@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import StationSearchPicker from "./StationSearchPicker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldAlert, CheckCircle2, Star, AlertTriangle, Loader2, History, Search, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
