@@ -91,8 +91,10 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Savings Summary — local price spread estimate */}
-              <SavingsSummaryCard selectedFuel={selectedFuel} />
+              {/* Savings Summary — area spread context.
+                  pumpModeActive suppresses the "kan spare X kr" line:
+                  PumpModeCard is the single savings authority when active. */}
+              <SavingsSummaryCard selectedFuel={selectedFuel} pumpModeActive={pumpModeActive} />
 
               {/* Route Savings — cheapest alternative station */}
               <RouteSavingsCard selectedFuel={selectedFuel} />
