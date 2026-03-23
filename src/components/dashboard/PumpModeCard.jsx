@@ -25,10 +25,9 @@ function distLabel(km) {
 }
 
 export default function PumpModeCard({ onActivate }) {
-  const [station, setStation] = useState(null);        // nearest within PUMP_RADIUS_KM
+  const [station, setStation] = useState(null);
   const [distKm, setDistKm] = useState(null);
-  const [userCoords, setUserCoords] = useState(null);
-  const [step, setStep] = useState("idle");            // idle | hidden
+  const [step, setStep] = useState("idle");
 
   // GPS + station detection
   useEffect(() => {
