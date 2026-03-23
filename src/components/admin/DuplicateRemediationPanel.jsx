@@ -450,30 +450,78 @@ export default function DuplicateRemediationPanel() {
           </div>
 
           <div className="space-y-3 mb-4">
+            {/* Station search picker */}
             <div>
-              <label className="block text-xs font-medium text-blue-900 mb-1">
-                Kanonisk stasjons-ID
-              </label>
-              <input
-                type="text"
-                value={previewCanonicalId}
-                onChange={(e) => { setPreviewCanonicalId(e.target.value); setPreviewResult(null); setPreviewError(null); }}
-                placeholder="f.eks. abc123def456"
-                className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              <label className="block text-xs font-medium text-blue-900 mb-1">Søk opp stasjon</label>
+              <StationSearchPicker
+                onSelectCanonical={handleSelectCanonical}
+                onAddDuplicate={handleAddDuplicate}
+                canonicalId={canonicalStation?.id}
+                duplicateIds={duplicateStations.map(s => s.id)}
               />
             </div>
+
+            {/* Canonical chip */}
             <div>
-              <label className="block text-xs font-medium text-blue-900 mb-1">
-                Duplikat-stasjons-IDer <span className="font-normal text-slate-500">(kommaseparert)</span>
-              </label>
-              <input
-                type="text"
-                value={previewDuplicateIds}
-                onChange={(e) => { setPreviewDuplicateIds(e.target.value); setPreviewResult(null); setPreviewError(null); }}
-                placeholder="f.eks. dup001, dup002"
-                className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-              />
+              <label className="block text-xs font-medium text-blue-900 mb-1">Kanonisk stasjon (beholdes)</label>
+              {canonicalStation ? (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-300 rounded px-3 py-1.5">
+                  <span className="flex-1 text-xs text-green-900 font-semibold truncate">
+                    {canonicalStation.name}{canonicalStation.chain ? ` (${canonicalStation.chain})` : ""} — <span className="font-mono text-green-700">{canonicalStation.id.substring(0, 10)}…</span>
+                  </span>
+                  <button onClick={() => { setCanonicalStation(null); setPreviewCanonicalId(""); setPreviewResult(null); }} className="text-green-600 hover:text-red-600 shrink-0">
+                    <X size={13} />
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 border border-dashed border-slate-300 rounded px-3 py-1.5 italic">
+                  Ingen kanonisk stasjon valgt — søk ovenfor
+                </div>
+              )}
             </div>
+
+            {/* Duplicate chips */}
+            <div>
+              <label className="block text-xs font-medium text-blue-900 mb-1">Duplikater (arkiveres)</label>
+              {duplicateStations.length === 0 ? (
+                <div className="text-xs text-slate-400 border border-dashed border-slate-300 rounded px-3 py-1.5 italic">
+                  Ingen duplikater lagt til ennå — søk og klikk «+ Dup»
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {duplicateStations.map(s => (
+                    <div key={s.id} className="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded px-2 py-1">
+                      <span className="text-xs text-amber-900 font-semibold">{s.name}</span>
+                      <span className="text-xs text-amber-600 font-mono">{s.id.substring(0, 8)}…</span>
+                      <button onClick={() => handleRemoveDuplicate(s.id)} className="text-amber-500 hover:text-red-600 ml-0.5">
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Fallback: manual ID input */}
+            <details className="mt-1">
+              <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-600 select-none">Lim inn IDer manuelt (alternativ)</summary>
+              <div className="mt-2 space-y-2">
+                <input
+                  type="text"
+                  value={previewCanonicalId}
+                  onChange={(e) => { setPreviewCanonicalId(e.target.value); setCanonicalStation(null); setPreviewResult(null); setPreviewError(null); }}
+                  placeholder="Kanonisk stasjons-ID"
+                  className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+                <input
+                  type="text"
+                  value={previewDuplicateIds}
+                  onChange={(e) => { setPreviewDuplicateIds(e.target.value); setDuplicateStations([]); setPreviewResult(null); setPreviewError(null); }}
+                  placeholder="Duplikat-IDer, kommaseparert"
+                  className="w-full text-xs border border-blue-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                />
+              </div>
+            </details>
           </div>
 
           <button
