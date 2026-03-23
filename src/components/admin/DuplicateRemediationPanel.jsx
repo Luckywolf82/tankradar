@@ -543,9 +543,8 @@ export default function DuplicateRemediationPanel() {
           ) : (
             <>
               <div className="mb-3 text-xs text-orange-900 bg-orange-100 border border-orange-200 rounded px-3 py-2">
-                Denne seksjonen kobler til den ekte <code className="font-mono">executeDuplicateMerge</code>-backend.
-                Utføring vil repeke FuelPrice-poster og myk-arkivere duplikatstasjoner.
-                Ingen harde slettinger. Revisjonslogg er obligatorisk.
+                Kjør tørrkjøringsforhåndsvisning ovenfor først. Bruk de samme ID-ene her for live utføring.
+                Ingen harde slettinger. Revisjonslogg skrives alltid til StationMergeLog.
               </div>
 
               {!result && (
