@@ -1130,8 +1130,8 @@ export const NEXT_ACTIONS = {
   },
 
   recommendedBuildSequence: [
-    { step: 1, id: "admin-operations-panel-integration", effort: "2–4 hours", score: 3.50, note: "Admin fix — do first, unblocks governance" },
-    { step: 2, id: "fuel-savings-tracker",               effort: "2–3 days",  score: 3.70, note: "Recommended next ship — zero prerequisites" },
+    { step: 1, id: "fuel-savings-tracker",               effort: "2–3 days",  score: 3.70, note: "TOP PRIORITY — recommended next user-facing ship. Zero prerequisites." },
+    { step: 2, id: "admin-operations-panel-integration", effort: "2–4 hours", score: 3.50, note: "Admin fix — do second, unblocks governance workflows" },
     { step: 3, id: "community-price-verification",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.75, note: "STATUS: scoping-required. Run trust-model + confidence-scoring design pass first, then move to build-ready." },
     { step: 4, id: "community-station-validation",       effort: "scoping: 1 day + impl: 3–5 days", score: 3.65, note: "STATUS: scoping-required. Scoping can overlap with step 3. Shares trust-model prerequisite." },
     { step: 5, id: "radar-mode",                          effort: "scoping: 1–2 days + impl: 4–6 days", score: 3.80, note: "STATUS: scoping-required. Define passive acquisition model before sprint." },
