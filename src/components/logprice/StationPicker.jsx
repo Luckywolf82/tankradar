@@ -49,7 +49,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
         const gpRes = await base44.functions.invoke('discoverGooglePlacesCandidatesForPicker', {
           latitude,
           longitude,
-          radiusMeters: 10000
+          radiusMeters: 15000
         });
         if (gpRes.data?.results) {
           googlePlacesResults = gpRes.data.results.map(gp => ({
