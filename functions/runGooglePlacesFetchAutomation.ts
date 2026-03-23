@@ -182,18 +182,15 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Scheduled automations run without a user token — always use service role.
+    const db = base44.asServiceRole;
 
     const apiKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
     if (!apiKey) {
       return Response.json({ error: 'GOOGLE_PLACES_API_KEY not set' }, { status: 500 });
     }
 
-    let allStations = await base44.entities.Station.list();
+    let allStations = await db.entities.Station.list();
     if (allStations.length === 0) {
       const testStations = [
         { name: "Circle K Ferner", chain: "Circle K", latitude: 59.9139, longitude: 10.7522, city: "Oslo" },
