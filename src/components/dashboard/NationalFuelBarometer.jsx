@@ -62,19 +62,23 @@ export default function NationalFuelBarometer() {
 
       const fuelOpt = FUEL_OPTIONS.find(f => f.id === selectedFuel);
 
-      const [benchmarks, ssbData] = await Promise.all([
-        base44.entities.NationalFuelBenchmark.filter({ fuelType: selectedFuel }, "-effectiveDate", 5),
+      const [nationalPrices, ssbData] = await Promise.all([
+        base44.entities.FuelPrice.filter(
+          { fuelType: selectedFuel, priceType: "national_average", sourceName: "GlobalPetrolPrices" },
+          "-fetchedAt",
+          5
+        ),
         base44.entities.SSBData.filter({ fuel_type: fuelOpt.ssbKey }, "-year", 24),
       ]);
 
-      const latest = benchmarks[0] || null;
+      const latest = nationalPrices[0] || null;
       if (!latest) {
         setLoading(false);
         return;
       }
 
       setCurrentPrice(latest.priceNok);
-      setDataSource(latest.source);
+      setDataSource(latest.sourceName);
 
       const historical = ssbData.map(r => r.price).filter(Boolean);
       const result = classifyPrice(latest.priceNok, historical);
