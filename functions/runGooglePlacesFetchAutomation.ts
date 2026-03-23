@@ -346,8 +346,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── BATCH CREATE all new FuelPrice records ───────────────────────────────
+    if (newPriceRecords.length > 0) {
+      await db.entities.FuelPrice.bulkCreate(newPriceRecords);
+      stats.fuelPricesCreated = newPriceRecords.length;
+    }
+
+    // ── MATERIALIZE CurrentStationPrices for each new record ─────────────────
+    // Fire-and-forget: best effort, does not block FetchLog
+    for (const record of newPriceRecords) {
+      if (record.plausibilityStatus === "realistic_price") {
+        db.functions.invoke("materializeCurrentStationPrice", record).catch(() => {});
+      }
+    }
+
     // Logg automation completion
-    await base44.asServiceRole.entities.FetchLog.create({
+    await db.entities.FetchLog.create({
       sourceName: "GooglePlaces",
       startedAt: automationStartedAt,
       finishedAt: new Date().toISOString(),
