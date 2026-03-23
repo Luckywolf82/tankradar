@@ -99,6 +99,7 @@ export default function DuplicateRemediationPanel() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  const [mergeNotes, setMergeNotes] = useState("");
   const [previewCanonicalId, setPreviewCanonicalId] = useState("");
   const [previewDuplicateIds, setPreviewDuplicateIds] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
