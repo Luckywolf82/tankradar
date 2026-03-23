@@ -25,7 +25,10 @@ const FUEL_OPTIONS = [
 export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [pumpModeActive, setPumpModeActive] = useState(false);
+  const [pumpStationId, setPumpStationId] = useState(null);
   const [selectedFuel, setSelectedFuel] = useState("diesel");
+
+  const pumpInsight = usePumpInsight(pumpStationId, selectedFuel);
   const { scrollRef, restoreScroll } = useTabState("Dashboard");
 
   useEffect(() => {
