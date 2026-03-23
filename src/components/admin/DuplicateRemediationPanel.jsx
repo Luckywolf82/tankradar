@@ -89,13 +89,7 @@ const MERGE_ACTION_MAP = [
 ];
 
 // ─── GOVERNANCE-FUNKSJONS-FLAGG ───────────────────────────────────────────────
-// Fase 4C-utføringsherdning: live merge-utføring må eksplisitt aktiveres
-// i kode før kuratorer kan utføre sammenslåinger. Tørrkjøringsforhåndsvisning forblir tilgjengelig.
-const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = false;
-
-// ─── MOCK-IDer FOR FASE 4C-DEMO — erstatt med ekte IDer fra duplikatskann ──
-const DEMO_CANONICAL_ID = "CANONICAL_STATION_ID_HERE";
-const DEMO_DUPLICATE_IDS = ["DUPLICATE_ID_1", "DUPLICATE_ID_2"];
+const ENABLE_LIVE_DUPLICATE_MERGE_EXECUTION = true;
 
 // ─── KOMPONENT ────────────────────────────────────────────────────────────────
 
