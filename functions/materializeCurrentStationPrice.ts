@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
         stationMeta = {
           stationName: s.name || null,
           stationChain: s.chain || null,
+          stationStatus: s.status || 'active',
           latitude: s.latitude ?? null,
           longitude: s.longitude ?? null,
         };

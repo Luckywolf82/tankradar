@@ -70,6 +70,7 @@ function runNearbyPipeline(rowsWithStation, userCoords, radiusKm, pathLabel = "p
   const eligible = rowsWithStation.filter((p) => {
     if (!isStationPriceDisplayEligible(p, { requireMatchedStationId: true })) return false;
     if (!p._station?.latitude || !p._station?.longitude) return false;
+    if (p._station?.status === 'archived_duplicate') return false;
     return true;
   });
 
