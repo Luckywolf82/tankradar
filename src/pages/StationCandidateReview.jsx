@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, MapPin, AlertCircle, ChevronDown, ChevronUp, Unlink, Zap } from 'lucide-react';
 import ReviewConsistencyCheck from '../components/admin/ReviewConsistencyCheck';
-import MasteringMetrics from '../components/admin/MasteringMetrics';
+
 import ChainUnconfirmedManualReviewUI from '../components/admin/ChainUnconfirmedManualReviewUI';
 import AdminOperationsPanel from '../components/admin/AdminOperationsPanel';
 import QueueWorkflowGuide from '../components/admin/QueueWorkflowGuide';
@@ -165,7 +165,15 @@ export default function StationCandidateReview() {
         }
       }
 
-      loadCandidates();
+      // Update state locally instead of reloading
+      setCandidates(prev => prev.filter(c => c.id !== candidate.id && !groupMembers.find(m => m.id === c.id)));
+      setStats(prev => ({
+        ...prev,
+        pending: prev.pending - 1 - groupMembers.filter(m => m.id !== candidate.id).length,
+        approved: prev.approved + 1
+      }));
+      // Reset expanded group
+      setExpandedGroupId(null);
     } catch (error) {
       console.error('Failed to approve:', error);
     }
@@ -174,7 +182,13 @@ export default function StationCandidateReview() {
   const handleReject = async (candidate) => {
     try {
       await base44.entities.StationCandidate.update(candidate.id, { status: 'rejected' });
-      loadCandidates();
+      setCandidates(prev => prev.filter(c => c.id !== candidate.id));
+      setStats(prev => ({
+        ...prev,
+        pending: prev.pending - 1,
+        rejected: prev.rejected + 1
+      }));
+      setExpandedGroupId(null);
     } catch (error) {
       console.error('Failed to reject:', error);
     }
@@ -183,7 +197,13 @@ export default function StationCandidateReview() {
   const handleDuplicate = async (candidate) => {
     try {
       await base44.entities.StationCandidate.update(candidate.id, { status: 'duplicate' });
-      loadCandidates();
+      setCandidates(prev => prev.filter(c => c.id !== candidate.id));
+      setStats(prev => ({
+        ...prev,
+        pending: prev.pending - 1,
+        duplicate: prev.duplicate + 1
+      }));
+      setExpandedGroupId(null);
     } catch (error) {
       console.error('Failed to mark as duplicate:', error);
     }
@@ -192,7 +212,23 @@ export default function StationCandidateReview() {
   const handleStationReviewApprove = async (review) => {
     try {
       await base44.entities.StationReview.update(review.id, { status: 'approved' });
-      loadCandidates();
+      setStationReviews(prev => prev.filter(r => r.id !== review.id));
+      setStationStats(prev => ({
+        ...prev,
+        pending_total: prev.pending_total - 1,
+        [review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator']: prev[review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator'] - 1
+      }));
+      setExpandedStationReviewId(null);
     } catch (error) {
       console.error('Failed to approve station review:', error);
     }
@@ -201,7 +237,23 @@ export default function StationCandidateReview() {
   const handleStationReviewReject = async (review) => {
     try {
       await base44.entities.StationReview.update(review.id, { status: 'rejected' });
-      loadCandidates();
+      setStationReviews(prev => prev.filter(r => r.id !== review.id));
+      setStationStats(prev => ({
+        ...prev,
+        pending_total: prev.pending_total - 1,
+        [review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator']: prev[review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator'] - 1
+      }));
+      setExpandedStationReviewId(null);
     } catch (error) {
       console.error('Failed to reject station review:', error);
     }
@@ -213,7 +265,23 @@ export default function StationCandidateReview() {
         status: 'duplicate',
         duplicate_of_station_id: duplicateOf,
       });
-      loadCandidates();
+      setStationReviews(prev => prev.filter(r => r.id !== review.id));
+      setStationStats(prev => ({
+        ...prev,
+        pending_total: prev.pending_total - 1,
+        [review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator']: prev[review.review_type === 'chain_unconfirmed' ? 'chain_unconfirmed' :
+         review.review_type === 'generic_name_review' ? 'generic_names' :
+         review.review_type === 'specialty_fuel_review' ? 'specialty_fuel' :
+         review.review_type === 'non_fuel_poi_review' ? 'non_fuel_poi' :
+         review.review_type === 'local_fuel_site_review' ? 'local_fuel_site' :
+         'retail_fuel_operator'] - 1
+      }));
+      setExpandedStationReviewId(null);
     } catch (error) {
       console.error('Failed to mark station as duplicate:', error);
     }
@@ -578,10 +646,7 @@ export default function StationCandidateReview() {
         </div>
       )}
 
-      {/* Metrics & Export — after operations, before manual review */}
-      <div className="mb-8">
-        <MasteringMetrics />
-      </div>
+
 
       {/* Stats: GooglePlaces Candidates */}
       <div className="mb-8">
