@@ -433,7 +433,16 @@ export default function SuperAdmin() {
           </div>
         </TabsContent>
 
-        {/* ── 6. PLAN OG HISTORIKK ── */}
+        {/* ── 6. STASJONER ── */}
+        <TabsContent value="stasjoner" className="space-y-4">
+          <SectionHeader
+            title="Stasjonssøk og redigering"
+            description="Søk opp hvilken som helst stasjon etter navn, kjede, by eller stasjons-ID. Rediger felt, vis i kart eller slett stasjonen."
+          />
+          <StationEditor />
+        </TabsContent>
+
+        {/* ── 7. PLAN OG HISTORIKK ── */}
         <TabsContent value="planoghistorikk" className="space-y-6">
           <SectionHeader
             title="Plan og historikk"
