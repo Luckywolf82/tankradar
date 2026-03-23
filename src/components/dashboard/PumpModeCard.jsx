@@ -33,13 +33,7 @@ export default function PumpModeCard({ onActivate }) {
   const [station, setStation] = useState(null);        // nearest within PUMP_RADIUS_KM
   const [distKm, setDistKm] = useState(null);
   const [userCoords, setUserCoords] = useState(null);
-  const [prices, setPrices] = useState({              // fuelKey → string input value
-    gasoline_95: "",
-    gasoline_98: "",
-    diesel: "",
-  });
-  const [step, setStep] = useState("idle");            // idle | submitting | success | hidden
-  const [error, setError] = useState(null);
+  const [step, setStep] = useState("idle");            // idle | hidden
 
   // GPS + station detection
   useEffect(() => {
