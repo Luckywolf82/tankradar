@@ -104,6 +104,7 @@ export const SCORING_MODEL = {
 
 export const STATUS_DEFINITIONS = {
   completed: "Shipped and live. No further action required unless regression is detected.",
+  stabilized: "Built, live, and no longer under active iteration. Core function is stable. Eligible for cleanup or minor enhancement only.",
   active: "Built and live, under ongoing iteration and improvement.",
   "build-ready": "Implementation can begin immediately. No design prerequisites. No blocking infra gaps.",
   "scoping-required": [
