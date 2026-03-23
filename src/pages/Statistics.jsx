@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
+import NationalFuelBarometer from "../components/dashboard/NationalFuelBarometer";
 import PriceDistribution from "../components/dashboard/PriceDistribution";
 import RegionalStats from "../components/dashboard/RegionalStats";
 import HistoricalSSBTrend from "../components/dashboard/HistoricalSSBTrend";
