@@ -257,6 +257,8 @@ Deno.serve(async (req) => {
       fuelPricesSkipped: 0
     };
 
+    const newPriceRecords = [];
+
     // Hent fra alle test-lokasjoner
     for (const [locationKey, location] of Object.entries(TEST_LOCATIONS)) {
       const googleResult = await fetchGooglePlacesData(apiKey, location);
