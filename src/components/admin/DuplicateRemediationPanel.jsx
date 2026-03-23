@@ -551,16 +551,16 @@ export default function DuplicateRemediationPanel() {
               {!result && (
                 <div className="mb-4 border border-slate-200 rounded overflow-hidden">
                   <div className="bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                    Forutføringsoppsummering (demoverdier)
+                    Forutføringsoppsummering
                   </div>
                   <div className="divide-y divide-slate-100">
                     <div className="flex justify-between px-3 py-2 text-xs">
                       <span className="text-slate-500">Kanonisk stasjons-ID</span>
-                      <span className="font-mono text-slate-700">{DEMO_CANONICAL_ID}</span>
+                      <span className="font-mono text-slate-700 break-all text-right max-w-[55%]">{previewCanonicalId.trim() || <span className="text-red-500 italic">ikke satt</span>}</span>
                     </div>
                     <div className="flex justify-between px-3 py-2 text-xs">
                       <span className="text-slate-500">Duplikater som arkiveres</span>
-                      <span className="font-mono text-slate-700">{DEMO_DUPLICATE_IDS.length}</span>
+                      <span className="font-mono text-slate-700">{previewDuplicateIds.split(",").map(s=>s.trim()).filter(Boolean).length}</span>
                     </div>
                     <div className="flex justify-between px-3 py-2 text-xs">
                       <span className="text-slate-500">Harde slettinger</span>
@@ -568,9 +568,22 @@ export default function DuplicateRemediationPanel() {
                     </div>
                     <div className="flex justify-between px-3 py-2 text-xs">
                       <span className="text-slate-500">Revisjonslogg</span>
-                      <span className="text-green-700 font-semibold">Påkrevet — skrives alltid</span>
+                      <span className="text-green-700 font-semibold">Skrives alltid</span>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {!result && (
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-orange-900 mb-1">Kuratornote (valgfritt)</label>
+                  <input
+                    type="text"
+                    value={mergeNotes}
+                    onChange={e => setMergeNotes(e.target.value)}
+                    placeholder="f.eks. Verifisert via kartlenke og adressesjekk"
+                    className="w-full text-xs border border-orange-200 rounded px-3 py-1.5 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                  />
                 </div>
               )}
 
