@@ -885,9 +885,9 @@ export const ACTIONABLE_PRIORITY_ORDER = [
   {
     rank: 3,
     id: "billigste-drivstoff-naerheten",
-    status: "active",
+    status: "stabilized",
     adjustedScore: 3.40,
-    action: "ACTIVE — iterate on coverage and distance accuracy",
+    action: "STABILIZED — CSP migration complete. Monitor for regressions. No active iteration required.",
   },
   {
     rank: 4,
