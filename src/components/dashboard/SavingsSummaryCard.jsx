@@ -100,7 +100,14 @@ function deriveInsights(freshRows, fuelType) {
   }];
 }
 
-export default function SavingsSummaryCard({ selectedFuel }) {
+/**
+ * PUMP MODE AUTHORITY RULE
+ * When pumpModeActive=true, PumpModeCard is the single source of truth for
+ * contextual savings (cheapest nearby / "you can save X kr").
+ * This card must NOT show a competing savings amount in that state.
+ * It may only show neutral area context: spread, station count.
+ */
+export default function SavingsSummaryCard({ selectedFuel, pumpModeActive = false }) {
   const [insights, setInsights] = useState(null); // null = loading
   const [gpsAvailable, setGpsAvailable] = useState(true);
 
