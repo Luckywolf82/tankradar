@@ -233,7 +233,8 @@ export default function NearbyPrices({ selectedFuel }) {
   const [nearbyResults, setNearbyResults] = useState([]);
   const [staleFallbackResults, setStaleFallbackResults] = useState([]);
 
-  // GPS acquisition — unchanged
+  // GPS acquisition — use watchPosition so we keep retrying on timeout/unavailable
+  // Only stop on explicit permission denial (code 1)
   useEffect(() => {
     if (!navigator.geolocation) {
       setGpsState("unavailable");
@@ -241,17 +242,25 @@ export default function NearbyPrices({ selectedFuel }) {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         setGpsState("ok");
+        navigator.geolocation.clearWatch(watchId);
       },
-      () => {
-        setGpsState("denied");
-        setLoading(false);
+      (err) => {
+        if (err.code === 1) {
+          // PERMISSION_DENIED — stop trying
+          navigator.geolocation.clearWatch(watchId);
+          setGpsState("denied");
+          setLoading(false);
+        }
+        // POSITION_UNAVAILABLE (2) or TIMEOUT (3) — keep watching
       },
-      { timeout: 8000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
   // Data fetch — both paths in parallel
