@@ -72,72 +72,7 @@ export default function PumpModeCard({ onActivate }) {
     );
   }, []);
 
-  const handleSubmit = async () => {
-    const filled = FUEL_TYPES.filter((f) => {
-      const val = parseFloat(prices[f.key]?.replace(",", "."));
-      return val >= 10 && val <= 30;
-    });
-
-    if (filled.length === 0) {
-      setError("Fyll inn minst én pris (10–30 kr)");
-      return;
-    }
-
-    setStep("submitting");
-    setError(null);
-
-    const now = new Date().toISOString();
-    const user = await base44.auth.me().catch(() => null);
-
-    await Promise.all(
-      filled.map((f) => {
-        const parsed = parseFloat(prices[f.key].replace(",", "."));
-        return base44.entities.FuelPrice.create({
-          stationId: station.id,
-          station_name: station.name,
-          station_chain: station.chain || null,
-          fuelType: f.key,
-          priceNok: parsed,
-          priceType: "user_reported",
-          sourceName: "user_reported",
-          fetchedAt: now,
-          sourceUpdatedAt: now,
-          sourceFrequency: "unknown",
-          confidenceScore: 0.75,
-          confidenceReason: "PumpModeCard — user at pump, multi-fuel",
-          parserVersion: "pump_mode_v1",
-          plausibilityStatus:
-            parsed >= 14 && parsed <= 26 ? "realistic_price" : "suspect_price_high",
-          station_match_status: "matched_station_id",
-          gps_latitude: userCoords?.lat ?? null,
-          gps_longitude: userCoords?.lon ?? null,
-          reportedByUserId: user?.email ?? null,
-        });
-      })
-    );
-
-    setStep("success");
-    setTimeout(() => setStep("hidden"), 3000);
-  };
-
   if (step === "hidden") return null;
-
-  // Success state
-  if (step === "success") {
-    return (
-      <Card className="shadow-md border-green-200 bg-green-50 mb-5">
-        <CardContent className="py-4 px-4 flex items-center gap-3">
-          <CheckCircle size={22} className="text-green-600 shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-green-800">Priser rapportert!</p>
-            <p className="text-xs text-green-600">{station?.name}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Loading / station not yet resolved
   if (!station) return null;
 
   return (
