@@ -36,7 +36,6 @@ export default function PumpModeCard({ onActivate }) {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
-        setUserCoords({ lat: latitude, lon: longitude });
 
         const stations = await base44.entities.Station.list("-created_date", 2000);
         const nearby = stations
