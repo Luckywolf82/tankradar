@@ -244,7 +244,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           <div className="space-y-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <p className="text-sm font-semibold text-amber-800 mb-1">Ingen stasjoner funnet</p>
-              <p className="text-xs text-amber-700">Vi fant ingen stasjoner innen 10 km. Prøv igjen eller skriv inn manuelt.</p>
+              <p className="text-xs text-amber-700">Vi fant ingen stasjoner innen 500 meter. Prøv igjen eller skriv inn manuelt.</p>
             </div>
             <div className="flex gap-2">
               <Button
