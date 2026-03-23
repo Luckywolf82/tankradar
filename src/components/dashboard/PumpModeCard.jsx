@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Fuel, MapPin, ChevronRight, TrendingDown, Flame, AlertCircle, HelpCircle } from "lucide-react";
+import { Fuel, MapPin, ChevronRight, TrendingDown, Flame, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
