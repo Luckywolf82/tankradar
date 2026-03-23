@@ -10,13 +10,13 @@ import ActiveAlertsPreview from "../components/dashboard/ActiveAlertsPreview";
 import PumpModeCard from "../components/dashboard/PumpModeCard";
 import ContributionImpactCard from "../components/dashboard/ContributionImpactCard";
 import RouteSavingsCard from "../components/dashboard/RouteSavingsCard";
+import SavingsSummaryCard from "../components/dashboard/SavingsSummaryCard";
 import PageContainer from "../components/layout/PageContainer";
 import DashboardGrid from "../components/layout/DashboardGrid";
 import { PullToRefresh } from "../components/mobile/PullToRefresh";
 import { useTabState } from "../components/mobile/TabStateProvider";
 import { RouteAnimation } from "../components/mobile/RouteAnimation";
 import { usePumpInsight } from "@/hooks/usePumpInsight";
-import SavingsSummaryCard from "../components/dashboard/SavingsSummaryCard";
 
 const FUEL_OPTIONS = [
   { value: "diesel", label: "Diesel" },
@@ -30,51 +30,52 @@ export default function Dashboard() {
   const [pumpStationId, setPumpStationId] = useState(null);
   const [selectedFuel, setSelectedFuel] = useState("diesel");
 
+  // Pump insight should own current-market logic via usePumpInsight.
   const pumpInsight = usePumpInsight(pumpStationId, selectedFuel);
+
   const { scrollRef, restoreScroll } = useTabState("Dashboard");
 
   useEffect(() => {
     restoreScroll();
-  }, []);
+  }, [restoreScroll]);
 
   const loadData = async () => {
     setLoading(true);
-    // Refetch components via their own useEffect
     setTimeout(() => setLoading(false), 500);
   };
 
   return (
     <RouteAnimation pageName="Dashboard">
       <FirstTimeOverlay />
+
       <PullToRefresh onRefresh={loadData} isLoading={loading}>
-        <div ref={scrollRef} className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-4 md:py-8">
+        <div
+          ref={scrollRef}
+          className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-4 md:py-8"
+        >
           <PageContainer>
             <div className="space-y-4">
-              {/* Quick Price Submit — moved to position 1 (highest priority) */}
               {!pumpModeActive && (
                 <>
                   <SubmitPriceCard />
 
-                  {/* Primary CTA */}
                   <Link to={createPageUrl("LogPrice")} className="block">
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 gap-2 h-10 text-sm">
-                      <Plus size={16} /> Logg pris
+                      <Plus size={16} />
+                      Logg pris
                     </Button>
                   </Link>
                 </>
               )}
 
-              {/* Pump Mode — activates when user is ≤150m from a station (position 2) */}
               <PumpModeCard
                 onActivate={setPumpModeActive}
                 onStationDetected={setPumpStationId}
                 pumpInsight={pumpInsight}
               />
 
-              {/* Contribution Impact — user's reporting stats */}
               <ContributionImpactCard />
 
-              {/* Fuel selector — controls nearby radar and route savings */}
               <div className="flex rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
                 {FUEL_OPTIONS.map((opt) => (
                   <button
@@ -91,15 +92,17 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Savings Summary — area spread context.
-                  pumpModeActive suppresses the "kan spare X kr" line:
-                  PumpModeCard is the single savings authority when active. */}
-              <SavingsSummaryCard selectedFuel={selectedFuel} pumpModeActive={pumpModeActive} />
+              {/*
+                SavingsSummaryCard should stay as area-context only.
+                When pumpModeActive is true, PumpModeCard is the single savings authority.
+              */}
+              <SavingsSummaryCard
+                selectedFuel={selectedFuel}
+                pumpModeActive={pumpModeActive}
+              />
 
-              {/* Route Savings — cheapest alternative station */}
               <RouteSavingsCard selectedFuel={selectedFuel} />
 
-              {/* Dashboard Grid — organized layout */}
               <DashboardGrid columns={1}>
                 <RadarCard selectedFuel={selectedFuel} />
                 <ActiveAlertsPreview />
