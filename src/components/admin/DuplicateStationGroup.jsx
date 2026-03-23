@@ -120,14 +120,6 @@ export default function DuplicateStationGroup({ group, index }) {
   return (
     <Card className={`${styles.bg} border-2 ${styles.border} mb-3`}>
       <CardContent className="pt-4">
-        {/* Preview-only warning banner */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3 flex items-start gap-2">
-          <AlertTriangle size={14} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900">
-            <strong>Preview only.</strong> Curator review — no automated actions.
-          </div>
-        </div>
-
         {/* Header with better hierarchy */}
         <div className="mb-3">
           {/* Classification title */}
