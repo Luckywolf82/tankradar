@@ -189,6 +189,10 @@ export default function SuperAdmin() {
             <Gauge size={13} />
             Drift og systemstatus
           </TabsTrigger>
+          <TabsTrigger value="stasjoner" className="flex items-center gap-1.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Search size={13} />
+            Stasjoner
+          </TabsTrigger>
           <TabsTrigger value="planoghistorikk" className="flex items-center gap-1.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Map size={13} />
             Plan og historikk
