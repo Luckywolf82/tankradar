@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create or start a conversation with the station_verifier agent
+    // Create conversation with the station_verifier agent
     const conversation = await base44.agents.createConversation({
       agent_name: 'station_verifier',
       metadata: {
@@ -34,20 +34,47 @@ Deno.serve(async (req) => {
 
     // Prepare station data for agent
     const stationSummary = pendingStations.map(s => 
-      `${s.name} (${s.city || 'unknown city'}, chain: ${s.chain || 'none'}, coords: ${s.latitude},${s.longitude})`
+      `STATION_ID: ${s.id} | ${s.name} (${s.city || 'unknown'}, chain: ${s.chain || 'none'}, coords: ${s.latitude},${s.longitude})`
     ).join('\n');
 
     // Send to agent for verification
     await base44.agents.addMessage(conversation, {
       role: 'user',
-      content: `Please verify the following ${pendingStations.length} fuel stations against Google Maps. For each, check if the name, address, and GPS coordinates match. Flag any that seem incorrect or suspicious:\n\n${stationSummary}`
+      content: `Verify each station against Google Maps. For flagged stations, respond with: FLAGGED: [STATION_ID]. For reviewed ok stations, respond with: REVIEWED: [STATION_ID].\n\n${stationSummary}`
     });
 
+    // Give agent a moment to respond
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Fetch updated conversation to read agent's response
+    const updatedConversation = await base44.agents.getConversation(conversation.id);
+    
+    // Parse agent response to find flagged/reviewed stations
+    const messages = updatedConversation.messages || [];
+    const agentResponse = messages.find(m => m.role === 'assistant')?.content || '';
+    
+    const flaggedIds = [...agentResponse.matchAll(/FLAGGED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
+    const reviewedIds = [...agentResponse.matchAll(/REVIEWED:\s*([a-zA-Z0-9_-]+)/g)].map(m => m[1]);
+
+    // Update station statuses
+    let updated = 0;
+    for (const station of pendingStations) {
+      if (flaggedIds.includes(station.id)) {
+        await base44.entities.Station.update(station.id, { reviewStatus: 'flagged' });
+        updated++;
+      } else if (reviewedIds.includes(station.id)) {
+        await base44.entities.Station.update(station.id, { reviewStatus: 'reviewed' });
+        updated++;
+      }
+    }
+
     return Response.json({
-      message: 'Batch verification started',
+      message: 'Batch verification completed',
       processed: pendingStations.length,
-      conversationId: conversation.id,
-      timestamp: new Date().toISOString()
+      flagged: flaggedIds.length,
+      reviewed: reviewedIds.length,
+      updated,
+      conversationId: conversation.id
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
