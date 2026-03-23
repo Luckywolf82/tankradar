@@ -200,29 +200,33 @@ export default function PumpModeCard({
           </span>
         </div>
 
-        {/* Certainty-aware insight — only shown when derived from real data */}
+        {/* Certainty-aware insight badge — only for high-certainty cases */}
         <PumpInsightLine insight={pumpInsight} />
 
-        {/* Fallback motivational text — shown only when no insight is available */}
-        {!pumpInsight && (
-          <p className="text-xs text-slate-600 leading-relaxed mb-3 px-1">
-            Registrer prisen her – så blir prisene rundt deg mer treffsikre neste gang du fyller.
-          </p>
-        )}
+        {/* Case-specific headline — shown for low-certainty cases where insight.text is not shown */}
+        {(() => {
+          const copy = resolveCopy(pumpInsight?.type);
+          return copy.headline ? (
+            <p className="text-xs font-medium text-slate-700 leading-snug mb-1.5 px-1">
+              {copy.headline}
+            </p>
+          ) : null;
+        })()}
 
-        {contributionImpactText && (
-          <p className="text-xs text-slate-400 mb-3 px-1">{contributionImpactText}</p>
-        )}
+        {/* Support text — always shown, varies by case */}
+        <p className="text-xs text-slate-500 leading-relaxed mb-3 px-1">
+          {resolveCopy(pumpInsight?.type).support}
+        </p>
 
-        {/* Primary CTA — unchanged */}
+        {/* Primary CTA — text varies by certainty case */}
         <Link to={createPageUrl("LogPrice")}>
           <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold gap-2 text-sm">
-            Registrer prisen her nå
+            {resolveCopy(pumpInsight?.type).cta}
             <ChevronRight size={15} />
           </Button>
         </Link>
 
-        {/* Subtext — low friction, reinforces habit */}
+        {/* Subtext — low friction */}
         <p className="text-center text-xs text-slate-400 mt-2">
           Ta bilde av prisskiltet — tar under 10 sekunder
         </p>
