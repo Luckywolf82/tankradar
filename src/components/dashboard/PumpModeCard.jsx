@@ -104,17 +104,17 @@ export default function PumpModeCard({
 
         {/* Motivational context */}
         <div className="mb-3 px-1">
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Oppdaterte priser hjelper deg å sammenligne og finne billigere alternativ neste gang du tanker.
-          </p>
-
-          {/* Optional future savings/impact text — shown only when provided */}
+          {/* Optional savings hook — only rendered when prop is provided, never calculated here */}
           {estimatedSavingsText && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-green-700 font-medium">
-              <TrendingDown size={12} />
+            <div className="mb-2 flex items-center gap-1.5 text-xs text-green-700 font-medium bg-green-50 border border-green-100 rounded-lg px-2.5 py-1.5">
+              <TrendingDown size={12} className="shrink-0" />
               {estimatedSavingsText}
             </div>
           )}
+
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Registrer prisen her – så blir prisene rundt deg mer treffsikre neste gang du fyller.
+          </p>
           {contributionImpactText && (
             <p className="mt-1 text-xs text-slate-400">{contributionImpactText}</p>
           )}
