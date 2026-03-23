@@ -388,7 +388,7 @@ export const FEATURES = [
     displayScore: 19.50,
     dependencies: ["NationalFuelBenchmark-entity", "SSBData-entity"],
     blockers: [],
-    note: "SHIPPED. Built 2026-03-12. Component: components/dashboard/NationalFuelBarometer.jsx",
+    note: "SHIPPED. Built 2026-03-12. Component: components/dashboard/NationalFuelBarometer.jsx. Enhanced after initial ship — integrated into Statistics page. Used on both Dashboard and Statistics surfaces.",
   },
 
   // ── PHASE 3 — GROWTH ENGINE ───────────────────────────────────────────────
