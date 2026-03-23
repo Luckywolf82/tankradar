@@ -316,27 +316,16 @@ Deno.serve(async (req) => {
           const sourceUpdatedAt = fuelPrice.updateTime || null;
           const fetchedAtNow = new Date().toISOString();
 
-          // Deduplicering: sjekk om identisk pris eksisterer for samme station/fuelType
-          const lastObservation = await base44.entities.FuelPrice.filter(
-            {
-              stationId: station.id,
-              fuelType: fuelType,
-              sourceName: "GooglePlaces"
-            },
-            "-created_date",
-            1
-          );
-
-          if (lastObservation.length > 0) {
-            const last = lastObservation[0];
-            if (last.priceNok === priceNok && last.sourceUpdatedAt === sourceUpdatedAt) {
-              stats.fuelPricesDeduplicated++;
-              continue;
-            }
+          // Deduplicering: in-memory check (no per-observation entity query)
+          const dedupKey = `${station.id}|${fuelType}`;
+          const existing = dedupMap[dedupKey];
+          if (existing && existing.priceNok === priceNok && existing.sourceUpdatedAt === sourceUpdatedAt) {
+            stats.fuelPricesDeduplicated++;
+            continue;
           }
 
-          // Opprett ny FuelPrice
-          await base44.entities.FuelPrice.create({
+          // Collect for batch creation
+          newPriceRecords.push({
             stationId: station.id,
             fuelType: fuelType,
             priceNok: priceNok,
@@ -351,7 +340,6 @@ Deno.serve(async (req) => {
             plausibilityStatus: plausibilityStatus,
             rawPayloadSnippet: `${fuelPrice.type} | ${Math.round(priceNok * 100) / 100} NOK/L`
           });
-          stats.fuelPricesCreated++;
         }
       }
     }
