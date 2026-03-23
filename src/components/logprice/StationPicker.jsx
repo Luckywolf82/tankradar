@@ -79,7 +79,7 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           ...s,
           distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
         }))
-        .filter(s => s.distance <= 10)
+        .filter(s => s.distance <= 0.5)
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 15);
 
