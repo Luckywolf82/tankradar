@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, MapPin, ChevronDown } from "lucide-react";
+import { AlertTriangle, MapPin, ChevronDown, GitMerge, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const classificationStyles = {
   exact_coordinate_duplicate: {
