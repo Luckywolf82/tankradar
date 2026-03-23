@@ -79,11 +79,11 @@ export default function StationPicker({ onSelectStation, onSkip }) {
           ...s,
           distance: calculateDistance(latitude, longitude, s.latitude || 0, s.longitude || 0)
         }))
-        .filter(s => s.distance <= 0.5)
+        .filter(s => s.distance <= 1.0)
         .sort((a, b) => a.distance - b.distance)
-        .slice(0, 15);
+        .slice(0, 20);
 
-      console.log(`[StationPicker] Combined results within 500m radius: ${nearbyWithDistance.length}`);
+      console.log(`[StationPicker] Combined results within 1km radius: ${nearbyWithDistance.length}`);
       setStations(nearbyWithDistance);
 
       if (nearbyWithDistance.length === 0) {
