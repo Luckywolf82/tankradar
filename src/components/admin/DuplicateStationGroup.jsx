@@ -36,6 +36,13 @@ export default function DuplicateStationGroup({ group, index }) {
     LOW: "bg-blue-100 text-blue-800",
   }[group.confidence] || "bg-slate-100 text-slate-800";
   const [expanded, setExpanded] = useState(false);
+  const [showMerge, setShowMerge] = useState(false);
+  const [canonicalId, setCanonicalId] = useState(group.stations[0]?.id || "");
+  const [mergeNotes, setMergeNotes] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [merging, setMerging] = useState(false);
+  const [mergeResult, setMergeResult] = useState(null);
+  const [mergeError, setMergeError] = useState(null);
 
   // Compute difference summary
   const computeDifferenceSummary = () => {
