@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, X, MapPin, AlertCircle, ChevronDown, ChevronUp, Unlink, Zap } from 'lucide-react';
+import { Check, X, MapPin, AlertCircle, ChevronDown, ChevronUp, Unlink, Zap, Edit2, Save } from 'lucide-react';
 import ReviewConsistencyCheck from '../components/admin/ReviewConsistencyCheck';
 
 import ChainUnconfirmedManualReviewUI from '../components/admin/ChainUnconfirmedManualReviewUI';
@@ -27,6 +27,8 @@ export default function StationCandidateReview() {
   const [autoChainResult, setAutoChainResult] = useState(null);
   const [ruleEngineResult, setRuleEngineResult] = useState(null);
   const [geocodeResult, setGeocodeResult] = useState(null);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editedReviewData, setEditedReviewData] = useState({});
 
   useEffect(() => {
     loadCandidates();
@@ -211,6 +213,19 @@ export default function StationCandidateReview() {
 
   const handleStationReviewApprove = async (review) => {
     try {
+      // Update station data if editing
+      if (editingReviewId === review.id && editedReviewData[review.id]) {
+        const updates = editedReviewData[review.id];
+        if (review.stationId) {
+          await base44.entities.Station.update(review.stationId, {
+            name: updates.station_name || review.station_name,
+            chain: updates.station_chain || review.station_chain,
+            latitude: updates.station_latitude || review.station_latitude,
+            longitude: updates.station_longitude || review.station_longitude,
+          });
+        }
+      }
+      
       await base44.entities.StationReview.update(review.id, { status: 'approved' });
       setStationReviews(prev => prev.filter(r => r.id !== review.id));
       setStationStats(prev => ({
@@ -229,6 +244,7 @@ export default function StationCandidateReview() {
          'retail_fuel_operator'] - 1
       }));
       setExpandedStationReviewId(null);
+      setEditingReviewId(null);
     } catch (error) {
       console.error('Failed to approve station review:', error);
     }
@@ -772,24 +788,87 @@ export default function StationCandidateReview() {
                 {expandedStationReviewId === review.id && (
                   <CardContent className="bg-purple-50 border-t space-y-4 p-4">
                     <MapVerificationLinks lat={review.station_latitude} lng={review.station_longitude} />
-                    <div className="bg-white p-3 rounded border">
-                      <div className="text-sm font-semibold mb-2">Problem:</div>
-                      <p className="text-sm text-gray-700">{review.issue_description}</p>
-                      
-                      {review.suggested_action && (
-                        <div className="mt-3 pt-3 border-t">
-                          <div className="text-sm font-semibold mb-1">Anbefaling:</div>
-                          <p className="text-sm text-gray-700">{review.suggested_action}</p>
+                    
+                    {/* Edit mode */}
+                    {editingReviewId === review.id && (
+                      <div className="bg-blue-50 border border-blue-200 rounded p-3 space-y-3">
+                        <div className="text-sm font-semibold text-blue-900">Rediger stasjondata:</div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 block mb-1">Navn:</label>
+                          <input
+                            type="text"
+                            value={editedReviewData[review.id]?.station_name || review.station_name}
+                            onChange={(e) => setEditedReviewData({
+                              ...editedReviewData,
+                              [review.id]: { ...editedReviewData[review.id], station_name: e.target.value }
+                            })}
+                            className="w-full px-2 py-1.5 border rounded text-sm"
+                          />
                         </div>
-                      )}
-                      
-                      {review.notes && (
-                        <div className="mt-3 pt-3 border-t">
-                          <div className="text-sm font-semibold mb-1">Reviewer-notater:</div>
-                          <p className="text-sm text-gray-700">{review.notes}</p>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 block mb-1">Kjede:</label>
+                          <input
+                            type="text"
+                            value={editedReviewData[review.id]?.station_chain || review.station_chain || ''}
+                            onChange={(e) => setEditedReviewData({
+                              ...editedReviewData,
+                              [review.id]: { ...editedReviewData[review.id], station_chain: e.target.value }
+                            })}
+                            className="w-full px-2 py-1.5 border rounded text-sm"
+                          />
                         </div>
-                      )}
-                    </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">Breddegrad:</label>
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={editedReviewData[review.id]?.station_latitude || review.station_latitude}
+                              onChange={(e) => setEditedReviewData({
+                                ...editedReviewData,
+                                [review.id]: { ...editedReviewData[review.id], station_latitude: parseFloat(e.target.value) }
+                              })}
+                              className="w-full px-2 py-1.5 border rounded text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-gray-700 block mb-1">Lengdegrad:</label>
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={editedReviewData[review.id]?.station_longitude || review.station_longitude}
+                              onChange={(e) => setEditedReviewData({
+                                ...editedReviewData,
+                                [review.id]: { ...editedReviewData[review.id], station_longitude: parseFloat(e.target.value) }
+                              })}
+                              className="w-full px-2 py-1.5 border rounded text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* View mode */}
+                    {editingReviewId !== review.id && (
+                      <div className="bg-white p-3 rounded border">
+                        <div className="text-sm font-semibold mb-2">Problem:</div>
+                        <p className="text-sm text-gray-700">{review.issue_description}</p>
+                        
+                        {review.suggested_action && (
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="text-sm font-semibold mb-1">Anbefaling:</div>
+                            <p className="text-sm text-gray-700">{review.suggested_action}</p>
+                          </div>
+                        )}
+                        
+                        {review.notes && (
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="text-sm font-semibold mb-1">Reviewer-notater:</div>
+                            <p className="text-sm text-gray-700">{review.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {(() => {
                       const approveMap = {
@@ -807,18 +886,36 @@ export default function StationCandidateReview() {
                             </p>
                           )}
                           <div className="flex gap-2 flex-wrap">
-                            <Button onClick={() => handleStationReviewApprove(review)} size="sm" className={cfg.cls}>
-                              <Check className="w-4 h-4 mr-1" />
-                              {cfg.label}
-                            </Button>
-                            <Button onClick={() => handleStationReviewDuplicate(review)} size="sm" variant="outline">
-                              <MapPin className="w-4 h-4 mr-1" />
-                              Marker som duplikat
-                            </Button>
-                            <Button onClick={() => handleStationReviewReject(review)} size="sm" variant="outline" className="text-red-600">
-                              <X className="w-4 h-4 mr-1" />
-                              Avvis
-                            </Button>
+                            {editingReviewId === review.id ? (
+                              <>
+                                <Button onClick={() => handleStationReviewApprove(review)} size="sm" className="bg-green-600 hover:bg-green-700">
+                                  <Save className="w-4 h-4 mr-1" />
+                                  Lagre & Godkjenn
+                                </Button>
+                                <Button onClick={() => setEditingReviewId(null)} size="sm" variant="outline">
+                                  Avbryt
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button onClick={() => setEditingReviewId(review.id)} size="sm" variant="outline" className="text-blue-600">
+                                  <Edit2 className="w-4 h-4 mr-1" />
+                                  Rediger
+                                </Button>
+                                <Button onClick={() => handleStationReviewApprove(review)} size="sm" className={cfg.cls}>
+                                  <Check className="w-4 h-4 mr-1" />
+                                  {cfg.label}
+                                </Button>
+                                <Button onClick={() => handleStationReviewDuplicate(review)} size="sm" variant="outline">
+                                  <MapPin className="w-4 h-4 mr-1" />
+                                  Marker som duplikat
+                                </Button>
+                                <Button onClick={() => handleStationReviewReject(review)} size="sm" variant="outline" className="text-red-600">
+                                  <X className="w-4 h-4 mr-1" />
+                                  Avvis
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </>
                       );
