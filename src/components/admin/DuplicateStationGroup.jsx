@@ -220,6 +220,80 @@ export default function DuplicateStationGroup({ group, index }) {
           </div>
         </div>
 
+        {/* Inline Merge Panel */}
+        {!mergeResult && (
+          <div className="mb-3">
+            <button
+              onClick={() => { setShowMerge(!showMerge); setConfirmed(false); setMergeError(null); }}
+              className="flex items-center gap-2 text-xs font-semibold text-orange-700 hover:text-orange-900 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <GitMerge size={13} />
+              {showMerge ? "Avbryt sammenslåing" : "Slå sammen denne gruppen"}
+            </button>
+
+            {showMerge && (
+              <div className="mt-2 bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-orange-900 mb-1">Velg kanonisk stasjon (beholdes)</label>
+                  <select
+                    value={canonicalId}
+                    onChange={e => { setCanonicalId(e.target.value); setConfirmed(false); }}
+                    className="w-full text-xs border border-orange-300 rounded px-2 py-1.5 bg-white text-slate-800"
+                  >
+                    {group.stations.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}{s.chain && s.chain !== 'unknown' ? ` (${s.chain})` : ''} — {s.id.substring(0, 8)}…
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-orange-700 mt-1">
+                    Arkiverer: {group.stations.filter(s => s.id !== canonicalId).map(s => s.name).join(", ")}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-orange-900 mb-1">Kuratornote (valgfritt)</label>
+                  <input
+                    type="text"
+                    value={mergeNotes}
+                    onChange={e => setMergeNotes(e.target.value)}
+                    placeholder="f.eks. Verifisert via kartlenke"
+                    className="w-full text-xs border border-orange-200 rounded px-2 py-1.5 bg-white text-slate-800 placeholder-slate-400"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={e => setConfirmed(e.target.checked)}
+                    className="w-4 h-4 accent-orange-600"
+                  />
+                  <span className="text-xs text-orange-900 font-medium">Jeg bekrefter at dette er et duplikat og at sammenslåingen er riktig</span>
+                </label>
+                {mergeError && (
+                  <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">{mergeError}</p>
+                )}
+                <button
+                  onClick={handleMerge}
+                  disabled={!confirmed || merging}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {merging ? <Loader2 size={13} className="animate-spin" /> : <GitMerge size={13} />}
+                  {merging ? "Slår sammen…" : "Utfør sammenslåing"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {mergeResult && (
+          <div className="mb-3 bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2">
+            <CheckCircle size={15} className="text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-green-900">
+              <strong>Sammenslåing fullført.</strong> {mergeResult.fuelprice_records_moved ?? 0} FuelPrice-poster repeket. Duplikatene er arkivert.
+            </div>
+          </div>
+        )}
+
         {/* Expand/collapse button with better styling */}
         <button
           onClick={() => setExpanded(!expanded)}
