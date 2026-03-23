@@ -197,8 +197,8 @@ export default function DuplicateRemediationPanel() {
           <p className="text-sm text-slate-600 mb-2">
             Denne delen viser status for opprydding av duplikater. Utføring skal bare være mulig når governance tillater det.
           </p>
-          <div className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-            Status nå: forhåndsvisning og dokumentasjon. Live sammenslåing er ikke aktiv.
+          <div className="text-xs font-semibold text-green-800 bg-green-50 border border-green-200 rounded px-3 py-2">
+            Status nå: Live sammenslåing er aktivert. Kjør tørrkjøring → bekreft → utfør.
           </div>
         </CardContent>
       </Card>
