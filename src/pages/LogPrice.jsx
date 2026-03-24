@@ -223,12 +223,62 @@ export default function LogPrice() {
     const now = new Date().toISOString();
     
     try {
-      // STATION MATCHING
-      // Fast path: user explicitly selected a known catalog station with GPS confirmation.
-      // Slow path: remote matching function for all other cases.
-      let matchResult = tryDirectCatalogMatch(stationInfo);
+      // ── STATION BINDING ────────────────────────────────────────────────────
+      // Step 1: Try direct bind from explicit user selection (catalog ID or GP source)
+      // Step 2: If GP source identity — attempt exact Station lookup by sourceStationId
+      // Step 3: Fallback to remote matching only if no direct bind was possible
+      // ──────────────────────────────────────────────────────────────────────
 
+      const directBindAttempt = tryDirectBind(stationInfo);
+
+      console.log('[LogPrice][match] selected station_id:', stationInfo.station_id);
+      console.log('[LogPrice][match] selected source:', stationInfo.selectedSource);
+      console.log('[LogPrice][match] selected google_place_id:', stationInfo.selectedGooglePlaceId);
+      console.log('[LogPrice][match] directBindAttempt:', JSON.stringify(directBindAttempt));
+
+      let matchResult = null;
+      let _usedBindPath = null;
+
+      if (directBindAttempt && directBindAttempt.status === 'matched_station_id') {
+        // DIRECT BIND — catalog stationId is authoritative, skip remote matching
+        matchResult = directBindAttempt;
+        _usedBindPath = directBindAttempt._bindPath;
+        console.log('[LogPrice][match] PATH: direct_bind →', directBindAttempt._bindPath);
+        console.log('[LogPrice][match] final stationId:', matchResult.stationId);
+        console.log('[LogPrice][match] final station_match_status: matched_station_id');
+
+      } else if (directBindAttempt && directBindAttempt.status === '_needs_source_lookup') {
+        // SOURCE LOOKUP — try to find Station by google_place_id / sourceStationId
+        console.log('[LogPrice][match] PATH: source_identity_lookup → google_place_id:', directBindAttempt.googlePlaceId);
+        let foundBySource = null;
+        try {
+          const sourceMatches = await base44.entities.Station.filter({
+            sourceStationId: directBindAttempt.googlePlaceId,
+          });
+          foundBySource = sourceMatches?.find(s => s.status !== 'archived_duplicate') || null;
+        } catch (_) {}
+
+        if (foundBySource) {
+          matchResult = {
+            status: 'matched_station_id',
+            stationId: foundBySource.id,
+            candidates: [foundBySource.id],
+            reason: 'source_identity_lookup_exact_match',
+            _bindPath: 'google_place_id_to_station',
+          };
+          _usedBindPath = 'google_place_id_to_station';
+          console.log('[LogPrice][match] source lookup succeeded → stationId:', foundBySource.id);
+        } else {
+          console.log('[LogPrice][match] source lookup: no exact match found, falling back to remote matching');
+          _usedBindPath = 'fallback_remote_match';
+        }
+      } else {
+        _usedBindPath = 'fallback_remote_match';
+      }
+
+      // FALLBACK: remote matching (only when no direct bind was possible)
       if (!matchResult) {
+        console.log('[LogPrice][match] PATH: fallback_remote_match');
         try {
           const matchRes = await base44.functions.invoke('matchStationForUserReportedPrice', {
             gps_lat: window.__gpsLat,
@@ -240,10 +290,14 @@ export default function LogPrice() {
             city: stationInfo.city
           });
           matchResult = matchRes.data;
+          console.log('[LogPrice][match] remote match result:', matchResult?.status, '/ stationId:', matchResult?.stationId);
         } catch (err) {
+          console.warn('[LogPrice][match] remote match failed:', err.message);
           matchResult = { status: 'no_safe_station_match', stationId: null };
         }
       }
+
+      console.log('[LogPrice][match] FINAL → bindPath:', _usedBindPath, '| status:', matchResult?.status, '| stationId:', matchResult?.stationId);
       
       const entries = FUEL_TYPES
         .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
