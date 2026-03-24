@@ -491,7 +491,7 @@ export default function CoverageMapExplorer() {
               />
             ))}
 
-            {/* Saved areas */}
+            {/* Saved areas - with dashed pattern for distinction */}
             {mapReady && showLayers.savedAreas && savedAreas.map(area => (
               <Rectangle
                 key={`saved-${area.id}`}
@@ -499,12 +499,20 @@ export default function CoverageMapExplorer() {
                   [area.bounds.south, area.bounds.west],
                   [area.bounds.north, area.bounds.east],
                 ]}
-                color="#2563eb"
+                color="#059669"
                 weight={3}
-                opacity={0.7}
-                fillOpacity={0.15}
+                opacity={0.9}
+                fillOpacity={0.2}
+                dashArray="8,5"
                 onClick={() => setSelectedArea(area)}
-              />
+              >
+                <Popup>
+                  <div className="text-xs font-semibold text-green-700">
+                    ✓ Active GP Fetch Area<br/>
+                    {area.coveragePercent}% coverage
+                  </div>
+                </Popup>
+              </Rectangle>
             ))}
 
             {/* Stations */}
