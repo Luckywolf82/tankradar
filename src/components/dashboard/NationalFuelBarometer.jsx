@@ -92,28 +92,12 @@ export default function NationalFuelBarometer({ selectedFuel }) {
     <Card className="shadow-sm">
       <CardContent className="pt-4 pb-4">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm font-semibold text-slate-800">Prisbarometer</p>
-            <p className="text-xs text-slate-400">Nasjonalt snitt vs. historikk</p>
-          </div>
-          {/* Fuel type toggle */}
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
-            {FUEL_OPTIONS.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => setSelectedFuel(opt.id)}
-                className={`px-3 py-1 text-xs font-medium transition-colors ${
-                  selectedFuel === opt.id
-                    ? "bg-slate-800 text-white"
-                    : "bg-white text-slate-500 hover:bg-slate-50"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
+         <div className="flex items-center justify-between mb-3">
+           <div>
+             <p className="text-sm font-semibold text-slate-800">Prisbarometer</p>
+             <p className="text-xs text-slate-400">Nasjonalt snitt vs. historikk</p>
+           </div>
+         </div>
 
         {loading ? (
           <div className="flex items-center gap-2 text-slate-400 text-sm py-3">
