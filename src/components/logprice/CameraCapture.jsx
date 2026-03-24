@@ -169,15 +169,30 @@ export default function CameraCapture({ onCapture, onFallback }) {
   }, [currentZoom, zoomSupported]);
 
   async function applyZoom(zoom) {
-    if (!trackRef.current || !zoomSupported) return;
-    try {
-      await trackRef.current.applyConstraints({ advanced: [{ zoom }] });
-      setCurrentZoom(zoom);
-    } catch {
-      // Zoom not supported on this device even though caps said so
-      setZoomSupported(false);
+    if (!trackRef.current) return;
+    if (zoomSupported) {
+      try {
+        await trackRef.current.applyConstraints({ advanced: [{ zoom }] });
+        setCurrentZoom(zoom);
+        return;
+      } catch {
+        setZoomSupported(false);
+      }
     }
+    // CSS zoom fallback: scale the video visually
+    setCssZoom(zoom);
+    setCurrentZoom(zoom);
   }
+
+  const handleZoomIn = () => {
+    const next = Math.min(currentZoom + ZOOM_STEP, ZOOM_MAX);
+    applyZoom(next);
+  };
+
+  const handleZoomOut = () => {
+    const next = Math.max(currentZoom - ZOOM_STEP, ZOOM_MIN);
+    applyZoom(next);
+  };
 
   const handleCapture = useCallback(() => {
     if (!videoRef.current || capturing) return;
