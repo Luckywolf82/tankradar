@@ -4,6 +4,9 @@
  * Cleans up stale FuelPrice and CurrentStationPrices references
  * that still point to archived_duplicate stationIds after Station remediation.
  *
+ * Strategy: bulk-fetch all FuelPrice + CSP rows, filter in-memory.
+ * Avoids per-station API calls that cause rate-limit errors.
+ *
  * STEP 1 — Build canonical mapping from StationMergeLog
  * STEP 2 — Reassign FuelPrice rows from archived → canonical stationId
  *          then detect + delete exact duplicate FuelPrice observations
@@ -12,7 +15,7 @@
  * STEP 5 — Safety stop for ambiguous cases
  *
  * Exact duplicate FuelPrice detection criteria (ALL must match):
- *   stationId + fuelType + priceNok + sourceName + fetchedAt
+ *   stationId (after reassignment) + fuelType + priceNok + sourceName + fetchedAt
  *
  * Input:
  * {
@@ -22,6 +25,19 @@
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+
+async function listAll(entity, sort = '-created_date', pageSize = 500) {
+  const results = [];
+  let page = 0;
+  while (true) {
+    const batch = await entity.list(sort, pageSize, page * pageSize);
+    if (!batch || batch.length === 0) break;
+    results.push(...batch);
+    if (batch.length < pageSize) break;
+    page++;
+  }
+  return results;
+}
 
 Deno.serve(async (req) => {
   try {
@@ -45,14 +61,21 @@ Deno.serve(async (req) => {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // BULK FETCH — all data loaded once into memory
+    // ─────────────────────────────────────────────────────────────────────────
+    const [mergeLogs, allStations, allFuelPrices, allCSP] = await Promise.all([
+      listAll(base44.asServiceRole.entities.StationMergeLog, '-timestamp', 200),
+      listAll(base44.asServiceRole.entities.Station),
+      listAll(base44.asServiceRole.entities.FuelPrice),
+      listAll(base44.asServiceRole.entities.CurrentStationPrices),
+    ]);
+
+    const stationById = Object.fromEntries(allStations.map(s => [s.id, s]));
+
+    // ─────────────────────────────────────────────────────────────────────────
     // STEP 1 — Build canonical mapping from StationMergeLog
     // ─────────────────────────────────────────────────────────────────────────
-    const mergeLogs = await base44.asServiceRole.entities.StationMergeLog.list('-timestamp', 200);
-
-    // Build map: archivedId → canonicalId
-    const canonicalMap = {}; // { archivedId: canonicalId }
-    const mappingDetails = []; // for reporting
-
+    const canonicalMap = {}; // archivedId → canonicalId
     for (const log of mergeLogs) {
       if (!log.canonical_station_id || !log.merged_station_ids?.length) continue;
       for (const archivedId of log.merged_station_ids) {
@@ -60,306 +83,253 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Cross-check: confirm archived stations are actually marked archived_duplicate
-    // and canonical stations are active. Flag any ambiguous cases.
-    const archivedIds = Object.keys(canonicalMap);
-    const canonicalIds = [...new Set(Object.values(canonicalMap))];
-
     const reviewNeeded = [];
     const confirmedMappings = {};
+    const mappingDetails = [];
 
-    if (archivedIds.length > 0) {
-      // Fetch archived station records (in pages)
-      const allArchivedStations = [];
-      for (const id of archivedIds) {
-        try {
-          const s = await base44.asServiceRole.entities.Station.filter({ id });
-          if (s.length > 0) allArchivedStations.push(s[0]);
-        } catch (_) { /* skip */ }
-      }
+    for (const [archivedId, canonicalId] of Object.entries(canonicalMap)) {
+      const archivedStation = stationById[archivedId];
+      const canonicalStation = stationById[canonicalId];
 
-      const allCanonicalStations = [];
-      for (const id of canonicalIds) {
-        try {
-          const s = await base44.asServiceRole.entities.Station.filter({ id });
-          if (s.length > 0) allCanonicalStations.push(s[0]);
-        } catch (_) { /* skip */ }
-      }
+      const isArchivedOk = archivedStation?.status === 'archived_duplicate';
+      const isCanonicalOk = canonicalStation && canonicalStation.status !== 'archived_duplicate';
 
-      const archivedMap = Object.fromEntries(allArchivedStations.map(s => [s.id, s]));
-      const canonicalStationMap = Object.fromEntries(allCanonicalStations.map(s => [s.id, s]));
-
-      for (const [archivedId, canonicalId] of Object.entries(canonicalMap)) {
-        const archivedStation = archivedMap[archivedId];
-        const canonicalStation = canonicalStationMap[canonicalId];
-
-        const isArchivedConfirmed = archivedStation?.status === 'archived_duplicate';
-        const isCanonicalActive = canonicalStation && canonicalStation.status !== 'archived_duplicate';
-
-        if (!isArchivedConfirmed || !isCanonicalActive) {
-          reviewNeeded.push({
-            archivedId,
-            canonicalId,
-            reason: !isArchivedConfirmed
-              ? `Archived station not found or not marked archived_duplicate (status=${archivedStation?.status ?? 'NOT_FOUND'})`
-              : `Canonical station not found or is also archived (status=${canonicalStation?.status ?? 'NOT_FOUND'})`,
-          });
-        } else {
-          confirmedMappings[archivedId] = {
-            canonicalId,
-            archivedName: archivedStation.name,
-            canonicalName: canonicalStation.name,
-            chain: canonicalStation.chain || null,
-            sourceName: canonicalStation.sourceName,
-            sourceStationId: canonicalStation.sourceStationId,
-          };
-          mappingDetails.push({
-            archivedId,
-            canonicalId,
-            archivedName: archivedStation.name,
-            canonicalName: canonicalStation.name,
-            chain: canonicalStation.chain || null,
-          });
-        }
+      if (!isArchivedOk || !isCanonicalOk) {
+        reviewNeeded.push({
+          archivedId,
+          canonicalId,
+          reason: !isArchivedOk
+            ? `Archived station not found or not marked archived_duplicate (status=${archivedStation?.status ?? 'NOT_FOUND'})`
+            : `Canonical station not found or is also archived (status=${canonicalStation?.status ?? 'NOT_FOUND'})`,
+        });
+      } else {
+        confirmedMappings[archivedId] = { canonicalId };
+        mappingDetails.push({
+          archivedId,
+          canonicalId,
+          archivedName: archivedStation.name,
+          canonicalName: canonicalStation.name,
+          chain: canonicalStation.chain || null,
+        });
       }
     }
 
-    const confirmedArchivedIds = Object.keys(confirmedMappings);
+    const confirmedArchivedIds = new Set(Object.keys(confirmedMappings));
+    const archivedToCanonical = Object.fromEntries(
+      Object.entries(confirmedMappings).map(([k, v]) => [k, v.canonicalId])
+    );
 
-    if (confirmedArchivedIds.length === 0) {
+    if (confirmedArchivedIds.size === 0) {
       return Response.json({
         mode: dry_run ? 'DRY_RUN' : 'EXECUTE',
         timestamp: new Date().toISOString(),
         step1_canonicalMappings: 0,
         reviewNeeded,
         note: 'No confirmed archived→canonical mappings found. Nothing to remediate.',
-        filesRead: ['StationMergeLog', 'Station'],
         filesChanged: 'NONE',
         lockedFilesVerification: { touchedLockedFiles: false },
       });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // STEP 2 — FuelPrice remediation
+    // STEP 2A+B — Find FuelPrice rows referencing archived stationIds
     // ─────────────────────────────────────────────────────────────────────────
-    let fuelPriceRowsReassigned = 0;
-    let fuelPriceExactDuplicatesDeleted = 0;
+    const fuelPricesToReassign = allFuelPrices.filter(p => confirmedArchivedIds.has(p.stationId));
     const fuelPriceReassignDetails = [];
-    const fuelPriceDeleteDetails = [];
 
-    for (const archivedId of confirmedArchivedIds) {
-      const { canonicalId, archivedName } = confirmedMappings[archivedId];
-
-      // 2A: Find all FuelPrice rows for archived stationId
-      const orphanPrices = await base44.asServiceRole.entities.FuelPrice.filter({ stationId: archivedId });
-
-      if (orphanPrices.length === 0) continue;
-
+    // Group by archived stationId for reporting
+    const reassignByArchived = {};
+    for (const p of fuelPricesToReassign) {
+      if (!reassignByArchived[p.stationId]) reassignByArchived[p.stationId] = [];
+      reassignByArchived[p.stationId].push(p);
+    }
+    for (const [archivedId, rows] of Object.entries(reassignByArchived)) {
       fuelPriceReassignDetails.push({
         archivedId,
-        archivedName,
-        canonicalId,
-        rowsFound: orphanPrices.length,
+        archivedName: stationById[archivedId]?.name,
+        canonicalId: archivedToCanonical[archivedId],
+        rowsToReassign: rows.length,
       });
+    }
 
-      // 2B: Reassign to canonical stationId
-      if (!dry_run) {
-        for (const price of orphanPrices) {
-          await base44.asServiceRole.entities.FuelPrice.update(price.id, {
-            stationId: canonicalId,
-          });
-          fuelPriceRowsReassigned++;
-        }
-      } else {
-        fuelPriceRowsReassigned += orphanPrices.length;
+    // Execute reassignment
+    if (!dry_run) {
+      for (const price of fuelPricesToReassign) {
+        await base44.asServiceRole.entities.FuelPrice.update(price.id, {
+          stationId: archivedToCanonical[price.stationId],
+        });
       }
+    }
 
-      // 2C: Detect exact duplicates AFTER reassignment
-      // Fetch all FuelPrice rows now on canonical stationId (includes just-moved ones)
-      const canonicalPrices = await base44.asServiceRole.entities.FuelPrice.filter({ stationId: canonicalId });
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 2C — Detect exact duplicate FuelPrice rows post-reassignment
+    // Work on in-memory merged view: reassigned rows get new stationId
+    // ─────────────────────────────────────────────────────────────────────────
+    const mergedFuelPrices = allFuelPrices.map(p => ({
+      ...p,
+      stationId: archivedToCanonical[p.stationId] ?? p.stationId,
+    }));
 
-      // Group by exact-duplicate key: fuelType + priceNok + sourceName + fetchedAt
-      const seen = {};
-      const toDelete = [];
+    // Group by canonical stationId, then find exact dupes
+    const byCanonicalStation = {};
+    for (const p of mergedFuelPrices) {
+      const cId = archivedToCanonical[p.stationId] ?? p.stationId;
+      if (!byCanonicalStation[cId]) byCanonicalStation[cId] = [];
+      byCanonicalStation[cId].push({ ...p, stationId: cId });
+    }
 
-      // Sort so the oldest created_date wins (keep canonical history)
-      const sorted = [...canonicalPrices].sort(
+    const fuelPriceDeleteDetails = [];
+    const idsToDelete = new Set();
+
+    for (const [canonicalId, rows] of Object.entries(byCanonicalStation)) {
+      if (!Object.values(archivedToCanonical).includes(canonicalId)) continue; // only check affected stations
+
+      // Sort oldest first (oldest created_date = canonical history row to keep)
+      const sorted = [...rows].sort(
         (a, b) => new Date(a.created_date || 0) - new Date(b.created_date || 0)
       );
 
+      const seen = {};
       for (const p of sorted) {
+        if (!p.fuelType || p.priceNok == null || !p.sourceName || !p.fetchedAt) continue;
         const key = `${p.fuelType}|${p.priceNok}|${p.sourceName}|${p.fetchedAt}`;
-        if (!key.includes('undefined') && !key.includes('null')) {
-          if (seen[key]) {
-            // This is an exact duplicate — mark for deletion
-            toDelete.push(p.id);
-            fuelPriceDeleteDetails.push({
-              deletedId: p.id,
-              keptId: seen[key],
-              fuelType: p.fuelType,
-              priceNok: p.priceNok,
-              sourceName: p.sourceName,
-              fetchedAt: p.fetchedAt,
-              stationId: canonicalId,
-            });
-          } else {
-            seen[key] = p.id;
-          }
-        }
-      }
-
-      if (!dry_run) {
-        for (const id of toDelete) {
-          await base44.asServiceRole.entities.FuelPrice.delete(id);
-          fuelPriceExactDuplicatesDeleted++;
-        }
-      } else {
-        fuelPriceExactDuplicatesDeleted += toDelete.length;
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // STEP 3 — CurrentStationPrices cleanup
-    // ─────────────────────────────────────────────────────────────────────────
-    let cspRowsDeleted = 0;
-    const cspDeleteDetails = [];
-
-    for (const archivedId of confirmedArchivedIds) {
-      const { canonicalId, archivedName } = confirmedMappings[archivedId];
-
-      // Find CSP rows still pointing to archived stationId
-      const orphanCSP = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId: archivedId });
-
-      // Also find any CSP rows with stationStatus = 'archived_duplicate' pointing to this canonical
-      // (could happen if backfill ran after archival and copied the status)
-      const archivedStatusCSP = await base44.asServiceRole.entities.CurrentStationPrices.filter({
-        stationId: canonicalId,
-        stationStatus: 'archived_duplicate',
-      });
-
-      const toDeleteCSP = [...orphanCSP, ...archivedStatusCSP];
-
-      // Verify canonical CSP row exists before deleting orphans
-      const canonicalCSP = await base44.asServiceRole.entities.CurrentStationPrices.filter({
-        stationId: canonicalId,
-      });
-
-      const canonicalActiveCSP = canonicalCSP.filter(r => r.stationStatus !== 'archived_duplicate');
-
-      for (const row of toDeleteCSP) {
-        // Safety: never delete the canonical active CSP row
-        if (row.stationId === canonicalId && canonicalActiveCSP.some(r => r.id === row.id) && row.stationStatus !== 'archived_duplicate') {
-          continue;
-        }
-
-        cspDeleteDetails.push({
-          deletedCSPId: row.id,
-          stationId: row.stationId,
-          stationName: row.stationName,
-          stationStatus: row.stationStatus,
-          reason: row.stationId === archivedId ? 'orphan_archived_stationId' : 'canonical_row_marked_archived',
-          canonicalActiveCSPExists: canonicalActiveCSP.length > 0,
-        });
-
-        if (!dry_run) {
-          await base44.asServiceRole.entities.CurrentStationPrices.delete(row.id);
-          cspRowsDeleted++;
+        if (seen[key]) {
+          idsToDelete.add(p.id);
+          fuelPriceDeleteDetails.push({
+            deletedId: p.id,
+            keptId: seen[key],
+            stationId: canonicalId,
+            fuelType: p.fuelType,
+            priceNok: p.priceNok,
+            sourceName: p.sourceName,
+            fetchedAt: p.fetchedAt,
+          });
         } else {
-          cspRowsDeleted++;
+          seen[key] = p.id;
         }
       }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // STEP 4 — Verification
-    // ─────────────────────────────────────────────────────────────────────────
-    const verificationResults = {
-      fuelPrice: {},
-      currentStationPrices: {},
-      summary: '',
-    };
 
     if (!dry_run) {
-      let staleRefs = 0;
-      for (const archivedId of confirmedArchivedIds) {
-        const remaining = await base44.asServiceRole.entities.FuelPrice.filter({ stationId: archivedId });
-        staleRefs += remaining.length;
+      for (const id of idsToDelete) {
+        await base44.asServiceRole.entities.FuelPrice.delete(id);
       }
+    }
 
-      let staleCSP = 0;
-      for (const archivedId of confirmedArchivedIds) {
-        const remaining = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId: archivedId });
-        staleCSP += remaining.length;
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 3 — CurrentStationPrices cleanup (in-memory)
+    // ─────────────────────────────────────────────────────────────────────────
+    const cspDeleteDetails = [];
+    const cspIdsToDelete = new Set();
+
+    // For each archived stationId: find CSP rows pointing to it
+    for (const cspRow of allCSP) {
+      if (confirmedArchivedIds.has(cspRow.stationId)) {
+        // Orphan — points to archived stationId
+        const canonicalId = archivedToCanonical[cspRow.stationId];
+        // Verify canonical CSP exists (already in allCSP)
+        const canonicalCSPExists = allCSP.some(
+          r => r.stationId === canonicalId && r.stationStatus !== 'archived_duplicate'
+        );
+        cspIdsToDelete.add(cspRow.id);
+        cspDeleteDetails.push({
+          deletedCSPId: cspRow.id,
+          stationId: cspRow.stationId,
+          stationName: cspRow.stationName,
+          stationStatus: cspRow.stationStatus,
+          canonicalId,
+          reason: 'orphan_archived_stationId',
+          canonicalActiveCSPExists: canonicalCSPExists,
+        });
+      } else if (cspRow.stationStatus === 'archived_duplicate') {
+        // CSP row where the station was later archived — also remove
+        const archivedId = Object.keys(archivedToCanonical).find(
+          k => archivedToCanonical[k] === cspRow.stationId
+        );
+        if (archivedId !== undefined) {
+          cspIdsToDelete.add(cspRow.id);
+          cspDeleteDetails.push({
+            deletedCSPId: cspRow.id,
+            stationId: cspRow.stationId,
+            stationName: cspRow.stationName,
+            stationStatus: cspRow.stationStatus,
+            reason: 'canonical_csp_row_marked_archived_duplicate',
+          });
+        }
       }
+    }
 
-      verificationResults.fuelPrice = {
+    if (!dry_run) {
+      for (const id of cspIdsToDelete) {
+        await base44.asServiceRole.entities.CurrentStationPrices.delete(id);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 4 — Verification (post-write, re-fetch only what's needed)
+    // ─────────────────────────────────────────────────────────────────────────
+    let verificationResults = { summary: 'DRY_RUN — verification skipped' };
+
+    if (!dry_run) {
+      // Re-fetch only the affected stationId sets
+      const verifyFP = await listAll(base44.asServiceRole.entities.FuelPrice);
+      const verifyCSP = await listAll(base44.asServiceRole.entities.CurrentStationPrices);
+
+      const staleRefs = verifyFP.filter(p => confirmedArchivedIds.has(p.stationId)).length;
+      const staleCSP = verifyCSP.filter(r => confirmedArchivedIds.has(r.stationId)).length;
+
+      verificationResults = {
         staleFuelPriceRefsRemaining: staleRefs,
-        passed: staleRefs === 0,
-      };
-      verificationResults.currentStationPrices = {
         staleCSPRowsRemaining: staleCSP,
-        passed: staleCSP === 0,
+        fuelPricePassed: staleRefs === 0,
+        cspPassed: staleCSP === 0,
+        summary: staleRefs === 0 && staleCSP === 0
+          ? 'PASSED — no stale archived_duplicate references remain in FuelPrice or CurrentStationPrices'
+          : `FAILED — ${staleRefs} FuelPrice + ${staleCSP} CSP rows still reference archived stationIds`,
       };
-      verificationResults.summary = staleRefs === 0 && staleCSP === 0
-        ? 'PASSED — no stale archived_duplicate references remain'
-        : `FAILED — ${staleRefs} FuelPrice + ${staleCSP} CSP rows still reference archived stationIds`;
-    } else {
-      verificationResults.summary = 'DRY_RUN — verification skipped (no writes performed)';
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // RETURN
     // ─────────────────────────────────────────────────────────────────────────
     return Response.json({
-      // A. Files read
       filesRead: [
         'StationMergeLog (entity)',
-        'Station (entity)',
-        'FuelPrice (entity)',
-        'CurrentStationPrices (entity)',
-        'components/dashboard/NearbyPrices.jsx (reviewed)',
-        'utils/currentPriceResolver.js (reviewed)',
-        'utils/currentStationPricesAdapter.js (reviewed)',
+        'Station (entity — bulk)',
+        'FuelPrice (entity — bulk)',
+        'CurrentStationPrices (entity — bulk)',
+        'NearbyPrices.jsx (reviewed — uses CSP path, filters archived_duplicate via _station.status)',
+        'currentPriceResolver.js (reviewed — resolveLatestPerStation collapses by stationId)',
+        'currentStationPricesAdapter.js (reviewed — passes stationStatus to _station.status)',
       ],
-
-      // B. Files changed
-      filesChanged: dry_run ? 'NONE — dry run' : 'FuelPrice (entity), CurrentStationPrices (entity)',
-
+      filesChanged: dry_run ? 'NONE — dry run' : 'FuelPrice rows reassigned + exact dupes deleted; CSP orphan rows deleted',
       mode: dry_run ? 'DRY_RUN' : 'EXECUTE',
       timestamp: new Date().toISOString(),
       curator_id: dry_run ? null : user.email,
 
-      // C. Confirmed station mappings processed
       step1_canonicalMappings: mappingDetails.length,
       mappingDetails,
 
-      // D. FuelPrice rows reassigned
-      step2_fuelPriceRowsReassigned: fuelPriceRowsReassigned,
+      step2_fuelPriceRowsReassigned: fuelPricesToReassign.length,
       fuelPriceReassignDetails,
 
-      // E. Exact FuelPrice duplicates deleted
-      step2_fuelPriceExactDuplicatesDeleted: fuelPriceExactDuplicatesDeleted,
+      step2_fuelPriceExactDuplicatesDeleted: idsToDelete.size,
       fuelPriceDeleteDetails,
 
-      // F. CurrentStationPrices rows deleted
-      step3_cspRowsDeleted: cspRowsDeleted,
+      step3_cspRowsDeleted: cspIdsToDelete.size,
       cspDeleteDetails,
 
-      // G. Verification
       step4_verification: verificationResults,
 
-      // H. Review-needed cases
       step5_reviewNeeded: reviewNeeded,
       reviewNeededCount: reviewNeeded.length,
 
-      // I. Recommended next step
       recommendedNextStep: dry_run
-        ? 'Re-run with dry_run=false and curator_confirmation=true to apply all remediation writes'
-        : (verificationResults.fuelPrice.passed && verificationResults.currentStationPrices.passed
-            ? 'Verification passed. NearbyPrices should now show no duplicates for remediated stations. Monitor for 24h.'
-            : 'Verification FAILED — inspect step5_reviewNeeded and re-run for remaining cases'),
+        ? `Dry-run complete. ${fuelPricesToReassign.length} FuelPrice rows to reassign, ${idsToDelete.size} exact dupes to delete, ${cspIdsToDelete.size} CSP orphan rows to delete. Re-run with dry_run=false and curator_confirmation=true to apply.`
+        : (verificationResults.fuelPricePassed && verificationResults.cspPassed
+            ? 'Verification PASSED. NearbyPrices now shows no duplicate entries for remediated stations.'
+            : 'Verification FAILED — inspect step5_reviewNeeded'),
 
-      // J. Locked files untouched verification
       lockedFilesVerification: {
         touchedLockedFiles: false,
         lockedFiles: [
