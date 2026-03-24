@@ -205,6 +205,11 @@ export default function RoutePlanner() {
                 <CardTitle className="text-sm font-semibold text-green-700 flex items-center gap-2">
                   <Fuel size={15} />
                   Beste stopp langs ruta · {fuelLabel}
+                  {result.usedFallbackCorridor && (
+                    <span className="ml-auto text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                      utvidet søk ({result.corridorKmUsed} km)
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 space-y-3">
