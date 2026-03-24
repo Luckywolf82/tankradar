@@ -241,8 +241,131 @@ export default function CoverageMapExplorer() {
      }
    };
 
+  // Toggle drawing mode
+  const toggleDrawing = () => {
+    if (isDrawing) {
+      setIsDrawing(false);
+      setDrawingPoints([]);
+    } else {
+      setIsDrawing(true);
+      setDrawingPoints([]);
+    }
+  };
+
+  // Handle map click when drawing
+  const handleMapClick = (e) => {
+    if (!isDrawing) return;
+    const newPoint = [e.latlng.lat, e.latlng.lng];
+    setDrawingPoints(prev => [...prev, newPoint]);
+  };
+
+  // Complete polygon
+  const completePolygon = async () => {
+    if (drawingPoints.length < 3) {
+      alert('Need at least 3 points to create polygon');
+      return;
+    }
+
+    setScanning(true);
+    const polygon = [...drawingPoints, drawingPoints[0]]; // Close polygon
+
+    try {
+      // Find stations inside polygon
+      const stationsInside = stations.filter(s => {
+        return pointInPolygon([s.latitude, s.longitude], drawingPoints);
+      });
+
+      if (stationsInside.length === 0) {
+        alert('No stations inside polygon');
+        setScanning(false);
+        return;
+      }
+
+      alert(`Testing ${stationsInside.length} stations inside polygon...`);
+
+      // Batch test GP coverage
+      await base44.functions.invoke('batchTestGooglePlacesCoverage', {
+        limit: stationsInside.length,
+        offset: 0,
+      });
+
+      const gpCandidates = await base44.entities.StationCandidate.filter({ 
+        sourceName: 'GooglePlaces'
+      });
+
+      const stationResults = stationsInside.map(station => {
+        const match = gpCandidates.find(c => 
+          c.matchCandidates?.includes(station.id)
+        );
+        return {
+          stationId: station.id,
+          stationName: station.name,
+          gpMatched: !!match,
+          hasFuelOptions: match?.proposedChain ? true : false,
+          fuelTypes: [],
+          updateTime: null,
+          distance: 0,
+        };
+      });
+
+      // Get bounds from polygon points
+      const lats = drawingPoints.map(p => p[0]);
+      const lngs = drawingPoints.map(p => p[1]);
+      const bounds = {
+        north: Math.max(...lats),
+        south: Math.min(...lats),
+        east: Math.max(...lngs),
+        west: Math.min(...lngs),
+      };
+
+      const newArea = {
+        id: Date.now().toString(),
+        center: { lat: (bounds.north + bounds.south) / 2, lng: (bounds.east + bounds.west) / 2 },
+        bounds,
+        testedAt: new Date().toISOString(),
+        totalStations: stationsInside.length,
+        gpMatchedCount: stationResults.filter(r => r.gpMatched).length,
+        gpFuelOptionsCount: stationResults.filter(r => r.hasFuelOptions).length,
+        coveragePercent: Math.round((stationResults.filter(r => r.hasFuelOptions).length / stationsInside.length) * 100),
+        fuelTypesObserved: [],
+        latestUpdateTime: null,
+        polygonPoints: drawingPoints,
+        stationResults,
+        status: 'tested',
+      };
+
+      setTestedAreas(prev => [...prev, newArea]);
+      setSelectedArea(newArea);
+      alert(`Test complete! ${newArea.gpFuelOptionsCount}/${newArea.totalStations} have prices.`);
+      setIsDrawing(false);
+      setDrawingPoints([]);
+    } catch (error) {
+      console.error('Polygon test failed:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Point in polygon algorithm
+  const pointInPolygon = (point, polygon) => {
+    const [x, y] = point;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const [xi, yi] = polygon[i];
+      const [xj, yj] = polygon[j];
+      const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+
   // Test clicked area with radius
   const testClickedArea = async (e) => {
+    if (isDrawing) {
+      handleMapClick(e);
+      return;
+    }
     const { lat, lng } = e.latlng;
     setScanning(true);
 
