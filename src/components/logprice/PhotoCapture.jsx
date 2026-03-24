@@ -1,14 +1,10 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, PenLine, Settings } from "lucide-react";
-import CameraCapture from "./CameraCapture";
 
 export default function PhotoCapture({ onPhoto, onSkip }) {
   const fileRef = useRef();
   const [showPermissionHelp, setShowPermissionHelp] = useState(false);
-  // useInAppCamera: true = try getUserMedia overlay camera first
-  // false = native file input (fallback or user-chosen)
-  const [useInAppCamera, setUseInAppCamera] = useState(true);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -18,69 +14,21 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
     }
   };
 
-  const handleFileInputClick = () => {
+  const handleCameraClick = () => {
     const input = fileRef.current;
     input.value = "";
     input.click();
 
+    // Vis hjelpetekst kun hvis file chooser ikke åpner (ingen fil etter 500ms)
     const timer = setTimeout(() => {
       if (!input.files || input.files.length === 0) {
         setShowPermissionHelp(true);
       }
     }, 500);
+
     input.addEventListener("change", () => clearTimeout(timer), { once: true });
   };
 
-  // CameraCapture called onCapture — pass through as if it were a file
-  const handleInAppCapture = (file) => {
-    onPhoto(file);
-  };
-
-  // CameraCapture couldn't start — switch to native file input
-  const handleFallback = () => {
-    setUseInAppCamera(false);
-    // Trigger native file input immediately
-    setTimeout(() => {
-      fileRef.current?.click();
-    }, 100);
-  };
-
-  if (useInAppCamera) {
-    return (
-      <div className="flex flex-col gap-4 py-2">
-        <div className="text-center">
-          <h2 className="text-lg font-bold text-slate-800">Ta bilde av prisskiltet</h2>
-          <p className="text-slate-500 text-xs mt-1">
-            Plasser prisskiltet i rammen og trykk på knappen.
-          </p>
-        </div>
-
-        <CameraCapture
-          onCapture={handleInAppCapture}
-          onFallback={handleFallback}
-        />
-
-        <button
-          type="button"
-          onClick={onSkip}
-          className="text-sm text-slate-400 hover:text-blue-600 flex items-center justify-center gap-1 mt-1"
-        >
-          <PenLine size={14} /> Skriv inn pris manuelt
-        </button>
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleFile}
-        />
-      </div>
-    );
-  }
-
-  // Fallback: native file input UI
   return (
     <div className="flex flex-col items-center gap-4 py-8">
       <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
@@ -93,11 +41,10 @@ export default function PhotoCapture({ onPhoto, onSkip }) {
 
       <Button
         className="bg-blue-600 hover:bg-blue-700 gap-2 w-full max-w-xs"
-        onClick={handleFileInputClick}
+        onClick={handleCameraClick}
       >
         <Camera size={18} /> Ta bilde / velg fra galleri
       </Button>
-
       <input
         ref={fileRef}
         type="file"
