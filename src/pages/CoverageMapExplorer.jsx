@@ -252,36 +252,57 @@ export default function CoverageMapExplorer() {
     }
   };
 
-  // Handle map click when drawing
-  const handleMapClick = (e) => {
+  // Handle rectangle drawing (drag from corner to opposite corner)
+  const handleMapMouseDown = (e) => {
     if (!isDrawing) return;
-    const newPoint = [e.latlng.lat, e.latlng.lng];
-    setDrawingPoints(prev => [...prev, newPoint]);
+    const startPoint = [e.latlng.lat, e.latlng.lng];
+
+    const handleMouseMove = (moveEvent) => {
+      const endPoint = [moveEvent.latlng.lat, moveEvent.latlng.lng];
+      setDrawingPoints([startPoint, endPoint]);
+    };
+
+    const handleMouseUp = () => {
+      mapRef.current?.off('mousemove', handleMouseMove);
+      mapRef.current?.off('mouseup', handleMouseUp);
+    };
+
+    mapRef.current?.on('mousemove', handleMouseMove);
+    mapRef.current?.on('mouseup', handleMouseUp);
   };
 
-  // Complete polygon
-  const completePolygon = async () => {
-    if (drawingPoints.length < 3) {
-      alert('Need at least 3 points to create polygon');
+  // Complete rectangle
+  const completeRectangle = async () => {
+    if (drawingPoints.length !== 2) {
+      alert('Draw a rectangle by dragging on the map');
       return;
     }
 
     setScanning(true);
-    const polygon = [...drawingPoints, drawingPoints[0]]; // Close polygon
+    const [lat1, lng1] = drawingPoints[0];
+    const [lat2, lng2] = drawingPoints[1];
+
+    const bounds = {
+      north: Math.max(lat1, lat2),
+      south: Math.min(lat1, lat2),
+      east: Math.max(lng1, lng2),
+      west: Math.min(lng1, lng2),
+    };
 
     try {
-      // Find stations inside polygon
-      const stationsInside = stations.filter(s => {
-        return pointInPolygon([s.latitude, s.longitude], drawingPoints);
-      });
+      // Find stations inside rectangle
+      const stationsInside = stations.filter(s => 
+        s.latitude >= bounds.south && s.latitude <= bounds.north &&
+        s.longitude >= bounds.west && s.longitude <= bounds.east
+      );
 
       if (stationsInside.length === 0) {
-        alert('No stations inside polygon');
+        alert('No stations inside rectangle');
         setScanning(false);
         return;
       }
 
-      alert(`Testing ${stationsInside.length} stations inside polygon...`);
+      alert(`Testing ${stationsInside.length} stations inside rectangle...`);
 
       // Batch test GP coverage
       await base44.functions.invoke('batchTestGooglePlacesCoverage', {
@@ -308,16 +329,6 @@ export default function CoverageMapExplorer() {
         };
       });
 
-      // Get bounds from polygon points
-      const lats = drawingPoints.map(p => p[0]);
-      const lngs = drawingPoints.map(p => p[1]);
-      const bounds = {
-        north: Math.max(...lats),
-        south: Math.min(...lats),
-        east: Math.max(...lngs),
-        west: Math.min(...lngs),
-      };
-
       const newArea = {
         id: Date.now().toString(),
         center: { lat: (bounds.north + bounds.south) / 2, lng: (bounds.east + bounds.west) / 2 },
@@ -329,7 +340,6 @@ export default function CoverageMapExplorer() {
         coveragePercent: Math.round((stationResults.filter(r => r.hasFuelOptions).length / stationsInside.length) * 100),
         fuelTypesObserved: [],
         latestUpdateTime: null,
-        polygonPoints: drawingPoints,
         stationResults,
         status: 'tested',
       };
@@ -340,7 +350,7 @@ export default function CoverageMapExplorer() {
       setIsDrawing(false);
       setDrawingPoints([]);
     } catch (error) {
-      console.error('Polygon test failed:', error);
+      console.error('Rectangle test failed:', error);
       alert(`Error: ${error.message}`);
     } finally {
       setScanning(false);
