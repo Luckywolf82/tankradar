@@ -154,6 +154,61 @@ export default function GooglePlacesCoverageMap() {
     return coverageData[stationId]?.hasGPData || false;
   };
 
+  // Scan visible stations on the map for GP coverage
+  const scanVisibleStations = async () => {
+    if (!mapRef.current) return;
+    
+    setScanning(true);
+    const bounds = mapRef.current.getBounds();
+    
+    // Filter stations visible in current map bounds
+    const visibleStations = stations.filter(s => {
+      return bounds.contains([s.latitude, s.longitude]);
+    });
+
+    if (visibleStations.length === 0) {
+      setScanning(false);
+      return;
+    }
+
+    try {
+      // Test in batches of 50 to avoid API limits
+      const batchSize = 50;
+      for (let i = 0; i < visibleStations.length; i += batchSize) {
+        const batch = visibleStations.slice(i, i + batchSize);
+        const response = await base44.functions.invoke('batchTestGooglePlacesCoverage', {
+          limit: batch.length,
+          offset: 0,
+        });
+
+        if (response.data?.candidatesSaved > 0) {
+          // Reload candidates to update map
+          const gpCandidates = await base44.entities.StationCandidate.filter({ 
+            sourceName: 'GooglePlaces',
+            classification: 'gp_coverage_test'
+          });
+          
+          const gpResults = {};
+          gpCandidates.forEach(candidate => {
+            if (candidate.matchCandidates && candidate.matchCandidates.length > 0) {
+              const stationId = candidate.matchCandidates[0];
+              gpResults[stationId] = {
+                hasGPMatch: true,
+                gpName: candidate.proposedName,
+                gpPlaceId: candidate.sourceStationId,
+              };
+            }
+          });
+          setCoverageData(prev => ({ ...prev, ...gpResults }));
+        }
+      }
+    } catch (error) {
+      console.error('Scan failed:', error);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const getMarkerIcon = (status) => {
     switch (status) {
       case 'covered': return coveredIcon;
@@ -327,7 +382,7 @@ export default function GooglePlacesCoverageMap() {
         </div>
 
         {/* Legend */}
-        <div className="flex gap-4 text-sm flex-wrap">
+        <div className="flex gap-4 text-sm flex-wrap items-center">
           <div className="flex items-center gap-2 font-semibold bg-green-50 px-2 py-1 rounded border border-green-300">
             <div className="w-4 h-6 bg-green-600 rounded"></div>
             <span>✓ HAS GP/User Prices</span>
@@ -336,8 +391,25 @@ export default function GooglePlacesCoverageMap() {
             <div className="w-4 h-6 bg-red-600 rounded"></div>
             <span>✗ NO GP/User Prices</span>
           </div>
+          <Button 
+            onClick={scanVisibleStations}
+            disabled={scanning}
+            className="ml-4"
+          >
+            {scanning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Testing...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Test Visible Stations
+              </>
+            )}
+          </Button>
           <div className="text-xs text-slate-600 mt-2 w-full">
-            (Testing: GP Covered=green, GP Partial=yellow, GP Uncovered=red, Not tested=blue)
+            Blue = not tested yet. Click "Test Visible Stations" to scan Google Places coverage.
           </div>
         </div>
       </div>
