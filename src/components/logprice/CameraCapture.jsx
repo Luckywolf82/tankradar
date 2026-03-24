@@ -181,11 +181,19 @@ export default function CameraCapture({ onCapture, onFallback }) {
     if (!videoRef.current || capturing) return;
     setCapturing(true);
 
+    const video = videoRef.current;
     const canvas = canvasRef.current;
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+
+    // Crop to the overlay box region for tighter, cleaner input to OCR
+    const sx = Math.round(video.videoWidth * BOX_LEFT);
+    const sy = Math.round(video.videoHeight * BOX_TOP);
+    const sw = Math.round(video.videoWidth * BOX_WIDTH);
+    const sh = Math.round(video.videoHeight * BOX_HEIGHT);
+
+    canvas.width = sw;
+    canvas.height = sh;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(videoRef.current, 0, 0);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
 
     canvas.toBlob(
       (blob) => {
@@ -195,7 +203,7 @@ export default function CameraCapture({ onCapture, onFallback }) {
         onCapture(file);
       },
       "image/jpeg",
-      0.92
+      0.93
     );
   }, [capturing, onCapture]);
 
