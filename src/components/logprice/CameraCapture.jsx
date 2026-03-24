@@ -10,7 +10,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, ZoomIn, AlertCircle } from "lucide-react";
+import { Camera, ZoomIn, ZoomOut, AlertCircle } from "lucide-react";
 
 // How often to analyze the frame for hints/zoom (ms)
 const ANALYSIS_INTERVAL_MS = 1000;
