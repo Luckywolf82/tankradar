@@ -62,14 +62,15 @@ export default function CoverageMapExplorer() {
    const [automationCoverage, setAutomationCoverage] = useState([]);
   
   // Layer visibility toggles
-  const [showLayers, setShowLayers] = useState({
-    stations: true,
-    coveredStations: true,
-    partialStations: true,
-    uncoveredStations: true,
-    testedAreas: true,
-    savedAreas: true,
-  });
+   const [showLayers, setShowLayers] = useState({
+     stations: true,
+     coveredStations: true,
+     partialStations: true,
+     uncoveredStations: true,
+     testedAreas: true,
+     savedAreas: true,
+     automationCoverage: true,
+   });
 
   // Load stations + restore saved areas from localStorage + get automation coverage
    useEffect(() => {
