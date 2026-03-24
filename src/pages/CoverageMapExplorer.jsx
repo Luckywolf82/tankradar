@@ -531,9 +531,18 @@ export default function CoverageMapExplorer() {
         stationIds,
         deduplicateByStationId: true, // Request dedup by stationId, keep old price
       });
-      
-      // Show result
-      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records\nDedup skipped: ${response.data.summary.dedupSkipped || 0}`);
+
+      // Build detailed report
+      const errorCount = response.data.errors?.length || 0;
+      const apiErrors = response.data.report?.filter(r => r.status === 'api_error') || [];
+      const errorMsg = errorCount > 0 
+        ? `\n\nErrors (${errorCount}):\n${response.data.errors.slice(0, 3).map(e => `${e.stationName}: ${e.error}`).join('\n')}${errorCount > 3 ? '\n...' : ''}`
+        : '';
+      const apiErrorMsg = apiErrors.length > 0
+        ? `\n\nAPI Errors (${apiErrors.length}): ${apiErrors[0].message}`
+        : '';
+
+      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records\nDedup skipped: ${response.data.summary.dedupSkipped || 0}${errorMsg}${apiErrorMsg}`);
     } catch (error) {
       console.error('Failed to fetch prices:', error);
       alert(`Error: ${error.message}`);
