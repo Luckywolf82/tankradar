@@ -183,8 +183,8 @@ export default function CoverageMapExplorer() {
 
       <div className="flex flex-1 gap-4 p-4 overflow-hidden">
         {/* Map */}
-        <div className="flex-1 rounded-lg overflow-hidden shadow-md">
-          <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%' }}>
+        <div className="flex-1 rounded-lg overflow-hidden shadow-md" style={{ minHeight: 0 }}>
+          <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%', minHeight: '100%' }}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapController />
             
