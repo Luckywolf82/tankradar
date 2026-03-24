@@ -96,20 +96,27 @@ export function findBestRouteStop(polyline, fuelType, cspRows, userCoords) {
   // Best = cheapest along route
   const bestStation = [...candidates].sort((a, b) => a._price - b._price)[0];
 
-  // Nearest = closest to user start (proxy for "your usual stop")
-  const nearestStation = [...candidates].sort((a, b) => a._distToUser - b._distToUser)[0];
+  // Reference station = nearest candidate with a DIFFERENT stationId than bestStation.
+  // This prevents comparing bestStation against itself when only one corridor station exists.
+  const alternativeCandidates = candidates.filter(
+    (c) => c.stationId !== bestStation.stationId
+  );
+  const referenceStation = alternativeCandidates.length > 0
+    ? [...alternativeCandidates].sort((a, b) => a._distToUser - b._distToUser)[0]
+    : null;
 
-  // Savings estimate (only meaningful if best != nearest and cheaper)
+  // Savings estimate: only when a distinct reference station exists AND it is more expensive.
+  // Never show savings if no valid alternative baseline exists.
   let savingsEstimate = null;
   if (
-    bestStation.stationId !== nearestStation.stationId &&
-    bestStation._price < nearestStation._price
+    referenceStation !== null &&
+    bestStation._price < referenceStation._price
   ) {
-    const diff = nearestStation._price - bestStation._price;
+    const diff = referenceStation._price - bestStation._price;
     savingsEstimate = Math.round(diff * FILL_LITERS);
   }
 
-  return { bestStation, nearestStation, savingsEstimate };
+  return { bestStation, referenceStation, savingsEstimate };
 }
 
 /**
