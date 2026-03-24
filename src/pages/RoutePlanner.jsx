@@ -244,15 +244,17 @@ export default function RoutePlanner() {
                   </a>
                 </div>
 
-                {/* Savings */}
-                {result.savingsEstimate != null && result.savingsEstimate > 0 && (
+                {/* Savings — only shown when a distinct reference station exists */}
+                {result.referenceStation != null &&
+                  result.savingsEstimate != null &&
+                  result.savingsEstimate > 0 && (
                   <div className="border-t border-green-100 pt-3 flex items-center gap-2">
                     <div className="flex-1">
-                      <p className="text-xs text-slate-500">vs nærmeste stasjon langs ruta</p>
+                      <p className="text-xs text-slate-500">vs nærmeste alternativ langs ruta</p>
                       <p className="text-sm font-semibold text-slate-700">
-                        {result.nearestStation.stationName}
+                        {result.referenceStation.stationName}
                         <span className="text-slate-400 font-normal ml-1">
-                          — {result.nearestStation._price.toFixed(2)} kr/l
+                          — {result.referenceStation._price.toFixed(2)} kr/l
                         </span>
                       </p>
                     </div>
