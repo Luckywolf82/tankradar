@@ -658,7 +658,6 @@ export default function CoverageMapExplorer() {
             center={[59.9139, 10.7522]} 
             zoom={12} 
             style={{ height: '100%', width: '100%' }}
-            onMouseDown={isDrawing ? handleMapMouseDown : undefined}
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
             <MapController mapRef={mapRef} onMapReady={() => setMapReady(true)} />
