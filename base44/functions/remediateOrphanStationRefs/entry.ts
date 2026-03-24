@@ -46,6 +46,11 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R_EARTH * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/** Throttle: wait ms milliseconds */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function normalize(str) {
   return (str || '').toLowerCase().replace(/[^a-z0-9æøå]/g, ' ').replace(/\s+/g, ' ').trim();
 }
