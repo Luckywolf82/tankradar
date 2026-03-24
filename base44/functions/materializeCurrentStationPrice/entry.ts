@@ -55,6 +55,33 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
+    // ── IDENTITY GUARD ────────────────────────────────────────────────────────
+    // Reject writes where stationId is a sourceStationId (external reference)
+    // instead of a canonical Station.id. This prevents bad-identity CSP rows.
+    try {
+      const stationCheck = await base44.asServiceRole.entities.Station.filter({ id: stationId });
+      if (!stationCheck || stationCheck.length === 0) {
+        // stationId not found as a Station.id — check if it matches a sourceStationId
+        const sourceCheck = await base44.asServiceRole.entities.Station.filter({ sourceStationId: stationId });
+        if (sourceCheck && sourceCheck.length > 0) {
+          console.error(`[materializeCSP] IDENTITY GUARD BLOCKED: stationId="${stationId}" is a sourceStationId, not a Station.id. Canonical id="${sourceCheck[0].id}". FuelPrice row must be remediated first.`);
+          return Response.json({
+            skipped: true,
+            reason: 'identity_guard_blocked',
+            detail: `stationId is a sourceStationId, not a canonical Station.id`,
+            wrongStationId: stationId,
+            canonicalStationId: sourceCheck[0].id,
+          });
+        }
+        // Truly orphan — log and skip
+        console.warn(`[materializeCSP] stationId="${stationId}" not found in Station catalog at all — skipping`);
+        return Response.json({ skipped: true, reason: 'station_not_found_in_catalog', stationId });
+      }
+    } catch (_) {
+      // Non-fatal: allow through if check itself fails (avoids blocking legitimate writes)
+    }
+    // ── END IDENTITY GUARD ────────────────────────────────────────────────────
+
     // Snapshot station metadata from Station catalog.
     let stationMeta = {};
     try {
