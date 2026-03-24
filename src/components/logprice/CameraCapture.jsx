@@ -240,25 +240,24 @@ export default function CameraCapture({ onCapture, onFallback }) {
       {ready && (
         <>
           {/* Top dim */}
-          <div className="absolute inset-x-0 top-0 bg-black/45" style={{ height: "35%" }} />
+          <div className="absolute inset-x-0 top-0 bg-black/50" style={{ height: `${BOX_TOP * 100}%` }} />
           {/* Bottom dim */}
-          <div className="absolute inset-x-0 bottom-0 bg-black/45" style={{ height: "35%" }} />
+          <div className="absolute inset-x-0 bottom-0 bg-black/50" style={{ height: `${(1 - BOX_TOP - BOX_HEIGHT) * 100}%` }} />
           {/* Left dim */}
-          <div className="absolute left-0 bg-black/45" style={{ top: "35%", height: "30%", width: "10%" }} />
+          <div className="absolute left-0 bg-black/50" style={{ top: `${BOX_TOP * 100}%`, height: `${BOX_HEIGHT * 100}%`, width: `${BOX_LEFT * 100}%` }} />
           {/* Right dim */}
-          <div className="absolute right-0 bg-black/45" style={{ top: "35%", height: "30%", width: "10%" }} />
+          <div className="absolute right-0 bg-black/50" style={{ top: `${BOX_TOP * 100}%`, height: `${BOX_HEIGHT * 100}%`, width: `${(1 - BOX_LEFT - BOX_WIDTH) * 100}%` }} />
 
           {/* Target box border */}
           <div
             className="absolute"
             style={{
-              top: "35%",
-              left: "10%",
-              width: "80%",
-              height: "30%",
-              border: "2px solid rgba(255,255,255,0.85)",
+              top: `${BOX_TOP * 100}%`,
+              left: `${BOX_LEFT * 100}%`,
+              width: `${BOX_WIDTH * 100}%`,
+              height: `${BOX_HEIGHT * 100}%`,
+              border: "2px solid rgba(255,255,255,0.9)",
               borderRadius: "8px",
-              boxShadow: "0 0 0 1px rgba(255,255,255,0.2)",
               pointerEvents: "none",
             }}
           >
@@ -269,25 +268,22 @@ export default function CameraCapture({ onCapture, onFallback }) {
               { bottom: -2, left: -2, borderBottom: "3px solid #60a5fa", borderLeft: "3px solid #60a5fa" },
               { bottom: -2, right: -2, borderBottom: "3px solid #60a5fa", borderRight: "3px solid #60a5fa" },
             ].map((style, i) => (
-              <div key={i} className="absolute w-5 h-5" style={{ ...style, borderRadius: "2px" }} />
+              <div key={i} className="absolute w-6 h-6" style={{ ...style, borderRadius: "2px" }} />
             ))}
-          </div>
 
-          {/* Guide label above box */}
-          <div
-            className="absolute text-white text-xs font-medium text-center"
-            style={{ top: "calc(35% - 1.6rem)", left: "10%", width: "80%", opacity: 0.85 }}
-          >
-            Plasser prisskiltet i boksen
+            {/* Label inside top of box */}
+            <div className="absolute top-2 inset-x-0 text-center text-white text-xs font-medium opacity-80">
+              Plasser prisskiltet her
+            </div>
           </div>
         </>
       )}
 
-      {/* Real-time hint */}
+      {/* Real-time hint — below the box */}
       {hint && (
         <div
           className="absolute inset-x-0 flex justify-center"
-          style={{ top: "calc(35% + 30% + 0.75rem)" }}
+          style={{ top: `${(BOX_TOP + BOX_HEIGHT) * 100 + 2}%` }}
         >
           <div className="bg-black/70 text-white text-sm font-medium px-4 py-2 rounded-full flex items-center gap-2">
             <ZoomIn size={14} className="text-blue-300" />
