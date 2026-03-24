@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import CanonicalContractAuditReport from './pages/CanonicalContractAuditReport';
 import RoutePlanner from './pages/RoutePlanner';
+import CoverageMapExplorer from './pages/CoverageMapExplorer';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
