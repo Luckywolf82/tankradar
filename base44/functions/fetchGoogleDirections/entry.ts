@@ -28,9 +28,32 @@ Deno.serve(async (req) => {
     // Fallback: geocode the destination and return a straight-line "route"
     // with interpolated midpoints. Good enough for 2 km corridor matching.
 
-    const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&region=no&language=no&key=${apiKey}`;
-    const geoRes = await fetch(geoUrl);
-    const geoData = await geoRes.json();
+    const [originLat, originLon] = origin.split(",").map(Number);
+
+    // Attempt 1: geocode with location bias centred on user's GPS position (1° ≈ 111 km radius).
+    // This dramatically improves resolution of ambiguous Norwegian place names like "Heimdal".
+    const geoUrl1 =
+      `https://maps.googleapis.com/maps/api/geocode/json` +
+      `?address=${encodeURIComponent(destination)}` +
+      `&region=no` +
+      `&language=no` +
+      `&location=${originLat},${originLon}` +
+      `&radius=150000` +
+      `&key=${apiKey}`;
+    let geoRes = await fetch(geoUrl1);
+    let geoData = await geoRes.json();
+
+    // Attempt 2: if no result, try appending "Norge" to the query (no location bias)
+    if (geoData.status !== "OK" || !geoData.results?.length) {
+      const geoUrl2 =
+        `https://maps.googleapis.com/maps/api/geocode/json` +
+        `?address=${encodeURIComponent(destination + ", Norge")}` +
+        `&region=no` +
+        `&language=no` +
+        `&key=${apiKey}`;
+      geoRes = await fetch(geoUrl2);
+      geoData = await geoRes.json();
+    }
 
     if (geoData.status !== "OK" || !geoData.results?.length) {
       return Response.json({ status: "NOT_FOUND", routes: [], error: "Destination not found" });
