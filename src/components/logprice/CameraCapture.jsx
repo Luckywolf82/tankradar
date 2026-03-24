@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, ZoomIn, AlertCircle } from "lucide-react";
 
 // How often to analyze the frame for hints/zoom (ms)
-const ANALYSIS_INTERVAL_MS = 1200;
+const ANALYSIS_INTERVAL_MS = 1000;
 
 // Zoom constraints
 const ZOOM_MIN = 1.0;
@@ -23,6 +23,12 @@ const ZOOM_DEFAULT = 1.0;
 
 // If variance below this threshold, text is probably absent / too small
 const VARIANCE_LOW_THRESHOLD = 28;
+
+// Overlay box geometry (fraction of viewport) — used for both display and crop
+const BOX_TOP = 0.28;
+const BOX_LEFT = 0.06;
+const BOX_WIDTH = 0.88;
+const BOX_HEIGHT = 0.38;
 
 function sampleFrameVariance(videoEl, canvasEl) {
   if (!videoEl || !canvasEl) return null;
