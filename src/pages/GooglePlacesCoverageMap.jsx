@@ -100,24 +100,29 @@ export default function GooglePlacesCoverageMap() {
 
         // Batch test Google Places coverage
         setScanning(true);
-        const gpResponse = await base44.functions.invoke('batchTestGooglePlacesCoverage', {
+        await base44.functions.invoke('batchTestGooglePlacesCoverage', {
           limit: filtered.length,
           offset: 0,
         });
 
-        if (gpResponse.data?.results) {
-          const gpResults = {};
-          gpResponse.data.results.forEach(result => {
-            gpResults[result.stationId] = {
-              hasGPMatch: result.hasGPMatch,
-              gpName: result.gpName,
-              distance: result.distance,
-              businessStatus: result.businessStatus,
-              gpPlaceId: result.gpPlaceId,
+        // Load StationCandidates created from GP test
+        const gpCandidates = await base44.entities.StationCandidate.filter({ 
+          sourceName: 'GooglePlaces',
+          classification: 'gp_coverage_test'
+        });
+        
+        const gpResults = {};
+        gpCandidates.forEach(candidate => {
+          if (candidate.matchCandidates && candidate.matchCandidates.length > 0) {
+            const stationId = candidate.matchCandidates[0];
+            gpResults[stationId] = {
+              hasGPMatch: true,
+              gpName: candidate.proposedName,
+              gpPlaceId: candidate.sourceStationId,
             };
-          });
-          setCoverageData(prev => ({ ...prev, ...gpResults }));
-        }
+          }
+        });
+        setCoverageData(prev => ({ ...prev, ...gpResults }));
         setScanning(false);
         setLoading(false);
       } catch (error) {

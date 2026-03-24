@@ -68,11 +68,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Test each station
+    // Test each station and save results
     const results = [];
+    const candidatesToCreate = [];
+    
     for (const station of stations) {
       const testResult = await testStationGooglePlacesCoverage(station);
       results.push(testResult);
+      
+      // Save GP match as StationCandidate for persistent visualization
+      if (testResult.hasGPMatch) {
+        candidatesToCreate.push({
+          sourceName: 'GooglePlaces',
+          sourceStationId: testResult.gpPlaceId,
+          proposedName: testResult.gpName,
+          proposedChain: null,
+          latitude: station.latitude,
+          longitude: station.longitude,
+          address: null,
+          matchCandidates: [station.id],
+          matchConfidence: 0.95,
+          status: 'auto_confirmed',
+          classification: 'gp_coverage_test',
+          region: station.region,
+          notes: `GP coverage test - ${testResult.businessStatus} - distance: ${testResult.distance?.toFixed(2)}km`,
+        });
+      }
+    }
+
+    // Batch create candidates
+    if (candidatesToCreate.length > 0) {
+      try {
+        await base44.asServiceRole.entities.StationCandidate.bulkCreate(candidatesToCreate);
+      } catch (error) {
+        console.warn('Failed to save some candidates:', error.message);
+      }
     }
 
     // Count results
@@ -84,6 +114,7 @@ Deno.serve(async (req) => {
       tested: results.length,
       withMatch,
       withFuelOptions,
+      candidatesSaved: candidatesToCreate.length,
       results,
       nextOffset: offset + results.length,
     });
