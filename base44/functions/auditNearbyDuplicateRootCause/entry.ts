@@ -218,9 +218,9 @@ Deno.serve(async (req) => {
   const hypothesisA_confirmed = confirmedDuplicatePairsInCSP.length > 0;
   const hypothesisB_confirmed = cspDuplicateRows.length > 0;
   // Hypothesis C: adapter never produces two rows from one CSP row per fuelType → structurally impossible
-  const hypothesisC_confirmed = false;
+  const hypothesisCConfirmed = false;
   // Hypothesis D: render uses key={p.id}, React dedupes by key, not a source of duplication
-  const hypothesisD_confirmed = false;
+  const hypothesisDConfirmed = false;
 
   let rootCause;
   if (hypothesisA_confirmed && hypothesisB_confirmed) {
