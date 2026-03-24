@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
       pricesFetched: 0,
       pricesFailed: 0,
       pricesCreated: [],
+      dedupSkipped: 0,
       errors: [],
       report: [],
     };
