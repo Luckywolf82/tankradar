@@ -317,7 +317,14 @@ export default function LogPrice() {
           
           if (matchResult?.status === 'matched_station_id') {
             confidenceScore = 0.85;
-            confidenceReason = "chain_match + name_similarity + distance_close";
+            // Reflect actual bind path in reason
+            if (_usedBindPath === 'catalog_id' || _usedBindPath === 'catalog_id_any_source') {
+              confidenceReason = "explicit_user_selection_catalog_id_direct_bind";
+            } else if (_usedBindPath === 'google_place_id_to_station') {
+              confidenceReason = "explicit_user_selection_source_identity_lookup";
+            } else {
+              confidenceReason = "chain_match + name_similarity + distance_close";
+            }
           } else if (matchResult?.status === 'review_needed_station_match') {
             confidenceScore = 0.50;
             confidenceReason = "ambiguous_station + uncertain_distance";
