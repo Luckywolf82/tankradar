@@ -283,12 +283,16 @@ Deno.serve(async (req) => {
     }
 
     // ── Execute: re-point FuelPrice rows ──────────────────────────────────────
+    // Throttled: 120ms between writes to avoid API rate limit (429).
+    let writeCount = 0;
     for (const [orphanId, canonicalId] of Object.entries(resolvedMap)) {
       const fpRows = orphanFPByStationId[orphanId] || [];
       for (const fp of fpRows) {
         try {
+          if (writeCount > 0 && writeCount % 5 === 0) await sleep(300);
           await base44.asServiceRole.entities.FuelPrice.update(fp.id, { stationId: canonicalId });
           report.fuelPriceRepointed++;
+          writeCount++;
         } catch (err) {
           report.errors.push({ type: 'fp_repoint_failed', fpId: fp.id, orphanId, error: err.message });
         }
