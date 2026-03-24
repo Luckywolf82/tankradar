@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MapPin, Fuel, AlertCircle, Check, X } from 'lucide-react';
+import { Loader2, MapPin, Fuel, AlertCircle, Check, X, Zap } from 'lucide-react';
 
 // LEGEND: Marker icons for coverage states
 const coveredIcon = new L.Icon({
@@ -53,6 +53,7 @@ export default function GooglePlacesCoverageMap() {
   const [scanning, setScanning] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [savedAreas, setSavedAreas] = useState([]);
+  const mapRef = React.useRef(null);
 
   // Load stations and batch-test GP coverage on mount
   useEffect(() => {
@@ -418,7 +419,7 @@ export default function GooglePlacesCoverageMap() {
       <div className="flex flex-1 gap-4 p-4 overflow-hidden">
         {/* Map */}
         <div className="flex-1 rounded-lg overflow-hidden shadow-md" style={{ minHeight: 0 }}>
-          <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%', minHeight: '100%' }}>
+          <MapContainer ref={mapRef} center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%', minHeight: '100%' }}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
             <MapController onMapReady={() => setMapReady(true)} />
             
