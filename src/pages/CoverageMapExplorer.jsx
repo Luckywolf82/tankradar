@@ -188,11 +188,11 @@ export default function CoverageMapExplorer() {
         {/* Map */}
         <div className="flex-1 rounded-lg overflow-hidden shadow-md" style={{ minHeight: 0 }}>
           <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%', minHeight: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <MapController />
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
+            <MapController onMapReady={() => setMapReady(true)} />
             
             {/* Render all stations */}
-            {stations.map(station => {
+            {mapReady && stations.filter(s => s.latitude && s.longitude).map(station => {
               const stationResults = searchResults[station.id];
               const hasMatch = stationResults?.results?.some(r => r.matchedStationId);
               const hasGaps = stationResults?.results?.some(r => !r.matchedStationId);
