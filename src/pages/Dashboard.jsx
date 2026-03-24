@@ -21,7 +21,6 @@ import { usePumpInsight } from "@/hooks/usePumpInsight";
 const FUEL_OPTIONS = [
   { value: "diesel", label: "Diesel" },
   { value: "gasoline_95", label: "Bensin 95" },
-  { value: "gasoline_98", label: "Bensin 98" },
 ];
 
 export default function Dashboard() {
