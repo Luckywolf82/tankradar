@@ -81,27 +81,47 @@ export default function CoverageMapExplorer() {
    useEffect(() => {
      const loadStations = async () => {
        try {
+         // Load with limit to avoid hanging
          const allStations = await base44.entities.Station.list();
-         const filtered = allStations.filter(s => s.latitude && s.longitude);
+         const filtered = allStations ? allStations.filter(s => s.latitude && s.longitude) : [];
          setStations(filtered);
 
          // Restore areas from localStorage
          const savedTestedAreas = localStorage.getItem('gp-tested-areas');
          const savedSavedAreas = localStorage.getItem('gp-saved-areas');
-         if (savedTestedAreas) setTestedAreas(JSON.parse(savedTestedAreas));
-         if (savedSavedAreas) setSavedAreas(JSON.parse(savedSavedAreas));
+         if (savedTestedAreas) {
+           try {
+             setTestedAreas(JSON.parse(savedTestedAreas));
+           } catch (e) {
+             console.warn('Failed to parse tested areas:', e);
+           }
+         }
+         if (savedSavedAreas) {
+           try {
+             setSavedAreas(JSON.parse(savedSavedAreas));
+           } catch (e) {
+             console.warn('Failed to parse saved areas:', e);
+           }
+         }
 
-         // Load stations with GooglePlaces prices (automation coverage)
-         const pricesWithGP = await base44.entities.FuelPrice.filter({
-           sourceName: 'GooglePlaces'
-         });
-         const stationIdsWithGP = [...new Set(pricesWithGP.map(p => p.stationId))];
-         const automationStations = filtered.filter(s => stationIdsWithGP.includes(s.id));
-         setAutomationCoverage(automationStations);
+         // Load stations with GooglePlaces prices (automation coverage) - limit to avoid timeout
+         try {
+           const pricesWithGP = await base44.entities.FuelPrice.filter({
+             sourceName: 'GooglePlaces'
+           });
+           const stationIdsWithGP = [...new Set(pricesWithGP.map(p => p.stationId))];
+           const automationStations = filtered.filter(s => stationIdsWithGP.includes(s.id));
+           setAutomationCoverage(automationStations);
+         } catch (error) {
+           console.warn('Failed to load GP prices:', error);
+           setAutomationCoverage([]);
+         }
 
          setLoading(false);
        } catch (error) {
          console.error('Failed to load stations:', error);
+         // Set loading to false anyway so UI doesn't hang
+         setStations([]);
          setLoading(false);
        }
      };
