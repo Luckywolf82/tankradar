@@ -156,77 +156,85 @@ export default function CoverageMapExplorer() {
   };
 
   // Test visible area
-  const testVisibleArea = async () => {
-    if (!mapRef.current) return;
-    
-    setScanning(true);
-    const bounds = mapRef.current.getBounds();
-    const center = bounds.getCenter();
-    
-    const visibleStations = stations.filter(s => 
-      bounds.contains([s.latitude, s.longitude])
-    );
+   const testVisibleArea = async () => {
+     if (!mapRef.current) {
+       alert('Map is not ready. Please wait.');
+       return;
+     }
 
-    if (visibleStations.length === 0) {
-      setScanning(false);
-      return;
-    }
+     setScanning(true);
+     const bounds = mapRef.current.getBounds();
+     const center = bounds.getCenter();
 
-    try {
-      // Batch test GP coverage
-      await base44.functions.invoke('batchTestGooglePlacesCoverage', {
-        limit: visibleStations.length,
-        offset: 0,
-      });
+     const visibleStations = stations.filter(s => 
+       bounds.contains([s.latitude, s.longitude])
+     );
 
-      // Load GP candidates to map results back to stations
-      const gpCandidates = await base44.entities.StationCandidate.filter({ 
-        sourceName: 'GooglePlaces'
-      });
+     if (visibleStations.length === 0) {
+       alert('No stations in visible area.');
+       setScanning(false);
+       return;
+     }
 
-      const stationResults = visibleStations.map(station => {
-        const match = gpCandidates.find(c => 
-          c.matchCandidates?.includes(station.id)
-        );
-        return {
-          stationId: station.id,
-          stationName: station.name,
-          gpMatched: !!match,
-          hasFuelOptions: match?.proposedChain ? true : false,
-          fuelTypes: match?.proposedChain ? ['unknown'] : [],
-          updateTime: null,
-          distance: 0,
-        };
-      });
+     try {
+       alert(`Testing ${visibleStations.length} stations...`);
 
-      const newArea = {
-        id: Date.now().toString(),
-        center: { lat: center.lat, lng: center.lng },
-        bounds: {
-          north: bounds.getNorth(),
-          south: bounds.getSouth(),
-          east: bounds.getEast(),
-          west: bounds.getWest(),
-        },
-        testedAt: new Date().toISOString(),
-        totalStations: visibleStations.length,
-        gpMatchedCount: stationResults.filter(r => r.gpMatched).length,
-        gpFuelOptionsCount: stationResults.filter(r => r.hasFuelOptions).length,
-        coveragePercent: Math.round((stationResults.filter(r => r.hasFuelOptions).length / visibleStations.length) * 100),
-        fuelTypesObserved: [...new Set(stationResults.flatMap(r => r.fuelTypes))],
-        latestUpdateTime: null,
-        stationResults,
-        status: 'tested',
-      };
+       // Batch test GP coverage
+       await base44.functions.invoke('batchTestGooglePlacesCoverage', {
+         limit: visibleStations.length,
+         offset: 0,
+       });
 
-      setTestedAreas(prev => [...prev, newArea]);
-      setSelectedArea(newArea);
-    } catch (error) {
-      console.error('Test failed:', error);
-    } finally {
-      setScanning(false);
-    }
-  };
+       // Load GP candidates to map results back to stations
+       const gpCandidates = await base44.entities.StationCandidate.filter({ 
+         sourceName: 'GooglePlaces'
+       });
+
+       const stationResults = visibleStations.map(station => {
+         const match = gpCandidates.find(c => 
+           c.matchCandidates?.includes(station.id)
+         );
+         return {
+           stationId: station.id,
+           stationName: station.name,
+           gpMatched: !!match,
+           hasFuelOptions: match?.proposedChain ? true : false,
+           fuelTypes: match?.proposedChain ? ['unknown'] : [],
+           updateTime: null,
+           distance: 0,
+         };
+       });
+
+       const newArea = {
+         id: Date.now().toString(),
+         center: { lat: center.lat, lng: center.lng },
+         bounds: {
+           north: bounds.getNorth(),
+           south: bounds.getSouth(),
+           east: bounds.getEast(),
+           west: bounds.getWest(),
+         },
+         testedAt: new Date().toISOString(),
+         totalStations: visibleStations.length,
+         gpMatchedCount: stationResults.filter(r => r.gpMatched).length,
+         gpFuelOptionsCount: stationResults.filter(r => r.hasFuelOptions).length,
+         coveragePercent: Math.round((stationResults.filter(r => r.hasFuelOptions).length / visibleStations.length) * 100),
+         fuelTypesObserved: [...new Set(stationResults.flatMap(r => r.fuelTypes))],
+         latestUpdateTime: null,
+         stationResults,
+         status: 'tested',
+       };
+
+       setTestedAreas(prev => [...prev, newArea]);
+       setSelectedArea(newArea);
+       alert(`Test complete! ${newArea.gpFuelOptionsCount}/${newArea.totalStations} have prices.`);
+     } catch (error) {
+       console.error('Test failed:', error);
+       alert(`Error: ${error.message}`);
+     } finally {
+       setScanning(false);
+     }
+   };
 
   // Test clicked area with radius
   const testClickedArea = async (e) => {
