@@ -143,8 +143,8 @@ export default function CoverageMapExplorer() {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="w-full h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
       </div>
     );
   }
