@@ -48,6 +48,7 @@ export default function CoverageMapExplorer() {
   const [mapBounds, setMapBounds] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(null);
+  const [mapReady, setMapReady] = useState(false);
 
   // Load stations
   useEffect(() => {
