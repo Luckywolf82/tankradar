@@ -37,7 +37,7 @@ export default function RoutePlanner() {
   const [userCoords, setUserCoords] = useState(null);
   const [gpsState, setGpsState] = useState("pending"); // pending | ok | denied
   const [routeState, setRouteState] = useState("idle"); // idle | loading | ready | error | no_data
-  const [result, setResult] = useState(null); // { bestStation, nearestStation, savingsEstimate }
+  const [result, setResult] = useState(null); // { bestStation, referenceStation, savingsEstimate }
   const [routeSummary, setRouteSummary] = useState(null); // { distanceText, durationText }
   const inputRef = useRef(null);
 
