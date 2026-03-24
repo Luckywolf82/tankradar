@@ -28,12 +28,14 @@ const unmatchedIcon = new L.Icon({
   iconAnchor: [12, 41],
 });
 
-function MapController() {
+function MapController({ onMapReady }) {
   const map = useMap();
   useEffect(() => {
-    // Center on Oslo by default
-    map.setView([59.9139, 10.7522], 12);
-  }, [map]);
+    if (map) {
+      map.setView([59.9139, 10.7522], 12);
+      onMapReady?.();
+    }
+  }, [map, onMapReady]);
   return null;
 }
 
