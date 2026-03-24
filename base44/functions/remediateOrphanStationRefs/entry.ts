@@ -300,12 +300,15 @@ Deno.serve(async (req) => {
     }
 
     // ── Execute: delete orphan CSP rows ───────────────────────────────────────
-    for (const [orphanId, canonicalId] of Object.entries(resolvedMap)) {
+    let cspWriteCount = 0;
+    for (const [orphanId] of Object.entries(resolvedMap)) {
       const cspRows = orphanCSPByStationId[orphanId] || [];
       for (const row of cspRows) {
         try {
+          if (cspWriteCount > 0 && cspWriteCount % 5 === 0) await sleep(300);
           await base44.asServiceRole.entities.CurrentStationPrices.delete(row.id);
           report.cspDeleted++;
+          cspWriteCount++;
         } catch (err) {
           report.errors.push({ type: 'csp_delete_failed', cspId: row.id, orphanId, error: err.message });
         }
