@@ -313,10 +313,28 @@ export default function CameraCapture({ onCapture, onFallback }) {
         </div>
       )}
 
-      {/* Zoom indicator (only when zoom is active and supported) */}
-      {zoomSupported && currentZoom > ZOOM_DEFAULT + 0.05 && (
-        <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-lg">
-          {currentZoom.toFixed(1)}×
+      {/* Manual zoom controls — always shown when ready */}
+      {ready && (
+        <div className="absolute top-3 right-3 flex flex-col gap-1 items-center">
+          <button
+            onClick={handleZoomIn}
+            disabled={currentZoom >= ZOOM_MAX}
+            className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center active:scale-95 disabled:opacity-30"
+            aria-label="Zoom inn"
+          >
+            <ZoomIn size={18} />
+          </button>
+          <div className="text-white text-xs font-medium bg-black/50 px-2 py-0.5 rounded-full">
+            {currentZoom.toFixed(1)}×
+          </div>
+          <button
+            onClick={handleZoomOut}
+            disabled={currentZoom <= ZOOM_MIN}
+            className="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center active:scale-95 disabled:opacity-30"
+            aria-label="Zoom ut"
+          >
+            <ZoomOut size={18} />
+          </button>
         </div>
       )}
 
