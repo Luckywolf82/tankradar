@@ -75,7 +75,7 @@ export default function CameraCapture({ onCapture, onFallback }) {
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
-  const [hint, setHint] = useState(null); // null | string
+  const [hint, setHint] = useState("Flytt nærmere prisskiltet"); // show hint immediately
   const [currentZoom, setCurrentZoom] = useState(ZOOM_DEFAULT);
   const [zoomSupported, setZoomSupported] = useState(false);
   const [capturing, setCapturing] = useState(false);
