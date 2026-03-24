@@ -71,28 +71,36 @@ export default function CoverageMapExplorer() {
     savedAreas: true,
   });
 
-  // Load stations + restore saved areas from localStorage
-  useEffect(() => {
-    const loadStations = async () => {
-      try {
-        const allStations = await base44.entities.Station.list();
-        const filtered = allStations.filter(s => s.latitude && s.longitude);
-        setStations(filtered);
-        
-        // Restore areas from localStorage
-        const savedTestedAreas = localStorage.getItem('gp-tested-areas');
-        const savedSavedAreas = localStorage.getItem('gp-saved-areas');
-        if (savedTestedAreas) setTestedAreas(JSON.parse(savedTestedAreas));
-        if (savedSavedAreas) setSavedAreas(JSON.parse(savedSavedAreas));
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to load stations:', error);
-        setLoading(false);
-      }
-    };
-    loadStations();
-  }, []);
+  // Load stations + restore saved areas from localStorage + get automation coverage
+   useEffect(() => {
+     const loadStations = async () => {
+       try {
+         const allStations = await base44.entities.Station.list();
+         const filtered = allStations.filter(s => s.latitude && s.longitude);
+         setStations(filtered);
+
+         // Restore areas from localStorage
+         const savedTestedAreas = localStorage.getItem('gp-tested-areas');
+         const savedSavedAreas = localStorage.getItem('gp-saved-areas');
+         if (savedTestedAreas) setTestedAreas(JSON.parse(savedTestedAreas));
+         if (savedSavedAreas) setSavedAreas(JSON.parse(savedSavedAreas));
+
+         // Load stations with GooglePlaces prices (automation coverage)
+         const pricesWithGP = await base44.entities.FuelPrice.filter({
+           sourceName: 'GooglePlaces'
+         });
+         const stationIdsWithGP = [...new Set(pricesWithGP.map(p => p.stationId))];
+         const automationStations = filtered.filter(s => stationIdsWithGP.includes(s.id));
+         setAutomationCoverage(automationStations);
+
+         setLoading(false);
+       } catch (error) {
+         console.error('Failed to load stations:', error);
+         setLoading(false);
+       }
+     };
+     loadStations();
+   }, []);
 
   // Persist areas to localStorage
   useEffect(() => {
