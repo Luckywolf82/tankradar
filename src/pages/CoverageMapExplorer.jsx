@@ -637,7 +637,12 @@ export default function CoverageMapExplorer() {
       <div className="flex flex-1 gap-4 p-4 overflow-hidden">
         {/* Map */}
         <div className="flex-1 rounded-lg overflow-hidden shadow-md" style={{ minHeight: 0 }}>
-          <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%' }}>
+          <MapContainer 
+            center={[59.9139, 10.7522]} 
+            zoom={12} 
+            style={{ height: '100%', width: '100%' }}
+            onClick={isDrawing ? handleMapClick : undefined}
+          >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
             <MapController mapRef={mapRef} onMapReady={() => setMapReady(true)} />
 
