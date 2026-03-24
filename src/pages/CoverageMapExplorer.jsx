@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Rectangle, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Rectangle, Circle, Polygon } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Zap, Grid3x3, MapPin, Save, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Zap, Grid3x3, MapPin, Save, Trash2, Eye, EyeOff, Pen } from 'lucide-react';
 
 // Icons
 const coveredIcon = new L.Icon({
