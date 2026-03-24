@@ -54,7 +54,7 @@ export default function GooglePlacesCoverageMap() {
   const [mapReady, setMapReady] = useState(false);
   const [savedAreas, setSavedAreas] = useState([]);
 
-  // Load stations and their existing price data on mount
+  // Load stations and batch-test GP coverage on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -62,7 +62,7 @@ export default function GooglePlacesCoverageMap() {
         const filtered = allStations.filter(s => s.latitude && s.longitude);
         setStations(filtered);
 
-        // Load FuelPrice data for each station, filtered by GP and user-reported sources
+        // Load FuelPrice data for each station
         const prices = {};
         const gpPrices = {};
         
@@ -70,7 +70,6 @@ export default function GooglePlacesCoverageMap() {
           try {
             const stationPrices = await base44.entities.FuelPrice.filter({ stationId: station.id });
             
-            // All prices for this station
             prices[station.id] = {
               count: stationPrices.length,
               recent: stationPrices.length > 0 ? stationPrices[0] : null,
@@ -79,7 +78,6 @@ export default function GooglePlacesCoverageMap() {
               latestFetch: stationPrices.length > 0 ? stationPrices[0].fetchedAt : null,
             };
 
-            // GP + user_reported prices specifically
             const gpAndUserPrices = stationPrices.filter(p => 
               p.sourceName === 'GooglePlaces' || 
               p.priceType === 'user_reported' ||
@@ -99,9 +97,32 @@ export default function GooglePlacesCoverageMap() {
         }
         setPriceData(prices);
         setCoverageData(prev => ({ ...prev, ...gpPrices }));
+
+        // Batch test Google Places coverage
+        setScanning(true);
+        const gpResponse = await base44.functions.invoke('batchTestGooglePlacesCoverage', {
+          limit: filtered.length,
+          offset: 0,
+        });
+
+        if (gpResponse.data?.results) {
+          const gpResults = {};
+          gpResponse.data.results.forEach(result => {
+            gpResults[result.stationId] = {
+              hasGPMatch: result.hasGPMatch,
+              gpName: result.gpName,
+              distance: result.distance,
+              businessStatus: result.businessStatus,
+              gpPlaceId: result.gpPlaceId,
+            };
+          });
+          setCoverageData(prev => ({ ...prev, ...gpResults }));
+        }
+        setScanning(false);
         setLoading(false);
       } catch (error) {
         console.error('Failed to load data:', error);
+        setScanning(false);
         setLoading(false);
       }
     };
