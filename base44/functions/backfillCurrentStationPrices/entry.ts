@@ -150,12 +150,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    // --- STEP 6: UPSERT ONE ROW PER stationId ---
+    // --- STEP 6: UPSERT ONE ROW PER stationId (WITH IDENTITY GUARD) ---
     let created = 0;
     let updated = 0;
     let skipped = 0;
+    let identityGuardSkipped = 0;
 
     for (const stationId of stationIds) {
+      // ── IDENTITY GUARD ──────────────────────────────────────────────────────
+      // Verify stationId is a canonical Station.id, not a sourceStationId.
+      // If it's a sourceStationId, skip and log — do not write CSP.
+      const stationCheck = stationMap[stationId];
+      if (!stationCheck) {
+        // stationId not found in Station.id — check if it matches a sourceStationId
+        const sourceMatch = allStations.find(s => s.sourceStationId === stationId);
+        if (sourceMatch) {
+          console.error(`[backfillCSP] IDENTITY GUARD BLOCKED: stationId="${stationId}" is a sourceStationId, not a Station.id. Canonical id="${sourceMatch.id}".`);
+          identityGuardSkipped++;
+          continue;
+        }
+        // Truly orphan — skip silently
+        console.warn(`[backfillCSP] stationId="${stationId}" not found in Station catalog — skipping`);
+        identityGuardSkipped++;
+        continue;
+      }
+      // ── END IDENTITY GUARD ──────────────────────────────────────────────────
+
       const { gasoline_95: g95Row, diesel: dslRow } = canonical[stationId];
       const station = stationMap[stationId];
 
