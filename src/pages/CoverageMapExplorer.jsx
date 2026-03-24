@@ -636,13 +636,13 @@ export default function CoverageMapExplorer() {
             className={isDrawing ? 'bg-blue-600 text-white' : ''}
           >
             <Pen className="w-4 h-4 mr-2" />
-            {isDrawing ? `Polygon (${drawingPoints.length} pts)` : 'Draw Area'}
-          </Button>
-          {isDrawing && drawingPoints.length >= 3 && (
-            <Button onClick={completePolygon} size="sm" className="bg-green-600 hover:bg-green-700">
-              Complete & Test
+            {isDrawing ? 'Draw Rectangle (drag)' : 'Draw Area'}
             </Button>
-          )}
+            {isDrawing && drawingPoints.length === 2 && (
+              <Button onClick={completeRectangle} size="sm" className="bg-green-600 hover:bg-green-700">
+                Complete & Test
+              </Button>
+            )}
           {isDrawing && (
             <Button onClick={() => { setIsDrawing(false); setDrawingPoints([]); }} size="sm" variant="outline">
               Cancel
