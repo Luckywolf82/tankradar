@@ -525,6 +525,19 @@ export default function CoverageMapExplorer() {
               </Rectangle>
             ))}
 
+            {/* Automation coverage - stations with GooglePlaces prices */}
+            {mapReady && showLayers.automationCoverage && automationCoverage.map(station => (
+              <Circle
+                key={`automation-${station.id}`}
+                center={[station.latitude, station.longitude]}
+                radius={50}
+                color="#10b981"
+                weight={1}
+                opacity={0.4}
+                fillOpacity={0.08}
+              />
+            ))}
+
             {/* Stations */}
             {mapReady && showLayers.stations && stations.map(station => {
               const coverage = getStationCoverage(station.id);
@@ -547,6 +560,9 @@ export default function CoverageMapExplorer() {
                     <div className="text-xs">
                       <strong>{station.name}</strong>
                       <div className="text-slate-600">{station.chain || 'Unknown'}</div>
+                      {automationCoverage.some(s => s.id === station.id) && (
+                        <div className="text-green-700 font-semibold text-xs mt-1">✓ GP Price</div>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
