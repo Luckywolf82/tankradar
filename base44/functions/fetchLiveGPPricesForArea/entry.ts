@@ -115,6 +115,22 @@ Deno.serve(async (req) => {
           station_chain: station.chain || null,
         };
 
+        // Check for deduplication if requested
+        if (deduplicateByStationId) {
+          const existingPrices = await base44.asServiceRole.entities.FuelPrice.filter({
+            stationId: stationId,
+            sourceName: 'GooglePlaces'
+          });
+          
+          if (existingPrices.length > 0) {
+            // Skip creation - keep existing price to save costs
+            results.dedupSkipped++;
+            results.report[results.report.length - 1].status = 'deduplicated_skipped';
+            results.report[results.report.length - 1].message = 'Price already exists for this station from GooglePlaces';
+            continue;
+          }
+        }
+
         await base44.asServiceRole.entities.FuelPrice.create(fuelPriceRecord);
         results.pricesCreated.push(fuelPriceRecord);
 
