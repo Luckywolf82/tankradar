@@ -9,6 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import CanonicalContractAuditReport from './pages/CanonicalContractAuditReport';
 import RoutePlanner from './pages/RoutePlanner';
 import CoverageMapExplorer from './pages/CoverageMapExplorer';
+import GooglePlacesCoverageMap from './pages/GooglePlacesCoverageMap';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
       <Route path="/CanonicalContractAuditReport" element={<CanonicalContractAuditReport />} />
       <Route path="/RoutePlanner" element={<LayoutWrapper currentPageName="RoutePlanner"><RoutePlanner /></LayoutWrapper>} />
       <Route path="/CoverageMapExplorer" element={<CoverageMapExplorer />} />
+      <Route path="/GooglePlacesCoverageMap" element={<GooglePlacesCoverageMap />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
