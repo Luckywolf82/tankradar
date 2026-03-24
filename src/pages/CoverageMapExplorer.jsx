@@ -58,6 +58,7 @@ export default function CoverageMapExplorer() {
   const [mapReady, setMapReady] = useState(false);
   const [testRadius, setTestRadius] = useState(1);
   const [fetchingPrices, setFetchingPrices] = useState(false);
+  const [disabledAreas, setDisabledAreas] = useState({});
   
   // Layer visibility toggles
   const [showLayers, setShowLayers] = useState({
