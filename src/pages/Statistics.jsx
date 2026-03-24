@@ -75,7 +75,7 @@ export default function Statistics() {
             </div>
 
             <div className="mb-6">
-              <NationalFuelBarometer />
+              <NationalFuelBarometer selectedFuel={selectedFuel} />
             </div>
 
             <div className="mb-6">
