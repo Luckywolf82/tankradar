@@ -85,8 +85,105 @@ export default function StationPicker({ onSelectStation, onSkip }) {
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 20);
 
-      console.log(`[StationPicker] Combined results within 1km radius: ${nearbyWithDistance.length}`);
-      setStations(nearbyWithDistance);
+      console.log(`[StationPicker] Raw combined results within 1km radius: ${nearbyWithDistance.length}`);
+
+      // ── CANONICAL DEDUPE PASS ──────────────────────────────────────────────
+      // Removes duplicate picker options representing the same physical station.
+      //
+      // Priority order for keeping: station_catalog > google_places.
+      // Within same source: earlier in sorted list (closer) wins.
+      //
+      // Three-tier matching (no single-field-name match):
+      //   1. Exact source identity: same sourceName + sourceStationId (both non-empty)
+      //   2. Catalog ID dedupe: same station entity id
+      //   3. Proximity + name: coordinates within 100m AND same normalised name
+      //
+      // Coordinate proximity threshold: 100 m ≈ 0.001 degrees at Norwegian latitudes.
+      // This prevents collapsing truly different stations that happen to be close.
+
+      function normaliseStationName(name) {
+        if (!name) return '';
+        return name
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/[.,\-]/g, '')
+          .trim();
+      }
+
+      function coordsWithinMeters(s1, s2, thresholdM) {
+        if (!s1.latitude || !s1.longitude || !s2.latitude || !s2.longitude) return false;
+        const distKm = calculateDistance(s1.latitude, s1.longitude, s2.latitude, s2.longitude);
+        return distKm * 1000 <= thresholdM;
+      }
+
+      // Returns whether two candidates represent the same physical station
+      function isSameStation(a, b) {
+        // Tier 1: exact source identity (sourceName + sourceStationId both match)
+        if (
+          a.sourceName && b.sourceName &&
+          a.sourceStationId && b.sourceStationId &&
+          a.sourceName === b.sourceName &&
+          a.sourceStationId === b.sourceStationId
+        ) return true;
+
+        // Tier 2: same Station catalog id (covers catalog vs catalog dupes)
+        if (a.id && b.id && a.id === b.id) return true;
+
+        // Tier 3: proximity (<= 100m) + normalised name match
+        const nameA = normaliseStationName(a.name);
+        const nameB = normaliseStationName(b.name);
+        if (nameA && nameB && nameA === nameB && coordsWithinMeters(a, b, 100)) return true;
+
+        return false;
+      }
+
+      // Rank candidates: lower = better to keep
+      // station_catalog with id beats google_places
+      function candidateRank(s) {
+        if (s._source === 'station_catalog' && s.id) return 0;
+        if (s._source === 'station_catalog') return 1;
+        return 2; // google_places
+      }
+
+      const dedupedStations = [];
+      const collapsedLog = []; // debug log
+
+      for (const candidate of nearbyWithDistance) {
+        const existingIdx = dedupedStations.findIndex(kept => isSameStation(kept, candidate));
+        if (existingIdx === -1) {
+          // No duplicate found — add as new entry
+          dedupedStations.push(candidate);
+        } else {
+          const existing = dedupedStations[existingIdx];
+          // Keep the better-ranked one; if tied keep the closer one (already sorted)
+          if (candidateRank(candidate) < candidateRank(existing)) {
+            collapsedLog.push({
+              kept: candidate.id || candidate.place_id,
+              keptName: candidate.name,
+              collapsed: existing.id || existing.place_id,
+              collapsedName: existing.name,
+              reason: 'higher_priority_source',
+            });
+            dedupedStations[existingIdx] = candidate;
+          } else {
+            collapsedLog.push({
+              kept: existing.id || existing.place_id,
+              keptName: existing.name,
+              collapsed: candidate.id || candidate.place_id,
+              collapsedName: candidate.name,
+              reason: candidateRank(candidate) === candidateRank(existing) ? 'closer_distance' : 'lower_priority_source',
+            });
+          }
+        }
+      }
+
+      console.log(`[StationPicker][dedupe] Raw: ${nearbyWithDistance.length} → Deduped: ${dedupedStations.length} (collapsed ${collapsedLog.length})`);
+      if (collapsedLog.length > 0) {
+        console.log('[StationPicker][dedupe] Collapsed entries:', JSON.stringify(collapsedLog, null, 2));
+      }
+      // ── END DEDUPE PASS ───────────────────────────────────────────────────
+
+      setStations(dedupedStations);
 
       if (nearbyWithDistance.length === 0) {
         console.log(`[StationPicker] No stations found within radius - showing no_stations_found state`);
