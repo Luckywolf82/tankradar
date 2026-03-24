@@ -1,10 +1,13 @@
 /**
  * fetchGoogleDirections
  *
- * Proxy for Google Directions API to avoid browser CORS restrictions.
- * Returns raw Directions API response. Called by RoutePlanner page.
+ * Geocodes destination with GPS-position bias (improves Norwegian place name resolution),
+ * then returns a straight-line interpolated polyline (Directions/Routes API not enabled on this key).
  *
- * Auth: requires logged-in user.
+ * KOMPROMISS: Directions API and Routes API are not enabled on the project's API key.
+ * Fallback: Geocoding API (active) + straight-line interpolation.
+ * Impact: polyline follows straight line, not roads. Sufficient for 2 km corridor station matching.
+ * Granularity: unaffected — station price data is from CSP, not this function.
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
@@ -24,35 +27,28 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
     if (!apiKey) return Response.json({ error: 'API key not configured' }, { status: 500 });
 
-    // Directions API and Routes API are not enabled on this key.
-    // Fallback: geocode the destination and return a straight-line "route"
-    // with interpolated midpoints. Good enough for 2 km corridor matching.
-
-    // Attempt 1: geocode with location bias centred on user's GPS position (1° ≈ 111 km radius).
-    // This dramatically improves resolution of ambiguous Norwegian place names like "Heimdal".
     const [originLat, originLon] = origin.split(",").map(Number);
 
-    const geoUrl1 =
-      `https://maps.googleapis.com/maps/api/geocode/json` +
-      `?address=${encodeURIComponent(destination)}` +
-      `&region=no` +
-      `&language=no` +
-      `&location=${originLat},${originLon}` +
-      `&radius=150000` +
-      `&key=${apiKey}`;
-    let geoRes = await fetch(geoUrl1);
-    let geoData = await geoRes.json();
+    // Attempt 1: geocode with GPS-position proximity bias.
+    // The `location` + `radius` params bias results toward the user's area, which significantly
+    // improves resolution of common Norwegian district names (e.g. "Heimdal", "Moholt").
+    async function geocode(address, withBias) {
+      let url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=no&language=no`;
+      if (withBias) {
+        url += `&location=${originLat},${originLon}&radius=150000`;
+      }
+      url += `&key=${apiKey}`;
+      const res = await fetch(url);
+      return res.json();
+    }
 
-    // Attempt 2: if no result, try appending "Norge" to the query (no location bias)
+    // Try with bias first, then without (+ "Norge" suffix), then bare fallback
+    let geoData = await geocode(destination, true);
     if (geoData.status !== "OK" || !geoData.results?.length) {
-      const geoUrl2 =
-        `https://maps.googleapis.com/maps/api/geocode/json` +
-        `?address=${encodeURIComponent(destination + ", Norge")}` +
-        `&region=no` +
-        `&language=no` +
-        `&key=${apiKey}`;
-      geoRes = await fetch(geoUrl2);
-      geoData = await geoRes.json();
+      geoData = await geocode(destination + ", Norge", false);
+    }
+    if (geoData.status !== "OK" || !geoData.results?.length) {
+      geoData = await geocode(destination, false);
     }
 
     if (geoData.status !== "OK" || !geoData.results?.length) {
@@ -61,11 +57,10 @@ Deno.serve(async (req) => {
 
     const destLat = geoData.results[0].geometry.location.lat;
     const destLon = geoData.results[0].geometry.location.lng;
-    const [originLat, originLon] = origin.split(",").map(Number);
 
     // Build a straight-line polyline with 10 interpolated points
-    const points = [];
     const steps = 10;
+    const points = [];
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       points.push({
@@ -88,22 +83,23 @@ Deno.serve(async (req) => {
     }
 
     let polylineStr = "";
-    let prevLat = 0, prevLon = 0;
+    let prevLat = 0;
+    let prevLon = 0;
     for (const pt of points) {
-      const dLat2 = pt.lat - prevLat;
-      const dLon2 = pt.lon - prevLon;
-      polylineStr += encodeCoord(dLat2) + encodeCoord(dLon2);
+      polylineStr += encodeCoord(pt.lat - prevLat) + encodeCoord(pt.lon - prevLon);
       prevLat = pt.lat;
       prevLon = pt.lon;
     }
 
-    // Haversine distance in km
+    // Haversine distance
     const R = 6371;
     const dLat = (destLat - originLat) * Math.PI / 180;
     const dLon = (destLon - originLon) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(originLat*Math.PI/180)*Math.cos(destLat*Math.PI/180)*Math.sin(dLon/2)**2;
-    const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const durationMin = Math.round(distKm / 60 * 60); // rough 60 km/h
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(originLat * Math.PI / 180) * Math.cos(destLat * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+    const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const durationMin = Math.round(distKm / 60 * 60);
 
     return Response.json({
       status: "OK",
