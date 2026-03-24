@@ -50,30 +50,32 @@ function MapController({ mapRef, onMapReady }) {
  }
 
 export default function CoverageMapExplorer() {
-  const mapRef = useRef(null);
-  const [stations, setStations] = useState([]);
-   const [testedAreas, setTestedAreas] = useState([]);
-   const [savedAreas, setSavedAreas] = useState([]);
-   const [selectedArea, setSelectedArea] = useState(null);
-   const [selectedStation, setSelectedStation] = useState(null);
-   const [loading, setLoading] = useState(true);
-   const [scanning, setScanning] = useState(false);
-   const [mapReady, setMapReady] = useState(false);
-   const [testRadius, setTestRadius] = useState(1);
-   const [fetchingPrices, setFetchingPrices] = useState(false);
-   const [disabledAreas, setDisabledAreas] = useState({});
-   const [automationCoverage, setAutomationCoverage] = useState([]);
-  
-  // Layer visibility toggles
-   const [showLayers, setShowLayers] = useState({
-     stations: true,
-     coveredStations: true,
-     partialStations: true,
-     uncoveredStations: true,
-     testedAreas: true,
-     savedAreas: true,
-     automationCoverage: true,
-   });
+   const mapRef = useRef(null);
+   const [stations, setStations] = useState([]);
+    const [testedAreas, setTestedAreas] = useState([]);
+    const [savedAreas, setSavedAreas] = useState([]);
+    const [selectedArea, setSelectedArea] = useState(null);
+    const [selectedStation, setSelectedStation] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [scanning, setScanning] = useState(false);
+    const [mapReady, setMapReady] = useState(false);
+    const [testRadius, setTestRadius] = useState(1);
+    const [fetchingPrices, setFetchingPrices] = useState(false);
+    const [disabledAreas, setDisabledAreas] = useState({});
+    const [automationCoverage, setAutomationCoverage] = useState([]);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [drawingPoints, setDrawingPoints] = useState([]);
+
+   // Layer visibility toggles
+    const [showLayers, setShowLayers] = useState({
+      stations: true,
+      coveredStations: true,
+      partialStations: true,
+      uncoveredStations: true,
+      testedAreas: true,
+      savedAreas: true,
+      automationCoverage: true,
+    });
 
   // Load stations + restore saved areas from localStorage + get automation coverage
    useEffect(() => {
