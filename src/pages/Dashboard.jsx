@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Navigation } from "lucide-react";
 import { Link } from "react-router-dom";
 import RadarCard from "../components/dashboard/RadarCard";
 import SubmitPriceCard from "../components/dashboard/SubmitPriceCard";
