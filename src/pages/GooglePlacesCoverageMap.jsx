@@ -46,6 +46,7 @@ function MapController({ onMapReady }) {
 
 export default function GooglePlacesCoverageMap() {
   const [stations, setStations] = useState([]);
+  const [priceData, setPriceData] = useState({});
   const [coverageData, setCoverageData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedStation, setSelectedStation] = useState(null);
@@ -53,19 +54,38 @@ export default function GooglePlacesCoverageMap() {
   const [mapReady, setMapReady] = useState(false);
   const [savedAreas, setSavedAreas] = useState([]);
 
-  // Load stations on mount
+  // Load stations and their existing price data on mount
   useEffect(() => {
-    const loadStations = async () => {
+    const loadData = async () => {
       try {
         const allStations = await base44.entities.Station.list();
-        setStations(allStations.filter(s => s.latitude && s.longitude));
+        const filtered = allStations.filter(s => s.latitude && s.longitude);
+        setStations(filtered);
+
+        // Load FuelPrice data for each station
+        const prices = {};
+        for (const station of filtered) {
+          try {
+            const stationPrices = await base44.entities.FuelPrice.filter({ stationId: station.id });
+            prices[station.id] = {
+              count: stationPrices.length,
+              recent: stationPrices.length > 0 ? stationPrices[0] : null,
+              hasPrices: stationPrices.length > 0,
+              fuelTypes: [...new Set(stationPrices.map(p => p.fuelType))],
+              latestFetch: stationPrices.length > 0 ? stationPrices[0].fetchedAt : null,
+            };
+          } catch (error) {
+            prices[station.id] = { count: 0, hasPrices: false, fuelTypes: [] };
+          }
+        }
+        setPriceData(prices);
         setLoading(false);
       } catch (error) {
-        console.error('Failed to load stations:', error);
+        console.error('Failed to load data:', error);
         setLoading(false);
       }
     };
-    loadStations();
+    loadData();
   }, []);
 
   // Determine coverage status for a station
@@ -76,6 +96,11 @@ export default function GooglePlacesCoverageMap() {
     if (!data.gpMatch) return { status: 'uncovered', label: 'No GP match' };
     if (!data.hasFuelOptions) return { status: 'partial', label: 'Matched (no prices)' };
     return { status: 'covered', label: 'Covered (has prices)' };
+  };
+
+  // Check if station has existing price data from FuelPrice
+  const hasExistingPrices = (stationId) => {
+    return priceData[stationId]?.hasPrices || false;
   };
 
   const getMarkerIcon = (status) => {
@@ -243,22 +268,26 @@ export default function GooglePlacesCoverageMap() {
         </div>
 
         {/* Legend */}
-        <div className="flex gap-4 text-sm">
+        <div className="flex gap-4 text-sm flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-4 h-6 bg-green-500 rounded"></div>
-            <span>Covered (fuelOptions)</span>
+            <span>GP Covered (has prices)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-6 bg-yellow-500 rounded"></div>
-            <span>Partial (matched, no prices)</span>
+            <span>GP Partial (matched, no prices)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-6 bg-red-500 rounded"></div>
-            <span>Uncovered (no match)</span>
+            <span>GP Uncovered (no match)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-6 bg-blue-500 rounded"></div>
-            <span>Not tested</span>
+            <span>Not GP tested yet</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-6 bg-purple-500 rounded"></div>
+            <span>★ Has existing prices</span>
           </div>
         </div>
       </div>
@@ -275,17 +304,25 @@ export default function GooglePlacesCoverageMap() {
             {mapReady && stations.map(station => {
               const status = getCoverageStatus(station.id).status;
               const icon = getMarkerIcon(status);
+              const hasExisting = hasExistingPrices(station.id);
               return (
                 <Marker
                   key={station.id}
                   position={[station.latitude, station.longitude]}
                   icon={icon}
                   onClick={() => setSelectedStation(station)}
+                  title={hasExisting ? `${station.name} ★` : station.name}
                 >
                   <Popup>
-                    <div className="text-sm">
+                    <div className="text-sm max-w-xs">
                       <strong>{station.name}</strong>
+                      {hasExisting && <span className="ml-1 text-purple-600 font-bold">★</span>}
                       <div className="text-xs text-slate-600 mt-1">{station.chain || 'Unknown'}</div>
+                      {hasExisting && (
+                        <div className="text-xs bg-purple-50 p-1 rounded mt-1 border border-purple-200">
+                          Has {priceData[station.id].count} existing prices
+                        </div>
+                      )}
                       <Button
                         onClick={() => testStationCoverage(station)}
                         size="sm"
@@ -293,7 +330,7 @@ export default function GooglePlacesCoverageMap() {
                         disabled={scanning}
                       >
                         {scanning ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <MapPin className="w-3 h-3 mr-1" />}
-                        Test Coverage
+                        Test GP Coverage
                       </Button>
                     </div>
                   </Popup>
@@ -336,13 +373,29 @@ export default function GooglePlacesCoverageMap() {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {selectedStation && (
               <>
-                <Card className="p-3 bg-blue-50 border-blue-200">
-                  <h3 className="font-semibold text-sm mb-2">{selectedStation.name}</h3>
+                <Card className={`p-3 border-2 ${hasExistingPrices(selectedStation.id) ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
+                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    {selectedStation.name}
+                    {hasExistingPrices(selectedStation.id) && <span className="text-purple-600 text-lg">★</span>}
+                  </h3>
                   <div className="text-xs text-slate-600 space-y-1">
                     <div>Chain: {selectedStation.chain || 'Unknown'}</div>
                     <div>Type: {selectedStation.stationType}</div>
                     <div>Lat/Lng: {selectedStation.latitude.toFixed(4)}, {selectedStation.longitude.toFixed(4)}</div>
                   </div>
+
+                  {hasExistingPrices(selectedStation.id) && (
+                    <div className="mt-3 pt-3 border-t border-purple-200">
+                      <div className="font-semibold text-sm text-purple-900 mb-2">✓ Existing Prices</div>
+                      <div className="text-xs space-y-1">
+                        <div>Count: {priceData[selectedStation.id].count} records</div>
+                        <div>Fuel types: {priceData[selectedStation.id].fuelTypes.join(', ') || 'None'}</div>
+                        {priceData[selectedStation.id].latestFetch && (
+                          <div>Latest: {new Date(priceData[selectedStation.id].latestFetch).toLocaleDateString()}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </Card>
 
                 {coverageData[selectedStation.id] ? (
