@@ -224,7 +224,6 @@ Deno.serve(async (req) => {
 
   let rootCause;
   if (hypothesisA_confirmed && hypothesisB_confirmed) {
-
     rootCause = 'MIXED: Station identity duplication (A) + CSP row duplication (B)';
   } else if (hypothesisA_confirmed) {
     rootCause = 'CONFIRMED: Station identity duplication (Hypothesis A) — multiple stationIds for same physical station, both present in CSP, both survive resolveLatestPerStation';
