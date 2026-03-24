@@ -103,6 +103,14 @@ export default function Dashboard() {
 
               <RouteSavingsCard selectedFuel={selectedFuel} />
 
+              <Link to={createPageUrl("RoutePlanner")} className="block">
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-white border border-slate-200 shadow-sm hover:bg-blue-50 hover:border-blue-200 transition-colors">
+                  <Navigation size={15} className="text-blue-500 shrink-0" />
+                  <span className="text-sm text-slate-700 font-medium">Beste drivstoff langs ruta</span>
+                  <span className="ml-auto text-xs text-slate-400">→</span>
+                </div>
+              </Link>
+
               <DashboardGrid columns={1}>
                 <RadarCard selectedFuel={selectedFuel} />
                 <ActiveAlertsPreview />
