@@ -157,6 +157,7 @@ Deno.serve(async (req) => {
         fetched: results.pricesFetched,
         failed: results.pricesFailed,
         pricesCreated: results.pricesCreated.length,
+        dedupSkipped: results.dedupSkipped,
       },
       report: results.report,
       errors: results.errors.length > 0 ? results.errors : null,
