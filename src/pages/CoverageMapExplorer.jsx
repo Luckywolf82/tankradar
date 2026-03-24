@@ -646,20 +646,32 @@ export default function CoverageMapExplorer() {
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
             <MapController mapRef={mapRef} onMapReady={() => setMapReady(true)} />
 
-            {/* Tested areas */}
+            {/* Tested areas - rectangles or polygons */}
             {mapReady && showLayers.testedAreas && testedAreas.map(area => (
-              <Rectangle
-                key={`tested-${area.id}`}
-                bounds={[
-                  [area.bounds.south, area.bounds.west],
-                  [area.bounds.north, area.bounds.east],
-                ]}
-                color={getAreaColor(area)}
-                weight={2}
-                opacity={0.5}
-                fillOpacity={0.1}
-                onClick={() => setSelectedArea(area)}
-              />
+              area.polygonPoints ? (
+                <Polygon
+                  key={`tested-${area.id}`}
+                  positions={area.polygonPoints}
+                  color={getAreaColor(area)}
+                  weight={2}
+                  opacity={0.5}
+                  fillOpacity={0.1}
+                  onClick={() => setSelectedArea(area)}
+                />
+              ) : (
+                <Rectangle
+                  key={`tested-${area.id}`}
+                  bounds={[
+                    [area.bounds.south, area.bounds.west],
+                    [area.bounds.north, area.bounds.east],
+                  ]}
+                  color={getAreaColor(area)}
+                  weight={2}
+                  opacity={0.5}
+                  fillOpacity={0.1}
+                  onClick={() => setSelectedArea(area)}
+                />
+              )
             ))}
 
             {/* Saved areas - with dashed pattern for distinction */}
