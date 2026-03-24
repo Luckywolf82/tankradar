@@ -71,34 +71,59 @@ function guessChain(name) {
 }
 
 /**
- * SAFE SHORT-CIRCUIT MATCH DECISION
+ * DIRECT STATION BIND DECISION
  *
- * Returns a matched_station_id result when all three conditions hold:
- * 1. User explicitly selected a verified Station catalog entry (has a real station_id)
- * 2. Source is confirmed as station_catalog (not a Google Places guess)
- * 3. GPS confirms the user is within 500m of the selected station
+ * Priority 1 — Catalog ID present:
+ *   User explicitly selected a Station catalog entry that has a real stationId.
+ *   This is authoritative regardless of source or GPS distance.
+ *   The station was already deduplicated in StationPicker and is a verified catalog record.
  *
- * This is NOT lowering matching standards. It combines:
- * - explicit user selection (high-confidence user signal)
- * - verified catalog ID (provenance confirmed)
- * - GPS proximity ≤500m (physical confirmation)
+ * Priority 2 — Source-backed Google Places selection:
+ *   User selected a GP result. No stationId yet, but source identity is known.
+ *   Caller must attempt exact Station lookup by sourceStationId before falling back.
+ *   This function returns a sentinel to trigger that lookup path.
  *
- * If any condition is missing, falls through to full remote matching.
+ * If neither applies, returns null → full remote matching fallback.
  */
-function tryDirectCatalogMatch(stationInfo) {
-  if (
-    stationInfo.station_id &&
-    stationInfo.selectedSource === 'station_catalog' &&
-    stationInfo.selectedCandidateDistanceM != null &&
-    stationInfo.selectedCandidateDistanceM <= 500
-  ) {
+function tryDirectBind(stationInfo) {
+  // PRIORITY 1: Known catalog station — direct bind, no GPS gate needed
+  // The user explicitly selected this from the deduplicated station picker.
+  // The catalog ID is the authoritative signal.
+  if (stationInfo.station_id && stationInfo.selectedSource === 'station_catalog') {
     return {
       status: 'matched_station_id',
       stationId: stationInfo.station_id,
       candidates: [stationInfo.station_id],
-      reason: 'explicit_catalog_selection_gps_confirmed',
+      reason: 'explicit_catalog_selection_direct_bind',
+      _bindPath: 'catalog_id',
     };
   }
+
+  // PRIORITY 1b: Known catalog station from any source with a confirmed station_id
+  // (covers edge case where selectedSource is null/unknown but station_id is set)
+  if (stationInfo.station_id) {
+    return {
+      status: 'matched_station_id',
+      stationId: stationInfo.station_id,
+      candidates: [stationInfo.station_id],
+      reason: 'explicit_selection_station_id_present',
+      _bindPath: 'catalog_id_any_source',
+    };
+  }
+
+  // PRIORITY 2: Google Places selection with source identity — signal for caller to attempt lookup
+  if (
+    stationInfo.selectedSource === 'google_places' &&
+    stationInfo.selectedGooglePlaceId
+  ) {
+    return {
+      status: '_needs_source_lookup',
+      googlePlaceId: stationInfo.selectedGooglePlaceId,
+      _bindPath: 'google_place_id_lookup',
+    };
+  }
+
+  // No direct bind possible — fall through to remote matching
   return null;
 }
 
