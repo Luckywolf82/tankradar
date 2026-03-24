@@ -35,16 +35,19 @@ const unscannedIcon = new L.Icon({
 });
 
 function MapController({ mapRef, onMapReady }) {
-  const map = useMap();
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map;
-      map.setView([59.9139, 10.7522], 12);
-      onMapReady?.();
-    }
-  }, [map, mapRef, onMapReady]);
-  return null;
-}
+   const map = useMap();
+   const initializedRef = useRef(false);
+
+   useEffect(() => {
+     if (map && !initializedRef.current) {
+       mapRef.current = map;
+       map.setView([59.9139, 10.7522], 12);
+       initializedRef.current = true;
+       onMapReady?.();
+     }
+   }, [map, mapRef, onMapReady]);
+   return null;
+ }
 
 export default function CoverageMapExplorer() {
   const mapRef = useRef(null);
