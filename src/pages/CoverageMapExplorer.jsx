@@ -364,19 +364,30 @@ export default function CoverageMapExplorer() {
     if (selectedArea?.id === areaId) setSelectedArea(null);
   };
 
-  // Fetch live GP prices for area
+  // Fetch live GP prices for area (only active ones + deduplication)
   const fetchLiveGPPrices = async () => {
     if (!selectedArea?.stationResults) return;
     
     setFetchingPrices(true);
     try {
-      const stationIds = selectedArea.stationResults.map(s => s.stationId);
+      // Filter out disabled areas' stations
+      const stationIds = selectedArea.stationResults
+        .filter(s => !disabledAreas[selectedArea.id])
+        .map(s => s.stationId);
+      
+      if (stationIds.length === 0) {
+        alert('Area is disabled. No stations will be fetched.');
+        setFetchingPrices(false);
+        return;
+      }
+
       const response = await base44.functions.invoke('fetchLiveGPPricesForArea', {
         stationIds,
+        deduplicateByStationId: true, // Request dedup by stationId, keep old price
       });
       
       // Show result
-      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records`);
+      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records\nDedup skipped: ${response.data.summary.dedupSkipped || 0}`);
     } catch (error) {
       console.error('Failed to fetch prices:', error);
       alert(`Error: ${error.message}`);
