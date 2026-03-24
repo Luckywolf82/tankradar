@@ -104,17 +104,10 @@ export default function CameraCapture({ onCapture, onFallback }) {
         const track = stream.getVideoTracks()[0];
         trackRef.current = track;
 
-        // Check zoom support and apply 2x immediately if available
+        // Check zoom support
         const caps = track.getCapabilities?.() || {};
         if (caps.zoom) {
           setZoomSupported(true);
-          try {
-            const target = Math.min(2.0, caps.zoom.max ?? 2.0);
-            await track.applyConstraints({ advanced: [{ zoom: target }] });
-            setCurrentZoom(target);
-          } catch {
-            // fall through to CSS zoom
-          }
         }
 
         videoRef.current.srcObject = stream;
