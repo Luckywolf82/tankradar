@@ -751,31 +751,16 @@ export default function CoverageMapExplorer() {
               );
               })}
 
-              {/* Drawing polygon preview */}
+              {/* Drawing rectangle preview */}
               {mapReady && isDrawing && drawingPoints.length > 0 && (
-              <>
-                {drawingPoints.map((point, idx) => (
-                  <Marker
-                    key={`draw-point-${idx}`}
-                    position={point}
-                    icon={new L.Icon({
-                      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                      iconSize: [18, 28],
-                      iconAnchor: [9, 28],
-                    })}
-                  />
-                ))}
-                {drawingPoints.length > 1 && (
-                  <Polygon
-                    positions={drawingPoints}
-                    color="#3b82f6"
-                    weight={2}
-                    opacity={0.7}
-                    fillOpacity={0.15}
-                    dashArray="5,5"
-                  />
-                )}
-              </>
+                <Rectangle
+                  bounds={[drawingPoints[0], drawingPoints[drawingPoints.length - 1]]}
+                  color="#3b82f6"
+                  weight={2}
+                  opacity={0.7}
+                  fillOpacity={0.15}
+                  dashArray="5,5"
+                />
               )}
               </MapContainer>
               </div>
