@@ -34,6 +34,7 @@ function normalize(s) {
 }
 
 Deno.serve(async (req) => {
+  try {
   const base44 = createClientFromRequest(req);
 
   // Use service role for data access (admin audit endpoint)
@@ -366,4 +367,7 @@ Deno.serve(async (req) => {
       status: 'UNTOUCHED — this function is new and does not modify any existing file',
     },
   });
+  } catch (err) {
+    return Response.json({ error: err.message, stack: err.stack }, { status: 500 });
+  }
 });
