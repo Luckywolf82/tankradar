@@ -47,8 +47,7 @@ const BAND_SEGMENTS = ["low", "normal", "high"];
 const SEGMENT_COLORS = { low: "bg-green-400", normal: "bg-amber-400", high: "bg-red-400" };
 const SEGMENT_INACTIVE = { low: "bg-green-100", normal: "bg-amber-100", high: "bg-red-100" };
 
-export default function NationalFuelBarometer() {
-  const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
+export default function NationalFuelBarometer({ selectedFuel }) {
   const [loading, setLoading] = useState(true);
   const [currentPrice, setCurrentPrice] = useState(null);
   const [classification, setClassification] = useState(null);
