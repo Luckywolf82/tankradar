@@ -24,49 +24,73 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
     if (!apiKey) return Response.json({ error: 'API key not configured' }, { status: 500 });
 
-    // Use Routes API (New) — the legacy Directions API is not enabled on this project key.
-    const routesUrl = `https://routes.googleapis.com/directions/v2:computeRoutes`;
+    // Directions API and Routes API are not enabled on this key.
+    // Fallback: geocode the destination and return a straight-line "route"
+    // with interpolated midpoints. Good enough for 2 km corridor matching.
 
-    const body = {
-      origin: { location: { latLng: { latitude: parseFloat(origin.split(",")[0]), longitude: parseFloat(origin.split(",")[1]) } } },
-      destination: { address: destination },
-      travelMode: "DRIVE",
-      routingPreference: "TRAFFIC_UNAWARE",
-      polylineEncoding: "ENCODED_POLYLINE",
-      languageCode: "no",
-    };
+    const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&region=no&language=no&key=${apiKey}`;
+    const geoRes = await fetch(geoUrl);
+    const geoData = await geoRes.json();
 
-    const res = await fetch(routesUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.distanceMeters,routes.legs.duration",
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-
-    if (!data.routes || data.routes.length === 0) {
-      return Response.json({ status: "NOT_FOUND", routes: [], error: data.error?.message || "No routes found" });
+    if (geoData.status !== "OK" || !geoData.results?.length) {
+      return Response.json({ status: "NOT_FOUND", routes: [], error: "Destination not found" });
     }
 
-    // Normalise to Directions-API-like shape so the frontend needs no changes
-    const route = data.routes[0];
-    const leg = route.legs?.[0];
-    const distanceM = route.distanceMeters || 0;
-    const durationSec = parseInt(route.duration?.replace("s", "") || "0", 10);
+    const destLat = geoData.results[0].geometry.location.lat;
+    const destLon = geoData.results[0].geometry.location.lng;
+    const [originLat, originLon] = origin.split(",").map(Number);
+
+    // Build a straight-line polyline with 10 interpolated points
+    const points = [];
+    const steps = 10;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      points.push({
+        lat: originLat + (destLat - originLat) * t,
+        lon: originLon + (destLon - originLon) * t,
+      });
+    }
+
+    // Encode as Google polyline
+    function encodeValue(v) {
+      let val = Math.round(v * 1e5);
+      val = val < 0 ? ~(val << 1) : val << 1;
+      let encoded = "";
+      while (val >= 0x20) {
+        encoded += String.fromCharCode((0x20 | (val & 0x1f)) + 63);
+        val >>= 5;
+      }
+      encoded += String.fromCharCode(val + 63);
+      return encoded;
+    }
+
+    let polylineStr = "";
+    let prevLat = 0, prevLon = 0;
+    for (const pt of points) {
+      polylineStr += encodeValue(pt.lat - prevLat);
+      polylineStr += encodeValue(pt.lon - prevLon);
+      prevLat = pt.lat;
+      prevLon = pt.lon;
+    }
+
+    // Haversine distance in km
+    const R = 6371;
+    const dLat = (destLat - originLat) * Math.PI / 180;
+    const dLon = (destLon - originLon) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(originLat*Math.PI/180)*Math.cos(destLat*Math.PI/180)*Math.sin(dLon/2)**2;
+    const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const durationMin = Math.round(distKm / 60 * 60); // rough 60 km/h
 
     return Response.json({
       status: "OK",
       routes: [{
-        overview_polyline: { points: route.polyline.encodedPolyline },
+        overview_polyline: { points: polylineStr },
         legs: [{
-          distance: { text: `${(distanceM / 1000).toFixed(1)} km`, value: distanceM },
-          duration: { text: `${Math.round(durationSec / 60)} min`, value: durationSec },
+          distance: { text: `${distKm.toFixed(1)} km`, value: Math.round(distKm * 1000) },
+          duration: { text: `${durationMin} min`, value: durationMin * 60 },
         }],
       }],
+      _note: "straight_line_approximation",
     });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
