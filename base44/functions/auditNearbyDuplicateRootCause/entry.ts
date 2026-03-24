@@ -37,9 +37,10 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   // Use service role for data access (admin audit endpoint)
+  // Limit to 500 stations and 500 CSP rows to avoid timeout
   const [allStations, allCSP] = await Promise.all([
-    base44.asServiceRole.entities.Station.list(),
-    base44.asServiceRole.entities.CurrentStationPrices.list(),
+    base44.asServiceRole.entities.Station.list('-created_date', 500),
+    base44.asServiceRole.entities.CurrentStationPrices.list('-updatedAt', 500),
   ]);
 
   // ─────────────────────────────────────────────────────────────
