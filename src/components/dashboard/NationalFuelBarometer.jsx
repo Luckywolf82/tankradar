@@ -86,7 +86,7 @@ export default function NationalFuelBarometer({ selectedFuel }) {
     };
 
     load();
-  }, [selectedFuel]);
+  }, [selectedFuel, FUEL_OPTIONS]);
 
   return (
     <Card className="shadow-sm">
