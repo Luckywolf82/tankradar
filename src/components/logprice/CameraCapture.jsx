@@ -251,6 +251,10 @@ export default function CameraCapture({ onCapture, onFallback }) {
         playsInline
         muted
         autoPlay
+        style={!zoomSupported && cssZoom > 1 ? {
+          transform: `scale(${cssZoom})`,
+          transformOrigin: "center center",
+        } : undefined}
       />
 
       {/* Semi-transparent dimmed overlay OUTSIDE the target box */}
