@@ -88,60 +88,73 @@ Deno.serve(async (req) => {
 
   // ─────────────────────────────────────────────────────────────
   // STEP 4: HYPOTHESIS A — Multiple stationIds = same physical station
-  // Use same logic as DuplicateDetection: name+chain match + ≤50m distance
-  // We operate on ACTIVE stations only (status !== 'archived_duplicate')
+  // O(n) approach: group by name+chain key first, then check distance
+  // within each name-group only.
   // ─────────────────────────────────────────────────────────────
   const activeStations = allStations.filter(
     s => s.status !== 'archived_duplicate' && s.latitude && s.longitude
   );
 
+  // Group stations by normalized name+chain key
+  const nameGroups = {};
+  for (const s of activeStations) {
+    const key = `${normalize(s.name)}||${normalize(s.chain || '')}`;
+    if (!nameGroups[key]) nameGroups[key] = [];
+    nameGroups[key].push(s);
+  }
+
   const duplicateGroups = [];
-  const visited = new Set();
 
-  for (let i = 0; i < activeStations.length; i++) {
-    if (visited.has(activeStations[i].id)) continue;
-    const a = activeStations[i];
-    const group = [a];
+  for (const [, group] of Object.entries(nameGroups)) {
+    if (group.length < 2) continue;
 
-    for (let j = i + 1; j < activeStations.length; j++) {
-      const b = activeStations[j];
-      if (visited.has(b.id)) continue;
+    // Within this name-group, check pairwise distances (group is small)
+    const visited = new Set();
+    for (let i = 0; i < group.length; i++) {
+      if (visited.has(group[i].id)) continue;
+      const cluster = [group[i]];
 
-      const nameSame = normalize(a.name) === normalize(b.name);
-      const chainSame =
-        (!a.chain && !b.chain) ||
-        (a.chain && b.chain && normalize(a.chain) === normalize(b.chain));
-
-      if (!nameSame || !chainSame) continue;
-
-      const distM = haversineM(a.latitude, a.longitude, b.latitude, b.longitude);
-      if (distM <= 50) {
-        group.push(b);
-        visited.add(b.id);
+      for (let j = i + 1; j < group.length; j++) {
+        if (visited.has(group[j].id)) continue;
+        const distM = haversineM(
+          group[i].latitude, group[i].longitude,
+          group[j].latitude, group[j].longitude
+        );
+        if (distM <= 50) {
+          cluster.push(group[j]);
+          visited.add(group[j].id);
+        }
       }
-    }
 
-    if (group.length > 1) {
-      visited.add(a.id);
-      duplicateGroups.push({
-        name: a.name,
-        chain: a.chain || null,
-        stationIds: group.map(s => s.id),
-        stations: group.map(s => ({
-          id: s.id,
-          name: s.name,
-          chain: s.chain || null,
-          lat: s.latitude,
-          lng: s.longitude,
-          status: s.status,
-          sourceName: s.sourceName,
-        })),
-        maxDistanceM: Math.max(
-          ...group.flatMap((s, si) =>
-            group.slice(si + 1).map(t => haversineM(s.latitude, s.longitude, t.latitude, t.longitude))
-          )
-        ),
-      });
+      if (cluster.length > 1) {
+        visited.add(group[i].id);
+        // Compute max pairwise distance in cluster
+        let maxDist = 0;
+        for (let a = 0; a < cluster.length; a++) {
+          for (let b = a + 1; b < cluster.length; b++) {
+            const d = haversineM(
+              cluster[a].latitude, cluster[a].longitude,
+              cluster[b].latitude, cluster[b].longitude
+            );
+            if (d > maxDist) maxDist = d;
+          }
+        }
+        duplicateGroups.push({
+          name: group[i].name,
+          chain: group[i].chain || null,
+          stationIds: cluster.map(s => s.id),
+          stations: cluster.map(s => ({
+            id: s.id,
+            name: s.name,
+            chain: s.chain || null,
+            lat: s.latitude,
+            lng: s.longitude,
+            status: s.status,
+            sourceName: s.sourceName,
+          })),
+          maxDistanceM: maxDist,
+        });
+      }
     }
   }
 
