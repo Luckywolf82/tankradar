@@ -113,6 +113,18 @@ Deno.serve(async (req) => {
     )
   );
 
+  // ── 5b. Clean CurrentStationPrices for legacy stationIds ─────────────────
+  // Delete any CSP rows that reference a now-archived stationId.
+  // This prevents stale duplicate rows from persisting in NearbyPrices.
+  // The canonical stationId's CSP row is preserved (or will be updated by the
+  // next FuelPrice automation event on that station).
+  for (const dupId of duplicate_station_ids) {
+    const staleCSP = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId: dupId });
+    for (const row of staleCSP) {
+      await base44.asServiceRole.entities.CurrentStationPrices.delete(row.id);
+    }
+  }
+
   // ── 6. Write audit log ────────────────────────────────────────────────────
   await base44.asServiceRole.entities.StationMergeLog.create({
     canonical_station_id,
