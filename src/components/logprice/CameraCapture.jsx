@@ -37,11 +37,11 @@ function sampleFrameVariance(videoEl, canvasEl) {
   canvasEl.width = w;
   canvasEl.height = h;
   const ctx = canvasEl.getContext("2d");
-  // Sample only the center region (where the overlay box is)
-  const sx = (videoEl.videoWidth - videoEl.videoWidth * 0.55) / 2;
-  const sy = (videoEl.videoHeight - videoEl.videoHeight * 0.30) / 2;
-  const sw = videoEl.videoWidth * 0.55;
-  const sh = videoEl.videoHeight * 0.30;
+  // Sample the exact overlay box region
+  const sx = videoEl.videoWidth * BOX_LEFT;
+  const sy = videoEl.videoHeight * BOX_TOP;
+  const sw = videoEl.videoWidth * BOX_WIDTH;
+  const sh = videoEl.videoHeight * BOX_HEIGHT;
   try {
     ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, w, h);
     const data = ctx.getImageData(0, 0, w, h).data;
