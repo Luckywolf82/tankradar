@@ -323,8 +323,20 @@ export default function CoverageMapExplorer() {
     }
   };
 
-  // Save area for launch
+  // Toggle area disabled status
+  const toggleAreaDisabled = (areaId) => {
+    setDisabledAreas(prev => ({
+      ...prev,
+      [areaId]: !prev[areaId]
+    }));
+  };
+
+  // Save area for launch (only active areas)
   const saveArea = (area) => {
+    if (disabledAreas[area.id]) {
+      alert('Cannot save disabled area. Enable it first.');
+      return;
+    }
     const saved = {
       ...area,
       savedAt: new Date().toISOString(),
@@ -332,11 +344,17 @@ export default function CoverageMapExplorer() {
     };
     setSavedAreas(prev => [...prev, saved]);
     setTestedAreas(prev => prev.filter(a => a.id !== area.id));
+    setSelectedArea(null);
   };
 
   // Delete tested area
   const deleteArea = (areaId) => {
     setTestedAreas(prev => prev.filter(a => a.id !== areaId));
+    setDisabledAreas(prev => {
+      const newDisabled = { ...prev };
+      delete newDisabled[areaId];
+      return newDisabled;
+    });
     if (selectedArea?.id === areaId) setSelectedArea(null);
   };
 
