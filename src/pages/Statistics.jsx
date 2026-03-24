@@ -19,7 +19,7 @@ export default function Statistics() {
   const [ssbData, setSsbData] = useState([]);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFuel, setSelectedFuel] = useState("gasoline_95");
+  const [selectedFuel, setSelectedFuel] = useState("diesel");
   const { scrollRef, restoreScroll } = useTabState("Statistics");
 
   useEffect(() => {
