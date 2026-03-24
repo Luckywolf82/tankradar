@@ -660,9 +660,26 @@ export default function CoverageMapExplorer() {
               <>
                 {/* Area details */}
                 <div>
-                  <h3 className="font-semibold text-sm mb-2">
-                    {selectedArea.status === 'saved_for_launch' ? 'Saved Area' : 'Tested Area'}
-                  </h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-sm">
+                      {selectedArea.status === 'saved_for_launch' ? 'Saved Area' : 'Tested Area'}
+                      {disabledAreas[selectedArea.id] && <span className="text-xs text-slate-500 ml-2">(disabled)</span>}
+                    </h3>
+                    {selectedArea.status !== 'saved_for_launch' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleAreaDisabled(selectedArea.id)}
+                        className="p-0 h-5"
+                      >
+                        {disabledAreas[selectedArea.id] ? (
+                          <EyeOff className="w-4 h-4 text-slate-400" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-slate-600" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   <div className="space-y-2 text-xs text-slate-700">
                     <div>Total stations: <span className="font-semibold">{selectedArea.totalStations}</span></div>
                     <div>GP matched: <span className="font-semibold">{selectedArea.gpMatchedCount}</span></div>
