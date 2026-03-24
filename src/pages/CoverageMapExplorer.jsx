@@ -599,16 +599,16 @@ export default function CoverageMapExplorer() {
                   <h3 className="font-semibold text-sm mb-2">Layers</h3>
                   <div className="space-y-2">
                     {Object.entries(showLayers).map(([key, value]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <Checkbox
-                          checked={value}
-                          onChange={(e) => setShowLayers(prev => ({ ...prev, [key]: e.target.checked }))}
-                        />
-                        <label className="text-xs text-slate-700 cursor-pointer flex-1">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </label>
-                      </div>
-                    ))}
+                       <div key={key} className="flex items-center gap-2">
+                         <Checkbox
+                           checked={value}
+                           onCheckedChange={(checked) => setShowLayers(prev => ({ ...prev, [key]: checked }))}
+                         />
+                         <label className="text-xs text-slate-700 cursor-pointer flex-1">
+                           {key.replace(/([A-Z])/g, ' $1').trim()}
+                         </label>
+                       </div>
+                     ))}
                   </div>
                 </div>
 
