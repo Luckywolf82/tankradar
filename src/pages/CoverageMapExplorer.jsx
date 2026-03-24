@@ -252,24 +252,33 @@ export default function CoverageMapExplorer() {
     }
   };
 
-  // Handle rectangle drawing (drag from corner to opposite corner)
-  const handleMapMouseDown = (e) => {
-    if (!isDrawing) return;
-    const startPoint = [e.latlng.lat, e.latlng.lng];
+  // Setup drawing event listeners when map is ready
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !isDrawing) return;
 
-    const handleMouseMove = (moveEvent) => {
-      const endPoint = [moveEvent.latlng.lat, moveEvent.latlng.lng];
-      setDrawingPoints([startPoint, endPoint]);
+    const handleMapMouseDown = (e) => {
+      const startPoint = [e.latlng.lat, e.latlng.lng];
+
+      const handleMouseMove = (moveEvent) => {
+        const endPoint = [moveEvent.latlng.lat, moveEvent.latlng.lng];
+        setDrawingPoints([startPoint, endPoint]);
+      };
+
+      const handleMouseUp = () => {
+        mapRef.current?.off('mousemove', handleMouseMove);
+        mapRef.current?.off('mouseup', handleMouseUp);
+      };
+
+      mapRef.current?.on('mousemove', handleMouseMove);
+      mapRef.current?.on('mouseup', handleMouseUp);
     };
 
-    const handleMouseUp = () => {
-      mapRef.current?.off('mousemove', handleMouseMove);
-      mapRef.current?.off('mouseup', handleMouseUp);
-    };
+    mapRef.current.on('mousedown', handleMapMouseDown);
 
-    mapRef.current?.on('mousemove', handleMouseMove);
-    mapRef.current?.on('mouseup', handleMouseUp);
-  };
+    return () => {
+      mapRef.current?.off('mousedown', handleMapMouseDown);
+    };
+  }, [mapReady, isDrawing]);
 
   // Complete rectangle
   const completeRectangle = async () => {
