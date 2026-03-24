@@ -11,7 +11,6 @@ import { RouteAnimation } from "../components/mobile/RouteAnimation";
 
 const fuelTypeLabel = {
   gasoline_95: "Bensin 95",
-  gasoline_98: "Bensin 98",
   diesel: "Diesel",
 };
 
