@@ -235,6 +235,7 @@ Deno.serve(async (req) => {
       created,
       updated,
       skipped,
+      identity_guard_skipped: identityGuardSkipped,
       duplicates_repaired: duplicateStationIds.length,
     });
 
