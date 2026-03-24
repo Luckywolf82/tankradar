@@ -4,54 +4,76 @@
  * Derives a certainty-aware pump insight from CurrentStationPrices data.
  * Called in Dashboard, passed as pumpInsight prop into PumpModeCard.
  *
- * No new entities. No new backend calls beyond what NearbyPrices already does.
- * Uses the same CurrentStationPrices entity — the browser will typically serve
- * it from the same in-flight or recently-resolved request.
- *
- * CERTAINTY RULES:
- * - Never claim "cheapest" without a fresh price on the pump station itself
- * - Never claim savings without both prices being fresh
- * - When certainty is low → turn it into a logging prompt
+ * Single-source-of-truth rule:
+ * - Market calculations must come from currentMarketEngine
+ * - This hook only fetches CSP rows and maps market context -> UI insight
  */
 
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { isFreshEnoughForNearbyRanking } from "@/utils/currentPriceResolver";
+import { getCurrentMarketContext } from "@/utils/currentMarketEngine";
 
-const FILL_LITERS = 40; // Standard estimate for savings calculation
+const PUMP_CONTEXT_RADIUS_KM = 10;
+const FILL_LITERS = 40;
 
-/**
- * Extracts the price for a given fuelType from a CSP row.
- * Returns null if missing or stale.
- */
-function extractFreshPrice(cspRow, fuelType) {
-  if (!cspRow) return null;
+function normalizeFuelType(fuelType) {
+  // currentMarketEngine should ideally support all active fuel types.
+  // If gasoline_98 is not yet supported there, do NOT fake certainty.
+  if (fuelType === "diesel") return "diesel";
+  if (fuelType === "gasoline_95") return "gasoline_95";
+  if (fuelType === "gasoline_98") return "gasoline_98";
+  return null;
+}
 
-  const priceField = fuelType === "gasoline_95" ? "gasoline_95_price"
-    : fuelType === "diesel" ? "diesel_price"
-    : null;
+function resolvePumpInsight(market) {
+  if (!market) {
+    return {
+      type: "insufficient_fresh_nearby_data",
+      text: "Vi har for få ferske priser i området akkurat nå. Registrer prisen her for å gjøre prisbildet bedre.",
+      market: null,
+    };
+  }
 
-  const fetchedAtField = fuelType === "gasoline_95" ? "gasoline_95_fetchedAt"
-    : fuelType === "diesel" ? "diesel_fetchedAt"
-    : null;
+  // Missing or unusable price on current/pump station
+  if (!market.currentStationPrice) {
+    return {
+      type: "missing_station_price",
+      text: "Vi mangler oppdatert pris på denne stasjonen. Registrer den her for å gjøre sammenligningen mer treffsikker.",
+      market,
+    };
+  }
 
-  if (!priceField || !fetchedAtField) return null;
+  // Already among the cheapest / cheapest
+  if (market.isCurrentStationCheapest) {
+    return {
+      type: "among_cheapest",
+      text: "Denne stasjonen er blant de billigste i nærheten 🔥",
+      market,
+    };
+  }
 
-  const price = cspRow[priceField];
-  const fetchedAt = cspRow[fetchedAtField];
+  // Cheaper nearby alternative exists
+  if (market.savingsVsCheapest > 0) {
+    return {
+      type: "cheaper_alternative_exists",
+      text: `Du kan potensielt spare ca ${Math.round(
+        market.savingsVsCheapest
+      )} kr på ${FILL_LITERS} liter ved å velge billigste alternativ.`,
+      market,
+    };
+  }
 
-  if (price == null || !fetchedAt) return null;
-
-  // Reuse same freshness check as NearbyPrices pipeline
-  const mockRow = { fetchedAt, priceNok: price };
-  if (!isFreshEnoughForNearbyRanking(mockRow)) return null;
-
-  return price;
+  // Fallback: enough data exists, but no strong action should be claimed
+  return {
+    type: "stale_station_price",
+    text: "Prisen her kan være utdatert. Oppdater den for å få et mer nøyaktig sammenligningsgrunnlag.",
+    market,
+  };
 }
 
 /**
- * @param {string} pumpStationId  — the stationId detected by PumpModeCard
- * @param {string} selectedFuel   — "diesel" | "gasoline_95" | "gasoline_98"
+ * @param {string|null} pumpStationId
+ * @param {string} selectedFuel
  */
 export function usePumpInsight(pumpStationId, selectedFuel) {
   const [pumpInsight, setPumpInsight] = useState(null);
@@ -62,77 +84,65 @@ export function usePumpInsight(pumpStationId, selectedFuel) {
       return;
     }
 
+    const normalizedFuel = normalizeFuelType(selectedFuel);
+    if (!normalizedFuel) {
+      setPumpInsight(null);
+      return;
+    }
+
     let cancelled = false;
 
-    base44.entities.CurrentStationPrices.list()
-      .then((rows) => {
+    async function run() {
+      try {
+        const rows = await base44.entities.CurrentStationPrices.list();
         if (cancelled) return;
 
-        // Only use rows with coordinates (mirrors NearbyPrices pipeline)
         const withCoords = rows.filter(
-          (r) => r.latitude != null && r.longitude != null && r.stationStatus !== "archived_duplicate"
+          (r) =>
+            r.latitude != null &&
+            r.longitude != null &&
+            r.stationStatus !== "archived_duplicate"
         );
 
-        // Rows with a fresh price for selected fuel
-        const freshRows = withCoords.filter((r) => extractFreshPrice(r, selectedFuel) != null);
-
-        if (freshRows.length === 0) {
-          // No fresh data in area at all
-          setPumpInsight({
-            type: "insufficient_fresh_nearby_data",
-            text: "Vi har for få ferske priser i området akkurat nå. Registrer prisen her for å gjøre prisbildet bedre.",
-          });
-          return;
-        }
-
-        // Find the pump station in CSP
         const pumpRow = withCoords.find((r) => r.stationId === pumpStationId);
-        const pumpPrice = extractFreshPrice(pumpRow, selectedFuel);
 
-        if (pumpPrice == null) {
-          // Fresh data exists in area, but NOT for this station
+        // If we do not even have the station row/coords, do not overclaim.
+        if (!pumpRow || pumpRow.latitude == null || pumpRow.longitude == null) {
           setPumpInsight({
             type: "missing_station_price",
             text: "Vi mangler oppdatert pris på denne stasjonen. Registrer den her for å gjøre sammenligningen mer treffsikker.",
+            market: null,
           });
           return;
         }
 
-        // We have a fresh price for the pump station. Now compare.
-        const sortedByPrice = [...freshRows].sort(
-          (a, b) => extractFreshPrice(a, selectedFuel) - extractFreshPrice(b, selectedFuel)
-        );
+        // Use the detected pump station as the center for “nearby” market context.
+        const market = getCurrentMarketContext({
+          cspRows: withCoords,
+          selectedFuel: normalizedFuel,
+          currentStationId: pumpStationId,
+          userCoords: {
+            lat: pumpRow.latitude,
+            lon: pumpRow.longitude,
+          },
+          radiusKm: PUMP_CONTEXT_RADIUS_KM,
+        });
 
-        const cheapestPrice = extractFreshPrice(sortedByPrice[0], selectedFuel);
-        const pumpRank = sortedByPrice.findIndex((r) => r.stationId === pumpStationId);
+        if (cancelled) return;
 
-        // Among top 3 cheapest?
-        if (pumpRank !== -1 && pumpRank <= 2) {
-          setPumpInsight({
-            type: "among_cheapest",
-            text: "Denne stasjonen er blant de billigste i nærheten 🔥",
-          });
-          return;
+        setPumpInsight(resolvePumpInsight(market));
+      } catch {
+        if (!cancelled) {
+          setPumpInsight(null);
         }
+      }
+    }
 
-        // Cheaper alternative exists — calculate estimated savings
-        const savings = Math.round((pumpPrice - cheapestPrice) * FILL_LITERS);
-        if (savings > 0) {
-          setPumpInsight({
-            type: "cheaper_alternative_exists",
-            text: `Du kan potensielt spare ca ${savings} kr på ${FILL_LITERS} liter ved å velge billigste alternativ.`,
-          });
-          return;
-        }
+    run();
 
-        // Fallback: we have fresh data but no meaningful difference
-        setPumpInsight(null);
-      })
-      .catch(() => {
-        if (!cancelled) setPumpInsight(null);
-      });
-
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pumpStationId, selectedFuel]);
 
   return pumpInsight;
