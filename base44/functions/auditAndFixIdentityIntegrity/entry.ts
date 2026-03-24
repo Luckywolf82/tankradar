@@ -240,9 +240,62 @@ Deno.serve(async (req) => {
       }
 
       // Trigger materializeCurrentStationPrice for each fuel type found
+      // Use the inline CSP upsert logic directly (avoids auth issues from function invocation)
       for (const fp of Object.values(latest)) {
         try {
-          await base44.asServiceRole.functions.invoke('materializeCurrentStationPrice', { data: fp });
+          // Inline CSP upsert: find existing row for this canonical stationId and update it
+          const existingCSP = await base44.asServiceRole.entities.CurrentStationPrices.filter(
+            { stationId: canonicalId }
+          );
+
+          const station = stationById[canonicalId];
+          const stationMeta = station ? {
+            stationName: station.name || null,
+            stationChain: station.chain || null,
+            stationStatus: station.status || 'active',
+            latitude: station.latitude ?? null,
+            longitude: station.longitude ?? null,
+          } : {};
+
+          let fuelPatch;
+          if (fp.fuelType === 'gasoline_95') {
+            fuelPatch = {
+              gasoline_95_price: fp.priceNok,
+              gasoline_95_fetchedAt: fp.fetchedAt || now,
+              gasoline_95_confidenceScore: fp.confidenceScore ?? null,
+              gasoline_95_plausibilityStatus: fp.plausibilityStatus || null,
+              gasoline_95_stationMatchStatus: fp.station_match_status || null,
+              gasoline_95_priceType: fp.priceType || null,
+            };
+          } else {
+            fuelPatch = {
+              diesel_price: fp.priceNok,
+              diesel_fetchedAt: fp.fetchedAt || now,
+              diesel_confidenceScore: fp.confidenceScore ?? null,
+              diesel_plausibilityStatus: fp.plausibilityStatus || null,
+              diesel_stationMatchStatus: fp.station_match_status || null,
+              diesel_priceType: fp.priceType || null,
+            };
+          }
+
+          const patch = { ...stationMeta, ...fuelPatch, sourceName: fp.sourceName || null, updatedAt: now };
+
+          if (existingCSP && existingCSP.length > 0) {
+            const sorted = [...existingCSP].sort((a, b) =>
+              new Date(a.created_date || 0) - new Date(b.created_date || 0)
+            );
+            await base44.asServiceRole.entities.CurrentStationPrices.update(sorted[0].id, patch);
+            // Delete extras if race-created
+            for (const extra of sorted.slice(1)) {
+              await base44.asServiceRole.entities.CurrentStationPrices.delete(extra.id);
+            }
+          } else {
+            await base44.asServiceRole.entities.CurrentStationPrices.create({
+              stationId: canonicalId,
+              ...patch,
+            });
+          }
+
           results.cspTriggered++;
         } catch (err) {
           results.cspTriggerFailed.push({ canonicalId, fuelType: fp.fuelType, error: err.message });
