@@ -28,10 +28,10 @@ Deno.serve(async (req) => {
     // Fallback: geocode the destination and return a straight-line "route"
     // with interpolated midpoints. Good enough for 2 km corridor matching.
 
-    const [originLat, originLon] = origin.split(",").map(Number);
-
     // Attempt 1: geocode with location bias centred on user's GPS position (1° ≈ 111 km radius).
     // This dramatically improves resolution of ambiguous Norwegian place names like "Heimdal".
+    const [originLat, originLon] = origin.split(",").map(Number);
+
     const geoUrl1 =
       `https://maps.googleapis.com/maps/api/geocode/json` +
       `?address=${encodeURIComponent(destination)}` +
