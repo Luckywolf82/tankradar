@@ -1,3 +1,4 @@
+import { isFreshEnoughForNearbyRanking } from "@/utils/currentPriceResolver";
 
 export function getCurrentMarketContext({
   cspRows,
@@ -6,9 +7,7 @@ export function getCurrentMarketContext({
   userCoords,
   radiusKm = 10,
 }) {
-  if (!cspRows || !selectedFuel || !userCoords) {
-    return null;
-  }
+  if (!cspRows || !selectedFuel || !userCoords) return null;
 
   const getFuelBlock = (row) => {
     if (selectedFuel === "diesel") {
@@ -38,14 +37,34 @@ export function getCurrentMarketContext({
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  // ─────────────────────────────
-  // 1. Filter usable rows
-  // ─────────────────────────────
+  // ───────── current station (separat!)
+  const currentRaw = cspRows.find(r => r.stationId === currentStationId);
+  const currentFuel = currentRaw ? getFuelBlock(currentRaw) : null;
+
+  const currentStationPrice =
+    currentFuel &&
+    currentFuel.price &&
+    currentFuel.fetchedAt &&
+    isFreshEnoughForNearbyRanking({
+      fetchedAt: currentFuel.fetchedAt,
+      priceNok: currentFuel.price,
+    })
+      ? currentFuel.price
+      : null;
+
+  // ───────── usable nearby
   const usable = cspRows
     .map((row) => {
       const fuel = getFuelBlock(row);
 
-      if (!fuel.price || !row.latitude || !row.longitude) return null;
+      if (!fuel.price || !fuel.fetchedAt || !row.latitude || !row.longitude) return null;
+
+      const mockRow = {
+        fetchedAt: fuel.fetchedAt,
+        priceNok: fuel.price,
+      };
+
+      if (!isFreshEnoughForNearbyRanking(mockRow)) return null;
 
       const distance = haversineKm(
         userCoords.lat,
@@ -60,59 +79,44 @@ export function getCurrentMarketContext({
         stationId: row.stationId,
         stationName: row.stationName,
         price: fuel.price,
-        fetchedAt: fuel.fetchedAt,
         distance,
       };
     })
     .filter(Boolean);
 
   if (usable.length === 0) {
-    return null;
+    return {
+      currentStationPrice,
+      cheapestNearbyPrice: null,
+      cheapestStation: null,
+      savingsVsCheapest: 0,
+      priceSpread: 0,
+      isCurrentStationCheapest: false,
+      nearbyStationCount: 0,
+    };
   }
 
-  // ─────────────────────────────
-  // 2. Current station
-  // ─────────────────────────────
-  const current = usable.find((r) => r.stationId === currentStationId);
-
-  // ─────────────────────────────
-  // 3. Cheapest station
-  // ─────────────────────────────
   const sorted = [...usable].sort((a, b) => a.price - b.price);
+
   const cheapest = sorted[0];
+  const mostExpensive = sorted[sorted.length - 1];
 
-  // ─────────────────────────────
-  // 4. Most expensive (for spread)
-  // ─────────────────────────────
-  const mostExpensive = [...usable].sort((a, b) => b.price - a.price)[0];
-
-  // ─────────────────────────────
-  // 5. Calculations
-  // ─────────────────────────────
   const isCurrentStationCheapest =
-    current && cheapest && current.stationId === cheapest.stationId;
+    currentStationPrice && cheapest && currentStationId === cheapest.stationId;
 
   const savingsVsCheapest =
-    current && cheapest
-      ? Math.max(0, (current.price - cheapest.price) * 40)
+    currentStationPrice && cheapest
+      ? Math.max(0, (currentStationPrice - cheapest.price) * 40)
       : 0;
 
-  const priceSpread =
-    cheapest && mostExpensive
-      ? mostExpensive.price - cheapest.price
-      : 0;
+  const priceSpread = mostExpensive.price - cheapest.price;
 
-  // ─────────────────────────────
-  // 6. Output
-  // ─────────────────────────────
   return {
-    currentStationPrice: current?.price ?? null,
+    currentStationPrice,
     cheapestNearbyPrice: cheapest.price,
     cheapestStation: cheapest,
-
     savingsVsCheapest,
     priceSpread,
-
     isCurrentStationCheapest,
     nearbyStationCount: usable.length,
   };
