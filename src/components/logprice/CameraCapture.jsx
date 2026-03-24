@@ -75,12 +75,12 @@ export default function CameraCapture({ onCapture, onFallback }) {
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
-  const [hint, setHint] = useState(null);
-  const [currentZoom, setCurrentZoom] = useState(2.0); // start at 2x
+  const [hint, setHint] = useState("Flytt nærmere prisskiltet");
+  const [currentZoom, setCurrentZoom] = useState(ZOOM_DEFAULT);
   const [zoomSupported, setZoomSupported] = useState(false);
   const [capturing, setCapturing] = useState(false);
   // cssZoom: used when native zoom is not available — scales the video element
-  const [cssZoom, setCssZoom] = useState(2.0); // start at 2x CSS zoom
+  const [cssZoom, setCssZoom] = useState(1.0);
 
   // Start stream
   useEffect(() => {
