@@ -69,13 +69,20 @@ export default function CoverageMapExplorer() {
     savedAreas: true,
   });
 
-  // Load stations on mount
+  // Load stations + restore saved areas from localStorage
   useEffect(() => {
     const loadStations = async () => {
       try {
         const allStations = await base44.entities.Station.list();
         const filtered = allStations.filter(s => s.latitude && s.longitude);
         setStations(filtered);
+        
+        // Restore areas from localStorage
+        const savedTestedAreas = localStorage.getItem('gp-tested-areas');
+        const savedSavedAreas = localStorage.getItem('gp-saved-areas');
+        if (savedTestedAreas) setTestedAreas(JSON.parse(savedTestedAreas));
+        if (savedSavedAreas) setSavedAreas(JSON.parse(savedSavedAreas));
+        
         setLoading(false);
       } catch (error) {
         console.error('Failed to load stations:', error);
@@ -84,6 +91,15 @@ export default function CoverageMapExplorer() {
     };
     loadStations();
   }, []);
+
+  // Persist areas to localStorage
+  useEffect(() => {
+    localStorage.setItem('gp-tested-areas', JSON.stringify(testedAreas));
+  }, [testedAreas]);
+
+  useEffect(() => {
+    localStorage.setItem('gp-saved-areas', JSON.stringify(savedAreas));
+  }, [savedAreas]);
 
   // Get coverage status for a station
   const getStationCoverage = (stationId) => {
