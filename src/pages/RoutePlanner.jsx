@@ -255,7 +255,9 @@ export default function RoutePlanner() {
                   result.savingsEstimate > 0 && (
                   <div className="border-t border-green-100 pt-3 flex items-center gap-2">
                     <div className="flex-1">
-                      <p className="text-xs text-slate-500">vs nærmeste alternativ langs ruta</p>
+                      <p className="text-xs text-slate-500">
+                        vs {result.baselineQuality === "strong" ? "dyreste alternativ" : "alternativ"} langs ruta
+                      </p>
                       <p className="text-sm font-semibold text-slate-700">
                         {result.referenceStation.stationName}
                         <span className="text-slate-400 font-normal ml-1">
@@ -268,7 +270,9 @@ export default function RoutePlanner() {
                       <p className="text-base font-bold text-green-700">
                         {result.savingsEstimate} kr
                       </p>
-                      <p className="text-xs text-slate-400">per 40 l (estimert)</p>
+                      <p className="text-xs text-slate-400">
+                        per 40 l (estimert{result.baselineQuality === "weak" ? ", svakt grunnlag" : ""})
+                      </p>
                     </div>
                   </div>
                 )}
