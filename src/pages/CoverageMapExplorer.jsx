@@ -57,6 +57,7 @@ export default function CoverageMapExplorer() {
   const [scanning, setScanning] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [testRadius, setTestRadius] = useState(1);
+  const [fetchingPrices, setFetchingPrices] = useState(false);
   
   // Layer visibility toggles
   const [showLayers, setShowLayers] = useState({
@@ -328,6 +329,27 @@ export default function CoverageMapExplorer() {
     if (selectedArea?.id === areaId) setSelectedArea(null);
   };
 
+  // Fetch live GP prices for area
+  const fetchLiveGPPrices = async () => {
+    if (!selectedArea?.stationResults) return;
+    
+    setFetchingPrices(true);
+    try {
+      const stationIds = selectedArea.stationResults.map(s => s.stationId);
+      const response = await base44.functions.invoke('fetchLiveGPPricesForArea', {
+        stationIds,
+      });
+      
+      // Show result
+      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records`);
+    } catch (error) {
+      console.error('Failed to fetch prices:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setFetchingPrices(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-slate-50">
@@ -588,27 +610,48 @@ export default function CoverageMapExplorer() {
                 </div>
 
                 {/* Actions */}
-                {selectedArea.status !== 'saved_for_launch' && (
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() => saveArea(selectedArea)}
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save for Launch
-                    </Button>
-                    <Button
-                      onClick={() => deleteArea(selectedArea.id)}
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Button
+                    onClick={fetchLiveGPPrices}
+                    disabled={fetchingPrices}
+                    size="sm"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    {fetchingPrices ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Fetching...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Fetch Live GP Prices
+                      </>
+                    )}
+                  </Button>
+
+                  {selectedArea.status !== 'saved_for_launch' && (
+                    <>
+                      <Button
+                        onClick={() => saveArea(selectedArea)}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Save for Launch
+                      </Button>
+                      <Button
+                        onClick={() => deleteArea(selectedArea.id)}
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </div>
