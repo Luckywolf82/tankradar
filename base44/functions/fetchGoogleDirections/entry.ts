@@ -51,24 +51,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Encode as Google polyline
-    function encodeValue(v) {
-      let val = Math.round(v * 1e5);
-      val = val < 0 ? ~(val << 1) : val << 1;
+    // Encode as Google polyline (standard algorithm)
+    function encodeCoord(delta) {
+      let value = Math.round(delta * 1e5);
+      value = value < 0 ? ~(value << 1) : value << 1;
       let encoded = "";
-      while (val >= 0x20) {
-        encoded += String.fromCharCode((0x20 | (val & 0x1f)) + 63);
-        val >>= 5;
+      while (value >= 0x20) {
+        encoded += String.fromCharCode((0x20 | (value & 0x1f)) + 63);
+        value >>= 5;
       }
-      encoded += String.fromCharCode(val + 63);
+      encoded += String.fromCharCode(value + 63);
       return encoded;
     }
 
     let polylineStr = "";
     let prevLat = 0, prevLon = 0;
     for (const pt of points) {
-      polylineStr += encodeValue(pt.lat - prevLat);
-      polylineStr += encodeValue(pt.lon - prevLon);
+      const dLat2 = pt.lat - prevLat;
+      const dLon2 = pt.lon - prevLon;
+      polylineStr += encodeCoord(dLat2) + encodeCoord(dLon2);
       prevLat = pt.lat;
       prevLon = pt.lon;
     }
