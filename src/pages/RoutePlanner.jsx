@@ -275,7 +275,7 @@ export default function RoutePlanner() {
           {routeState === "no_data" && (
             <Card className="shadow-sm border-amber-100 bg-amber-50">
               <CardContent className="p-4 text-sm text-amber-700">
-                Ingen stasjoner med kjent {fuelLabel}-pris funnet langs denne ruten (innen 2 km fra ruten).
+                Ingen stasjoner med fersk {fuelLabel}-pris funnet langs denne ruten (søkt innen 4 km fra ruten).
               </CardContent>
             </Card>
           )}
