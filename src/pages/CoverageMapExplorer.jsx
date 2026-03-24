@@ -597,18 +597,38 @@ export default function CoverageMapExplorer() {
 
         {/* Action buttons */}
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={testVisibleArea} disabled={scanning} size="sm">
+          <Button onClick={testVisibleArea} disabled={scanning || isDrawing} size="sm">
             <Zap className="w-4 h-4 mr-2" />
             Test Visible Area
           </Button>
-          <Button onClick={gridScanVisibleArea} disabled={scanning} size="sm" variant="outline">
+          <Button onClick={gridScanVisibleArea} disabled={scanning || isDrawing} size="sm" variant="outline">
             <Grid3x3 className="w-4 h-4 mr-2" />
             Grid Scan Area
           </Button>
-          <Button onClick={() => mapRef.current?.on('click', testClickedArea)} disabled={scanning} size="sm" variant="outline">
+          <Button onClick={() => mapRef.current?.on('click', testClickedArea)} disabled={scanning || isDrawing} size="sm" variant="outline">
             <MapPin className="w-4 h-4 mr-2" />
             Click to Test
           </Button>
+          <Button 
+            onClick={toggleDrawing} 
+            disabled={scanning}
+            size="sm" 
+            variant={isDrawing ? 'default' : 'outline'}
+            className={isDrawing ? 'bg-blue-600 text-white' : ''}
+          >
+            <Pen className="w-4 h-4 mr-2" />
+            {isDrawing ? `Polygon (${drawingPoints.length} pts)` : 'Draw Area'}
+          </Button>
+          {isDrawing && drawingPoints.length >= 3 && (
+            <Button onClick={completePolygon} size="sm" className="bg-green-600 hover:bg-green-700">
+              Complete & Test
+            </Button>
+          )}
+          {isDrawing && (
+            <Button onClick={() => { setIsDrawing(false); setDrawingPoints([]); }} size="sm" variant="outline">
+              Cancel
+            </Button>
+          )}
           {scanning && <span className="text-xs text-slate-600 flex items-center"><Loader2 className="w-4 h-4 animate-spin mr-2" />Testing...</span>}
         </div>
       </div>
