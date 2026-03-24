@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { stationIds } = await req.json();
+    const { stationIds, deduplicateByStationId } = await req.json();
 
     if (!stationIds || stationIds.length === 0) {
       return Response.json({ error: 'No station IDs provided' }, { status: 400 });
