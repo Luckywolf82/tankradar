@@ -239,7 +239,7 @@ export default function CoverageMapExplorer() {
     if (nearby.length === 0) { alert('No stations within radius.'); return; }
     alert(`Testing ${nearby.length} stations near clicked point...`);
     try {
-      await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', { stationIds: nearby.map(s => s.id) });
+      await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', { latitude: lat, longitude: lng, radiusKm: testRadius });
       await loadAll();
       setClickToTestMode(false);
     } catch (err) { alert(`Error: ${err.message}`); }
