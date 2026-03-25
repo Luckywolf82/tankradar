@@ -23,13 +23,9 @@ const ICONS = {
   out_zone:           makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', [14, 23]),
 };
 
-// ─── Map controller (stable initial view) ────────────────────────────────────
-import { useMapEvents } from 'react-leaflet';
-
+// ─── Map controller + click handler ──────────────────────────────────────────
 function MapController({ mapRef, onMapClick }) {
-  const map = useMapEvents({
-    click: onMapClick,
-  });
+  const map = useMapEvents({ click: onMapClick });
   const initialized = useRef(false);
   useEffect(() => {
     if (map && !initialized.current) { mapRef.current = map; map.setView([63.43, 10.39], 11); initialized.current = true; }
