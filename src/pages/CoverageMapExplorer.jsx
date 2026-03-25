@@ -211,10 +211,13 @@ export default function CoverageMapExplorer() {
     return cov.hasFuelOptions ? 'covered' : 'partial';
   };
 
+  const getQuality = (stationId) => classifyGPQuality(gpCoverageMap[stationId]);
+
   const getIcon = (station) => {
     const zone = getZoneMembership(station);
     if (!zone) return ICONS.out_zone;
-    return ICONS[`in_zone_${getGpStatus(station.id)}`] || ICONS.in_zone_not_tested;
+    const quality = getQuality(station.id);
+    return ICONS[`in_zone_${quality}`] || ICONS.in_zone_not_tested;
   };
 
   const stationsInZone = useCallback((zone) => {
