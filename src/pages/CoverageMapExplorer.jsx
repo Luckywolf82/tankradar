@@ -186,7 +186,19 @@ export default function CoverageMapExplorer() {
       const coverageMap = {};
       for (const price of gpPrices) {
         if (!price.stationId) continue;
-        if (!coverageMap[price.stationId]) coverageMap[price.stationId] = { hasFuelOptions: true, fuelTypes: [], fetchedAt: price.fetchedAt };
+        if (!coverageMap[price.stationId]) {
+          coverageMap[price.stationId] = {
+            gpReachable: true,
+            gpPriceFound: true,
+            hasFuelOptions: true,
+            fuelTypes: [],
+            fetchedAt: price.fetchedAt,
+            sourceUpdatedAt: price.sourceUpdatedAt || null,
+          };
+        }
+        // Keep most recent fetchedAt
+        if (price.fetchedAt > coverageMap[price.stationId].fetchedAt)
+          coverageMap[price.stationId].fetchedAt = price.fetchedAt;
         if (price.fuelType && !coverageMap[price.stationId].fuelTypes.includes(price.fuelType))
           coverageMap[price.stationId].fuelTypes.push(price.fuelType);
       }
