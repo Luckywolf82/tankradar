@@ -210,7 +210,12 @@ export default function CoverageMapExplorer() {
   const testSingleStation = async (station) => {
     setTestingStation(true);
     try {
-      await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', { stationIds: [station.id] });
+      await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', {
+        latitude: station.latitude,
+        longitude: station.longitude,
+        radiusKm: 0.5,
+        stationId: station.id,
+      });
       const gpPrices = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: station.id });
       const entry = gpPrices.length > 0
         ? { hasFuelOptions: true, fuelTypes: gpPrices.map(p => p.fuelType).filter(Boolean), fetchedAt: gpPrices[0].fetchedAt }
