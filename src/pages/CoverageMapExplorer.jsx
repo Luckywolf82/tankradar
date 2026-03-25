@@ -590,37 +590,95 @@ export default function CoverageMapExplorer() {
                 <div className="text-sm text-slate-400 text-center pt-8">Click a station on the map</div>
               ) : (() => {
                 const zone = getZoneMembership(selectedStation);
-                const gpStatus = getGpStatus(selectedStation.id);
                 const cov = gpCoverageMap[selectedStation.id];
+                const quality = getQuality(selectedStation.id);
+                const qs = QUALITY_STYLE[quality] || QUALITY_STYLE.not_tested;
+                const inActiveScope = !!zone;
+
+                const Row = ({ label, value, valueClass }) => (
+                  <div className="flex items-start justify-between gap-2 py-1 border-b border-slate-100 last:border-0">
+                    <span className="text-xs text-slate-500 shrink-0 w-36">{label}</span>
+                    <span className={`text-xs font-medium text-right ${valueClass || 'text-slate-700'}`}>{value}</span>
+                  </div>
+                );
+
                 return (
                   <div className="space-y-3">
+                    {/* Station header */}
                     <div>
-                      <h3 className="font-bold">{selectedStation.name}</h3>
-                      <div className="text-sm text-slate-500">{selectedStation.chain || 'Unknown chain'}</div>
-                      <div className="text-xs text-slate-400">{selectedStation.address || ''}</div>
+                      <h3 className="font-bold text-sm leading-tight">{selectedStation.name}</h3>
+                      <div className="text-xs text-slate-500">{selectedStation.chain || 'Unknown chain'}</div>
+                      {selectedStation.address && <div className="text-xs text-slate-400">{selectedStation.address}</div>}
                     </div>
-                    <div className="rounded-lg border p-2.5 space-y-1">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Zone membership</div>
-                      {zone ? (
-                        <>
-                          <Badge className="bg-emerald-100 text-emerald-800">✓ In zone: {zone.name}</Badge>
-                          <div className="text-xs text-slate-500">{zone.isActive ? 'Active' : 'Inactive'} · {zone.zoneType || 'circle'} · {zone.priority || 'normal'}</div>
-                        </>
-                      ) : <Badge className="bg-slate-100 text-slate-500">✗ Outside all zones</Badge>}
+
+                    {/* Quality badge */}
+                    <div className={`rounded-lg px-3 py-2 flex items-center justify-between ${qs.bg}`}>
+                      <span className={`text-xs font-bold uppercase tracking-wide ${qs.text}`}>Quality: {qs.label}</span>
+                      {cov?.testedAt && <span className="text-xs text-slate-400">tested {new Date(cov.testedAt).toLocaleTimeString()}</span>}
                     </div>
+
+                    {/* Zone + scope */}
                     <div className="rounded-lg border p-2.5 space-y-1.5">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide">GP historical coverage</div>
-                      <Badge className={gpStatus === 'covered' ? 'bg-green-100 text-green-800' : gpStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-slate-100 text-slate-500'}>
-                        {gpStatus === 'covered' ? '✓ Has GP fuel prices' : gpStatus === 'partial' ? '~ GP matched, no price' : '? No GP data yet'}
-                      </Badge>
-                      {cov?.fuelTypes?.length > 0 && <div className="text-xs text-slate-600">{cov.fuelTypes.join(', ')}</div>}
-                      {cov?.fetchedAt && <div className="text-xs text-slate-400">Last seen: {new Date(cov.fetchedAt).toLocaleString()}</div>}
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Fetch scope</div>
+                      <Row label="Zone membership" value={zone ? zone.name : 'None'} valueClass={zone ? 'text-emerald-700' : 'text-slate-400'} />
+                      <Row label="In active scope" value={inActiveScope ? 'Yes' : 'No'} valueClass={inActiveScope ? 'text-emerald-700 font-bold' : 'text-slate-400'} />
+                      {zone && <Row label="Zone type" value={`${zone.zoneType || 'circle'} · ${zone.priority || 'normal'}`} />}
                     </div>
-                    <div className="space-y-1.5">
-                      <Button size="sm" variant="outline" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
-                        {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />} Test this station
+
+                    {/* GP assessment */}
+                    <div className="rounded-lg border p-2.5 space-y-0.5">
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Google Places assessment</div>
+                      <Row
+                        label="Has historical GP prices"
+                        value={cov ? 'Yes' : 'No'}
+                        valueClass={cov ? 'text-green-700' : 'text-slate-400'}
+                      />
+                      <Row
+                        label="GP reachable"
+                        value={cov ? (cov.gpReachable ? 'Yes' : 'No') : 'Not tested'}
+                        valueClass={cov ? (cov.gpReachable ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}
+                      />
+                      <Row
+                        label="GP price data found"
+                        value={cov ? (cov.gpPriceFound ? 'Yes' : 'No') : 'Not tested'}
+                        valueClass={cov ? (cov.gpPriceFound ? 'text-green-700' : 'text-slate-400') : 'text-slate-400'}
+                      />
+                      <Row
+                        label="Fuel types"
+                        value={cov?.fuelTypes?.length > 0 ? cov.fuelTypes.join(', ') : cov ? 'Unknown' : 'Not tested'}
+                        valueClass={cov?.fuelTypes?.length > 0 ? 'text-blue-700' : 'text-slate-400'}
+                      />
+                      <Row
+                        label="Last GP fetched"
+                        value={cov?.fetchedAt ? new Date(cov.fetchedAt).toLocaleString('nb-NO') : 'Unknown'}
+                        valueClass="text-slate-600"
+                      />
+                      <Row
+                        label="Source updated at"
+                        value={cov?.sourceUpdatedAt ? new Date(cov.sourceUpdatedAt).toLocaleString('nb-NO') : 'Unknown'}
+                        valueClass="text-slate-600"
+                      />
+                      {cov?.matchDistance != null && (
+                        <Row label="Match distance" value={`${cov.matchDistance} km`} />
+                      )}
+                      {cov?.matchConfidence && (
+                        <Row label="Match confidence" value={cov.matchConfidence} />
+                      )}
+                      {cov?.matchedName && cov.matchedName !== selectedStation.name && (
+                        <Row label="GP matched name" value={cov.matchedName} valueClass="text-slate-500 italic" />
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-1.5 pt-1">
+                      <Button size="sm" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
+                        {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+                        Test this station
                       </Button>
-                      <Button size="sm" variant="outline" className="w-full" onClick={() => { if (mapRef.current) mapRef.current.setView([selectedStation.latitude, selectedStation.longitude], 14); }}>
+                      {!inActiveScope && zones.filter(z => z.isActive).length > 0 && (
+                        <div className="text-xs text-slate-400 text-center">Station is outside all active zones</div>
+                      )}
+                      <Button size="sm" variant="outline" className="w-full" onClick={() => { if (mapRef.current) mapRef.current.setView([selectedStation.latitude, selectedStation.longitude], 15); }}>
                         <MapPin className="w-4 h-4 mr-2" /> Center map here
                       </Button>
                     </div>
