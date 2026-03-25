@@ -318,6 +318,24 @@ Deno.serve(async (req) => {
       stats.created = newRecords.length;
     }
 
+    // 6b. Update StationFetchStatus for all stations that got new price records (zone_fetch)
+    // Collect unique station IDs + names from persisted records
+    const stationFetchResults = {};
+    for (const r of newRecords) {
+      if (!r.stationId) continue;
+      // Find station name from allStations
+      const st = allStations.find(s => s.id === r.stationId);
+      stationFetchResults[r.stationId] = { name: st?.name || null, gotPrices: true };
+    }
+    for (const [stationId, info] of Object.entries(stationFetchResults)) {
+      db.functions.invoke('updateStationFetchStatus', {
+        stationId,
+        stationName: info.name,
+        result: 'full',
+        source: 'zone_fetch',
+      }).catch(() => {});
+    }
+
     // 7. Materialize
     for (const r of newRecords) {
       if (r.plausibilityStatus === 'realistic_price') {
