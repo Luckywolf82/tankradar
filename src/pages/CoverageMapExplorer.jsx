@@ -177,37 +177,63 @@ export default function CoverageMapExplorer() {
 
   // ─── Load ──────────────────────────────────────────────────────────────────
   // Loads DB state only. Does NOT touch liveTestMap.
+  // Stations + zones load first (critical). GP prices load separately (non-blocking).
   const loadAll = useCallback(async () => {
     try {
-      const [allStations, allZones, gpPrices] = await Promise.all([
+      // Step 1: Load stations + zones — always required
+      const [allStations, allZones] = await Promise.all([
         base44.entities.Station.list(),
         base44.entities.GPFetchZone.list(),
-        base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }),
       ]);
       setStations(allStations.filter(s => s.latitude && s.longitude));
       setZones(allZones);
-
-      // Build dbCoverageMap ONLY from actual FuelPrice rows with stationId
-      const dbMap = {};
-      for (const price of gpPrices) {
-        if (!price.stationId) continue;
-        if (!dbMap[price.stationId]) {
-          dbMap[price.stationId] = {
-            storedFuelTypes: [],
-            fetchedAt: price.fetchedAt,
-            sourceUpdatedAt: price.sourceUpdatedAt || null,
-            rowCount: 0,
-          };
-        }
-        dbMap[price.stationId].rowCount += 1;
-        if (price.fetchedAt > dbMap[price.stationId].fetchedAt)
-          dbMap[price.stationId].fetchedAt = price.fetchedAt;
-        if (price.fuelType && !dbMap[price.stationId].storedFuelTypes.includes(price.fuelType))
-          dbMap[price.stationId].storedFuelTypes.push(price.fuelType);
-      }
-      setDbCoverageMap(dbMap);
       setLoading(false);
-    } catch (err) { console.error('Load failed:', err); setLoading(false); }
+
+      // Step 2: Load GP prices separately — non-blocking, paginated to avoid rate limit
+      try {
+        // Fetch in batches of 200 to reduce single-request load
+        let allGpPrices = [];
+        let skip = 0;
+        const batchSize = 200;
+        while (true) {
+          const batch = await base44.entities.FuelPrice.filter(
+            { sourceName: 'GooglePlaces' },
+            '-fetchedAt',
+            batchSize,
+            skip
+          );
+          allGpPrices = allGpPrices.concat(batch);
+          if (batch.length < batchSize) break;
+          skip += batchSize;
+        }
+
+        // Build dbCoverageMap ONLY from actual FuelPrice rows with stationId
+        const dbMap = {};
+        for (const price of allGpPrices) {
+          if (!price.stationId) continue;
+          if (!dbMap[price.stationId]) {
+            dbMap[price.stationId] = {
+              storedFuelTypes: [],
+              fetchedAt: price.fetchedAt,
+              sourceUpdatedAt: price.sourceUpdatedAt || null,
+              rowCount: 0,
+            };
+          }
+          dbMap[price.stationId].rowCount += 1;
+          if (price.fetchedAt > dbMap[price.stationId].fetchedAt)
+            dbMap[price.stationId].fetchedAt = price.fetchedAt;
+          if (price.fuelType && !dbMap[price.stationId].storedFuelTypes.includes(price.fuelType))
+            dbMap[price.stationId].storedFuelTypes.push(price.fuelType);
+        }
+        setDbCoverageMap(dbMap);
+      } catch (gpErr) {
+        console.warn('GP prices load failed (non-critical):', gpErr.message);
+        // Stations + zones still shown; coverage map will be empty
+      }
+    } catch (err) {
+      console.error('Load failed:', err);
+      setLoading(false);
+    }
   }, []);
   useEffect(() => { loadAll(); }, [loadAll]);
 
