@@ -360,9 +360,16 @@ export default function CoverageMapExplorer() {
             {/* Corridor draft preview */}
             {isDrawingCorridor && corridorDraft.points.length >= 1 && (
               <>
-                {corridorDraft.points.length >= 2 && (
-                  <Polyline positions={corridorDraft.points.map(p => [p.lat, p.lng])} pathOptions={{ color: '#2563eb', weight: 3, dashArray: '6,4' }} />
-                )}
+                {corridorDraft.points.length >= 2 && (() => {
+                  const draftPositions = corridorDraft.points.map(p => [p.lat, p.lng]);
+                  const draftPolygon = buildCorridorPolygon(corridorDraft.points, corridorDraft.buffer || 2000);
+                  return (
+                    <>
+                      <Polygon positions={draftPolygon} pathOptions={{ color: '#2563eb', weight: 1, opacity: 0.5, fillColor: '#2563eb', fillOpacity: 0.1 }} />
+                      <Polyline positions={draftPositions} pathOptions={{ color: '#2563eb', weight: 2.5, dashArray: '6,4' }} />
+                    </>
+                  );
+                })()}
                 {corridorDraft.points.map((p, i) => (
                   <Marker key={i} position={[p.lat, p.lng]} icon={makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png', [16, 26])}>
                     <Popup><div className="text-xs">Waypoint {i + 1}<br />{p.lat.toFixed(5)}, {p.lng.toFixed(5)}</div></Popup>
