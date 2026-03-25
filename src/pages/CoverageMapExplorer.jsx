@@ -16,11 +16,43 @@ const makeIcon = (url, size = [20, 33]) => new L.Icon({
   iconAnchor: [size[0] / 2, size[1]], popupAnchor: [0, -size[1]],
 });
 const ICONS = {
-  in_zone_covered:    makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'),
+  // In-zone quality levels
+  in_zone_full:       makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'),
   in_zone_partial:    makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png'),
-  in_zone_uncovered:  makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'),
+  in_zone_weak:       makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'),
+  in_zone_no_data:    makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'),
   in_zone_not_tested: makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png'),
+  // Legacy aliases
+  in_zone_covered:    makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'),
+  in_zone_uncovered:  makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'),
   out_zone:           makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', [14, 23]),
+};
+
+// ─── Quality classification ───────────────────────────────────────────────────
+function classifyGPQuality(cov) {
+  if (!cov) return 'not_tested';
+  if (!cov.gpReachable) return 'no_data';
+  if (cov.gpPriceFound && cov.fuelTypes?.length > 0) {
+    // Full: reachable, has prices, has fuel types
+    return 'full';
+  }
+  if (cov.gpReachable && cov.gpPriceFound) {
+    // Partial: reachable, has some data, but no fuel types resolved
+    return 'partial';
+  }
+  if (cov.gpReachable && !cov.gpPriceFound) {
+    // Weak: reachable but no useful price data
+    return 'weak';
+  }
+  return 'no_data';
+}
+
+const QUALITY_STYLE = {
+  full:       { bg: 'bg-green-100',  text: 'text-green-800',  label: 'FULL',     dot: 'bg-green-500' },
+  partial:    { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'PARTIAL',  dot: 'bg-yellow-500' },
+  weak:       { bg: 'bg-orange-100', text: 'text-orange-800', label: 'WEAK',     dot: 'bg-orange-400' },
+  no_data:    { bg: 'bg-red-100',    text: 'text-red-700',    label: 'NO DATA',  dot: 'bg-red-400' },
+  not_tested: { bg: 'bg-slate-100',  text: 'text-slate-500',  label: 'NOT TESTED', dot: 'bg-slate-300' },
 };
 
 // ─── Map controller + click handler ──────────────────────────────────────────
