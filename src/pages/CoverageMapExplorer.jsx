@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Rectangle, Circle, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Rectangle, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Zap, Grid3x3, MapPin, Save, Trash2, Eye, EyeOff, Pen } from 'lucide-react';
+import { Loader2, Zap, Grid3x3, MapPin, Save, Trash2, Eye, EyeOff } from 'lucide-react';
 
 // Icons
 const coveredIcon = new L.Icon({
@@ -50,78 +50,56 @@ function MapController({ mapRef, onMapReady }) {
  }
 
 export default function CoverageMapExplorer() {
-   const mapRef = useRef(null);
-   const [stations, setStations] = useState([]);
-    const [testedAreas, setTestedAreas] = useState([]);
-    const [savedAreas, setSavedAreas] = useState([]);
-    const [selectedArea, setSelectedArea] = useState(null);
-    const [selectedStation, setSelectedStation] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [scanning, setScanning] = useState(false);
-    const [mapReady, setMapReady] = useState(false);
-    const [testRadius, setTestRadius] = useState(1);
-    const [fetchingPrices, setFetchingPrices] = useState(false);
-    const [disabledAreas, setDisabledAreas] = useState({});
-    const [automationCoverage, setAutomationCoverage] = useState([]);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [drawingPoints, setDrawingPoints] = useState([]);
-
-   // Layer visibility toggles
-    const [showLayers, setShowLayers] = useState({
-      stations: true,
-      coveredStations: true,
-      partialStations: true,
-      uncoveredStations: true,
-      testedAreas: true,
-      savedAreas: true,
-      automationCoverage: true,
-    });
+  const mapRef = useRef(null);
+  const [stations, setStations] = useState([]);
+   const [testedAreas, setTestedAreas] = useState([]);
+   const [savedAreas, setSavedAreas] = useState([]);
+   const [selectedArea, setSelectedArea] = useState(null);
+   const [selectedStation, setSelectedStation] = useState(null);
+   const [loading, setLoading] = useState(true);
+   const [scanning, setScanning] = useState(false);
+   const [mapReady, setMapReady] = useState(false);
+   const [testRadius, setTestRadius] = useState(1);
+   const [fetchingPrices, setFetchingPrices] = useState(false);
+   const [disabledAreas, setDisabledAreas] = useState({});
+   const [automationCoverage, setAutomationCoverage] = useState([]);
+  
+  // Layer visibility toggles
+   const [showLayers, setShowLayers] = useState({
+     stations: true,
+     coveredStations: true,
+     partialStations: true,
+     uncoveredStations: true,
+     testedAreas: true,
+     savedAreas: true,
+     automationCoverage: true,
+   });
 
   // Load stations + restore saved areas from localStorage + get automation coverage
    useEffect(() => {
      const loadStations = async () => {
        try {
-         // Load with limit to avoid hanging
          const allStations = await base44.entities.Station.list();
-         const filtered = allStations ? allStations.filter(s => s.latitude && s.longitude) : [];
+         const filtered = allStations.filter(s => s.latitude && s.longitude);
          setStations(filtered);
 
          // Restore areas from localStorage
          const savedTestedAreas = localStorage.getItem('gp-tested-areas');
          const savedSavedAreas = localStorage.getItem('gp-saved-areas');
-         if (savedTestedAreas) {
-           try {
-             setTestedAreas(JSON.parse(savedTestedAreas));
-           } catch (e) {
-             console.warn('Failed to parse tested areas:', e);
-           }
-         }
-         if (savedSavedAreas) {
-           try {
-             setSavedAreas(JSON.parse(savedSavedAreas));
-           } catch (e) {
-             console.warn('Failed to parse saved areas:', e);
-           }
-         }
+         if (savedTestedAreas) setTestedAreas(JSON.parse(savedTestedAreas));
+         if (savedSavedAreas) setSavedAreas(JSON.parse(savedSavedAreas));
 
-         // Load stations with GooglePlaces prices (automation coverage) - limit to avoid timeout
-         try {
-           const pricesWithGP = await base44.entities.FuelPrice.filter({
-             sourceName: 'GooglePlaces'
-           });
-           const stationIdsWithGP = [...new Set(pricesWithGP.map(p => p.stationId))];
-           const automationStations = filtered.filter(s => stationIdsWithGP.includes(s.id));
-           setAutomationCoverage(automationStations);
-         } catch (error) {
-           console.warn('Failed to load GP prices:', error);
-           setAutomationCoverage([]);
-         }
+         // Load stations with GooglePlaces prices (automation coverage)
+         const pricesWithGP = await base44.entities.FuelPrice.filter({
+           sourceName: 'GooglePlaces'
+         });
+         const stationIdsWithGP = [...new Set(pricesWithGP.map(p => p.stationId))];
+         const automationStations = filtered.filter(s => stationIdsWithGP.includes(s.id));
+         setAutomationCoverage(automationStations);
 
          setLoading(false);
        } catch (error) {
          console.error('Failed to load stations:', error);
-         // Set loading to false anyway so UI doesn't hang
-         setStations([]);
          setLoading(false);
        }
      };
@@ -261,139 +239,8 @@ export default function CoverageMapExplorer() {
      }
    };
 
-  // Toggle drawing mode
-  const toggleDrawing = () => {
-    if (isDrawing) {
-      setIsDrawing(false);
-      setDrawingPoints([]);
-    } else {
-      setIsDrawing(true);
-      setDrawingPoints([]);
-    }
-  };
-
-  // Setup drawing event listeners when map is ready
-  useEffect(() => {
-    if (!mapReady || !mapRef.current || !isDrawing) return;
-
-    const handleMapMouseDown = (e) => {
-      const startPoint = [e.latlng.lat, e.latlng.lng];
-
-      const handleMouseMove = (moveEvent) => {
-        const endPoint = [moveEvent.latlng.lat, moveEvent.latlng.lng];
-        setDrawingPoints([startPoint, endPoint]);
-      };
-
-      const handleMouseUp = () => {
-        mapRef.current?.off('mousemove', handleMouseMove);
-        mapRef.current?.off('mouseup', handleMouseUp);
-      };
-
-      mapRef.current?.on('mousemove', handleMouseMove);
-      mapRef.current?.on('mouseup', handleMouseUp);
-    };
-
-    mapRef.current.on('mousedown', handleMapMouseDown);
-
-    return () => {
-      mapRef.current?.off('mousedown', handleMapMouseDown);
-    };
-  }, [mapReady, isDrawing]);
-
-  // Complete rectangle
-  const completeRectangle = async () => {
-    if (drawingPoints.length !== 2) {
-      alert('Draw a rectangle by dragging on the map');
-      return;
-    }
-
-    setScanning(true);
-    const [lat1, lng1] = drawingPoints[0];
-    const [lat2, lng2] = drawingPoints[1];
-
-    const bounds = {
-      north: Math.max(lat1, lat2),
-      south: Math.min(lat1, lat2),
-      east: Math.max(lng1, lng2),
-      west: Math.min(lng1, lng2),
-    };
-
-    try {
-      // Find stations inside rectangle
-      const stationsInside = stations.filter(s => 
-        s.latitude >= bounds.south && s.latitude <= bounds.north &&
-        s.longitude >= bounds.west && s.longitude <= bounds.east
-      );
-
-      if (stationsInside.length === 0) {
-        alert('No stations inside rectangle');
-        setScanning(false);
-        return;
-      }
-
-      alert(`Testing ${stationsInside.length} stations inside rectangle...`);
-
-      // Batch test GP coverage
-      await base44.functions.invoke('batchTestGooglePlacesCoverage', {
-        limit: stationsInside.length,
-        offset: 0,
-      });
-
-      const gpCandidates = await base44.entities.StationCandidate.filter({ 
-        sourceName: 'GooglePlaces'
-      });
-
-      const stationResults = stationsInside.map(station => {
-        const match = gpCandidates.find(c => 
-          c.matchCandidates?.includes(station.id)
-        );
-        return {
-          stationId: station.id,
-          stationName: station.name,
-          gpMatched: !!match,
-          hasFuelOptions: match?.proposedChain ? true : false,
-          fuelTypes: [],
-          updateTime: null,
-          distance: 0,
-        };
-      });
-
-      const newArea = {
-        id: Date.now().toString(),
-        center: { lat: (bounds.north + bounds.south) / 2, lng: (bounds.east + bounds.west) / 2 },
-        bounds,
-        testedAt: new Date().toISOString(),
-        totalStations: stationsInside.length,
-        gpMatchedCount: stationResults.filter(r => r.gpMatched).length,
-        gpFuelOptionsCount: stationResults.filter(r => r.hasFuelOptions).length,
-        coveragePercent: Math.round((stationResults.filter(r => r.hasFuelOptions).length / stationsInside.length) * 100),
-        fuelTypesObserved: [],
-        latestUpdateTime: null,
-        stationResults,
-        status: 'tested',
-      };
-
-      setTestedAreas(prev => [...prev, newArea]);
-      setSelectedArea(newArea);
-      alert(`Test complete! ${newArea.gpFuelOptionsCount}/${newArea.totalStations} have prices.`);
-      setIsDrawing(false);
-      setDrawingPoints([]);
-    } catch (error) {
-      console.error('Rectangle test failed:', error);
-      alert(`Error: ${error.message}`);
-    } finally {
-      setScanning(false);
-    }
-  };
-
-
-
   // Test clicked area with radius
   const testClickedArea = async (e) => {
-    if (isDrawing) {
-      handleMapClick(e);
-      return;
-    }
     const { lat, lng } = e.latlng;
     setScanning(true);
 
@@ -559,18 +406,9 @@ export default function CoverageMapExplorer() {
         stationIds,
         deduplicateByStationId: true, // Request dedup by stationId, keep old price
       });
-
-      // Build detailed report
-      const errorCount = response.data.errors?.length || 0;
-      const apiErrors = response.data.report?.filter(r => r.status === 'api_error') || [];
-      const errorMsg = errorCount > 0 
-        ? `\n\nErrors (${errorCount}):\n${response.data.errors.slice(0, 3).map(e => `${e.stationName}: ${e.error}`).join('\n')}${errorCount > 3 ? '\n...' : ''}`
-        : '';
-      const apiErrorMsg = apiErrors.length > 0
-        ? `\n\nAPI Errors (${apiErrors.length}): ${apiErrors[0].message}`
-        : '';
-
-      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records\nDedup skipped: ${response.data.summary.dedupSkipped || 0}${errorMsg}${apiErrorMsg}`);
+      
+      // Show result
+      alert(`Fetched GP prices:\n✓ ${response.data.summary.fetched} stations\n✗ ${response.data.summary.failed} failed\nCreated: ${response.data.summary.pricesCreated} price records\nDedup skipped: ${response.data.summary.dedupSkipped || 0}`);
     } catch (error) {
       console.error('Failed to fetch prices:', error);
       alert(`Error: ${error.message}`);
@@ -634,38 +472,18 @@ export default function CoverageMapExplorer() {
 
         {/* Action buttons */}
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={testVisibleArea} disabled={scanning || isDrawing} size="sm">
+          <Button onClick={testVisibleArea} disabled={scanning} size="sm">
             <Zap className="w-4 h-4 mr-2" />
             Test Visible Area
           </Button>
-          <Button onClick={gridScanVisibleArea} disabled={scanning || isDrawing} size="sm" variant="outline">
+          <Button onClick={gridScanVisibleArea} disabled={scanning} size="sm" variant="outline">
             <Grid3x3 className="w-4 h-4 mr-2" />
             Grid Scan Area
           </Button>
-          <Button onClick={() => mapRef.current?.on('click', testClickedArea)} disabled={scanning || isDrawing} size="sm" variant="outline">
+          <Button onClick={() => mapRef.current?.on('click', testClickedArea)} disabled={scanning} size="sm" variant="outline">
             <MapPin className="w-4 h-4 mr-2" />
             Click to Test
           </Button>
-          <Button 
-            onClick={toggleDrawing} 
-            disabled={scanning}
-            size="sm" 
-            variant={isDrawing ? 'default' : 'outline'}
-            className={isDrawing ? 'bg-blue-600 text-white' : ''}
-          >
-            <Pen className="w-4 h-4 mr-2" />
-            {isDrawing ? 'Draw Rectangle (drag)' : 'Draw Area'}
-            </Button>
-            {isDrawing && drawingPoints.length === 2 && (
-              <Button onClick={completeRectangle} size="sm" className="bg-green-600 hover:bg-green-700">
-                Complete & Test
-              </Button>
-            )}
-          {isDrawing && (
-            <Button onClick={() => { setIsDrawing(false); setDrawingPoints([]); }} size="sm" variant="outline">
-              Cancel
-            </Button>
-          )}
           {scanning && <span className="text-xs text-slate-600 flex items-center"><Loader2 className="w-4 h-4 animate-spin mr-2" />Testing...</span>}
         </div>
       </div>
@@ -674,40 +492,24 @@ export default function CoverageMapExplorer() {
       <div className="flex flex-1 gap-4 p-4 overflow-hidden">
         {/* Map */}
         <div className="flex-1 rounded-lg overflow-hidden shadow-md" style={{ minHeight: 0 }}>
-          <MapContainer 
-            center={[59.9139, 10.7522]} 
-            zoom={12} 
-            style={{ height: '100%', width: '100%' }}
-          >
+          <MapContainer center={[59.9139, 10.7522]} zoom={12} style={{ height: '100%', width: '100%' }}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
             <MapController mapRef={mapRef} onMapReady={() => setMapReady(true)} />
 
-            {/* Tested areas - rectangles or polygons */}
+            {/* Tested areas */}
             {mapReady && showLayers.testedAreas && testedAreas.map(area => (
-              area.polygonPoints ? (
-                <Polygon
-                  key={`tested-${area.id}`}
-                  positions={area.polygonPoints}
-                  color={getAreaColor(area)}
-                  weight={2}
-                  opacity={0.5}
-                  fillOpacity={0.1}
-                  onClick={() => setSelectedArea(area)}
-                />
-              ) : (
-                <Rectangle
-                  key={`tested-${area.id}`}
-                  bounds={[
-                    [area.bounds.south, area.bounds.west],
-                    [area.bounds.north, area.bounds.east],
-                  ]}
-                  color={getAreaColor(area)}
-                  weight={2}
-                  opacity={0.5}
-                  fillOpacity={0.1}
-                  onClick={() => setSelectedArea(area)}
-                />
-              )
+              <Rectangle
+                key={`tested-${area.id}`}
+                bounds={[
+                  [area.bounds.south, area.bounds.west],
+                  [area.bounds.north, area.bounds.east],
+                ]}
+                color={getAreaColor(area)}
+                weight={2}
+                opacity={0.5}
+                fillOpacity={0.1}
+                onClick={() => setSelectedArea(area)}
+              />
             ))}
 
             {/* Saved areas - with dashed pattern for distinction */}
@@ -776,21 +578,9 @@ export default function CoverageMapExplorer() {
                   </Popup>
                 </Marker>
               );
-              })}
-
-              {/* Drawing rectangle preview */}
-              {mapReady && isDrawing && drawingPoints.length > 0 && (
-                <Rectangle
-                  bounds={[drawingPoints[0], drawingPoints[drawingPoints.length - 1]]}
-                  color="#3b82f6"
-                  weight={2}
-                  opacity={0.7}
-                  fillOpacity={0.15}
-                  dashArray="5,5"
-                />
-              )}
-              </MapContainer>
-              </div>
+            })}
+          </MapContainer>
+        </div>
 
         {/* Sidebar */}
         <div className="w-72 bg-white rounded-lg shadow-md flex flex-col border overflow-hidden">

@@ -59,18 +59,6 @@ Deno.serve(async (req) => {
         const gpResponse = await fetch(searchUrl.toString());
         const gpData = await gpResponse.json();
 
-        // Check for API errors
-        if (gpData.status && gpData.status !== 'OK') {
-          results.pricesFailed++;
-          results.report.push({
-            stationId,
-            stationName: station.name,
-            status: 'api_error',
-            message: `Google Places API error: ${gpData.status} - ${gpData.error_message || ''}`,
-          });
-          continue;
-        }
-
         if (!gpData.results || gpData.results.length === 0) {
           results.pricesFailed++;
           results.report.push({
