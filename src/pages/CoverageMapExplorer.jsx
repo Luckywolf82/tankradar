@@ -33,47 +33,90 @@ function MapController({ mapRef, onMapClick }) {
   return null;
 }
 
+// ─── Build a buffered polygon around a polyline (flat-earth approximation) ────
+function buildCorridorPolygon(points, bufferMeters) {
+  if (points.length < 2) return [];
+  const DEG_PER_METER_LAT = 1 / 111320;
+  const avgLat = points.reduce((s, p) => s + p.lat, 0) / points.length;
+  const DEG_PER_METER_LNG = 1 / (111320 * Math.cos(avgLat * Math.PI / 180));
+
+  const leftSide = [];
+  const rightSide = [];
+
+  for (let i = 0; i < points.length; i++) {
+    // Compute average direction at this point
+    const prev = i > 0 ? points[i - 1] : null;
+    const next = i < points.length - 1 ? points[i + 1] : null;
+    const ref = next || prev;
+    const base = prev || next;
+
+    const dlat = (ref.lat - base.lat);
+    const dlng = (ref.lng - base.lng);
+    const len = Math.sqrt(dlat * dlat + dlng * dlng) || 1;
+    // Perpendicular (rotated 90°)
+    const perpLat = -dlng / len;
+    const perpLng = dlat / len;
+
+    const offsetLat = perpLat * bufferMeters * DEG_PER_METER_LAT;
+    const offsetLng = perpLng * bufferMeters * DEG_PER_METER_LNG;
+
+    leftSide.push([points[i].lat + offsetLat, points[i].lng + offsetLng]);
+    rightSide.push([points[i].lat - offsetLat, points[i].lng - offsetLng]);
+  }
+
+  return [...leftSide, ...[...rightSide].reverse()];
+}
+
 // ─── Corridor zone map layer ──────────────────────────────────────────────────
 function CorridorZoneLayer({ zone, onZoneClick }) {
   const points = parseCorridorPoints(zone);
   if (points.length < 2) return null;
 
   const positions = points.map(p => [p.lat, p.lng]);
+  const bufferMeters = zone.bufferMeters || 2000;
   const activeColor = zone.isActive ? '#10b981' : '#94a3b8';
+  const polygonPositions = buildCorridorPolygon(points, bufferMeters);
+
+  const popupContent = (
+    <div className="text-xs min-w-[140px] space-y-1">
+      <div className="font-bold">{zone.name}</div>
+      <div className={zone.isActive ? 'text-green-700' : 'text-slate-400'}>
+        {zone.isActive ? '✓ Active' : '✗ Inactive'} · corridor
+      </div>
+      <div className="text-slate-500">Buffer: {bufferMeters / 1000} km · Priority: {zone.priority || 'normal'}</div>
+      <div className="text-slate-400">{points.length} waypoints</div>
+    </div>
+  );
 
   return (
     <>
-      {/* Buffer width visual — thick semi-transparent stroke */}
-      <Polyline
-        positions={positions}
+      {/* Buffer polygon fill */}
+      <Polygon
+        positions={polygonPositions}
         pathOptions={{
           color: activeColor,
-          weight: Math.max(4, Math.min(30, (zone.bufferMeters || 2000) / 200)),
-          opacity: zone.isActive ? 0.18 : 0.08,
+          weight: 1,
+          opacity: zone.isActive ? 0.5 : 0.2,
+          fillColor: activeColor,
+          fillOpacity: zone.isActive ? 0.12 : 0.04,
+          dashArray: zone.isActive ? null : '6,4',
         }}
         eventHandlers={{ click: () => onZoneClick(zone) }}
-      />
+      >
+        <Popup>{popupContent}</Popup>
+      </Polygon>
       {/* Route centerline */}
       <Polyline
         positions={positions}
         pathOptions={{
           color: activeColor,
           weight: zone.isActive ? 2.5 : 1.5,
-          opacity: zone.isActive ? 0.85 : 0.35,
+          opacity: zone.isActive ? 0.9 : 0.4,
           dashArray: zone.isActive ? null : '7,5',
         }}
         eventHandlers={{ click: () => onZoneClick(zone) }}
       >
-        <Popup>
-          <div className="text-xs min-w-[140px] space-y-1">
-            <div className="font-bold">{zone.name}</div>
-            <div className={zone.isActive ? 'text-green-700' : 'text-slate-400'}>
-              {zone.isActive ? '✓ Active' : '✗ Inactive'} · corridor
-            </div>
-            <div className="text-slate-500">Buffer: {(zone.bufferMeters || 2000) / 1000} km · Priority: {zone.priority || 'normal'}</div>
-            <div className="text-slate-400">{points.length} waypoints</div>
-          </div>
-        </Popup>
+        <Popup>{popupContent}</Popup>
       </Polyline>
     </>
   );
