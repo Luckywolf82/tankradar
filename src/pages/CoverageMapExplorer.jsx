@@ -24,8 +24,12 @@ const ICONS = {
 };
 
 // ─── Map controller (stable initial view) ────────────────────────────────────
-function MapController({ mapRef }) {
-  const map = useMap();
+import { useMapEvents } from 'react-leaflet';
+
+function MapController({ mapRef, onMapClick }) {
+  const map = useMapEvents({
+    click: onMapClick,
+  });
   const initialized = useRef(false);
   useEffect(() => {
     if (map && !initialized.current) { mapRef.current = map; map.setView([63.43, 10.39], 11); initialized.current = true; }
