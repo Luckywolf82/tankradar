@@ -286,10 +286,9 @@ export default function CoverageMapExplorer() {
       {/* ── Map + Sidebar ── */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative" style={{ minWidth: 0 }}>
-          <MapContainer center={[63.43, 10.39]} zoom={11} style={{ height: '100%', width: '100%' }}
-            eventHandlers={{ click: handleMapClick }}>
+          <MapContainer center={[63.43, 10.39]} zoom={11} style={{ height: '100%', width: '100%' }}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
-            <MapController mapRef={mapRef} />
+            <MapController mapRef={mapRef} onMapClick={handleMapClick} />
 
             {/* Zone shapes */}
             {showLayers.zoneShapes && zones.map(zone => {
