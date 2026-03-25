@@ -29,21 +29,18 @@ const ICONS = {
 };
 
 // ─── Quality classification ───────────────────────────────────────────────────
-function classifyGPQuality(cov) {
-  if (!cov) return 'not_tested';
-  if (!cov.gpReachable) return 'no_data';
-  if (cov.gpPriceFound && cov.fuelTypes?.length > 0) {
-    // Full: reachable, has prices, has fuel types
-    return 'full';
-  }
-  if (cov.gpReachable && cov.gpPriceFound) {
-    // Partial: reachable, has some data, but no fuel types resolved
-    return 'partial';
-  }
-  if (cov.gpReachable && !cov.gpPriceFound) {
-    // Weak: reachable but no useful price data
-    return 'weak';
-  }
+// dbEntry = entry from dbCoverageMap (historical DB rows only)
+// liveEntry = entry from liveTestMap (live test result only)
+function classifyGPQuality(dbEntry, liveEntry) {
+  // If we have stored prices in DB: FULL (best evidence)
+  if (dbEntry && dbEntry.storedFuelTypes?.length > 0) return 'full';
+  if (dbEntry) return 'partial'; // DB rows exist but no fuel types resolved
+
+  // No DB data — fall back to live test result if available
+  if (!liveEntry) return 'not_tested';
+  if (!liveEntry.gpReachable) return 'no_data';
+  if (liveEntry.gpMatchFound && liveEntry.liveFuelTypes?.length > 0) return 'partial';
+  if (liveEntry.gpMatchFound) return 'weak';
   return 'no_data';
 }
 
@@ -159,7 +156,12 @@ export default function CoverageMapExplorer() {
   const mapRef = useRef(null);
   const [stations, setStations] = useState([]);
   const [zones, setZones] = useState([]);
-  const [gpCoverageMap, setGpCoverageMap] = useState({});
+  // dbCoverageMap: stationId → { storedFuelTypes, fetchedAt, sourceUpdatedAt, rowCount }
+  // Populated ONLY from FuelPrice DB rows (sourceName=GooglePlaces). Never from test actions.
+  const [dbCoverageMap, setDbCoverageMap] = useState({});
+  // liveTestMap: stationId → { gpReachable, gpMatchFound, liveFuelTypes, matchDistance, matchConfidence, matchedName, resultsCount, newRowsCreated, testedAt }
+  // Populated ONLY when "Test this station" is run. Never from DB load.
+  const [liveTestMap, setLiveTestMap] = useState({});
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedZone, setSelectedZone] = useState(null);
   const [sidebarMode, setSidebarMode] = useState('zones');
@@ -174,6 +176,7 @@ export default function CoverageMapExplorer() {
   const [corridorDraft, setCorridorDraft] = useState(null); // { points: [{lat,lng},...], name: '', buffer: 2000 }
 
   // ─── Load ──────────────────────────────────────────────────────────────────
+  // Loads DB state only. Does NOT touch liveTestMap.
   const loadAll = useCallback(async () => {
     try {
       const [allStations, allZones, gpPrices] = await Promise.all([
@@ -183,26 +186,26 @@ export default function CoverageMapExplorer() {
       ]);
       setStations(allStations.filter(s => s.latitude && s.longitude));
       setZones(allZones);
-      const coverageMap = {};
+
+      // Build dbCoverageMap ONLY from actual FuelPrice rows with stationId
+      const dbMap = {};
       for (const price of gpPrices) {
         if (!price.stationId) continue;
-        if (!coverageMap[price.stationId]) {
-          coverageMap[price.stationId] = {
-            gpReachable: true,
-            gpPriceFound: true,
-            hasFuelOptions: true,
-            fuelTypes: [],
+        if (!dbMap[price.stationId]) {
+          dbMap[price.stationId] = {
+            storedFuelTypes: [],
             fetchedAt: price.fetchedAt,
             sourceUpdatedAt: price.sourceUpdatedAt || null,
+            rowCount: 0,
           };
         }
-        // Keep most recent fetchedAt
-        if (price.fetchedAt > coverageMap[price.stationId].fetchedAt)
-          coverageMap[price.stationId].fetchedAt = price.fetchedAt;
-        if (price.fuelType && !coverageMap[price.stationId].fuelTypes.includes(price.fuelType))
-          coverageMap[price.stationId].fuelTypes.push(price.fuelType);
+        dbMap[price.stationId].rowCount += 1;
+        if (price.fetchedAt > dbMap[price.stationId].fetchedAt)
+          dbMap[price.stationId].fetchedAt = price.fetchedAt;
+        if (price.fuelType && !dbMap[price.stationId].storedFuelTypes.includes(price.fuelType))
+          dbMap[price.stationId].storedFuelTypes.push(price.fuelType);
       }
-      setGpCoverageMap(coverageMap);
+      setDbCoverageMap(dbMap);
       setLoading(false);
     } catch (err) { console.error('Load failed:', err); setLoading(false); }
   }, []);
@@ -218,12 +221,12 @@ export default function CoverageMapExplorer() {
   }, [zones]);
 
   const getGpStatus = (stationId) => {
-    const cov = gpCoverageMap[stationId];
-    if (!cov) return 'not_tested';
-    return cov.hasFuelOptions ? 'covered' : 'partial';
+    const db = dbCoverageMap[stationId];
+    if (!db) return 'not_tested';
+    return db.storedFuelTypes?.length > 0 ? 'covered' : 'partial';
   };
 
-  const getQuality = (stationId) => classifyGPQuality(gpCoverageMap[stationId]);
+  const getQuality = (stationId) => classifyGPQuality(dbCoverageMap[stationId], liveTestMap[stationId]);
 
   const getIcon = (station) => {
     const zone = getZoneMembership(station);
@@ -254,10 +257,12 @@ export default function CoverageMapExplorer() {
   };
 
   // ─── Test single station ──────────────────────────────────────────────────
+  // Writes ONLY to liveTestMap. Does NOT modify dbCoverageMap.
+  // After test, re-reads DB rows for this station and updates dbCoverageMap for that station only.
   const testSingleStation = async (station) => {
     setTestingStation(true);
     try {
-      // 1. Run real GP test
+      // 1. Run real live GP test
       const res = await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', {
         latitude: station.latitude,
         longitude: station.longitude,
@@ -267,28 +272,61 @@ export default function CoverageMapExplorer() {
       const gpResults = res?.data?.results || [];
       const gpReachable = res?.data != null && !res?.data?.error;
       const bestMatch = gpResults.find(r => r.matchedStationId === station.id) || gpResults[0] || null;
+      // Extract any live fuel type hints from GP response (place types / fuel options if exposed)
+      const liveFuelTypes = bestMatch?.fuelTypes || [];
 
-      // 2. Read back stored FuelPrice rows for this station
-      const gpPrices = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: station.id });
-      const fuelTypes = [...new Set(gpPrices.map(p => p.fuelType).filter(Boolean))];
-      const gpPriceFound = gpPrices.length > 0;
-      const latestPrice = gpPrices.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0] || null;
+      // 2. Re-read DB rows for THIS station (to detect newly persisted rows from this test)
+      const gpPricesAfter = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: station.id });
+      const dbBefore = dbCoverageMap[station.id];
+      const rowsBefore = dbBefore?.rowCount || 0;
+      const newRowsCreated = Math.max(0, gpPricesAfter.length - rowsBefore);
 
-      // 3. Build enriched coverage entry
-      const entry = {
-        gpReachable,
-        gpPriceFound,
-        hasFuelOptions: gpPriceFound,
-        fuelTypes,
-        fetchedAt: latestPrice?.fetchedAt || null,
-        sourceUpdatedAt: latestPrice?.sourceUpdatedAt || null,
-        matchDistance: bestMatch?.distance || null,
-        matchConfidence: bestMatch?.matchConfidence || null,
-        matchedName: bestMatch?.name || null,
-        resultsCount: gpResults.length,
-        testedAt: new Date().toISOString(),
-      };
-      setGpCoverageMap(prev => ({ ...prev, [station.id]: entry }));
+      // Update dbCoverageMap for this station based on fresh DB read
+      if (gpPricesAfter.length > 0) {
+        const storedFuelTypes = [...new Set(gpPricesAfter.map(p => p.fuelType).filter(Boolean))];
+        const latest = gpPricesAfter.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0];
+        setDbCoverageMap(prev => ({
+          ...prev,
+          [station.id]: {
+            storedFuelTypes,
+            fetchedAt: latest.fetchedAt,
+            sourceUpdatedAt: latest.sourceUpdatedAt || null,
+            rowCount: gpPricesAfter.length,
+          },
+        }));
+      } else {
+        // Explicitly remove from dbCoverageMap if no DB rows exist (was previously assumed)
+        setDbCoverageMap(prev => {
+          const next = { ...prev };
+          delete next[station.id];
+          return next;
+        });
+      }
+
+      // 3. Store live test result separately — this is NOT historical data
+      setLiveTestMap(prev => ({
+        ...prev,
+        [station.id]: {
+          gpReachable,
+          gpMatchFound: !!bestMatch,
+          liveFuelTypes,
+          matchDistance: bestMatch?.distance ?? null,
+          matchConfidence: bestMatch?.matchConfidence ?? null,
+          matchedName: bestMatch?.name ?? null,
+          resultsCount: gpResults.length,
+          newRowsCreated,
+          noDataReason: !gpReachable
+            ? 'GP not reachable'
+            : gpResults.length === 0
+            ? 'No GP results returned for this location'
+            : !bestMatch
+            ? 'No match found in GP results'
+            : newRowsCreated === 0 && gpPricesAfter.length === 0
+            ? 'GP matched but returned no price data'
+            : null,
+          testedAt: new Date().toISOString(),
+        },
+      }));
     } catch (err) { alert(`Error: ${err.message}`); }
     finally { setTestingStation(false); }
   };
@@ -340,8 +378,9 @@ export default function CoverageMapExplorer() {
   // ─── Stats ─────────────────────────────────────────────────────────────────
   const activeZones = zones.filter(z => z.isActive);
   const inActiveZone = stations.filter(s => getZoneMembership(s));
-  const coveredInZone = inActiveZone.filter(s => getGpStatus(s.id) === 'covered');
-  const untestedInZone = inActiveZone.filter(s => getGpStatus(s.id) === 'not_tested');
+  // "covered" = has stored FuelPrice rows in DB (historical truth only)
+  const coveredInZone = inActiveZone.filter(s => dbCoverageMap[s.id] != null);
+  const untestedInZone = inActiveZone.filter(s => !dbCoverageMap[s.id] && !liveTestMap[s.id]);
 
   if (loading) return (
     <div className="w-full h-screen flex items-center justify-center">
@@ -456,20 +495,23 @@ export default function CoverageMapExplorer() {
               const zone = getZoneMembership(station);
               if (!showLayers.inZone && zone) return null;
               if (!showLayers.outZone && !zone) return null;
-              const gpStatus = getGpStatus(station.id);
-              const cov = gpCoverageMap[station.id];
+              const db = dbCoverageMap[station.id];
+              const live = liveTestMap[station.id];
+              const quality = getQuality(station.id);
+              const qs = QUALITY_STYLE[quality] || QUALITY_STYLE.not_tested;
               return (
                 <Marker key={station.id} position={[station.latitude, station.longitude]} icon={getIcon(station)}
                   eventHandlers={{ click: () => { setSelectedStation(station); setSidebarMode('station'); } }}>
                   <Popup>
-                    <div className="text-xs min-w-[170px] space-y-1">
+                    <div className="text-xs min-w-[180px] space-y-1">
                       <div className="font-bold">{station.name}</div>
                       <div className="text-slate-500">{station.chain || 'Unknown chain'}</div>
                       <div className="flex gap-1 flex-wrap">
-                        <span className={`px-1.5 py-0.5 rounded text-white text-xs ${zone ? 'bg-emerald-500' : 'bg-slate-400'}`}>{zone ? `Zone: ${zone.name}` : 'Out of zone'}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-white text-xs ${gpStatus === 'covered' ? 'bg-green-600' : gpStatus === 'partial' ? 'bg-yellow-500' : 'bg-slate-300'}`}>GP: {gpStatus.replace('_', ' ')}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-white text-xs ${zone ? 'bg-emerald-500' : 'bg-slate-400'}`}>{zone ? zone.name : 'Out of zone'}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-xs ${qs.bg} ${qs.text}`}>{qs.label}</span>
                       </div>
-                      {cov?.fuelTypes?.length > 0 && <div className="text-slate-600">{cov.fuelTypes.join(', ')}</div>}
+                      {db && <div className="text-green-700">DB: {db.storedFuelTypes?.join(', ') || 'no fuel types'} ({db.rowCount} rows)</div>}
+                      {!db && live && <div className="text-slate-500">Tested · {live.gpMatchFound ? 'match found' : 'no match'}</div>}
                     </div>
                   </Popup>
                 </Marker>
@@ -591,10 +633,11 @@ export default function CoverageMapExplorer() {
                 <div className="text-sm text-slate-400 text-center pt-8">Click a station on the map</div>
               ) : (() => {
                 const zone = getZoneMembership(selectedStation);
-                const cov = gpCoverageMap[selectedStation.id];
+                // Strictly separate: DB historical vs live test result
+                const db = dbCoverageMap[selectedStation.id] || null;  // null = no DB rows
+                const live = liveTestMap[selectedStation.id] || null;  // null = never tested
                 const quality = getQuality(selectedStation.id);
                 const qs = QUALITY_STYLE[quality] || QUALITY_STYLE.not_tested;
-                const inActiveScope = !!zone;
 
                 const Row = ({ label, value, valueClass }) => (
                   <div className="flex items-start justify-between gap-2 py-1 border-b border-slate-100 last:border-0">
@@ -615,60 +658,96 @@ export default function CoverageMapExplorer() {
                     {/* Quality badge */}
                     <div className={`rounded-lg px-3 py-2 flex items-center justify-between ${qs.bg}`}>
                       <span className={`text-xs font-bold uppercase tracking-wide ${qs.text}`}>Quality: {qs.label}</span>
-                      {cov?.testedAt && <span className="text-xs text-slate-400">tested {new Date(cov.testedAt).toLocaleTimeString()}</span>}
+                      {live?.testedAt && <span className="text-xs text-slate-400">tested {new Date(live.testedAt).toLocaleTimeString()}</span>}
                     </div>
 
-                    {/* Zone + scope */}
-                    <div className="rounded-lg border p-2.5 space-y-1.5">
+                    {/* Fetch scope */}
+                    <div className="rounded-lg border p-2.5 space-y-0.5">
                       <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Fetch scope</div>
-                      <Row label="Zone membership" value={zone ? zone.name : 'None'} valueClass={zone ? 'text-emerald-700' : 'text-slate-400'} />
-                      <Row label="In active scope" value={inActiveScope ? 'Yes' : 'No'} valueClass={inActiveScope ? 'text-emerald-700 font-bold' : 'text-slate-400'} />
+                      <Row label="Zone" value={zone ? zone.name : 'None'} valueClass={zone ? 'text-emerald-700' : 'text-slate-400'} />
+                      <Row label="In active scope" value={zone ? 'Yes' : 'No'} valueClass={zone ? 'text-emerald-700 font-bold' : 'text-slate-400'} />
                       {zone && <Row label="Zone type" value={`${zone.zoneType || 'circle'} · ${zone.priority || 'normal'}`} />}
                     </div>
 
-                    {/* GP assessment */}
+                    {/* A. Historical data — from DB only */}
                     <div className="rounded-lg border p-2.5 space-y-0.5">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Google Places assessment</div>
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">A · Historical data (database)</div>
                       <Row
-                        label="Has historical GP prices"
-                        value={cov ? 'Yes' : 'No'}
-                        valueClass={cov ? 'text-green-700' : 'text-slate-400'}
+                        label="Has stored GP prices"
+                        value={db ? `Yes (${db.rowCount} rows)` : 'No'}
+                        valueClass={db ? 'text-green-700 font-semibold' : 'text-slate-400'}
                       />
                       <Row
-                        label="GP reachable"
-                        value={cov ? (cov.gpReachable ? 'Yes' : 'No') : 'Not tested'}
-                        valueClass={cov ? (cov.gpReachable ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}
+                        label="Stored fuel types"
+                        value={db?.storedFuelTypes?.length > 0 ? db.storedFuelTypes.join(', ') : db ? 'None resolved' : '—'}
+                        valueClass={db?.storedFuelTypes?.length > 0 ? 'text-blue-700' : 'text-slate-400'}
                       />
                       <Row
-                        label="GP price data found"
-                        value={cov ? (cov.gpPriceFound ? 'Yes' : 'No') : 'Not tested'}
-                        valueClass={cov ? (cov.gpPriceFound ? 'text-green-700' : 'text-slate-400') : 'text-slate-400'}
-                      />
-                      <Row
-                        label="Fuel types"
-                        value={cov?.fuelTypes?.length > 0 ? cov.fuelTypes.join(', ') : cov ? 'Unknown' : 'Not tested'}
-                        valueClass={cov?.fuelTypes?.length > 0 ? 'text-blue-700' : 'text-slate-400'}
-                      />
-                      <Row
-                        label="Last GP fetched"
-                        value={cov?.fetchedAt ? new Date(cov.fetchedAt).toLocaleString('nb-NO') : 'Unknown'}
+                        label="Last stored fetchedAt"
+                        value={db?.fetchedAt ? new Date(db.fetchedAt).toLocaleString('nb-NO') : '—'}
                         valueClass="text-slate-600"
                       />
                       <Row
-                        label="Source updated at"
-                        value={cov?.sourceUpdatedAt ? new Date(cov.sourceUpdatedAt).toLocaleString('nb-NO') : 'Unknown'}
+                        label="Last source updatedAt"
+                        value={db?.sourceUpdatedAt ? new Date(db.sourceUpdatedAt).toLocaleString('nb-NO') : 'Unknown'}
                         valueClass="text-slate-600"
                       />
-                      {cov?.matchDistance != null && (
-                        <Row label="Match distance" value={`${cov.matchDistance} km`} />
-                      )}
-                      {cov?.matchConfidence && (
-                        <Row label="Match confidence" value={cov.matchConfidence} />
-                      )}
-                      {cov?.matchedName && cov.matchedName !== selectedStation.name && (
-                        <Row label="GP matched name" value={cov.matchedName} valueClass="text-slate-500 italic" />
+                    </div>
+
+                    {/* B. Live test result */}
+                    <div className="rounded-lg border p-2.5 space-y-0.5">
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">B · Live test result</div>
+                      {!live ? (
+                        <div className="text-xs text-slate-400 italic py-1">Not tested yet — click "Test this station"</div>
+                      ) : (
+                        <>
+                          <Row
+                            label="GP reachable"
+                            value={live.gpReachable ? 'Yes' : 'No'}
+                            valueClass={live.gpReachable ? 'text-green-700' : 'text-red-600'}
+                          />
+                          <Row
+                            label="GP match found"
+                            value={live.gpMatchFound ? `Yes (${live.resultsCount} results)` : `No (${live.resultsCount} results)`}
+                            valueClass={live.gpMatchFound ? 'text-green-700' : 'text-slate-400'}
+                          />
+                          {live.gpMatchFound && (
+                            <>
+                              <Row label="Match distance" value={live.matchDistance != null ? `${live.matchDistance} km` : 'Unknown'} />
+                              <Row label="Match confidence" value={live.matchConfidence || 'Unknown'} />
+                              {live.matchedName && live.matchedName !== selectedStation.name && (
+                                <Row label="GP name" value={live.matchedName} valueClass="text-slate-500 italic" />
+                              )}
+                              {live.liveFuelTypes?.length > 0 && (
+                                <Row label="Live fuel types" value={live.liveFuelTypes.join(', ')} valueClass="text-blue-700" />
+                              )}
+                            </>
+                          )}
+                          {live.noDataReason && (
+                            <div className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mt-1">{live.noDataReason}</div>
+                          )}
+                        </>
                       )}
                     </div>
+
+                    {/* C. Persistence result */}
+                    {live && (
+                      <div className="rounded-lg border p-2.5 space-y-0.5">
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">C · Persistence result (this test)</div>
+                        <Row
+                          label="New rows created"
+                          value={live.newRowsCreated > 0 ? `Yes (${live.newRowsCreated})` : 'No'}
+                          valueClass={live.newRowsCreated > 0 ? 'text-green-700 font-semibold' : 'text-slate-400'}
+                        />
+                        {live.newRowsCreated === 0 && (
+                          <div className="text-xs text-slate-500 italic">
+                            {live.gpMatchFound
+                              ? 'GP matched but no price data was persisted. The function may not persist prices in discovery mode.'
+                              : 'No match found — nothing to persist.'}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Actions */}
                     <div className="space-y-1.5 pt-1">
@@ -676,9 +755,6 @@ export default function CoverageMapExplorer() {
                         {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
                         Test this station
                       </Button>
-                      {!inActiveScope && zones.filter(z => z.isActive).length > 0 && (
-                        <div className="text-xs text-slate-400 text-center">Station is outside all active zones</div>
-                      )}
                       <Button size="sm" variant="outline" className="w-full" onClick={() => { if (mapRef.current) mapRef.current.setView([selectedStation.latitude, selectedStation.longitude], 15); }}>
                         <MapPin className="w-4 h-4 mr-2" /> Center map here
                       </Button>
@@ -788,12 +864,13 @@ export default function CoverageMapExplorer() {
                       <div className="text-xs font-semibold text-slate-500 mb-1.5">Stations in zone</div>
                       <div className="space-y-0.5 max-h-44 overflow-y-auto">
                         {inZone.map(s => {
-                          const gp = getGpStatus(s.id);
+                          const q = getQuality(s.id);
+                          const qs = QUALITY_STYLE[q] || QUALITY_STYLE.not_tested;
                           return (
                             <div key={s.id} className="flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-50 cursor-pointer"
                               onClick={() => { setSelectedStation(s); setSidebarMode('station'); }}>
                               <span className="truncate flex-1 mr-2">{s.name}</span>
-                              <span className={`shrink-0 px-1.5 py-0.5 rounded text-white text-xs ${gp === 'covered' ? 'bg-green-500' : gp === 'partial' ? 'bg-yellow-500' : 'bg-slate-300'}`}>{gp}</span>
+                              <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-medium ${qs.bg} ${qs.text}`}>{qs.label}</span>
                             </div>
                           );
                         })}
