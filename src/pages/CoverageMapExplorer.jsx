@@ -247,11 +247,12 @@ export default function CoverageMapExplorer() {
 
       // Step 2: Load GP prices separately — non-blocking, paginated to avoid rate limit
       try {
-        // Fetch in batches of 200 to reduce single-request load
+        // Fetch in batches of 200, max 5 batches (1000 rows) to avoid hanging
         let allGpPrices = [];
         let skip = 0;
         const batchSize = 200;
-        while (true) {
+        const maxBatches = 5;
+        for (let i = 0; i < maxBatches; i++) {
           const batch = await base44.entities.FuelPrice.filter(
             { sourceName: 'GooglePlaces' },
             '-fetchedAt',
