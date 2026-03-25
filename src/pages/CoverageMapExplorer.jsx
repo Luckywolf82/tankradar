@@ -44,6 +44,61 @@ function classifyGPQuality(dbEntry, liveEntry) {
   return 'no_data';
 }
 
+// ─── GP Scope Decision ───────────────────────────────────────────────────────
+// Computed from available signals. NOT stored in DB — ephemeral UI recommendation.
+// "Remove from scope" is the only action that persists (via Station.reviewStatus = flagged).
+//
+// Logic:
+//   keep_in_scope       — DB has useful prices (storedFuelTypes > 0) OR live test confirmed match + prices
+//   monitor             — Some signal exists (DB rows without fuel types, or live match without prices)
+//   remove_from_scope_candidate — Tested but GP returned nothing useful (no match, no prices)
+//   insufficient_data   — Not enough signals to decide (not tested, no DB rows)
+//
+// GOVERNANCE NOTE: This does NOT require a test count — one strong negative signal is surfaced
+// as a CANDIDATE only. The user must explicitly confirm removal. The UI shows the reason.
+function computeScopeDecision(dbEntry, liveEntry) {
+  const hasUsefulDB = dbEntry && dbEntry.storedFuelTypes?.length > 0;
+  const hasDBRows = !!dbEntry;
+
+  if (!liveEntry && !hasDBRows) {
+    return { decision: 'insufficient_data', reason: 'No DB records and never tested for this station.' };
+  }
+
+  if (hasUsefulDB) {
+    return { decision: 'keep_in_scope', reason: `${dbEntry.storedFuelTypes.join(', ')} found in database (${dbEntry.rowCount} rows).` };
+  }
+
+  if (liveEntry) {
+    const liveUseful = liveEntry.gpMatchFound && (liveEntry.newRowsCreated > 0 || liveEntry.liveFuelTypes?.length > 0);
+    if (liveUseful) {
+      return { decision: 'keep_in_scope', reason: 'Live test returned a GP match with useful data.' };
+    }
+    const livePartial = liveEntry.gpMatchFound && liveEntry.gpReachable;
+    if (livePartial) {
+      return { decision: 'monitor', reason: 'GP match found but no price data returned. May improve.' };
+    }
+    if (!liveEntry.gpReachable) {
+      return { decision: 'monitor', reason: 'GP not reachable during test — could be transient.' };
+    }
+    if (!liveEntry.gpMatchFound) {
+      return { decision: 'remove_from_scope_candidate', reason: `GP reachable but no match found (${liveEntry.resultsCount} results). ${liveEntry.noDataReason || ''}` };
+    }
+  }
+
+  if (hasDBRows && !hasUsefulDB) {
+    return { decision: 'monitor', reason: 'DB rows exist but no fuel types resolved. Partial data.' };
+  }
+
+  return { decision: 'insufficient_data', reason: 'Signals present but ambiguous.' };
+}
+
+const SCOPE_DECISION_STYLE = {
+  keep_in_scope:              { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-800',  label: 'Keep in scope',          dot: 'bg-green-500' },
+  monitor:                    { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-800', label: 'Monitor',                dot: 'bg-yellow-500' },
+  remove_from_scope_candidate:{ bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-800',    label: 'Remove from scope candidate', dot: 'bg-red-500' },
+  insufficient_data:          { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-500',  label: 'Insufficient data',      dot: 'bg-slate-300' },
+};
+
 const QUALITY_STYLE = {
   full:       { bg: 'bg-green-100',  text: 'text-green-800',  label: 'FULL',     dot: 'bg-green-500' },
   partial:    { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'PARTIAL',  dot: 'bg-yellow-500' },
@@ -545,6 +600,8 @@ export default function CoverageMapExplorer() {
               const live = liveTestMap[station.id];
               const quality = getQuality(station.id);
               const qs = QUALITY_STYLE[quality] || QUALITY_STYLE.not_tested;
+              const { decision } = computeScopeDecision(db, live);
+              const ds = SCOPE_DECISION_STYLE[decision] || SCOPE_DECISION_STYLE.insufficient_data;
               return (
                 <Marker key={station.id} position={[station.latitude, station.longitude]} icon={getIcon(station)}
                   eventHandlers={{ click: () => { setSelectedStation(station); setSidebarMode('station'); } }}>
@@ -556,8 +613,13 @@ export default function CoverageMapExplorer() {
                         <span className={`px-1.5 py-0.5 rounded text-white text-xs ${zone ? 'bg-emerald-500' : 'bg-slate-400'}`}>{zone ? zone.name : 'Out of zone'}</span>
                         <span className={`px-1.5 py-0.5 rounded text-xs ${qs.bg} ${qs.text}`}>{qs.label}</span>
                       </div>
+                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${ds.bg} ${ds.text}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${ds.dot}`} />
+                        {ds.label}
+                      </div>
                       {db && <div className="text-green-700">DB: {db.storedFuelTypes?.join(', ') || 'no fuel types'} ({db.rowCount} rows)</div>}
                       {!db && live && <div className="text-slate-500">Tested · {live.gpMatchFound ? 'match found' : 'no match'}</div>}
+                      {station.reviewStatus === 'flagged' && <div className="text-amber-600 font-semibold">⚑ Flagged for review</div>}
                     </div>
                   </Popup>
                 </Marker>
@@ -679,11 +741,12 @@ export default function CoverageMapExplorer() {
                 <div className="text-sm text-slate-400 text-center pt-8">Click a station on the map</div>
               ) : (() => {
                 const zone = getZoneMembership(selectedStation);
-                // Strictly separate: DB historical vs live test result
-                const db = dbCoverageMap[selectedStation.id] || null;  // null = no DB rows
-                const live = liveTestMap[selectedStation.id] || null;  // null = never tested
+                const db = dbCoverageMap[selectedStation.id] || null;
+                const live = liveTestMap[selectedStation.id] || null;
                 const quality = getQuality(selectedStation.id);
                 const qs = QUALITY_STYLE[quality] || QUALITY_STYLE.not_tested;
+                const { decision, reason } = computeScopeDecision(db, live);
+                const ds = SCOPE_DECISION_STYLE[decision] || SCOPE_DECISION_STYLE.insufficient_data;
 
                 const Row = ({ label, value, valueClass }) => (
                   <div className="flex items-start justify-between gap-2 py-1 border-b border-slate-100 last:border-0">
@@ -701,10 +764,17 @@ export default function CoverageMapExplorer() {
                       {selectedStation.address && <div className="text-xs text-slate-400">{selectedStation.address}</div>}
                     </div>
 
-                    {/* Quality badge */}
-                    <div className={`rounded-lg px-3 py-2 flex items-center justify-between ${qs.bg}`}>
-                      <span className={`text-xs font-bold uppercase tracking-wide ${qs.text}`}>Quality: {qs.label}</span>
-                      {live?.testedAt && <span className="text-xs text-slate-400">tested {new Date(live.testedAt).toLocaleTimeString()}</span>}
+                    {/* GP Scope Decision — computed from db + live signals */}
+                    <div className={`rounded-lg border p-2.5 ${ds.bg} ${ds.border}`}>
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">GP Scope Assessment</div>
+                      <div className={`text-sm font-bold ${ds.text} flex items-center gap-1.5 mb-1`}>
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${ds.dot}`} />
+                        {ds.label}
+                      </div>
+                      <div className="text-xs text-slate-600 leading-relaxed">{reason}</div>
+                      {decision === 'insufficient_data' && (
+                        <div className="text-xs text-slate-400 mt-1 italic">Run "Test this station" to generate a signal.</div>
+                      )}
                     </div>
 
                     {/* Fetch scope */}
@@ -713,11 +783,27 @@ export default function CoverageMapExplorer() {
                       <Row label="Zone" value={zone ? zone.name : 'None'} valueClass={zone ? 'text-emerald-700' : 'text-slate-400'} />
                       <Row label="In active scope" value={zone ? 'Yes' : 'No'} valueClass={zone ? 'text-emerald-700 font-bold' : 'text-slate-400'} />
                       {zone && <Row label="Zone type" value={`${zone.zoneType || 'circle'} · ${zone.priority || 'normal'}`} />}
+                      <Row label="Station status" value={selectedStation.status || 'active'} valueClass={selectedStation.status === 'active' ? 'text-green-700' : 'text-red-600'} />
+                      <Row
+                        label="Review status"
+                        value={selectedStation.reviewStatus || 'pending'}
+                        valueClass={
+                          selectedStation.reviewStatus === 'reviewed' ? 'text-green-700' :
+                          selectedStation.reviewStatus === 'flagged' ? 'text-amber-600 font-semibold' :
+                          'text-slate-500'
+                        }
+                      />
+                    </div>
+
+                    {/* Quality badge */}
+                    <div className={`rounded-lg px-3 py-2 flex items-center justify-between ${qs.bg}`}>
+                      <span className={`text-xs font-bold uppercase tracking-wide ${qs.text}`}>GP quality: {qs.label}</span>
+                      {live?.testedAt && <span className="text-xs text-slate-400">tested {new Date(live.testedAt).toLocaleTimeString()}</span>}
                     </div>
 
                     {/* A. Historical data — from DB only */}
                     <div className="rounded-lg border p-2.5 space-y-0.5">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">A · Historical data (database)</div>
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">A · Stored data (database)</div>
                       <Row
                         label="Has stored GP prices"
                         value={db ? `Yes (${db.rowCount} rows)` : 'No'}
@@ -729,12 +815,12 @@ export default function CoverageMapExplorer() {
                         valueClass={db?.storedFuelTypes?.length > 0 ? 'text-blue-700' : 'text-slate-400'}
                       />
                       <Row
-                        label="Last stored fetchedAt"
+                        label="Last fetchedAt"
                         value={db?.fetchedAt ? new Date(db.fetchedAt).toLocaleString('nb-NO') : '—'}
                         valueClass="text-slate-600"
                       />
                       <Row
-                        label="Last source updatedAt"
+                        label="Source updatedAt"
                         value={db?.sourceUpdatedAt ? new Date(db.sourceUpdatedAt).toLocaleString('nb-NO') : 'Unknown'}
                         valueClass="text-slate-600"
                       />
@@ -747,11 +833,7 @@ export default function CoverageMapExplorer() {
                         <div className="text-xs text-slate-400 italic py-1">Not tested yet — click "Test this station"</div>
                       ) : (
                         <>
-                          <Row
-                            label="GP reachable"
-                            value={live.gpReachable ? 'Yes' : 'No'}
-                            valueClass={live.gpReachable ? 'text-green-700' : 'text-red-600'}
-                          />
+                          <Row label="GP reachable" value={live.gpReachable ? 'Yes' : 'No'} valueClass={live.gpReachable ? 'text-green-700' : 'text-red-600'} />
                           <Row
                             label="GP match found"
                             value={live.gpMatchFound ? `Yes (${live.resultsCount} results)` : `No (${live.resultsCount} results)`}
@@ -788,37 +870,17 @@ export default function CoverageMapExplorer() {
                         {live.newRowsCreated === 0 && (
                           <div className="text-xs text-slate-500 italic">
                             {live.gpMatchFound
-                              ? 'GP matched but no price data was persisted. The function may not persist prices in discovery mode.'
-                              : 'No match found — nothing to persist.'}
+                              ? 'GP matched but no price data was persisted.'
+                              : 'No match — nothing to persist.'}
                           </div>
                         )}
                       </div>
                     )}
 
-                    {/* Station lifecycle status */}
-                    <div className="rounded-lg border p-2.5 space-y-0.5">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Station status</div>
-                      <Row
-                        label="Status"
-                        value={selectedStation.status || 'active'}
-                        valueClass={selectedStation.status === 'active' ? 'text-green-700' : 'text-red-600'}
-                      />
-                      <Row
-                        label="Review status"
-                        value={selectedStation.reviewStatus || 'pending'}
-                        valueClass={
-                          selectedStation.reviewStatus === 'reviewed' ? 'text-green-700' :
-                          selectedStation.reviewStatus === 'flagged' ? 'text-amber-600 font-semibold' :
-                          'text-slate-500'
-                        }
-                      />
-                      {selectedStation.stationType && selectedStation.stationType !== 'standard' && (
-                        <Row label="Type" value={selectedStation.stationType} />
-                      )}
-                    </div>
-
                     {/* Actions */}
-                    <div className="space-y-1.5 pt-1">
+                    <div className="space-y-1.5 pt-1 border-t">
+                      <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide pt-1">Actions</div>
+
                       <Button size="sm" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
                         {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
                         Test this station
@@ -827,41 +889,72 @@ export default function CoverageMapExplorer() {
                         <MapPin className="w-4 h-4 mr-2" /> Center map here
                       </Button>
 
-                      {/* Station lifecycle actions — uses only verified existing enum values */}
-                      <div className="border-t pt-2 space-y-1.5 mt-1">
-                        <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Operational actions</div>
-                        {selectedStation.reviewStatus !== 'flagged' && (
+                      {/* Remove from GP fetch scope
+                          GOVERNANCE: Uses Station.reviewStatus = 'flagged' (verified existing enum).
+                          There is no 'excluded_from_gp' enum value in the Station model.
+                          Flagging is the smallest safe existing mechanism to mark a station for operational review.
+                          The operator must confirm with a documented reason before the action is applied.
+                          This does NOT archive the station — it remains active but flagged.
+                      */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="text-xs text-slate-400 italic leading-relaxed">
+                          "Remove from scope" flags the station for operational review
+                          (<code>reviewStatus → flagged</code>). No new enum values are introduced.
+                          This is a soft signal — the station stays active. Only archive if it is a confirmed duplicate.
+                        </div>
+
+                        {decision === 'remove_from_scope_candidate' && selectedStation.reviewStatus !== 'flagged' && (
+                          <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 space-y-1.5">
+                            <div className="font-semibold">⚠ Scope removal candidate</div>
+                            <div>{reason}</div>
+                            <div className="text-red-500 italic">Based on 1 test. Confirm only if this reflects a persistent pattern.</div>
+                            <Button
+                              size="sm"
+                              className="w-full bg-red-600 hover:bg-red-700 text-white"
+                              onClick={() => {
+                                if (window.confirm(`Remove "${selectedStation.name}" from active GP fetch scope?\n\nThis sets reviewStatus → flagged.\nReason: ${reason}\n\nThe station stays active but is marked for review. You can reverse this in the Station editor.`)) {
+                                  flagStation(selectedStation);
+                                }
+                              }}
+                            >
+                              Remove from active fetch scope
+                            </Button>
+                          </div>
+                        )}
+
+                        {selectedStation.reviewStatus === 'flagged' && (
+                          <div className="text-xs bg-amber-50 border border-amber-200 text-amber-700 rounded px-2 py-1.5 font-semibold">
+                            ✓ Already flagged — excluded from automatic GP fetch scope assessment
+                          </div>
+                        )}
+
+                        {decision !== 'remove_from_scope_candidate' && selectedStation.reviewStatus !== 'flagged' && (
                           <Button
                             size="sm"
                             variant="outline"
                             className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
-                            onClick={() => flagStation(selectedStation)}
+                            onClick={() => {
+                              if (window.confirm(`Flag "${selectedStation.name}" for scope review?\n\nThis sets reviewStatus → flagged. Use this if you have reason to question this station's GP value beyond current test signals.`)) {
+                                flagStation(selectedStation);
+                              }
+                            }}
                           >
-                            Flag for review
-                            <span className="ml-1 text-xs text-amber-500">(reviewStatus → flagged)</span>
+                            Flag for scope review
                           </Button>
                         )}
-                        {selectedStation.reviewStatus === 'flagged' && (
-                          <div className="text-xs bg-amber-50 border border-amber-200 text-amber-700 rounded px-2 py-1.5">
-                            Already flagged for review
-                          </div>
-                        )}
+
                         <Button
                           size="sm"
                           variant="outline"
-                          className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                          className="w-full border-red-300 text-red-700 hover:bg-red-50 text-xs"
                           onClick={() => {
-                            if (window.confirm(`Archive "${selectedStation.name}"?\n\nThis sets status → archived_duplicate. The station will be removed from the active map immediately.\n\nNote: Use this only if this station is a confirmed duplicate or should be permanently removed.`)) {
+                            if (window.confirm(`PERMANENTLY archive "${selectedStation.name}"?\n\nThis sets status → archived_duplicate.\nUse ONLY if this is a confirmed duplicate station.\n\nThis cannot be easily undone from this UI.`)) {
                               archiveStation(selectedStation);
                             }
                           }}
                         >
-                          Archive (remove from map)
-                          <span className="ml-1 text-xs text-red-400">(status → archived_duplicate)</span>
+                          Archive as duplicate (permanent)
                         </Button>
-                        <div className="text-xs text-slate-400 leading-relaxed">
-                          Archive uses the only available inactive state in the Station model. Flagging is a softer reversible alternative.
-                        </div>
                       </div>
                     </div>
                   </div>
