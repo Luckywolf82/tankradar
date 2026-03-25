@@ -63,38 +63,27 @@ export default function GooglePlacesCoverageMap() {
         const filtered = allStations.filter(s => s.latitude && s.longitude);
         setStations(filtered);
 
-        // Load FuelPrice data for each station
+        // Load all FuelPrice data in ONE batch query — never per-station loops
         const prices = {};
         const gpPrices = {};
-        
-        for (const station of filtered) {
-          try {
-            const stationPrices = await base44.entities.FuelPrice.filter({ stationId: station.id });
-            
-            prices[station.id] = {
-              count: stationPrices.length,
-              recent: stationPrices.length > 0 ? stationPrices[0] : null,
-              hasPrices: stationPrices.length > 0,
-              fuelTypes: [...new Set(stationPrices.map(p => p.fuelType))],
-              latestFetch: stationPrices.length > 0 ? stationPrices[0].fetchedAt : null,
-            };
+        try {
+          const allPrices = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-fetchedAt', 500);
+          for (const p of allPrices) {
+            if (!p.stationId) continue;
+            if (!prices[p.stationId]) prices[p.stationId] = { count: 0, hasPrices: false, fuelTypes: [], latestFetch: null };
+            prices[p.stationId].count += 1;
+            prices[p.stationId].hasPrices = true;
+            if (p.fuelType && !prices[p.stationId].fuelTypes.includes(p.fuelType)) prices[p.stationId].fuelTypes.push(p.fuelType);
+            if (!prices[p.stationId].latestFetch || p.fetchedAt > prices[p.stationId].latestFetch) prices[p.stationId].latestFetch = p.fetchedAt;
 
-            const gpAndUserPrices = stationPrices.filter(p => 
-              p.sourceName === 'GooglePlaces' || 
-              p.priceType === 'user_reported' ||
-              p.sourceName === 'user_reported'
-            );
-            
-            gpPrices[station.id] = {
-              hasGPData: gpAndUserPrices.length > 0,
-              gpCount: gpAndUserPrices.length,
-              gpSources: [...new Set(gpAndUserPrices.map(p => p.sourceName || p.priceType))],
-              gpFuelTypes: [...new Set(gpAndUserPrices.map(p => p.fuelType))],
-            };
-          } catch (error) {
-            prices[station.id] = { count: 0, hasPrices: false, fuelTypes: [] };
-            gpPrices[station.id] = { hasGPData: false, gpCount: 0, gpSources: [], gpFuelTypes: [] };
+            if (!gpPrices[p.stationId]) gpPrices[p.stationId] = { hasGPData: false, gpCount: 0, gpSources: [], gpFuelTypes: [] };
+            gpPrices[p.stationId].hasGPData = true;
+            gpPrices[p.stationId].gpCount += 1;
+            if (!gpPrices[p.stationId].gpSources.includes(p.sourceName)) gpPrices[p.stationId].gpSources.push(p.sourceName);
+            if (p.fuelType && !gpPrices[p.stationId].gpFuelTypes.includes(p.fuelType)) gpPrices[p.stationId].gpFuelTypes.push(p.fuelType);
           }
+        } catch (e) {
+          console.warn('FuelPrice batch load failed:', e.message);
         }
         setPriceData(prices);
         setCoverageData(prev => ({ ...prev, ...gpPrices }));
