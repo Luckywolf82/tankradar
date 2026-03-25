@@ -245,18 +245,38 @@ export default function CoverageMapExplorer() {
   const testSingleStation = async (station) => {
     setTestingStation(true);
     try {
-      await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', {
+      // 1. Run real GP test
+      const res = await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', {
         latitude: station.latitude,
         longitude: station.longitude,
         radiusKm: 0.5,
         stationId: station.id,
       });
+      const gpResults = res?.data?.results || [];
+      const gpReachable = res?.data != null && !res?.data?.error;
+      const bestMatch = gpResults.find(r => r.matchedStationId === station.id) || gpResults[0] || null;
+
+      // 2. Read back stored FuelPrice rows for this station
       const gpPrices = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: station.id });
-      const entry = gpPrices.length > 0
-        ? { hasFuelOptions: true, fuelTypes: gpPrices.map(p => p.fuelType).filter(Boolean), fetchedAt: gpPrices[0].fetchedAt }
-        : null;
+      const fuelTypes = [...new Set(gpPrices.map(p => p.fuelType).filter(Boolean))];
+      const gpPriceFound = gpPrices.length > 0;
+      const latestPrice = gpPrices.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0] || null;
+
+      // 3. Build enriched coverage entry
+      const entry = {
+        gpReachable,
+        gpPriceFound,
+        hasFuelOptions: gpPriceFound,
+        fuelTypes,
+        fetchedAt: latestPrice?.fetchedAt || null,
+        sourceUpdatedAt: latestPrice?.sourceUpdatedAt || null,
+        matchDistance: bestMatch?.distance || null,
+        matchConfidence: bestMatch?.matchConfidence || null,
+        matchedName: bestMatch?.name || null,
+        resultsCount: gpResults.length,
+        testedAt: new Date().toISOString(),
+      };
       setGpCoverageMap(prev => ({ ...prev, [station.id]: entry }));
-      alert(`Tested. GP prices: ${entry ? entry.fuelTypes.join(', ') : 'None'}`);
     } catch (err) { alert(`Error: ${err.message}`); }
     finally { setTestingStation(false); }
   };
