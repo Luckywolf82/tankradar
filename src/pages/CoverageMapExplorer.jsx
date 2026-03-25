@@ -185,7 +185,8 @@ export default function CoverageMapExplorer() {
         base44.entities.Station.list(),
         base44.entities.GPFetchZone.list(),
       ]);
-      setStations(allStations.filter(s => s.latitude && s.longitude));
+      // Only show active stations (status === 'active') with valid coordinates
+      setStations(allStations.filter(s => s.latitude && s.longitude && s.status === 'active'));
       setZones(allZones);
       setLoading(false);
 
@@ -280,6 +281,25 @@ export default function CoverageMapExplorer() {
     await base44.entities.GPFetchZone.update(zone.id, { [field]: value });
     setZones(prev => prev.map(z => z.id === zone.id ? { ...z, [field]: value } : z));
     if (selectedZone?.id === zone.id) setSelectedZone(z => ({ ...z, [field]: value }));
+  };
+
+  // ─── Station status actions ───────────────────────────────────────────────
+  // Safe actions using only verified existing Station.status and reviewStatus values.
+  // Station.status enum: ['active', 'archived_duplicate']
+  // Station.reviewStatus enum: ['pending', 'reviewed', 'flagged']
+  const flagStation = async (station) => {
+    await base44.entities.Station.update(station.id, { reviewStatus: 'flagged' });
+    // Update local state — station stays on map but is flagged
+    setStations(prev => prev.map(s => s.id === station.id ? { ...s, reviewStatus: 'flagged' } : s));
+    setSelectedStation(s => s ? { ...s, reviewStatus: 'flagged' } : s);
+  };
+
+  const archiveStation = async (station) => {
+    await base44.entities.Station.update(station.id, { status: 'archived_duplicate' });
+    // Remove from active map immediately — archived stations are excluded by the active filter
+    setStations(prev => prev.filter(s => s.id !== station.id));
+    setSelectedStation(null);
+    setSidebarMode('zones');
   };
 
   // ─── Test single station ──────────────────────────────────────────────────
@@ -775,6 +795,28 @@ export default function CoverageMapExplorer() {
                       </div>
                     )}
 
+                    {/* Station lifecycle status */}
+                    <div className="rounded-lg border p-2.5 space-y-0.5">
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Station status</div>
+                      <Row
+                        label="Status"
+                        value={selectedStation.status || 'active'}
+                        valueClass={selectedStation.status === 'active' ? 'text-green-700' : 'text-red-600'}
+                      />
+                      <Row
+                        label="Review status"
+                        value={selectedStation.reviewStatus || 'pending'}
+                        valueClass={
+                          selectedStation.reviewStatus === 'reviewed' ? 'text-green-700' :
+                          selectedStation.reviewStatus === 'flagged' ? 'text-amber-600 font-semibold' :
+                          'text-slate-500'
+                        }
+                      />
+                      {selectedStation.stationType && selectedStation.stationType !== 'standard' && (
+                        <Row label="Type" value={selectedStation.stationType} />
+                      )}
+                    </div>
+
                     {/* Actions */}
                     <div className="space-y-1.5 pt-1">
                       <Button size="sm" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
@@ -784,6 +826,43 @@ export default function CoverageMapExplorer() {
                       <Button size="sm" variant="outline" className="w-full" onClick={() => { if (mapRef.current) mapRef.current.setView([selectedStation.latitude, selectedStation.longitude], 15); }}>
                         <MapPin className="w-4 h-4 mr-2" /> Center map here
                       </Button>
+
+                      {/* Station lifecycle actions — uses only verified existing enum values */}
+                      <div className="border-t pt-2 space-y-1.5 mt-1">
+                        <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Operational actions</div>
+                        {selectedStation.reviewStatus !== 'flagged' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                            onClick={() => flagStation(selectedStation)}
+                          >
+                            Flag for review
+                            <span className="ml-1 text-xs text-amber-500">(reviewStatus → flagged)</span>
+                          </Button>
+                        )}
+                        {selectedStation.reviewStatus === 'flagged' && (
+                          <div className="text-xs bg-amber-50 border border-amber-200 text-amber-700 rounded px-2 py-1.5">
+                            Already flagged for review
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            if (window.confirm(`Archive "${selectedStation.name}"?\n\nThis sets status → archived_duplicate. The station will be removed from the active map immediately.\n\nNote: Use this only if this station is a confirmed duplicate or should be permanently removed.`)) {
+                              archiveStation(selectedStation);
+                            }
+                          }}
+                        >
+                          Archive (remove from map)
+                          <span className="ml-1 text-xs text-red-400">(status → archived_duplicate)</span>
+                        </Button>
+                        <div className="text-xs text-slate-400 leading-relaxed">
+                          Archive uses the only available inactive state in the Station model. Flagging is a softer reversible alternative.
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
