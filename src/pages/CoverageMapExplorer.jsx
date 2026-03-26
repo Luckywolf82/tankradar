@@ -390,6 +390,8 @@ const ICONS = {
   in_zone_covered:    makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'),
   in_zone_uncovered:  makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png'),
   out_zone:           makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', [14, 23]),
+  // Out of scope — distinct red/violet color
+  out_of_scope:       makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', [14, 23]),
 };
 
 // ─── Quality classification ───────────────────────────────────────────────────
@@ -697,6 +699,7 @@ export default function CoverageMapExplorer() {
   const getQuality = (stationId) => classifyGPQuality(dbCoverageMap[stationId], liveTestMap[stationId]);
 
   const getIcon = (station) => {
+    if (station.fetchScopeStatus === 'out_of_scope') return ICONS.out_of_scope;
     const zone = getZoneMembership(station);
     if (!zone) return ICONS.out_zone;
     const quality = getQuality(station.id);
@@ -971,6 +974,7 @@ export default function CoverageMapExplorer() {
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" /> Weak / no data</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Not tested</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block" /> Out of zone</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Out of scope</span>
           </div>
           <div className="flex items-center gap-1 ml-auto">
             {!isDrawingCorridor && !isDrawingCircle && (
