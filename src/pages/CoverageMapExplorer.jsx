@@ -602,20 +602,33 @@ export default function CoverageMapExplorer() {
 
   // ─── Load ──────────────────────────────────────────────────────────────────
   // Loads DB state only. Does NOT touch liveTestMap.
-  // Stations + zones load first (critical). GP prices load separately (non-blocking).
+  // Strategy: load zones first, then stations visible in viewport, then remaining stations in background.
   const loadAll = useCallback(async () => {
     try {
-      // Step 1: Load stations + zones — fetch all active stations in two batches
-      const [batch1, batch2, allZones] = await Promise.all([
-        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500, 0),
-        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500, 500),
+      // Step 1: Zones + first batch of stations (most recent = most likely relevant)
+      const [batch1, allZones] = await Promise.all([
+        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 0),
         base44.entities.GPFetchZone.list('-created_date', 200),
       ]);
-      const allStations = [...batch1, ...batch2];
-      // Filter to valid coordinates (status filter already applied in query)
-      setStations(allStations.filter(s => s.latitude && s.longitude));
+      const validBatch1 = batch1.filter(s => s.latitude && s.longitude);
+      setStations(validBatch1);
       setZones(allZones);
       setLoading(false);
+
+      // Step 2: Load remaining stations in background — do not block UI
+      const [batch2, batch3] = await Promise.all([
+        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 300),
+        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 600),
+      ]);
+      const allValid = [
+        ...validBatch1,
+        ...batch2.filter(s => s.latitude && s.longitude),
+        ...batch3.filter(s => s.latitude && s.longitude),
+      ];
+      // Deduplicate by id (batch1 overlap possible)
+      const seen = new Set();
+      const deduped = allValid.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+      setStations(deduped);
 
       // Step 2: Load GP prices separately — non-blocking, single batch capped at 500
       try {
