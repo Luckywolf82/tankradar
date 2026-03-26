@@ -139,9 +139,9 @@ Deno.serve(async (req) => {
   const zone = allZones.find(z => z.id === zoneId);
   if (!zone) return Response.json({ error: 'Zone not found' }, { status: 404 });
 
-  // Load stations to classify coverage
+  // Load stations to classify coverage — exclude flagged (out of GP scope)
   const allStations = await db.entities.Station.filter({ status: 'active' });
-  const stationsInZone = allStations.filter(s => isStationInZone(s, zone));
+  const stationsInZone = allStations.filter(s => s.reviewStatus !== 'flagged' && isStationInZone(s, zone));
 
   // Load DB coverage (GP prices only) for stations in this zone
   const stationIds = stationsInZone.map(s => s.id);
