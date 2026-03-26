@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import CanonicalContractAuditReport from './pages/CanonicalContractAuditReport';
 import RoutePlanner from './pages/RoutePlanner';
 import CoverageMapExplorer from './pages/CoverageMapExplorer';
@@ -63,7 +64,11 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="/CanonicalContractAuditReport" element={<CanonicalContractAuditReport />} />
       <Route path="/RoutePlanner" element={<LayoutWrapper currentPageName="RoutePlanner"><RoutePlanner /></LayoutWrapper>} />
-      <Route path="/CoverageMapExplorer" element={<CoverageMapExplorer />} />
+      <Route path="/CoverageMapExplorer" element={
+        <ProtectedRoute requiredRole="admin">
+          <CoverageMapExplorer />
+        </ProtectedRoute>
+      } />
       <Route path="/GooglePlacesCoverageMap" element={<GooglePlacesCoverageMap />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
