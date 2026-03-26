@@ -606,9 +606,8 @@ export default function CoverageMapExplorer() {
   const loadAll = useCallback(async () => {
     try {
       // Step 1: Load stations + zones — always required
-      // Use filter with high limit to bypass default 50-row cap
       const [allStations, allZones] = await Promise.all([
-        base44.entities.Station.filter({ status: 'active' }, '-created_date', 2000),
+        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500),
         base44.entities.GPFetchZone.list('-created_date', 200),
       ]);
       // Filter to valid coordinates (status filter already applied in query)
@@ -1057,8 +1056,8 @@ export default function CoverageMapExplorer() {
               </>
             )}
 
-            {/* Station markers */}
-            {stations.map(station => {
+            {/* Station markers — capped at 300 visible to prevent Leaflet freeze */}
+            {stations.slice(0, 300).map(station => {
               const zone = getZoneMembership(station);
               if (!showLayers.inZone && zone) return null;
               if (!showLayers.outZone && !zone) return null;
