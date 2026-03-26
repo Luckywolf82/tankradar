@@ -1424,12 +1424,41 @@ export default function CoverageMapExplorer() {
 
                     {/* Actions */}
                     <div className="space-y-1.5 pt-1 border-t">
-                      <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide pt-1">Actions</div>
+                       <div className="text-xs text-slate-400 font-semibold uppercase tracking-wide pt-1">Actions</div>
 
-                      <Button size="sm" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
-                        {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
-                        Test this station
-                      </Button>
+                       <Button size="sm" className="w-full" disabled={testingStation} onClick={() => testSingleStation(selectedStation)}>
+                         {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+                         {testingStation ? 'Testing Google Places...' : 'Test this station'}
+                       </Button>
+
+                       {/* Live test result: decision + reason */}
+                       {live && (
+                         <div className={`rounded border p-2.5 text-xs space-y-1 ${
+                           live.gpReachable && live.gpMatchFound && live.newRowsCreated > 0
+                             ? 'bg-green-50 border-green-200'
+                             : live.gpReachable && live.gpMatchFound
+                             ? 'bg-amber-50 border-amber-200'
+                             : 'bg-red-50 border-red-200'
+                         }`}>
+                           <div className="font-semibold text-slate-600 uppercase tracking-wide text-xs mb-1">Google Places test result</div>
+                           <div className={`${
+                             live.gpReachable && live.gpMatchFound && live.newRowsCreated > 0
+                               ? 'text-green-800'
+                               : live.gpReachable && live.gpMatchFound
+                               ? 'text-amber-800'
+                               : 'text-red-800'
+                           } leading-relaxed`}>
+                             {live.gpReachable && live.gpMatchFound && live.newRowsCreated > 0
+                               ? `✓ Match found with ${live.newRowsCreated} price${live.newRowsCreated !== 1 ? 's' : ''} persisted. SAFE to keep in scope.`
+                               : live.gpReachable && live.gpMatchFound
+                               ? `◐ Match found but no price data. Monitor or test zone-wide.`
+                               : !live.gpReachable
+                               ? `⚠ Google Places not reachable. Retry or check connectivity.`
+                               : `✗ No match found (${live.resultsCount} results scanned). Consider removing from scope.`
+                             }
+                           </div>
+                         </div>
+                       )}
 
                       {selectedStation.fetchScopeStatus !== 'out_of_scope' && (
                         <Button
