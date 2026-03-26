@@ -237,12 +237,13 @@ export default function CoverageMapExplorer() {
   const loadAll = useCallback(async () => {
     try {
       // Step 1: Load stations + zones — always required
+      // Use filter with high limit to bypass default 50-row cap
       const [allStations, allZones] = await Promise.all([
-        base44.entities.Station.list(),
-        base44.entities.GPFetchZone.list(),
+        base44.entities.Station.filter({ status: 'active' }, '-created_date', 2000),
+        base44.entities.GPFetchZone.list('-created_date', 200),
       ]);
-      // Only show active stations (status === 'active') with valid coordinates
-      setStations(allStations.filter(s => s.latitude && s.longitude && s.status === 'active'));
+      // Filter to valid coordinates (status filter already applied in query)
+      setStations(allStations.filter(s => s.latitude && s.longitude));
       setZones(allZones);
       setLoading(false);
 
@@ -330,9 +331,20 @@ export default function CoverageMapExplorer() {
     return ICONS[`in_zone_${quality}`] || ICONS.in_zone_not_tested;
   };
 
+  // Pre-compute per-zone station lists from stationZoneMap (O(n) — no geometry re-check)
+  const zoneStationsMap = useMemo(() => {
+    const map = {};
+    for (const [stationId, zone] of Object.entries(stationZoneMap)) {
+      if (!map[zone.id]) map[zone.id] = [];
+      const station = stations.find(s => s.id === stationId);
+      if (station) map[zone.id].push(station);
+    }
+    return map;
+  }, [stationZoneMap, stations]);
+
   const stationsInZone = useCallback((zone) => {
-    return stations.filter(s => isStationInZone(s, zone));
-  }, [stations]);
+    return zoneStationsMap[zone.id] || [];
+  }, [zoneStationsMap]);
 
   // ─── Zone toggle ──────────────────────────────────────────────────────────
   const toggleZoneActive = async (zone) => {

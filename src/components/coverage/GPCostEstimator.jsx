@@ -17,13 +17,6 @@ import { corridorFetchPoints } from '@/utils/zoneGeometry';
  * PRICING DEFAULTS:
  *   Google Places API New – searchNearby with fuelOptions (Advanced Data field)
  *   = $0.032 (Nearby Search Basic) + $0.017 (fuelOptions Advanced) = $0.049 per request
- *
- * LEGACY / MANUAL FUNCTIONS — NOT production cost drivers:
- *   - fetchLiveGPPricesForArea:    UNSAFE — writes FuelPrice with priceNok=null. Incomplete parser.
- *   - batchTestGooglePlacesCoverage: MANUAL ANALYSIS ONLY — 1 call/station, uses Legacy API v1.
- *   - fetchGooglePlacesPrices:     LEGACY — hardcoded 4 cities. Not zone-driven. Not production.
- *   - discoverGooglePlacesCoverageAroundStations: MANUAL ANALYSIS — no price writes, Legacy API.
- *   - testGooglePlacesApi / captureRawGooglePlacesResponse: DEBUG only.
  */
 
 const COST_PER_REQUEST_USD = 0.049;
