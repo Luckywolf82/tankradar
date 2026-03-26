@@ -40,91 +40,112 @@ function getFetchPointCount(zone) {
   return null;
 }
 
-// ─── Combined data-aware realism classifier ───────────────────────────────────
-// Signals considered:
-//   geometry    — radius (circle) or fetch points (corridor)
-//   density     — stations per fetch point
-//   coverage    — covered stations per fetch point, coverage rate
-//   waste       — untested share
+// ─── Data-outcome realism classifier ─────────────────────────────────────────
+// Realism = "Does this zone actually produce useful data?"
+// No geometry signals. Size alone never downgrades a zone.
 //
-// Geometry alone is only a safety baseline.
-// Final classification requires geometry + coverage evidence to agree.
+// Inputs:
+//   inZoneCount    — stations in zone
+//   coveredCount   — stations with DB price rows (covered)
+//   untestedCount  — stations with no DB rows and no live test
+//   fetchPoints    — number of fetch points for the zone
+//   costPerCovered — USD cost per covered station (null if no covered stations)
+//   hasFetchHistory — whether lastFetchedAt is set (zone has run at least once)
+//
+// Thresholds:
+//   coverageRate  < 0.20  → significant issue
+//   coverageRate  < 0.40  → moderate issue
+//   wasteRate     > 0.80  → very high untested share (after fetch history)
+//   wasteRate     > 0.60  → high untested share (after fetch history)
+//   coveredPerPt  < 1.0   → poor yield per fetch point
+//   costPerCovered > 0.5  → expensive per useful station
+//
+// Classification logic (additive penalty):
+//   0 issues   → REALISTIC
+//   1 issue    → LOW_REALISM
+//   2+ issues  → VERY_LOW_REALISM
+//
+// If zone has no fetch history and insufficient data, returns REALISTIC
+// with "Insufficient data — not yet evaluated" reason.
 //
 // Returns { level, reasons[] }
-function classifyRealism({ zone, fetchPoints, inZoneCount, coveredCount, untestedCount }) {
-  const zoneType = zone.zoneType || 'circle';
-  const r = zone.radiusMeters || 5000;
-
-  const reasons = [];
-  let geometryLevel = 'REALISTIC'; // baseline from geometry
-  let dataLevel = 'REALISTIC';     // baseline from data signals
-
-  // ── 1. Geometry signal ──────────────────────────────────────────────────────
-  if (zoneType === 'circle') {
-    if (r > 50_000) {
-      geometryLevel = 'VERY_LOW_REALISM';
-      reasons.push(`Circle radius ${(r / 1000).toFixed(0)} km — a single Nearby Search request cannot cover this area.`);
-    } else if (r > 10_000) {
-      geometryLevel = 'LOW_REALISM';
-      reasons.push(`Circle radius ${(r / 1000).toFixed(0)} km — Nearby Search is location-based and result-limited; coverage at this scale is likely partial.`);
-    }
-  }
-  // Corridors: geometry is always REALISTIC — their fetch model is already point-based.
-
-  // ── 2. Density signal (stations per fetch point) ────────────────────────────
-  // Nearby Search returns ≤ 20 results per request. If stations/point is very high,
-  // the fetch model structurally cannot reach all stations regardless of geometry.
-  const stationsPerPoint = fetchPoints > 0 ? inZoneCount / fetchPoints : 0;
-  if (stationsPerPoint > 30) {
-    dataLevel = 'VERY_LOW_REALISM';
-    reasons.push(`${stationsPerPoint.toFixed(0)} stations per fetch point — Nearby Search returns ≤20 results; many stations will be unreachable.`);
-  } else if (stationsPerPoint > 15) {
-    if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
-    reasons.push(`${stationsPerPoint.toFixed(0)} stations per fetch point — density is high relative to Nearby Search result limits.`);
-  }
-
-  // ── 3. Coverage efficiency signal ──────────────────────────────────────────
-  // Only apply if we have meaningful data (>= 3 stations with coverage data)
-  const testedCount = inZoneCount - untestedCount;
+function classifyRealism({ zone, fetchPoints, inZoneCount, coveredCount, untestedCount, costPerCovered }) {
+  const hasFetchHistory = !!zone.lastFetchedAt;
   const coverageRate = inZoneCount > 0 ? coveredCount / inZoneCount : null;
-  const coveredPerPoint = fetchPoints > 0 ? coveredCount / fetchPoints : 0;
+  const wasteRate = inZoneCount > 0 ? untestedCount / inZoneCount : null;
+  const coveredPerPoint = fetchPoints > 0 ? coveredCount / fetchPoints : null;
 
-  if (testedCount >= 3) {
-    // Low coverage rate despite testing → fetch model is delivering poor results
-    if (coverageRate !== null && coverageRate < 0.2 && coveredCount < 3) {
-      if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
-      reasons.push(`Coverage rate ${Math.round(coverageRate * 100)}% — very few stations covered despite active fetch zone.`);
-    }
-    // Very low covered stations per fetch point
-    if (coveredPerPoint < 1 && inZoneCount > 5) {
-      if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
-      reasons.push(`${coveredPerPoint.toFixed(1)} covered stations per fetch point — fetch yield is low.`);
-    }
+  // Not enough data to evaluate — zone hasn't run or zone is empty
+  if (!hasFetchHistory || inZoneCount === 0) {
+    return {
+      level: 'REALISTIC',
+      reasons: [inZoneCount === 0
+        ? 'No stations in zone — cannot evaluate yet.'
+        : 'Zone has not been fetched yet — realism will be evaluated after first run.'],
+    };
   }
 
-  // ── 4. High untested share (if zone has been running, we expect some coverage) ──
-  if (inZoneCount >= 5 && untestedCount / inZoneCount > 0.85 && zone.lastFetchedAt) {
-    if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
-    reasons.push(`${Math.round((untestedCount / inZoneCount) * 100)}% of in-zone stations still untested after at least one fetch run.`);
-  }
+  const issues = [];
+  const positives = [];
 
-  // ── 5. Combine: geometry and data signals ──────────────────────────────────
-  // If either geometry or data signals indicate VERY_LOW → VERY_LOW wins.
-  // If either indicates LOW and the other doesn't counter it → LOW.
-  // Both must be REALISTIC for final REALISTIC.
-  const order = { REALISTIC: 0, LOW_REALISM: 1, VERY_LOW_REALISM: 2 };
-  const finalLevel = order[geometryLevel] >= order[dataLevel] ? geometryLevel : dataLevel;
-
-  // If no specific reasons collected and zone is REALISTIC, give a positive summary
-  if (reasons.length === 0) {
-    if (zoneType === 'corridor') {
-      reasons.push('Corridor zone — point-based fetch model; geometry and density are appropriate.');
+  // ── Coverage rate ──────────────────────────────────────────────────────────
+  if (coverageRate !== null) {
+    if (coverageRate < 0.20) {
+      issues.push(`Low coverage rate: ${Math.round(coverageRate * 100)}% of in-zone stations are covered.`);
+    } else if (coverageRate < 0.40) {
+      issues.push(`Moderate coverage rate: ${Math.round(coverageRate * 100)}% covered — less than half of in-zone stations have price data.`);
     } else {
-      reasons.push(`Circle radius ${(r / 1000).toFixed(1)} km with ${stationsPerPoint.toFixed(1)} stations/point — within acceptable density range.`);
+      positives.push(`Coverage rate: ${Math.round(coverageRate * 100)}% of in-zone stations covered.`);
     }
   }
 
-  return { level: finalLevel, reasons };
+  // ── Untested / waste share ─────────────────────────────────────────────────
+  if (wasteRate !== null && inZoneCount >= 3) {
+    if (wasteRate > 0.80) {
+      issues.push(`High waste rate: ${Math.round(wasteRate * 100)}% of in-zone stations are still untested after fetch run(s).`);
+    } else if (wasteRate > 0.60) {
+      issues.push(`Elevated untested share: ${Math.round(wasteRate * 100)}% of stations have not been reached.`);
+    } else if (wasteRate < 0.30) {
+      positives.push(`Low waste rate: only ${Math.round(wasteRate * 100)}% of stations untested.`);
+    }
+  }
+
+  // ── Covered stations per fetch point ──────────────────────────────────────
+  if (coveredPerPoint !== null && inZoneCount >= 3) {
+    if (coveredPerPoint < 1.0) {
+      issues.push(`Poor fetch yield: ${coveredPerPoint.toFixed(1)} covered stations per fetch point.`);
+    } else if (coveredPerPoint >= 3.0) {
+      positives.push(`Good fetch yield: ${coveredPerPoint.toFixed(1)} covered stations per fetch point.`);
+    }
+  }
+
+  // ── Cost per covered station ───────────────────────────────────────────────
+  if (costPerCovered != null) {
+    if (costPerCovered > 0.5) {
+      issues.push(`Expensive per covered station: $${costPerCovered.toFixed(3)}/covered — fetch cost is high relative to useful output.`);
+    } else if (costPerCovered < 0.05) {
+      positives.push(`Efficient: $${costPerCovered.toFixed(3)} per covered station.`);
+    }
+  }
+
+  // ── Classify based on issue count ─────────────────────────────────────────
+  let level;
+  if (issues.length === 0) {
+    level = 'REALISTIC';
+  } else if (issues.length === 1) {
+    level = 'LOW_REALISM';
+  } else {
+    level = 'VERY_LOW_REALISM';
+  }
+
+  // Build reason list: issues first, then positives if realistic
+  const reasons = issues.length > 0
+    ? issues
+    : positives.length > 0
+      ? positives
+      : [`Coverage rate ${Math.round((coverageRate ?? 0) * 100)}% · waste ${Math.round((wasteRate ?? 0) * 100)}% · ${(coveredPerPoint ?? 0).toFixed(1)} covered/pt — performing well.`];
+
+  return { level, reasons };
 }
 
 function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership, zoneStationsMap }) {
@@ -153,13 +174,14 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
       const stationsPerPoint = (fetchPoints > 0 && inZone.length > 0) ? inZone.length / fetchPoints : null;
       const coveredPerPoint = (fetchPoints > 0 && covered.length > 0) ? covered.length / fetchPoints : null;
 
-      // Combined data-aware realism classification
+      // Data-outcome realism classification
       const { level: realism, reasons: realismReasons } = classifyRealism({
         zone,
         fetchPoints: fetchPoints || 1,
         inZoneCount: inZone.length,
         coveredCount: covered.length,
         untestedCount: untested.length,
+        costPerCovered,
       });
 
       return {
@@ -215,11 +237,10 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
 
       {/* Global realism warning */}
       {hasGlobalRealismWarning && (
-        <div className="bg-red-50 border border-red-300 rounded-lg p-2.5 text-xs text-red-800 leading-relaxed">
-          <div className="font-bold mb-1">⚠ Estimated cost is artificially low</div>
-          Large circle zones appear cheap because Nearby Search uses 1 request per zone regardless of size.
-          In practice, <strong>a single request covers very limited geographic area</strong> and returns ≤20 results.
-          Coverage will likely be poor.
+        <div className="bg-amber-50 border border-amber-300 rounded-lg p-2.5 text-xs text-amber-800 leading-relaxed">
+          <div className="font-bold mb-1">⚠ One or more zones show poor data output</div>
+          Low cost combined with weak coverage efficiency suggests these zones are not producing useful data per fetch run.
+          Review the realism flags per zone for specific reasons.
         </div>
       )}
 
@@ -342,11 +363,11 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
 
         {/* Realism legend */}
         <div className="rounded border p-2 space-y-1 text-xs bg-slate-50">
-          <div className="font-semibold text-slate-500 uppercase tracking-wide text-xs mb-1">Realism model — combined signals</div>
-          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>REALISTIC</strong> — geometry and density are appropriate for Nearby Search</span></div>
-          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>LOW_REALISM</strong> — large geometry, high station density per point, or poor observed coverage</span></div>
-          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-red-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>VERY_LOW_REALISM</strong> — fetch model is structurally too weak (radius &gt;50 km or &gt;30 stations/point)</span></div>
-          <div className="text-slate-400 italic mt-1">Signals: geometry + stations/fetch point + coverage rate + untested share. Corridor zones use point-based fetch and are evaluated on density only.</div>
+          <div className="font-semibold text-slate-500 uppercase tracking-wide text-xs mb-1">Realism = "Does this zone produce useful data?"</div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>REALISTIC</strong> — good coverage rate, low waste, acceptable cost per covered station</span></div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>LOW_REALISM</strong> — one data issue: low coverage, high untested share, poor yield, or high cost/covered</span></div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-red-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>VERY_LOW_REALISM</strong> — two or more data issues combined</span></div>
+          <div className="text-slate-400 italic mt-1">Zone size and geometry are not factors. A large zone that performs well scores as REALISTIC.</div>
         </div>
       </div>
     </div>
