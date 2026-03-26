@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, MapPin, Search, RefreshCw, Route } from 'lucide-react';
 import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoints } from '@/utils/zoneGeometry';
+import GPCostEstimator from '@/components/coverage/GPCostEstimator.jsx';
 
 // ─── Marker icons ─────────────────────────────────────────────────────────────
 const makeIcon = (url, size = [20, 33]) => new L.Icon({
@@ -676,9 +677,14 @@ export default function CoverageMapExplorer() {
           )}
 
           <div className="flex border-b text-xs font-semibold">
-            {[{ key: 'zones', label: 'Zones' }, { key: 'station', label: `Station${selectedStation ? ' ●' : ''}` }, { key: 'zone_detail', label: `Zone${selectedZone ? ' ●' : ''}` }].map(({ key, label }) => (
+            {[
+              { key: 'zones', label: 'Zones' },
+              { key: 'station', label: `Station${selectedStation ? ' ●' : ''}` },
+              { key: 'zone_detail', label: `Zone${selectedZone ? ' ●' : ''}` },
+              { key: 'cost', label: 'Cost' },
+            ].map(({ key, label }) => (
               <button key={key} onClick={() => setSidebarMode(key)}
-                className={`flex-1 py-2 px-2 ${sidebarMode === key ? 'border-b-2 border-blue-600 text-blue-700 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}>
+                className={`flex-1 py-2 px-1 ${sidebarMode === key ? 'border-b-2 border-blue-600 text-blue-700 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}>
                 {label}
               </button>
             ))}
@@ -961,6 +967,17 @@ export default function CoverageMapExplorer() {
                   </div>
                 );
               })()
+            )}
+
+            {/* ── Cost estimator ── */}
+            {sidebarMode === 'cost' && (
+              <GPCostEstimator
+                zones={zones}
+                stations={stations}
+                dbCoverageMap={dbCoverageMap}
+                liveTestMap={liveTestMap}
+                getZoneMembership={getZoneMembership}
+              />
             )}
 
             {/* ── Zone detail ── */}
