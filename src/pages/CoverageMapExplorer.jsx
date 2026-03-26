@@ -616,24 +616,13 @@ export default function CoverageMapExplorer() {
       setZones(allZones);
       setLoading(false);
 
-      // Step 2: Load GP prices separately — non-blocking, paginated to avoid rate limit
+      // Step 2: Load GP prices separately — non-blocking, single batch capped at 500
       try {
-        // Fetch in batches of 200, max 5 batches (1000 rows) to avoid hanging
-        let allGpPrices = [];
-        let skip = 0;
-        const batchSize = 200;
-        const maxBatches = 5;
-        for (let i = 0; i < maxBatches; i++) {
-          const batch = await base44.entities.FuelPrice.filter(
-            { sourceName: 'GooglePlaces' },
-            '-fetchedAt',
-            batchSize,
-            skip
-          );
-          allGpPrices = allGpPrices.concat(batch);
-          if (batch.length < batchSize) break;
-          skip += batchSize;
-        }
+        const allGpPrices = await base44.entities.FuelPrice.filter(
+          { sourceName: 'GooglePlaces' },
+          '-fetchedAt',
+          500
+        );
 
         // Build dbCoverageMap ONLY from actual FuelPrice rows with stationId
         const dbMap = {};
@@ -1798,21 +1787,23 @@ export default function CoverageMapExplorer() {
                             <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 space-y-1.5">
                               <div className="font-semibold">⚠ {removeCandidates.length} station{removeCandidates.length !== 1 ? 's' : ''} not reached by GP</div>
                               <div className="text-red-600 leading-relaxed">
-                                No GP match within 300 m and no DB prices. Flagging sets <code>reviewStatus → flagged</code> — station stays active but is excluded from scope assessment.
+                                No GP match within 500 m and no DB prices. Sets <code>fetchScopeStatus → out_of_scope</code> — station stays active but excluded from future GP fetch runs.
                               </div>
                               <Button
                                 size="sm"
                                 className="w-full bg-red-600 hover:bg-red-700 text-white"
                                 onClick={async () => {
                                   const names = removeCandidates.map(s => `• ${s.name}`).join('\n');
-                                  if (!window.confirm(`Flag ${removeCandidates.length} station${removeCandidates.length !== 1 ? 's' : ''} for scope removal?\n\n${names}\n\nThis sets reviewStatus → flagged on each. Reversible from the Station editor.`)) return;
-                                  for (const s of removeCandidates) {
-                                    await base44.entities.Station.update(s.id, { reviewStatus: 'flagged' });
-                                    setStations(prev => prev.map(st => st.id === s.id ? { ...st, reviewStatus: 'flagged' } : st));
-                                  }
+                                  if (!window.confirm(`Remove ${removeCandidates.length} station${removeCandidates.length !== 1 ? 's' : ''} from GP fetch scope?\n\n${names}\n\nThis sets fetchScopeStatus → out_of_scope. Reversible from Station editor.`)) return;
+                                  const stationIds = removeCandidates.map(s => s.id);
+                                  await base44.functions.invoke('applyFetchScopeDecision', {
+                                    mode: 'bulk_remove_candidates',
+                                    stationIds,
+                                  });
+                                  setStations(prev => prev.map(st => stationIds.includes(st.id) ? { ...st, fetchScopeStatus: 'out_of_scope' } : st));
                                 }}
                               >
-                                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Flag all {removeCandidates.length} for scope removal
+                                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Remove all {removeCandidates.length} from fetch scope
                               </Button>
                             </div>
                           )}
