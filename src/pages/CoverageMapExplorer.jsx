@@ -9,7 +9,116 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, MapPin, Search, RefreshCw, Route } from 'lucide-react';
 import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoints } from '@/utils/zoneGeometry';
-import GPCostEstimator from '@/components/coverage/GPCostEstimator.jsx';
+
+
+// ─── GP Cost Estimator (inlined to avoid external file dependency) ────────────
+const COST_PER_REQUEST_USD = 0.049;
+const DEFAULT_NOK_RATE = 10.8;
+
+function getFetchPointCount(zone) {
+  const zoneType = zone.zoneType || 'circle';
+  if (zoneType === 'circle') return 1;
+  if (zoneType === 'corridor') {
+    try { return corridorFetchPoints(zone).length; } catch { return null; }
+  }
+  return null;
+}
+
+function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership }) {
+  const [costPerRequest, setCostPerRequest] = React.useState(COST_PER_REQUEST_USD);
+  const [runsPerDay, setRunsPerDay] = React.useState(1);
+  const [nokRate, setNokRate] = React.useState(DEFAULT_NOK_RATE);
+
+  const activeZones = zones.filter(z => z.isActive);
+
+  const zoneBreakdown = React.useMemo(() => activeZones.map(zone => {
+    const zoneType = zone.zoneType || 'circle';
+    const fetchPoints = getFetchPointCount(zone);
+    const supported = fetchPoints !== null;
+    const requestsPerRun = supported ? fetchPoints : null;
+    const costPerRun = supported ? requestsPerRun * costPerRequest : null;
+    return { zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported };
+  }), [activeZones, costPerRequest]);
+
+  const totals = React.useMemo(() => {
+    const rows = zoneBreakdown.filter(r => r.supported);
+    const totalRequests = rows.reduce((s, r) => s + r.requestsPerRun, 0);
+    const costPerRun = totalRequests * costPerRequest;
+    return {
+      totalRequests, costPerRun,
+      costPerDay: costPerRun * runsPerDay,
+      costPerWeek: costPerRun * runsPerDay * 7,
+      costPerMonth: costPerRun * runsPerDay * 30,
+    };
+  }, [zoneBreakdown, costPerRequest, runsPerDay]);
+
+  const inZoneStations = stations.filter(s => getZoneMembership(s) != null);
+  const coveredInZone = inZoneStations.filter(s => dbCoverageMap[s.id] != null);
+  const untestedInZone = inZoneStations.filter(s => !dbCoverageMap[s.id] && !liveTestMap[s.id]);
+  const fmtUSD = v => v != null ? `$${v.toFixed(3)}` : '—';
+  const fmtNOK = v => v != null ? `${(v * nokRate).toFixed(2)} kr` : '—';
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-xs text-blue-800 leading-relaxed">
+        <div className="font-semibold mb-1">Production fetch model</div>
+        Cost is based on <strong>active GPFetchZone records</strong> — <strong>not per-station</strong>.
+        <div className="mt-1 text-blue-600">No scheduled automation is currently active — estimation only.</div>
+      </div>
+      <div className="space-y-2">
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Configuration</div>
+        <div className="grid grid-cols-3 gap-1.5">
+          <div><label className="text-xs text-slate-500 block mb-0.5">$/request</label>
+            <input type="number" step="0.001" value={costPerRequest} onChange={e => setCostPerRequest(parseFloat(e.target.value) || COST_PER_REQUEST_USD)} className="w-full px-2 py-1 border rounded text-xs" /></div>
+          <div><label className="text-xs text-slate-500 block mb-0.5">Runs/day</label>
+            <input type="number" min="1" value={runsPerDay} onChange={e => setRunsPerDay(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+          <div><label className="text-xs text-slate-500 block mb-0.5">NOK/USD</label>
+            <input type="number" step="0.1" value={nokRate} onChange={e => setNokRate(parseFloat(e.target.value) || DEFAULT_NOK_RATE)} className="w-full px-2 py-1 border rounded text-xs" /></div>
+        </div>
+        <div className="text-xs text-slate-400">Default: <code>$0.049</code> = Nearby Search ($0.032) + fuelOptions ($0.017).</div>
+      </div>
+      <div>
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Active zones ({activeZones.length})</div>
+        {activeZones.length === 0 ? <div className="text-xs text-slate-400 italic py-2">No active zones.</div> : (
+          <div className="space-y-1">
+            <div className="grid grid-cols-12 gap-1 text-xs text-slate-400 font-semibold pb-1 border-b">
+              <div className="col-span-4">Zone</div><div className="col-span-2 text-center">Type</div>
+              <div className="col-span-2 text-center">Pts</div><div className="col-span-2 text-right">Req</div><div className="col-span-2 text-right">Cost</div>
+            </div>
+            {zoneBreakdown.map(({ zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported }) => (
+              <div key={zone.id} className="grid grid-cols-12 gap-1 text-xs py-1 border-b border-slate-100">
+                <div className="col-span-4 truncate font-medium text-slate-700" title={zone.name}>{zone.name}</div>
+                <div className="col-span-2 text-center"><span className={`px-1 rounded text-xs ${zoneType === 'corridor' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{zoneType}</span></div>
+                <div className="col-span-2 text-center text-slate-600">{supported ? fetchPoints : <span className="text-amber-600">?</span>}</div>
+                <div className="col-span-2 text-right text-slate-600">{supported ? requestsPerRun : '—'}</div>
+                <div className="col-span-2 text-right font-medium text-slate-700">{supported ? fmtUSD(costPerRun) : '—'}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="space-y-2">
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estimated totals</div>
+        <div className="border rounded p-3 space-y-2 bg-white">
+          <div className="flex justify-between text-xs"><span className="text-slate-500">Total requests / run</span><span className="font-bold text-slate-800">{totals.totalRequests}</span></div>
+          <div className="flex justify-between text-xs border-t pt-2"><span className="text-slate-500">Cost / run</span><span className="font-semibold">{fmtUSD(totals.costPerRun)} <span className="text-slate-400 font-normal">({fmtNOK(totals.costPerRun)})</span></span></div>
+          <div className="flex justify-between text-xs"><span className="text-slate-500">Cost / day ({runsPerDay}×)</span><span className="font-semibold">{fmtUSD(totals.costPerDay)} <span className="text-slate-400 font-normal">({fmtNOK(totals.costPerDay)})</span></span></div>
+          <div className="flex justify-between text-xs"><span className="text-slate-500">Cost / week</span><span className="font-semibold">{fmtUSD(totals.costPerWeek)} <span className="text-slate-400 font-normal">({fmtNOK(totals.costPerWeek)})</span></span></div>
+          <div className="flex justify-between text-xs border-t pt-2"><span className="text-slate-500 font-semibold">Cost / month (30d)</span><span className="font-bold text-blue-700">{fmtUSD(totals.costPerMonth)} <span className="text-blue-400 font-normal">({fmtNOK(totals.costPerMonth)})</span></span></div>
+        </div>
+        <div className="text-xs text-slate-400 italic">Estimates only. No automation active.</div>
+      </div>
+      <div className="space-y-1.5">
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Station coverage (active zones)</div>
+        <div className="grid grid-cols-3 gap-1.5">
+          <div className="border rounded p-2 text-center"><div className="text-base font-bold text-slate-800">{inZoneStations.length}</div><div className="text-xs text-slate-500">In-zone</div></div>
+          <div className="border rounded p-2 text-center bg-green-50"><div className="text-base font-bold text-green-700">{coveredInZone.length}</div><div className="text-xs text-slate-500">DB covered</div></div>
+          <div className="border rounded p-2 text-center bg-amber-50"><div className="text-base font-bold text-amber-600">{untestedInZone.length}</div><div className="text-xs text-slate-500">Untested</div></div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Marker icons ─────────────────────────────────────────────────────────────
 const makeIcon = (url, size = [20, 33]) => new L.Icon({
@@ -230,6 +339,8 @@ export default function CoverageMapExplorer() {
 
   // New corridor creation state
   const [corridorDraft, setCorridorDraft] = useState(null); // { points: [{lat,lng},...], name: '', buffer: 2000 }
+  // New circle creation state
+  const [circleDraft, setCircleDraft] = useState(null); // { center: {lat,lng}, name: '', radiusMeters: 5000 }
 
   // ─── Load ──────────────────────────────────────────────────────────────────
   // Loads DB state only. Does NOT touch liveTestMap.
@@ -457,8 +568,35 @@ export default function CoverageMapExplorer() {
     finally { setTestingStation(false); }
   };
 
+  // ─── Save circle zone ─────────────────────────────────────────────────────
+  const saveCircleZone = async () => {
+    if (!circleDraft?.center) { alert('Klikk på kartet for å plassere senterpunktet.'); return; }
+    if (!circleDraft.name.trim()) { alert('Skriv inn et sonenavn.'); return; }
+    try {
+      const newZone = await base44.entities.GPFetchZone.create({
+        name: circleDraft.name.trim(),
+        zoneType: 'circle',
+        isActive: false,
+        priority: 'normal',
+        latitude: circleDraft.center.lat,
+        longitude: circleDraft.center.lng,
+        radiusMeters: circleDraft.radiusMeters || 5000,
+        notes: `Circle zone created manually`,
+      });
+      setZones(prev => [...prev, newZone]);
+      setCircleDraft(null);
+      setSelectedZone(newZone);
+      setSidebarMode('zone_detail');
+    } catch (err) { alert(`Klarte ikke lagre sone: ${err.message}`); }
+  };
+
   // ─── Map click ─────────────────────────────────────────────────────────────
   const handleMapClick = useCallback(async (e) => {
+    // Circle draft mode: set center
+    if (circleDraft && !circleDraft.center) {
+      setCircleDraft(d => ({ ...d, center: { lat: e.latlng.lat, lng: e.latlng.lng } }));
+      return;
+    }
     // Corridor draft mode: add waypoints
     if (corridorDraft) {
       setCorridorDraft(d => ({ ...d, points: [...d.points, { lat: e.latlng.lat, lng: e.latlng.lng }] }));
@@ -474,7 +612,7 @@ export default function CoverageMapExplorer() {
       await loadAll();
       setClickToTestMode(false);
     } catch (err) { alert(`Error: ${err.message}`); }
-  }, [corridorDraft, clickToTestMode, testRadius, stations, loadAll]);
+  }, [circleDraft, corridorDraft, clickToTestMode, testRadius, stations, loadAll]);
 
   // ─── Save corridor zone ───────────────────────────────────────────────────
   const saveCorridorZone = async () => {
@@ -515,6 +653,7 @@ export default function CoverageMapExplorer() {
   );
 
   const isDrawingCorridor = !!corridorDraft;
+  const isDrawingCircle = !!circleDraft;
 
   return (
     <div className="w-full h-screen flex flex-col bg-slate-100">
@@ -541,7 +680,7 @@ export default function CoverageMapExplorer() {
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block" /> Out of zone</span>
           </div>
           <div className="flex items-center gap-1 ml-auto">
-            {!isDrawingCorridor && (
+            {!isDrawingCorridor && !isDrawingCircle && (
               <>
                 <Button size="sm" variant={clickToTestMode ? 'default' : 'outline'} onClick={() => setClickToTestMode(m => !m)} className="text-xs">
                   <MapPin className="w-3 h-3 mr-1" />{clickToTestMode ? 'Click mode ON' : 'Click to test'}
@@ -550,6 +689,9 @@ export default function CoverageMapExplorer() {
                   <input type="number" value={testRadius} onChange={e => setTestRadius(Math.max(0.1, parseFloat(e.target.value) || 1))}
                     className="w-14 px-2 py-1 border rounded text-xs" placeholder="km" />
                 )}
+                <Button size="sm" variant="outline" onClick={() => { setCircleDraft({ center: null, name: '', radiusMeters: 5000 }); setClickToTestMode(false); }} className="text-xs">
+                  <MapPin className="w-3 h-3 mr-1" /> New circle
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => { setCorridorDraft({ points: [], name: '', buffer: 2000, fetchRadius: 3000 }); setClickToTestMode(false); }} className="text-xs">
                   <Route className="w-3 h-3 mr-1" /> New corridor
                 </Button>
@@ -558,6 +700,11 @@ export default function CoverageMapExplorer() {
             {isDrawingCorridor && (
               <span className="text-xs text-blue-700 font-semibold bg-blue-50 border border-blue-200 rounded px-2 py-1">
                 ✏ Click map to add waypoints ({corridorDraft.points.length} added)
+              </span>
+            )}
+            {isDrawingCircle && (
+              <span className="text-xs text-green-700 font-semibold bg-green-50 border border-green-200 rounded px-2 py-1">
+                ✏ {circleDraft.center ? `Senter satt — juster i sidepanel` : 'Klikk kartet for å sette senterpunkt'}
               </span>
             )}
           </div>
@@ -594,6 +741,21 @@ export default function CoverageMapExplorer() {
               }
               return null;
             })}
+
+            {/* Circle draft preview */}
+            {isDrawingCircle && circleDraft.center && (
+              <>
+                <Circle
+                  center={[circleDraft.center.lat, circleDraft.center.lng]}
+                  radius={circleDraft.radiusMeters || 5000}
+                  pathOptions={{ color: '#16a34a', weight: 2, opacity: 0.8, fillColor: '#16a34a', fillOpacity: 0.1, dashArray: '6,4' }}
+                />
+                <Marker position={[circleDraft.center.lat, circleDraft.center.lng]}
+                  icon={makeIcon('https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', [16, 26])}>
+                  <Popup><div className="text-xs">Sirkelsenter (utkast)</div></Popup>
+                </Marker>
+              </>
+            )}
 
             {/* Corridor draft preview */}
             {isDrawingCorridor && corridorDraft.points.length >= 1 && (
@@ -694,6 +856,38 @@ export default function CoverageMapExplorer() {
                 <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setCorridorDraft(null)}>Cancel</Button>
                 <Button size="sm" className="flex-1 text-xs" onClick={saveCorridorZone} disabled={corridorDraft.points.length < 2 || !corridorDraft.name.trim()}>
                   Save zone
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Circle draft panel */}
+          {isDrawingCircle && (
+            <div className="border-b bg-green-50 p-3 space-y-2">
+              <div className="text-xs font-bold text-green-800">Ny sirkelsone</div>
+              <input
+                className="w-full px-2 py-1 border rounded text-xs"
+                placeholder="Sonenavn (f.eks. Trondheim sentrum)"
+                value={circleDraft.name}
+                onChange={e => setCircleDraft(d => ({ ...d, name: e.target.value }))}
+              />
+              <div>
+                <label className="text-xs text-slate-500">Radius (m)</label>
+                <input type="number" className="w-full px-2 py-1 border rounded text-xs" value={circleDraft.radiusMeters}
+                  onChange={e => setCircleDraft(d => ({ ...d, radiusMeters: parseInt(e.target.value) || 5000 }))} />
+              </div>
+              {circleDraft.center ? (
+                <div className="text-xs text-green-700">
+                  Senter: {circleDraft.center.lat.toFixed(5)}, {circleDraft.center.lng.toFixed(5)}
+                  <button className="ml-2 text-red-500 underline" onClick={() => setCircleDraft(d => ({ ...d, center: null }))}>Tilbakestill</button>
+                </div>
+              ) : (
+                <div className="text-xs text-green-600 italic">Klikk på kartet for å sette senterpunkt</div>
+              )}
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setCircleDraft(null)}>Avbryt</Button>
+                <Button size="sm" className="flex-1 text-xs" onClick={saveCircleZone} disabled={!circleDraft.center || !circleDraft.name.trim()}>
+                  Lagre sone
                 </Button>
               </div>
             </div>
