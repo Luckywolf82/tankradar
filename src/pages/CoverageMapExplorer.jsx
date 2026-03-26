@@ -605,11 +605,13 @@ export default function CoverageMapExplorer() {
   // Stations + zones load first (critical). GP prices load separately (non-blocking).
   const loadAll = useCallback(async () => {
     try {
-      // Step 1: Load stations + zones — always required
-      const [allStations, allZones] = await Promise.all([
-        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500),
+      // Step 1: Load stations + zones — fetch all active stations in two batches
+      const [batch1, batch2, allZones] = await Promise.all([
+        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500, 0),
+        base44.entities.Station.filter({ status: 'active' }, '-created_date', 500, 500),
         base44.entities.GPFetchZone.list('-created_date', 200),
       ]);
+      const allStations = [...batch1, ...batch2];
       // Filter to valid coordinates (status filter already applied in query)
       setStations(allStations.filter(s => s.latitude && s.longitude));
       setZones(allZones);
