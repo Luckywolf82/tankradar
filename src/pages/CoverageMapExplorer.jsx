@@ -1056,8 +1056,8 @@ export default function CoverageMapExplorer() {
               </>
             )}
 
-            {/* Station markers — capped at 300 visible to prevent Leaflet freeze */}
-            {stations.slice(0, 300).map(station => {
+            {/* Station markers — all loaded stations rendered */}
+            {stations.map(station => {
               const zone = getZoneMembership(station);
               if (!showLayers.inZone && zone) return null;
               if (!showLayers.outZone && !zone) return null;
