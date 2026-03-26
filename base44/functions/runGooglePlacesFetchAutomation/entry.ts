@@ -196,8 +196,9 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'No active GPFetchZones. Nothing to fetch.', activeZones: 0, totalZones: allZones.length });
     }
 
-    // 2. Station catalog
-    const allStations = await db.entities.Station.list();
+    // 2. Station catalog — exclude flagged stations from GP matching scope
+    const allStationsRaw = await db.entities.Station.list();
+    const allStations = allStationsRaw.filter(s => s.reviewStatus !== 'flagged');
 
     // 3. Dedup snapshot
     const existingGP = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-created_date', 2000);
