@@ -1795,11 +1795,25 @@ export default function CoverageMapExplorer() {
                           </div>
 
                           {hasStationResults && removeCandidates.length > 0 && (
-                            <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 space-y-1">
+                            <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 space-y-1.5">
                               <div className="font-semibold">⚠ {removeCandidates.length} station{removeCandidates.length !== 1 ? 's' : ''} not reached by GP</div>
                               <div className="text-red-600 leading-relaxed">
-                                These stations had no GP match within 300 m and no DB prices. Consider flagging them to remove from fetch scope.
+                                No GP match within 300 m and no DB prices. Flagging sets <code>reviewStatus → flagged</code> — station stays active but is excluded from scope assessment.
                               </div>
+                              <Button
+                                size="sm"
+                                className="w-full bg-red-600 hover:bg-red-700 text-white"
+                                onClick={async () => {
+                                  const names = removeCandidates.map(s => `• ${s.name}`).join('\n');
+                                  if (!window.confirm(`Flag ${removeCandidates.length} station${removeCandidates.length !== 1 ? 's' : ''} for scope removal?\n\n${names}\n\nThis sets reviewStatus → flagged on each. Reversible from the Station editor.`)) return;
+                                  for (const s of removeCandidates) {
+                                    await base44.entities.Station.update(s.id, { reviewStatus: 'flagged' });
+                                    setStations(prev => prev.map(st => st.id === s.id ? { ...st, reviewStatus: 'flagged' } : st));
+                                  }
+                                }}
+                              >
+                                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Flag all {removeCandidates.length} for scope removal
+                              </Button>
                             </div>
                           )}
 
