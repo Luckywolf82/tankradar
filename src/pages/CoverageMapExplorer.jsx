@@ -703,6 +703,8 @@ export default function CoverageMapExplorer() {
     const zone = getZoneMembership(station);
     if (!zone) return ICONS.out_zone;
     const quality = getQuality(station.id);
+    // If station is in a zone that has been tested (lastFetchedAt set) but has no DB data → orange (no data after testing)
+    if (quality === 'not_tested' && zone.lastFetchedAt) return ICONS.in_zone_no_data;
     return ICONS[`in_zone_${quality}`] || ICONS.in_zone_not_tested;
   };
 
@@ -736,6 +738,13 @@ export default function CoverageMapExplorer() {
     await base44.entities.GPFetchZone.update(zone.id, { [field]: value });
     setZones(prev => prev.map(z => z.id === zone.id ? { ...z, [field]: value } : z));
     if (selectedZone?.id === zone.id) setSelectedZone(z => ({ ...z, [field]: value }));
+  };
+
+  // ─── Set out of scope ─────────────────────────────────────────────────────
+  const setOutOfScope = async (station) => {
+    await base44.entities.Station.update(station.id, { fetchScopeStatus: 'out_of_scope' });
+    setStations(prev => prev.map(s => s.id === station.id ? { ...s, fetchScopeStatus: 'out_of_scope' } : s));
+    if (selectedStation?.id === station.id) setSelectedStation(s => ({ ...s, fetchScopeStatus: 'out_of_scope' }));
   };
 
   // ─── Station status actions ───────────────────────────────────────────────
@@ -972,7 +981,8 @@ export default function CoverageMapExplorer() {
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Full</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" /> Partial</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" /> Weak / no data</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Not tested</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" /> No GP data (tested)</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Not yet in tested zone</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block" /> Out of zone</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Out of scope</span>
           </div>
@@ -1104,6 +1114,19 @@ export default function CoverageMapExplorer() {
                       {db && <div className="text-green-700">DB: {db.storedFuelTypes?.join(', ') || 'no fuel types'} ({db.rowCount} rows)</div>}
                       {!db && live && <div className="text-slate-500">Tested · {live.gpMatchFound ? 'match found' : 'no match'}</div>}
                       {station.reviewStatus === 'flagged' && <div className="text-amber-600 font-semibold">⚑ Flagged for review</div>}
+                      {station.fetchScopeStatus !== 'out_of_scope' && !db && zone?.lastFetchedAt && (
+                        <button
+                          className="mt-1 w-full text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded px-2 py-1 font-semibold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Set "${station.name}" as out of scope?\n\nStation has been in zone but produced no GP data.`)) {
+                              setOutOfScope(station);
+                            }
+                          }}
+                        >
+                          → Set out of scope
+                        </button>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
@@ -1304,6 +1327,7 @@ export default function CoverageMapExplorer() {
                       <Row label="Zone" value={zone ? zone.name : 'None'} valueClass={zone ? 'text-emerald-700' : 'text-slate-400'} />
                       <Row label="In active scope" value={zone ? 'Yes' : 'No'} valueClass={zone ? 'text-emerald-700 font-bold' : 'text-slate-400'} />
                       {zone && <Row label="Zone type" value={`${zone.zoneType || 'circle'} · ${zone.priority || 'normal'}`} />}
+                      <Row label="fetchScopeStatus" value={selectedStation.fetchScopeStatus || 'keep'} valueClass={selectedStation.fetchScopeStatus === 'out_of_scope' ? 'text-red-600 font-semibold' : selectedStation.fetchScopeStatus === 'monitor' ? 'text-amber-600' : 'text-green-700'} />
                       <Row label="Station status" value={selectedStation.status || 'active'} valueClass={selectedStation.status === 'active' ? 'text-green-700' : 'text-red-600'} />
                       <Row
                         label="Review status"
@@ -1406,6 +1430,35 @@ export default function CoverageMapExplorer() {
                         {testingStation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
                         Test this station
                       </Button>
+
+                      {selectedStation.fetchScopeStatus !== 'out_of_scope' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            if (window.confirm(`Set "${selectedStation.name}" as out of scope?\n\nThis sets fetchScopeStatus → out_of_scope. Station stays active but excluded from GP fetch runs.`)) {
+                              setOutOfScope(selectedStation);
+                            }
+                          }}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" /> Set out of scope
+                        </Button>
+                      )}
+                      {selectedStation.fetchScopeStatus === 'out_of_scope' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                          onClick={async () => {
+                            await base44.entities.Station.update(selectedStation.id, { fetchScopeStatus: 'keep' });
+                            setStations(prev => prev.map(s => s.id === selectedStation.id ? { ...s, fetchScopeStatus: 'keep' } : s));
+                            setSelectedStation(s => ({ ...s, fetchScopeStatus: 'keep' }));
+                          }}
+                        >
+                          ↩ Restore to scope (set keep)
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" className="w-full" onClick={() => { if (mapRef.current) mapRef.current.setView([selectedStation.latitude, selectedStation.longitude], 15); }}>
                         <MapPin className="w-4 h-4 mr-2" /> Center map here
                       </Button>
