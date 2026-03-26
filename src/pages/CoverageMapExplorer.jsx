@@ -15,6 +15,27 @@ import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoin
 const COST_PER_REQUEST_USD = 0.049;
 const DEFAULT_NOK_RATE = 10.8;
 
+// Realism thresholds for circle zones (in meters)
+const CIRCLE_REALISTIC_MAX = 10_000;   // <= 10 km → REALISTIC
+const CIRCLE_LOW_MAX = 50_000;         // <= 50 km → LOW_REALISM
+// > 50 km → VERY_LOW_REALISM
+
+const REALISM_STYLE = {
+  REALISTIC:      { label: 'REALISTIC',      bg: 'bg-green-100',  text: 'text-green-800',  dot: 'bg-green-500' },
+  LOW_REALISM:    { label: 'LOW_REALISM',    bg: 'bg-amber-100',  text: 'text-amber-800',  dot: 'bg-amber-500' },
+  VERY_LOW_REALISM: { label: 'VERY_LOW',     bg: 'bg-red-100',    text: 'text-red-700',    dot: 'bg-red-500'   },
+};
+
+const SORT_OPTIONS = [
+  { key: 'name',          label: 'Name' },
+  { key: 'cost',          label: 'Cost' },
+  { key: 'coverage_rate', label: 'Coverage %' },
+  { key: 'waste_rate',    label: 'Waste %' },
+  { key: 'realism',       label: 'Realism' },
+];
+
+const REALISM_ORDER = { REALISTIC: 0, LOW_REALISM: 1, VERY_LOW_REALISM: 2 };
+
 function getFetchPointCount(zone) {
   const zoneType = zone.zoneType || 'circle';
   if (zoneType === 'circle') return 1;
@@ -24,21 +45,60 @@ function getFetchPointCount(zone) {
   return null;
 }
 
-function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership }) {
+function classifyRealism(zone, stationsInZoneCount) {
+  const zoneType = zone.zoneType || 'circle';
+  if (zoneType === 'corridor') return 'REALISTIC'; // corridors have point-based fetch — always realistic
+  // Circle realism
+  const r = zone.radiusMeters || 5000;
+  let realism = r <= CIRCLE_REALISTIC_MAX ? 'REALISTIC' : r <= CIRCLE_LOW_MAX ? 'LOW_REALISM' : 'VERY_LOW_REALISM';
+  // Downgrade if large station count with only 1 fetch point
+  if (realism === 'REALISTIC' && stationsInZoneCount > 20) realism = 'LOW_REALISM';
+  return realism;
+}
+
+function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership, zoneStationsMap }) {
   const [costPerRequest, setCostPerRequest] = React.useState(COST_PER_REQUEST_USD);
   const [runsPerDay, setRunsPerDay] = React.useState(1);
   const [nokRate, setNokRate] = React.useState(DEFAULT_NOK_RATE);
+  const [sortKey, setSortKey] = React.useState('name');
 
   const activeZones = zones.filter(z => z.isActive);
 
-  const zoneBreakdown = React.useMemo(() => activeZones.map(zone => {
-    const zoneType = zone.zoneType || 'circle';
-    const fetchPoints = getFetchPointCount(zone);
-    const supported = fetchPoints !== null;
-    const requestsPerRun = supported ? fetchPoints : null;
-    const costPerRun = supported ? requestsPerRun * costPerRequest : null;
-    return { zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported };
-  }), [activeZones, costPerRequest]);
+  const zoneBreakdown = React.useMemo(() => {
+    return activeZones.map(zone => {
+      const zoneType = zone.zoneType || 'circle';
+      const fetchPoints = getFetchPointCount(zone);
+      const supported = fetchPoints !== null;
+      const requestsPerRun = supported ? fetchPoints : null;
+      const costPerRun = supported ? requestsPerRun * costPerRequest : null;
+
+      // Station coverage for this zone
+      const inZone = zoneStationsMap[zone.id] || [];
+      const covered = inZone.filter(s => dbCoverageMap[s.id] != null);
+      const untested = inZone.filter(s => !dbCoverageMap[s.id] && !liveTestMap[s.id]);
+      const coverageRate = inZone.length > 0 ? covered.length / inZone.length : null;
+      const wasteRate = inZone.length > 0 ? untested.length / inZone.length : null;
+      const costPerCovered = (costPerRun != null && covered.length > 0) ? costPerRun / covered.length : null;
+
+      // Realism
+      const realism = classifyRealism(zone, inZone.length);
+
+      return {
+        zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported,
+        inZone, covered, untested, coverageRate, wasteRate, costPerCovered, realism,
+      };
+    });
+  }, [activeZones, costPerRequest, zoneStationsMap, dbCoverageMap, liveTestMap]);
+
+  const sortedBreakdown = React.useMemo(() => {
+    return [...zoneBreakdown].sort((a, b) => {
+      if (sortKey === 'cost') return (b.costPerRun ?? -Infinity) - (a.costPerRun ?? -Infinity);
+      if (sortKey === 'coverage_rate') return (b.coverageRate ?? -1) - (a.coverageRate ?? -1);
+      if (sortKey === 'waste_rate') return (b.wasteRate ?? -1) - (a.wasteRate ?? -1);
+      if (sortKey === 'realism') return REALISM_ORDER[a.realism] - REALISM_ORDER[b.realism];
+      return a.zone.name.localeCompare(b.zone.name);
+    });
+  }, [zoneBreakdown, sortKey]);
 
   const totals = React.useMemo(() => {
     const rows = zoneBreakdown.filter(r => r.supported);
@@ -52,19 +112,38 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
     };
   }, [zoneBreakdown, costPerRequest, runsPerDay]);
 
+  // Global realism warning: low cost but large/unrealistic zones
+  const lowRealismZones = zoneBreakdown.filter(r => r.realism === 'LOW_REALISM' || r.realism === 'VERY_LOW_REALISM');
+  const hasGlobalRealismWarning = lowRealismZones.length > 0 && totals.costPerMonth < 5;
+
   const inZoneStations = stations.filter(s => getZoneMembership(s) != null);
   const coveredInZone = inZoneStations.filter(s => dbCoverageMap[s.id] != null);
   const untestedInZone = inZoneStations.filter(s => !dbCoverageMap[s.id] && !liveTestMap[s.id]);
   const fmtUSD = v => v != null ? `$${v.toFixed(3)}` : '—';
   const fmtNOK = v => v != null ? `${(v * nokRate).toFixed(2)} kr` : '—';
+  const fmtPct = v => v != null ? `${Math.round(v * 100)}%` : '—';
 
   return (
     <div className="space-y-4">
+      {/* Model note */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-xs text-blue-800 leading-relaxed">
         <div className="font-semibold mb-1">Production fetch model</div>
         Cost is based on <strong>active GPFetchZone records</strong> — <strong>not per-station</strong>.
+        circle = 1 request · corridor = ceil(length/4000)+1 requests.
         <div className="mt-1 text-blue-600">No scheduled automation is currently active — estimation only.</div>
       </div>
+
+      {/* Global realism warning */}
+      {hasGlobalRealismWarning && (
+        <div className="bg-red-50 border border-red-300 rounded-lg p-2.5 text-xs text-red-800 leading-relaxed">
+          <div className="font-bold mb-1">⚠ Estimated cost is artificially low</div>
+          Large circle zones appear cheap because Nearby Search uses 1 request per zone regardless of size.
+          In practice, <strong>a single request covers very limited geographic area</strong> and returns ≤20 results.
+          Coverage will likely be poor.
+        </div>
+      )}
+
+      {/* Configuration */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Configuration</div>
         <div className="grid grid-cols-3 gap-1.5">
@@ -77,26 +156,74 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
         </div>
         <div className="text-xs text-slate-400">Default: <code>$0.049</code> = Nearby Search ($0.032) + fuelOptions ($0.017).</div>
       </div>
+
+      {/* Zone table */}
       <div>
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Active zones ({activeZones.length})</div>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Active zones ({activeZones.length})</div>
+          <select value={sortKey} onChange={e => setSortKey(e.target.value)} className="text-xs border rounded px-1.5 py-0.5 text-slate-600">
+            {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>Sort: {o.label}</option>)}
+          </select>
+        </div>
         {activeZones.length === 0 ? <div className="text-xs text-slate-400 italic py-2">No active zones.</div> : (
-          <div className="space-y-1">
-            <div className="grid grid-cols-12 gap-1 text-xs text-slate-400 font-semibold pb-1 border-b">
-              <div className="col-span-4">Zone</div><div className="col-span-2 text-center">Type</div>
-              <div className="col-span-2 text-center">Pts</div><div className="col-span-2 text-right">Req</div><div className="col-span-2 text-right">Cost</div>
-            </div>
-            {zoneBreakdown.map(({ zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported }) => (
-              <div key={zone.id} className="grid grid-cols-12 gap-1 text-xs py-1 border-b border-slate-100">
-                <div className="col-span-4 truncate font-medium text-slate-700" title={zone.name}>{zone.name}</div>
-                <div className="col-span-2 text-center"><span className={`px-1 rounded text-xs ${zoneType === 'corridor' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{zoneType}</span></div>
-                <div className="col-span-2 text-center text-slate-600">{supported ? fetchPoints : <span className="text-amber-600">?</span>}</div>
-                <div className="col-span-2 text-right text-slate-600">{supported ? requestsPerRun : '—'}</div>
-                <div className="col-span-2 text-right font-medium text-slate-700">{supported ? fmtUSD(costPerRun) : '—'}</div>
-              </div>
-            ))}
+          <div className="space-y-2">
+            {sortedBreakdown.map(({ zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported, inZone, covered, untested, coverageRate, wasteRate, costPerCovered, realism }) => {
+              const rs = REALISM_STYLE[realism];
+              const isUnrealistic = realism === 'LOW_REALISM' || realism === 'VERY_LOW_REALISM';
+              return (
+                <div key={zone.id} className={`rounded border p-2 space-y-1.5 text-xs ${isUnrealistic ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+                  {/* Zone name + type + realism */}
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-semibold text-slate-800 truncate flex-1" title={zone.name}>{zone.name}</span>
+                    <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-semibold ${rs.bg} ${rs.text}`}>{rs.label}</span>
+                  </div>
+
+                  {/* Realism warning */}
+                  {isUnrealistic && (
+                    <div className="text-amber-700 leading-snug bg-amber-100 rounded px-2 py-1">
+                      {realism === 'VERY_LOW_REALISM'
+                        ? '⚠ Extremely large zone. Nearby Search cannot provide reliable coverage — 1 request returns ≤20 results regardless of radius.'
+                        : '⚠ Large circle zone. Nearby Search is location-based and result-limited — actual coverage will be partial.'}
+                    </div>
+                  )}
+
+                  {/* Cost + fetch info */}
+                  <div className="grid grid-cols-4 gap-1 text-slate-600">
+                    <div className="text-center">
+                      <div className="font-bold text-slate-700">{supported ? fetchPoints : '?'}</div>
+                      <div className="text-slate-400">fetch pts</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-slate-700">{supported ? fmtUSD(costPerRun) : '—'}</div>
+                      <div className="text-slate-400">per run</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`font-bold ${coverageRate != null ? (coverageRate > 0.5 ? 'text-green-700' : 'text-amber-600') : 'text-slate-400'}`}>{fmtPct(coverageRate)}</div>
+                      <div className="text-slate-400">covered</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`font-bold ${wasteRate != null && wasteRate > 0.5 ? 'text-red-600' : 'text-slate-600'}`}>{fmtPct(wasteRate)}</div>
+                      <div className="text-slate-400">untested</div>
+                    </div>
+                  </div>
+
+                  {/* Station + efficiency */}
+                  <div className="flex items-center justify-between text-slate-500 border-t border-slate-100 pt-1">
+                    <span>{inZone.length} stations · <span className="text-green-700">{covered.length} covered</span> · <span className="text-amber-600">{untested.length} untested</span></span>
+                    {costPerCovered != null && (
+                      <span className="text-slate-400">
+                        {fmtUSD(costPerCovered)}/covered
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Totals */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estimated totals</div>
         <div className="border rounded p-3 space-y-2 bg-white">
@@ -108,12 +235,23 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
         </div>
         <div className="text-xs text-slate-400 italic">Estimates only. No automation active.</div>
       </div>
+
+      {/* Global coverage summary */}
       <div className="space-y-1.5">
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Station coverage (active zones)</div>
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Station coverage (all active zones)</div>
         <div className="grid grid-cols-3 gap-1.5">
           <div className="border rounded p-2 text-center"><div className="text-base font-bold text-slate-800">{inZoneStations.length}</div><div className="text-xs text-slate-500">In-zone</div></div>
           <div className="border rounded p-2 text-center bg-green-50"><div className="text-base font-bold text-green-700">{coveredInZone.length}</div><div className="text-xs text-slate-500">DB covered</div></div>
           <div className="border rounded p-2 text-center bg-amber-50"><div className="text-base font-bold text-amber-600">{untestedInZone.length}</div><div className="text-xs text-slate-500">Untested</div></div>
+        </div>
+
+        {/* Realism legend */}
+        <div className="rounded border p-2 space-y-1 text-xs bg-slate-50">
+          <div className="font-semibold text-slate-500 uppercase tracking-wide text-xs mb-1">Realism classification (circle zones)</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /><span className="text-slate-600"><strong>REALISTIC</strong> — radius ≤ 10 km</span></div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /><span className="text-slate-600"><strong>LOW_REALISM</strong> — radius 10–50 km</span></div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /><span className="text-slate-600"><strong>VERY_LOW_REALISM</strong> — radius &gt; 50 km</span></div>
+          <div className="text-slate-400 italic mt-1">Corridor zones are always REALISTIC (point-based fetch).</div>
         </div>
       </div>
     </div>
@@ -1194,6 +1332,7 @@ export default function CoverageMapExplorer() {
                 dbCoverageMap={dbCoverageMap}
                 liveTestMap={liveTestMap}
                 getZoneMembership={getZoneMembership}
+                zoneStationsMap={zoneStationsMap}
               />
             )}
 
