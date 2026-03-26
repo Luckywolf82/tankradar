@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, MapPin, Search, RefreshCw, Route } from 'lucide-react';
+import { Loader2, MapPin, Search, RefreshCw, Route, FlaskConical, XCircle } from 'lucide-react';
 import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoints } from '@/utils/zoneGeometry';
 
 
@@ -591,6 +591,10 @@ export default function CoverageMapExplorer() {
   const [testRadius, setTestRadius] = useState(1);
   const [showLayers, setShowLayers] = useState({ inZone: true, outZone: true, zoneShapes: true });
 
+  // Zone test state — keyed by zone.id, stores last test result from testZone function
+  const [zoneTestMap, setZoneTestMap] = useState({});
+  const [testingZoneId, setTestingZoneId] = useState(null);
+
   // New corridor creation state
   const [corridorDraft, setCorridorDraft] = useState(null); // { points: [{lat,lng},...], name: '', buffer: 2000 }
   // New circle creation state
@@ -745,6 +749,38 @@ export default function CoverageMapExplorer() {
     setStations(prev => prev.filter(s => s.id !== station.id));
     setSelectedStation(null);
     setSidebarMode('zones');
+  };
+
+  // ─── Test zone ────────────────────────────────────────────────────────────
+  // Calls testZone backend function. Writes to zoneTestMap (ephemeral UI state).
+  // Also refreshes zone record from DB (to pick up lastZoneTestAt / zoneTestCount).
+  // Does NOT auto-disable. Operator must confirm.
+  const testZone = async (zone) => {
+    setTestingZoneId(zone.id);
+    try {
+      const res = await base44.functions.invoke('testZone', { zoneId: zone.id });
+      const result = res?.data;
+      if (result?.success) {
+        setZoneTestMap(prev => ({ ...prev, [zone.id]: result }));
+        // Refresh zone record to get updated zoneTestCount + lastZoneTestAt
+        const freshZones = await base44.entities.GPFetchZone.list('-created_date', 200);
+        setZones(freshZones);
+        const refreshed = freshZones.find(z => z.id === zone.id);
+        if (refreshed && selectedZone?.id === zone.id) setSelectedZone(refreshed);
+      }
+    } catch (err) { alert(`Zone test failed: ${err.message}`); }
+    finally { setTestingZoneId(null); }
+  };
+
+  // ─── Disable zone ──────────────────────────────────────────────────────────
+  const disableZone = async (zone, reason) => {
+    setSavingZone(true);
+    try {
+      await base44.entities.GPFetchZone.update(zone.id, { isActive: false });
+      setZones(prev => prev.map(z => z.id === zone.id ? { ...z, isActive: false } : z));
+      if (selectedZone?.id === zone.id) setSelectedZone(z => ({ ...z, isActive: false }));
+    } catch (err) { alert(`Failed to disable zone: ${err.message}`); }
+    finally { setSavingZone(false); }
   };
 
   // ─── Test single station ──────────────────────────────────────────────────
@@ -1464,15 +1500,45 @@ export default function CoverageMapExplorer() {
                 const zoneType = selectedZone.zoneType || 'circle';
                 const pts = zoneType === 'corridor' ? parseCorridorPoints(selectedZone) : [];
                 const fetchPts = zoneType === 'corridor' ? corridorFetchPoints(selectedZone) : [{ latitude: selectedZone.latitude, longitude: selectedZone.longitude }];
+                const isTestingThis = testingZoneId === selectedZone.id;
+
+                // Parse stored test stats from DB (persisted across sessions)
+                const storedTestStats = (() => {
+                  if (!selectedZone.lastZoneTestStats) return null;
+                  try { return JSON.parse(selectedZone.lastZoneTestStats); } catch { return null; }
+                })();
+
+                // Live test result from this session (takes priority over stored)
+                const liveTestResult = zoneTestMap[selectedZone.id];
+                // Use live result if available, else fall back to stored stats for decision display
+                const testResult = liveTestResult || null;
+                const displayStats = testResult
+                  ? testResult.decision
+                  : storedTestStats
+                    ? { decision: storedTestStats.decision, reasons: storedTestStats.decisionReasons }
+                    : null;
+
+                const DECISION_STYLE = {
+                  keep:              { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-800',  label: 'KEEP',              dot: 'bg-green-500'  },
+                  monitor:           { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  label: 'MONITOR',           dot: 'bg-amber-500'  },
+                  disable_candidate: { bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-800',    label: 'DISABLE CANDIDATE', dot: 'bg-red-500'    },
+                };
+
+                const fmtPct = v => v != null ? `${Math.round(v * 100)}%` : '—';
+                const fmtN = (v, d = 2) => v != null ? v.toFixed(d) : '—';
 
                 return (
                   <div className="space-y-3">
+                    {/* Header row */}
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-bold text-sm">{selectedZone.name}</h3>
-                        <div className="flex items-center gap-1 mt-0.5">
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           {zoneType === 'corridor' && <Route className="w-3 h-3 text-blue-500" />}
                           <span className="text-xs text-slate-400 capitalize">{zoneType}</span>
+                          {selectedZone.zoneTestCount > 0 && (
+                            <span className="text-xs text-slate-400">· {selectedZone.zoneTestCount} test{selectedZone.zoneTestCount !== 1 ? 's' : ''}</span>
+                          )}
                         </div>
                       </div>
                       <button disabled={savingZone} onClick={() => toggleZoneActive(selectedZone)}
@@ -1481,6 +1547,7 @@ export default function CoverageMapExplorer() {
                       </button>
                     </div>
 
+                    {/* DB coverage snapshot (from loaded FuelPrice rows) */}
                     <div className="grid grid-cols-2 gap-1.5 text-xs">
                       <Card className="p-2 text-center"><div className="font-bold text-base">{inZone.length}</div><div className="text-slate-500">Stations</div></Card>
                       <Card className="p-2 text-center bg-green-50"><div className="font-bold text-base text-green-700">{covered.length}</div><div className="text-slate-500">GP covered</div></Card>
@@ -1493,54 +1560,201 @@ export default function CoverageMapExplorer() {
                       <div className="rounded border p-2 space-y-1 text-xs bg-blue-50 border-blue-100">
                         <div className="font-semibold text-blue-800">Corridor details</div>
                         <div className="text-slate-600">{pts.length} waypoints · {fetchPts.length} fetch points</div>
-                        <div className="text-slate-600">Buffer: {(selectedZone.bufferMeters || 2000) / 1000} km each side</div>
-                        <div className="text-slate-600">Fetch radius per point: {(selectedZone.radiusMeters || 3000) / 1000} km</div>
+                        <div className="text-slate-600">Buffer: {(selectedZone.bufferMeters || 2000) / 1000} km · Fetch R: {(selectedZone.radiusMeters || 3000) / 1000} km/pt</div>
                       </div>
                     )}
 
-                    <div className="space-y-1.5">
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Priority</div>
-                      <div className="flex gap-1">
-                        {['high', 'normal', 'low'].map(p => (
-                          <button key={p} onClick={() => updateZoneField(selectedZone, 'priority', p)}
-                            className={`flex-1 py-1 text-xs rounded border capitalize ${selectedZone.priority === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
-                            {p}
-                          </button>
-                        ))}
-                      </div>
+                    {/* ── Zone Test Section ── */}
+                    <div className="border-t pt-2 space-y-2">
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Zone test</div>
+
+                      <Button size="sm" className="w-full" disabled={isTestingThis} onClick={() => testZone(selectedZone)}>
+                        {isTestingThis
+                          ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Testing zone…</>
+                          : <><FlaskConical className="w-4 h-4 mr-2" /> Test this zone</>}
+                      </Button>
+
+                      {/* Last test timestamp */}
+                      {selectedZone.lastZoneTestAt && (
+                        <div className="text-xs text-slate-400">
+                          Last tested: {new Date(selectedZone.lastZoneTestAt).toLocaleString('nb-NO')}
+                          {selectedZone.zoneTestCount > 1 && ` (${selectedZone.zoneTestCount} tests total)`}
+                        </div>
+                      )}
+
+                      {/* Zone decision (from live test result this session, or stored) */}
+                      {displayStats && (() => {
+                        const ds = DECISION_STYLE[displayStats.decision] || DECISION_STYLE.monitor;
+                        const isDisableCandidate = displayStats.decision === 'disable_candidate';
+                        return (
+                          <div className={`rounded border p-2.5 space-y-1.5 ${ds.bg} ${ds.border}`}>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${ds.dot}`} />
+                              <span className={`text-xs font-bold uppercase tracking-wide ${ds.text}`}>{ds.label}</span>
+                              {liveTestResult && <span className="text-xs text-slate-400 ml-auto">live</span>}
+                              {!liveTestResult && storedTestStats && <span className="text-xs text-slate-400 ml-auto">stored</span>}
+                            </div>
+                            <div className="space-y-0.5">
+                              {displayStats.reasons.map((r, i) => (
+                                <div key={i} className={`text-xs leading-snug ${isDisableCandidate ? 'text-red-700' : ds.text}`}>
+                                  {isDisableCandidate ? '⚠ ' : displayStats.decision === 'keep' ? '✓ ' : '→ '}{r}
+                                </div>
+                              ))}
+                            </div>
+                            {displayStats.requiresMultipleTests && (
+                              <div className="text-xs text-slate-500 italic">Run at least 2 tests before disabling.</div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Live test metrics */}
+                      {testResult && (
+                        <div className="space-y-2">
+                          {/* Coverage metrics */}
+                          <div className="grid grid-cols-2 gap-1 text-xs">
+                            <div className="border rounded p-1.5 text-center bg-white">
+                              <div className={`font-bold ${testResult.coverage.coverageRate != null && testResult.coverage.coverageRate < 0.35 ? 'text-amber-600' : 'text-green-700'}`}>
+                                {fmtPct(testResult.coverage.coverageRate)}
+                              </div>
+                              <div className="text-slate-400">coverage</div>
+                            </div>
+                            <div className="border rounded p-1.5 text-center bg-white">
+                              <div className={`font-bold ${testResult.coverage.wasteRate != null && testResult.coverage.wasteRate > 0.6 ? 'text-red-600' : 'text-slate-700'}`}>
+                                {fmtPct(testResult.coverage.wasteRate)}
+                              </div>
+                              <div className="text-slate-400">waste</div>
+                            </div>
+                            <div className="border rounded p-1.5 text-center bg-white">
+                              <div className="font-bold text-slate-700">{fmtN(testResult.coverage.coveredPerPoint, 1)}</div>
+                              <div className="text-slate-400">cov/pt</div>
+                            </div>
+                            <div className="border rounded p-1.5 text-center bg-white">
+                              <div className="font-bold text-slate-700">
+                                {testResult.coverage.costPerCovered != null ? `$${testResult.coverage.costPerCovered.toFixed(3)}` : '—'}
+                              </div>
+                              <div className="text-slate-400">$/covered</div>
+                            </div>
+                          </div>
+
+                          {/* Saturation */}
+                          <div className={`rounded border p-2 text-xs space-y-1 ${testResult.saturation.saturationRate > 0.4 ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                            <div className="font-semibold text-slate-600">Result saturation</div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Saturated fetch points</span>
+                              <span className={`font-semibold ${testResult.saturation.saturationRate > 0.4 ? 'text-amber-700' : 'text-slate-700'}`}>
+                                {testResult.saturation.saturatedFetchPoints} / {testResult.saturation.totalFetchPoints}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Saturation rate</span>
+                              <span className={`font-semibold ${testResult.saturation.saturationRate > 0.4 ? 'text-amber-700' : 'text-slate-700'}`}>
+                                {fmtPct(testResult.saturation.saturationRate)}
+                              </span>
+                            </div>
+                            <div className="text-slate-400 italic">
+                              Saturated = ≥{testResult.saturation.threshold} results returned (Nearby Search cap ~20)
+                            </div>
+                          </div>
+
+                          {/* Station counts */}
+                          <div className="text-xs text-slate-500 border rounded p-2 bg-white space-y-0.5">
+                            <div className="font-semibold text-slate-600 mb-1">Station breakdown (DB state)</div>
+                            <div className="flex justify-between"><span>Total in zone</span><span className="font-semibold">{testResult.coverage.totalStations}</span></div>
+                            <div className="flex justify-between"><span className="text-green-700">Covered (GP prices)</span><span className="font-semibold text-green-700">{testResult.coverage.coveredCount}</span></div>
+                            <div className="flex justify-between"><span className="text-yellow-600">Weak (no fuel types)</span><span className="font-semibold text-yellow-600">{testResult.coverage.weakCount}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Untested</span><span className="font-semibold">{testResult.coverage.untestedCount}</span></div>
+                            <div className="flex justify-between border-t pt-1 mt-1"><span>GP API places found</span><span className="font-semibold">{testResult.apiResults.totalPlaces}</span></div>
+                            {testResult.apiResults.apiErrors > 0 && (
+                              <div className="flex justify-between text-red-600"><span>API errors</span><span className="font-semibold">{testResult.apiResults.apiErrors}</span></div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stored stats summary (no live test this session) */}
+                      {!testResult && storedTestStats && (
+                        <div className="text-xs text-slate-500 border rounded p-2 bg-slate-50 space-y-0.5">
+                          <div className="font-semibold text-slate-600 mb-1">Last test summary</div>
+                          <div className="flex justify-between"><span>Coverage rate</span><span className="font-semibold">{fmtPct(storedTestStats.coverageRate)}</span></div>
+                          <div className="flex justify-between"><span>Waste rate</span><span className="font-semibold">{fmtPct(storedTestStats.wasteRate)}</span></div>
+                          <div className="flex justify-between"><span>Saturation</span><span className="font-semibold">{fmtPct(storedTestStats.saturationRate)}</span></div>
+                          <div className="flex justify-between"><span>Covered/pt</span><span className="font-semibold">{fmtN(storedTestStats.coveredPerPoint, 1)}</span></div>
+                          <div className="flex justify-between"><span>$/covered</span><span className="font-semibold">{storedTestStats.costPerCovered != null ? `$${storedTestStats.costPerCovered.toFixed(3)}` : '—'}</span></div>
+                        </div>
+                      )}
+
+                      {/* Disable zone action */}
+                      {displayStats?.decision === 'disable_candidate' && selectedZone.isActive && (
+                        <div className="bg-red-50 border border-red-200 rounded p-2 space-y-1.5 text-xs">
+                          <div className="font-semibold text-red-800">Disable candidate</div>
+                          <div className="text-red-700 italic">
+                            Based on {selectedZone.zoneTestCount || 1} test run{(selectedZone.zoneTestCount || 1) !== 1 ? 's' : ''}.
+                            This zone has shown consistently poor data output. Disabling sets isActive = false.
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full bg-red-600 hover:bg-red-700 text-white"
+                            disabled={savingZone}
+                            onClick={() => {
+                              if (window.confirm(`Disable zone "${selectedZone.name}"?\n\nThis sets isActive = false.\nThe zone will not be fetched in future runs.\nYou can re-enable it at any time.`)) {
+                                disableZone(selectedZone);
+                              }
+                            }}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1.5" /> Disable this zone
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
-                    {zoneType === 'circle' && (
+                    {/* ── Configuration ── */}
+                    <div className="border-t pt-2 space-y-2">
+                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Configuration</div>
+
                       <div className="space-y-1.5">
-                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Radius</div>
-                        <div className="flex gap-1 items-center">
-                          <input type="number" defaultValue={selectedZone.radiusMeters || 5000} className="flex-1 px-2 py-1 border rounded text-xs"
-                            onBlur={e => updateZoneField(selectedZone, 'radiusMeters', parseInt(e.target.value))} />
-                          <span className="text-xs text-slate-400">m</span>
+                        <div className="text-xs text-slate-500">Priority</div>
+                        <div className="flex gap-1">
+                          {['high', 'normal', 'low'].map(p => (
+                            <button key={p} onClick={() => updateZoneField(selectedZone, 'priority', p)}
+                              className={`flex-1 py-1 text-xs rounded border capitalize ${selectedZone.priority === p ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                              {p}
+                            </button>
+                          ))}
                         </div>
                       </div>
-                    )}
 
-                    {zoneType === 'corridor' && (
-                      <div className="grid grid-cols-2 gap-1.5">
+                      {zoneType === 'circle' && (
                         <div className="space-y-1">
-                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Buffer (m)</div>
-                          <input type="number" defaultValue={selectedZone.bufferMeters || 2000} className="w-full px-2 py-1 border rounded text-xs"
-                            onBlur={e => updateZoneField(selectedZone, 'bufferMeters', parseInt(e.target.value))} />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Fetch R (m)</div>
-                          <input type="number" defaultValue={selectedZone.radiusMeters || 3000} className="w-full px-2 py-1 border rounded text-xs"
+                          <div className="text-xs text-slate-500">Radius (m)</div>
+                          <input type="number" defaultValue={selectedZone.radiusMeters || 5000} className="w-full px-2 py-1 border rounded text-xs"
                             onBlur={e => updateZoneField(selectedZone, 'radiusMeters', parseInt(e.target.value))} />
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {selectedZone.notes && <div className="text-xs text-slate-500 bg-slate-50 rounded p-2">{selectedZone.notes}</div>}
-                    {selectedZone.lastFetchedAt && (
-                      <div className="text-xs text-slate-400">
-                        Last fetch: {new Date(selectedZone.lastFetchedAt).toLocaleString()}
-                        {selectedZone.lastFetchStats && <div className="mt-0.5">{selectedZone.lastFetchStats}</div>}
+                      {zoneType === 'corridor' && (
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="space-y-1">
+                            <div className="text-xs text-slate-500">Buffer (m)</div>
+                            <input type="number" defaultValue={selectedZone.bufferMeters || 2000} className="w-full px-2 py-1 border rounded text-xs"
+                              onBlur={e => updateZoneField(selectedZone, 'bufferMeters', parseInt(e.target.value))} />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-xs text-slate-500">Fetch R (m)</div>
+                            <input type="number" defaultValue={selectedZone.radiusMeters || 3000} className="w-full px-2 py-1 border rounded text-xs"
+                              onBlur={e => updateZoneField(selectedZone, 'radiusMeters', parseInt(e.target.value))} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Metadata ── */}
+                    {(selectedZone.notes || selectedZone.lastFetchedAt) && (
+                      <div className="border-t pt-2 space-y-1 text-xs text-slate-400">
+                        {selectedZone.notes && <div className="bg-slate-50 rounded p-1.5 text-slate-500">{selectedZone.notes}</div>}
+                        {selectedZone.lastFetchedAt && (
+                          <div>Last production fetch: {new Date(selectedZone.lastFetchedAt).toLocaleString('nb-NO')}</div>
+                        )}
                       </div>
                     )}
 
@@ -1548,9 +1762,10 @@ export default function CoverageMapExplorer() {
                       <MapPin className="w-4 h-4 mr-2" /> Go to zone
                     </Button>
 
+                    {/* Station list */}
                     <div>
                       <div className="text-xs font-semibold text-slate-500 mb-1.5">Stations in zone</div>
-                      <div className="space-y-0.5 max-h-44 overflow-y-auto">
+                      <div className="space-y-0.5 max-h-40 overflow-y-auto">
                         {inZone.map(s => {
                           const q = getQuality(s.id);
                           const qs = QUALITY_STYLE[q] || QUALITY_STYLE.not_tested;
