@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
 
   const fetchPointResults = [];
   const seenPlaceIds = new Set();
+  const allFetchedPlaces = []; // all unique GP places returned, for per-station matching
   let totalPlaces = 0;
   let totalWithPrices = 0;
   let apiErrors = 0;
@@ -180,7 +181,7 @@ Deno.serve(async (req) => {
       continue;
     }
     const newPlaces = result.places.filter(p => !seenPlaceIds.has(p.id));
-    for (const p of newPlaces) seenPlaceIds.add(p.id);
+    for (const p of newPlaces) { seenPlaceIds.add(p.id); allFetchedPlaces.push(p); }
 
     const saturated = result.resultsCount >= SATURATION_THRESHOLD;
     totalPlaces += newPlaces.length;
@@ -194,6 +195,59 @@ Deno.serve(async (req) => {
       saturated,
     });
   }
+
+  // ── Per-station GP match assessment ──────────────────────────────────────────
+  // For each station in zone, find the closest GP place returned by the fetch.
+  // Match threshold: 300m (conservative — GP places within 300m of station coords are candidates).
+  // We do NOT write to DB here — this is diagnostic only.
+  const MATCH_RADIUS_METERS = 300;
+
+  const stationResults = stationsInZone.map(station => {
+    // Find closest GP place
+    let closestPlace = null;
+    let closestDist = Infinity;
+    for (const place of allFetchedPlaces) {
+      const loc = place.location;
+      if (!loc?.latitude || !loc?.longitude) continue;
+      const d = distMeters(station.latitude, station.longitude, loc.latitude, loc.longitude);
+      if (d < closestDist) { closestDist = d; closestPlace = place; }
+    }
+
+    const gpReached = closestPlace !== null && closestDist <= MATCH_RADIUS_METERS;
+    const hasPrices = gpReached && (closestPlace.fuelOptions?.fuelPrices?.length > 0);
+    const inDbCovered = dbCoveredIds.has(station.id);
+    const inDbWeak = dbWeakIds.has(station.id);
+
+    // Per-station scope recommendation
+    let scopeRecommendation;
+    if (inDbCovered) {
+      scopeRecommendation = 'keep'; // has DB prices — strong signal
+    } else if (hasPrices) {
+      scopeRecommendation = 'keep'; // live GP match with prices
+    } else if (gpReached && !hasPrices) {
+      scopeRecommendation = 'monitor'; // reached but no price data
+    } else if (inDbWeak) {
+      scopeRecommendation = 'monitor'; // DB rows but no fuel types
+    } else {
+      scopeRecommendation = 'remove_candidate'; // not reached, no DB, no prices
+    }
+
+    return {
+      stationId: station.id,
+      stationName: station.name,
+      stationChain: station.chain || null,
+      latitude: station.latitude,
+      longitude: station.longitude,
+      gpReached,
+      closestGpDistanceMeters: closestPlace ? Math.round(closestDist) : null,
+      closestGpName: closestPlace?.displayName?.text || null,
+      hasPrices,
+      fuelPriceCount: hasPrices ? closestPlace.fuelOptions.fuelPrices.length : 0,
+      inDbCovered,
+      inDbWeak,
+      scopeRecommendation,
+    };
+  });
 
   // Zone-level metrics from DB state
   const totalStations = stationsInZone.length;
@@ -267,6 +321,7 @@ Deno.serve(async (req) => {
   );
 
   // Persist test metadata to zone
+  const removeCandidates = stationResults.filter(r => r.scopeRecommendation === 'remove_candidate');
   const testStats = JSON.stringify({
     testedAt: new Date().toISOString(),
     totalStations,
@@ -284,6 +339,7 @@ Deno.serve(async (req) => {
     decision,
     decisionReasons,
     apiErrors,
+    removeCandidateCount: removeCandidates.length,
   });
 
   await db.entities.GPFetchZone.update(zoneId, {
@@ -324,5 +380,6 @@ Deno.serve(async (req) => {
       testCount: newTestCount,
       requiresMultipleTests: decision === 'disable_candidate' ? false : newTestCount < 2,
     },
+    stationResults,
   });
 });

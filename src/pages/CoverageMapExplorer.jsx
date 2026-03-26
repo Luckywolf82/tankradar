@@ -1762,23 +1762,89 @@ export default function CoverageMapExplorer() {
                       <MapPin className="w-4 h-4 mr-2" /> Go to zone
                     </Button>
 
-                    {/* Station list */}
-                    <div>
-                      <div className="text-xs font-semibold text-slate-500 mb-1.5">Stations in zone</div>
-                      <div className="space-y-0.5 max-h-40 overflow-y-auto">
-                        {inZone.map(s => {
-                          const q = getQuality(s.id);
-                          const qs = QUALITY_STYLE[q] || QUALITY_STYLE.not_tested;
-                          return (
-                            <div key={s.id} className="flex items-center justify-between text-xs p-1.5 rounded hover:bg-slate-50 cursor-pointer"
-                              onClick={() => { setSelectedStation(s); setSidebarMode('station'); }}>
-                              <span className="truncate flex-1 mr-2">{s.name}</span>
-                              <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-medium ${qs.bg} ${qs.text}`}>{qs.label}</span>
+                    {/* Station list — enriched with per-station GP test results if available */}
+                    {(() => {
+                      // Build per-station lookup from live test result
+                      const stationResultMap = {};
+                      if (testResult?.stationResults) {
+                        for (const r of testResult.stationResults) stationResultMap[r.stationId] = r;
+                      }
+                      const hasStationResults = Object.keys(stationResultMap).length > 0;
+
+                      const SCOPE_ROW_STYLE = {
+                        keep:             { bg: 'bg-green-50',  text: 'text-green-700',  label: 'GP OK' },
+                        monitor:          { bg: 'bg-amber-50',  text: 'text-amber-700',  label: 'Monitor' },
+                        remove_candidate: { bg: 'bg-red-50',    text: 'text-red-700',    label: 'No data' },
+                      };
+
+                      const removeCandidates = hasStationResults
+                        ? inZone.filter(s => stationResultMap[s.id]?.scopeRecommendation === 'remove_candidate')
+                        : [];
+
+                      return (
+                        <div className="border-t pt-2 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                              Stations in zone ({inZone.length})
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                            {hasStationResults && removeCandidates.length > 0 && (
+                              <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-semibold">
+                                {removeCandidates.length} no-data
+                              </span>
+                            )}
+                          </div>
+
+                          {hasStationResults && removeCandidates.length > 0 && (
+                            <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700 space-y-1">
+                              <div className="font-semibold">⚠ {removeCandidates.length} station{removeCandidates.length !== 1 ? 's' : ''} not reached by GP</div>
+                              <div className="text-red-600 leading-relaxed">
+                                These stations had no GP match within 300 m and no DB prices. Consider flagging them to remove from fetch scope.
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-0.5 max-h-56 overflow-y-auto">
+                            {inZone.map(s => {
+                              const q = getQuality(s.id);
+                              const qs = QUALITY_STYLE[q] || QUALITY_STYLE.not_tested;
+                              const sr = stationResultMap[s.id];
+                              const scopeStyle = sr ? (SCOPE_ROW_STYLE[sr.scopeRecommendation] || SCOPE_ROW_STYLE.monitor) : null;
+
+                              return (
+                                <div key={s.id}
+                                  className={`rounded p-1.5 cursor-pointer transition-colors border text-xs ${sr?.scopeRecommendation === 'remove_candidate' ? 'border-red-200 bg-red-50 hover:bg-red-100' : 'border-transparent hover:bg-slate-50'}`}
+                                  onClick={() => { setSelectedStation(s); setSidebarMode('station'); }}>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="truncate flex-1 font-medium">{s.name}</span>
+                                    <div className="flex gap-1 shrink-0">
+                                      {/* DB quality badge (always shown) */}
+                                      <span className={`px-1.5 py-0.5 rounded font-medium ${qs.bg} ${qs.text}`}>{qs.label}</span>
+                                      {/* Live scope badge (only if test ran) */}
+                                      {scopeStyle && (
+                                        <span className={`px-1.5 py-0.5 rounded font-medium ${scopeStyle.bg} ${scopeStyle.text}`}>{scopeStyle.label}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {/* GP match detail — shown only for remove candidates or partial matches */}
+                                  {sr && sr.scopeRecommendation !== 'keep' && (
+                                    <div className={`mt-0.5 leading-snug ${sr.scopeRecommendation === 'remove_candidate' ? 'text-red-600' : 'text-amber-600'}`}>
+                                      {sr.gpReached
+                                        ? `GP reached (${sr.closestGpDistanceMeters} m) — no prices`
+                                        : sr.closestGpDistanceMeters != null
+                                          ? `Closest GP: ${sr.closestGpDistanceMeters} m — out of range`
+                                          : 'Not found in GP results'}
+                                    </div>
+                                  )}
+                                  {sr && sr.scopeRecommendation === 'keep' && sr.hasPrices && !sr.inDbCovered && (
+                                    <div className="mt-0.5 text-green-600">Live GP: {sr.fuelPriceCount} fuel price{sr.fuelPriceCount !== 1 ? 's' : ''}</div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()
