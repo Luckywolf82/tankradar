@@ -1,5 +1,79 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+// ── Geometry & Distance (production-aligned)
+const GEO_R = 6371000;
+function toRad(d) { return d * Math.PI / 180; }
+function distMeters(lat1, lon1, lat2, lon2) {
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return GEO_R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ── GP API — production-aligned (v1 places:searchNearby)
+async function fetchGPForPoint(apiKey, latitude, longitude, radiusMeters) {
+  try {
+    const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.location,places.fuelOptions',
+      },
+      body: JSON.stringify({
+        includedTypes: ['gas_station'],
+        maxResultCount: 20,
+        locationRestriction: {
+          circle: { center: { latitude, longitude }, radius: radiusMeters },
+        },
+      }),
+    });
+    if (!res.ok) return { success: false, error: `HTTP ${res.status}`, places: [] };
+    const data = await res.json();
+    return { success: true, places: data.places || [] };
+  } catch (err) {
+    return { success: false, error: err.message, places: [] };
+  }
+}
+
+// ── Station matching — production-aligned (500m radius, chain-based)
+function matchStation(googlePlace, allStations) {
+  const gName = googlePlace.displayName?.text || '';
+  const gLat = googlePlace.location?.latitude;
+  const gLon = googlePlace.location?.longitude;
+  if (!gLat || !gLon) return null;
+
+  const lower = gName.toLowerCase();
+  let chain = null;
+  if (lower.includes('circle k')) chain = 'circle k';
+  else if (lower.includes('uno') && lower.includes('x')) chain = 'uno x';
+  else if (lower.includes('esso')) chain = 'esso';
+  else if (lower.includes('shell')) chain = 'shell';
+  else if (lower.includes('statoil')) chain = 'statoil';
+  else if (lower.includes('st1')) chain = 'st1';
+  if (!chain) return null;
+
+  let best = null, bestDist = Infinity;
+  const MATCH_RADIUS = 500;
+
+  for (const s of allStations) {
+    if (!s.latitude || !s.longitude || !s.chain) continue;
+    const d = distMeters(gLat, gLon, s.latitude, s.longitude);
+    if (d > MATCH_RADIUS) continue;
+    const sChain = (s.chain || '').toLowerCase().replace(/[-\s]+/g, ' ');
+    if (sChain !== chain) continue;
+    
+    let conf = 0;
+    if (d < 50) conf = gName.toLowerCase().includes((s.name || '').toLowerCase()) ? 0.90 : 0.85;
+    else if (d < 150) conf = 0.80;
+    else if (d < 300) conf = 0.65;
+    else conf = 0.55;
+    
+    if (d < bestDist) { best = { station: s, distanceMeters: d, confidence: conf }; bestDist = d; }
+  }
+  return best;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -21,64 +95,98 @@ Deno.serve(async (req) => {
     }
 
     const radiusMeters = radiusKm * 1000;
+    const db = base44.asServiceRole;
 
-    // Search Google Places for gas stations nearby
-    const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
-    url.searchParams.set('location', `${latitude},${longitude}`);
-    url.searchParams.set('radius', radiusMeters.toString());
-    url.searchParams.set('type', 'gas_station');
-    url.searchParams.set('key', apiKey);
-
-    const gpResponse = await fetch(url.toString());
-    const gpData = await gpResponse.json();
-
-    if (!gpData.results) {
-      return Response.json({ 
-        results: [],
-        sourceStationId: stationId,
-        searchPoint: { latitude, longitude },
-        radiusKm 
+    // ── LIVE GP RESULT ──
+    const gpResult = await fetchGPForPoint(apiKey, latitude, longitude, radiusMeters);
+    if (!gpResult.success) {
+      return Response.json({
+        live: {
+          gpReachableNow: false,
+          gpMatchedNow: false,
+          resultsCount: 0,
+          liveFuelDataFoundNow: false,
+          liveFuelTypes: [],
+          liveSourceUpdatedAt: null,
+        },
+        stored: {
+          storedGpPrices: false,
+          storedFuelTypes: [],
+          lastStoredFetchedAt: null,
+          lastStoredSourceUpdatedAt: null,
+        },
+        persistence: {
+          newFuelPriceRowsCreated: false,
+          rowsCreatedCount: 0,
+          reasonIfNoRowsCreated: `GP not reachable: ${gpResult.error}`,
+        },
       });
     }
 
-    // Fetch all stations to check for existing matches
-    const allStations = await base44.asServiceRole.entities.Station.list();
+    const places = gpResult.places || [];
+    const allStations = await db.entities.Station.filter({ status: 'active' });
+    
+    let gpMatchedNow = false;
+    let liveFuelDataFoundNow = false;
+    let liveFuelTypes = [];
+    let liveSourceUpdatedAt = null;
+    let matchedPlace = null;
 
-    // Match each Google Places result against our stations
-    const enrichedResults = gpData.results.map(place => {
-      const placeLocation = place.geometry.location;
-      
-      // Simple distance calculation (Haversine formula)
-      const distance = calculateDistance(
-        latitude, longitude,
-        placeLocation.lat, placeLocation.lng
-      );
+    for (const place of places) {
+      const match = matchStation(place, allStations);
+      if (match && match.station.id === stationId) {
+        gpMatchedNow = true;
+        matchedPlace = place;
+        const fuelOptions = place.fuelOptions?.fuelPrices || [];
+        if (fuelOptions.length > 0) {
+          liveFuelDataFoundNow = true;
+          liveFuelTypes = [...new Set(fuelOptions.map(f => f.type).filter(Boolean))];
+          liveSourceUpdatedAt = fuelOptions[0]?.updateTime || null;
+        }
+        break;
+      }
+    }
 
-      // Try to find matching station in our catalog
-      const matchedStation = findClosestMatch(allStations, place, distance);
+    // ── STORED DB RESULT ──
+    const gpPricesStored = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: stationId });
+    const storedGpPrices = gpPricesStored.length > 0;
+    const storedFuelTypes = [...new Set(gpPricesStored.map(p => p.fuelType).filter(Boolean))];
+    const lastStoredFetchedAt = storedGpPrices ? gpPricesStored.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0].fetchedAt : null;
+    const lastStoredSourceUpdatedAt = storedGpPrices ? gpPricesStored.sort((a, b) => new Date(b.sourceUpdatedAt || 0) - new Date(a.sourceUpdatedAt || 0))[0].sourceUpdatedAt : null;
 
-      return {
-        googlePlacesId: place.place_id,
-        name: place.name,
-        address: place.vicinity,
-        latitude: placeLocation.lat,
-        longitude: placeLocation.lng,
-        distance,
-        businessStatus: place.business_status,
-        hasGeoLocation: place.geometry ? true : false,
-        matchedStationId: matchedStation?.id,
-        matchedStationName: matchedStation?.name,
-        matchDistance: matchedStation?.distance,
-        matchConfidence: matchedStation?.confidence,
-      };
-    });
+    // ── PERSISTENCE RESULT ──
+    // For now (test-only): record what WOULD have been created if we persisted
+    // Don't actually persist — that's the production function's job
+    const newFuelPriceRowsCreated = false;
+    const rowsCreatedCount = 0;
+    let reasonIfNoRowsCreated = null;
+
+    if (!gpMatchedNow) {
+      reasonIfNoRowsCreated = 'No GP match found for this station within 500m.';
+    } else if (!liveFuelDataFoundNow) {
+      reasonIfNoRowsCreated = 'GP match found but returned no fuel price data.';
+    }
 
     return Response.json({
-      results: enrichedResults,
-      sourceStationId: stationId,
-      searchPoint: { latitude, longitude },
-      radiusKm,
-      resultsCount: enrichedResults.length,
+      live: {
+        gpReachableNow: true,
+        gpMatchedNow,
+        resultsCount: places.length,
+        liveFuelDataFoundNow,
+        liveFuelTypes,
+        liveSourceUpdatedAt,
+      },
+      stored: {
+        storedGpPrices,
+        storedFuelTypes,
+        lastStoredFetchedAt,
+        lastStoredSourceUpdatedAt,
+      },
+      persistence: {
+        newFuelPriceRowsCreated,
+        rowsCreatedCount,
+        reasonIfNoRowsCreated,
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -267,6 +267,27 @@ Deno.serve(async (req) => {
   const saturatedCount = fetchPointResults.filter(r => r.saturated).length;
   const saturationRate = fetchPoints.length > 0 ? saturatedCount / fetchPoints.length : 0;
 
+  // ── DECISION SAFETY GUARD ──
+  // Zone test is only decision-safe if saturation is low enough that Google results are trustworthy
+  let isDecisionSafe = true;
+  let blockedBySaturation = false;
+  let blockedReason = null;
+  let recommendation = 'Zone test results can guide decisions.';
+
+  if (saturationRate > 0.7) {
+    // >70% of fetch points hit saturation → Google likely truncating results
+    isDecisionSafe = false;
+    blockedBySaturation = true;
+    blockedReason = `Zone is too dense/saturated (${Math.round(saturationRate * 100)}% of fetch points near result cap). Google may not be returning full station set. Cannot reliably make scope decisions.`;
+    recommendation = 'Run only for observation. Do NOT use for scope-cleaning decisions until density decreases.';
+  } else if (saturationRate > 0.4) {
+    // 40-70% saturated → risky for decision-grade use
+    isDecisionSafe = false;
+    blockedBySaturation = true;
+    blockedReason = `Zone saturation is moderate (${Math.round(saturationRate * 100)}% of fetch points). Scope-cleaning decisions blocked as a precaution.`;
+    recommendation = 'Results can inform monitoring strategy, but not scope removal.';
+  }
+
   const prevTestCount = zone.zoneTestCount || 0;
   const newTestCount = prevTestCount + 1;
 
@@ -373,9 +394,19 @@ Deno.serve(async (req) => {
       totalWithPrices,
       apiErrors,
     },
+    decisionSafety: {
+      isDecisionSafe,
+      blockedBySaturation,
+      blockedReason,
+      saturatedFetchPoints: saturatedCount,
+      totalFetchPoints: fetchPoints.length,
+      saturationRate: Math.round(saturationRate * 1000) / 1000,
+      maxResultsObservedAtAnyPoint: Math.max(...fetchPointResults.map(r => r.resultsCount || 0)),
+      recommendation,
+    },
     decision: {
-      decision,
-      reasons: decisionReasons,
+      decision: isDecisionSafe ? decision : 'blocked_by_saturation',
+      reasons: isDecisionSafe ? decisionReasons : [blockedReason],
       testCount: newTestCount,
       requiresMultipleTests: decision === 'disable_candidate' ? false : newTestCount < 2,
     },

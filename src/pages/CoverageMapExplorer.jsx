@@ -806,40 +806,28 @@ export default function CoverageMapExplorer() {
   const testSingleStation = async (station) => {
     setTestingStation(true);
     try {
-      // 1. Run real live GP test
+      // Call production-aligned station test (returns 3-part breakdown)
       const res = await base44.functions.invoke('discoverGooglePlacesCoverageAroundStations', {
         latitude: station.latitude,
         longitude: station.longitude,
         radiusKm: 0.5,
         stationId: station.id,
       });
-      const gpResults = res?.data?.results || [];
-      const gpReachable = res?.data != null && !res?.data?.error;
-      const bestMatch = gpResults.find(r => r.matchedStationId === station.id) || gpResults[0] || null;
-      // Extract any live fuel type hints from GP response (place types / fuel options if exposed)
-      const liveFuelTypes = bestMatch?.fuelTypes || [];
 
-      // 2. Re-read DB rows for THIS station (to detect newly persisted rows from this test)
-      const gpPricesAfter = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: station.id });
-      const dbBefore = dbCoverageMap[station.id];
-      const rowsBefore = dbBefore?.rowCount || 0;
-      const newRowsCreated = Math.max(0, gpPricesAfter.length - rowsBefore);
+      const { live, stored, persistence } = res?.data || {};
 
-      // Update dbCoverageMap for this station based on fresh DB read
-      if (gpPricesAfter.length > 0) {
-        const storedFuelTypes = [...new Set(gpPricesAfter.map(p => p.fuelType).filter(Boolean))];
-        const latest = gpPricesAfter.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0];
+      // Update dbCoverageMap from stored DB state (before this test)
+      if (stored?.storedGpPrices) {
         setDbCoverageMap(prev => ({
           ...prev,
           [station.id]: {
-            storedFuelTypes,
-            fetchedAt: latest.fetchedAt,
-            sourceUpdatedAt: latest.sourceUpdatedAt || null,
-            rowCount: gpPricesAfter.length,
+            storedFuelTypes: stored.storedFuelTypes || [],
+            fetchedAt: stored.lastStoredFetchedAt,
+            sourceUpdatedAt: stored.lastStoredSourceUpdatedAt || null,
+            rowCount: stored.storedFuelTypes?.length || 0,
           },
         }));
       } else {
-        // Explicitly remove from dbCoverageMap if no DB rows exist (was previously assumed)
         setDbCoverageMap(prev => {
           const next = { ...prev };
           delete next[station.id];
@@ -847,27 +835,23 @@ export default function CoverageMapExplorer() {
         });
       }
 
-      // 3. Store live test result separately — this is NOT historical data
+      // Store live test result (from this session only)
       setLiveTestMap(prev => ({
         ...prev,
         [station.id]: {
-          gpReachable,
-          gpMatchFound: !!bestMatch,
-          liveFuelTypes,
-          matchDistance: bestMatch?.distance ?? null,
-          matchConfidence: bestMatch?.matchConfidence ?? null,
-          matchedName: bestMatch?.name ?? null,
-          resultsCount: gpResults.length,
-          newRowsCreated,
-          noDataReason: !gpReachable
-            ? 'GP not reachable'
-            : gpResults.length === 0
-            ? 'No GP results returned for this location'
-            : !bestMatch
-            ? 'No match found in GP results'
-            : newRowsCreated === 0 && gpPricesAfter.length === 0
-            ? 'GP matched but returned no price data'
-            : null,
+          gpReachableNow: live?.gpReachableNow,
+          gpMatchedNow: live?.gpMatchedNow,
+          liveFuelDataFoundNow: live?.liveFuelDataFoundNow,
+          liveFuelTypes: live?.liveFuelTypes || [],
+          liveSourceUpdatedAt: live?.liveSourceUpdatedAt,
+          resultsCount: live?.resultsCount || 0,
+          storedGpPrices: stored?.storedGpPrices,
+          storedFuelTypes: stored?.storedFuelTypes || [],
+          lastStoredFetchedAt: stored?.lastStoredFetchedAt,
+          lastStoredSourceUpdatedAt: stored?.lastStoredSourceUpdatedAt,
+          newFuelPriceRowsCreated: persistence?.newFuelPriceRowsCreated,
+          rowsCreatedCount: persistence?.rowsCreatedCount || 0,
+          reasonIfNoRowsCreated: persistence?.reasonIfNoRowsCreated,
           testedAt: new Date().toISOString(),
         },
       }));
