@@ -15,15 +15,10 @@ import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoin
 const COST_PER_REQUEST_USD = 0.049;
 const DEFAULT_NOK_RATE = 10.8;
 
-// Realism thresholds for circle zones (in meters)
-const CIRCLE_REALISTIC_MAX = 10_000;   // <= 10 km → REALISTIC
-const CIRCLE_LOW_MAX = 50_000;         // <= 50 km → LOW_REALISM
-// > 50 km → VERY_LOW_REALISM
-
 const REALISM_STYLE = {
-  REALISTIC:      { label: 'REALISTIC',      bg: 'bg-green-100',  text: 'text-green-800',  dot: 'bg-green-500' },
-  LOW_REALISM:    { label: 'LOW_REALISM',    bg: 'bg-amber-100',  text: 'text-amber-800',  dot: 'bg-amber-500' },
-  VERY_LOW_REALISM: { label: 'VERY_LOW',     bg: 'bg-red-100',    text: 'text-red-700',    dot: 'bg-red-500'   },
+  REALISTIC:        { label: 'REALISTIC',   bg: 'bg-green-100',  text: 'text-green-800', dot: 'bg-green-500' },
+  LOW_REALISM:      { label: 'LOW_REALISM', bg: 'bg-amber-100',  text: 'text-amber-800', dot: 'bg-amber-500' },
+  VERY_LOW_REALISM: { label: 'VERY_LOW',    bg: 'bg-red-100',    text: 'text-red-700',   dot: 'bg-red-500'   },
 };
 
 const SORT_OPTIONS = [
@@ -45,15 +40,91 @@ function getFetchPointCount(zone) {
   return null;
 }
 
-function classifyRealism(zone, stationsInZoneCount) {
+// ─── Combined data-aware realism classifier ───────────────────────────────────
+// Signals considered:
+//   geometry    — radius (circle) or fetch points (corridor)
+//   density     — stations per fetch point
+//   coverage    — covered stations per fetch point, coverage rate
+//   waste       — untested share
+//
+// Geometry alone is only a safety baseline.
+// Final classification requires geometry + coverage evidence to agree.
+//
+// Returns { level, reasons[] }
+function classifyRealism({ zone, fetchPoints, inZoneCount, coveredCount, untestedCount }) {
   const zoneType = zone.zoneType || 'circle';
-  if (zoneType === 'corridor') return 'REALISTIC'; // corridors have point-based fetch — always realistic
-  // Circle realism
   const r = zone.radiusMeters || 5000;
-  let realism = r <= CIRCLE_REALISTIC_MAX ? 'REALISTIC' : r <= CIRCLE_LOW_MAX ? 'LOW_REALISM' : 'VERY_LOW_REALISM';
-  // Downgrade if large station count with only 1 fetch point
-  if (realism === 'REALISTIC' && stationsInZoneCount > 20) realism = 'LOW_REALISM';
-  return realism;
+
+  const reasons = [];
+  let geometryLevel = 'REALISTIC'; // baseline from geometry
+  let dataLevel = 'REALISTIC';     // baseline from data signals
+
+  // ── 1. Geometry signal ──────────────────────────────────────────────────────
+  if (zoneType === 'circle') {
+    if (r > 50_000) {
+      geometryLevel = 'VERY_LOW_REALISM';
+      reasons.push(`Circle radius ${(r / 1000).toFixed(0)} km — a single Nearby Search request cannot cover this area.`);
+    } else if (r > 10_000) {
+      geometryLevel = 'LOW_REALISM';
+      reasons.push(`Circle radius ${(r / 1000).toFixed(0)} km — Nearby Search is location-based and result-limited; coverage at this scale is likely partial.`);
+    }
+  }
+  // Corridors: geometry is always REALISTIC — their fetch model is already point-based.
+
+  // ── 2. Density signal (stations per fetch point) ────────────────────────────
+  // Nearby Search returns ≤ 20 results per request. If stations/point is very high,
+  // the fetch model structurally cannot reach all stations regardless of geometry.
+  const stationsPerPoint = fetchPoints > 0 ? inZoneCount / fetchPoints : 0;
+  if (stationsPerPoint > 30) {
+    dataLevel = 'VERY_LOW_REALISM';
+    reasons.push(`${stationsPerPoint.toFixed(0)} stations per fetch point — Nearby Search returns ≤20 results; many stations will be unreachable.`);
+  } else if (stationsPerPoint > 15) {
+    if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
+    reasons.push(`${stationsPerPoint.toFixed(0)} stations per fetch point — density is high relative to Nearby Search result limits.`);
+  }
+
+  // ── 3. Coverage efficiency signal ──────────────────────────────────────────
+  // Only apply if we have meaningful data (>= 3 stations with coverage data)
+  const testedCount = inZoneCount - untestedCount;
+  const coverageRate = inZoneCount > 0 ? coveredCount / inZoneCount : null;
+  const coveredPerPoint = fetchPoints > 0 ? coveredCount / fetchPoints : 0;
+
+  if (testedCount >= 3) {
+    // Low coverage rate despite testing → fetch model is delivering poor results
+    if (coverageRate !== null && coverageRate < 0.2 && coveredCount < 3) {
+      if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
+      reasons.push(`Coverage rate ${Math.round(coverageRate * 100)}% — very few stations covered despite active fetch zone.`);
+    }
+    // Very low covered stations per fetch point
+    if (coveredPerPoint < 1 && inZoneCount > 5) {
+      if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
+      reasons.push(`${coveredPerPoint.toFixed(1)} covered stations per fetch point — fetch yield is low.`);
+    }
+  }
+
+  // ── 4. High untested share (if zone has been running, we expect some coverage) ──
+  if (inZoneCount >= 5 && untestedCount / inZoneCount > 0.85 && zone.lastFetchedAt) {
+    if (dataLevel === 'REALISTIC') dataLevel = 'LOW_REALISM';
+    reasons.push(`${Math.round((untestedCount / inZoneCount) * 100)}% of in-zone stations still untested after at least one fetch run.`);
+  }
+
+  // ── 5. Combine: geometry and data signals ──────────────────────────────────
+  // If either geometry or data signals indicate VERY_LOW → VERY_LOW wins.
+  // If either indicates LOW and the other doesn't counter it → LOW.
+  // Both must be REALISTIC for final REALISTIC.
+  const order = { REALISTIC: 0, LOW_REALISM: 1, VERY_LOW_REALISM: 2 };
+  const finalLevel = order[geometryLevel] >= order[dataLevel] ? geometryLevel : dataLevel;
+
+  // If no specific reasons collected and zone is REALISTIC, give a positive summary
+  if (reasons.length === 0) {
+    if (zoneType === 'corridor') {
+      reasons.push('Corridor zone — point-based fetch model; geometry and density are appropriate.');
+    } else {
+      reasons.push(`Circle radius ${(r / 1000).toFixed(1)} km with ${stationsPerPoint.toFixed(1)} stations/point — within acceptable density range.`);
+    }
+  }
+
+  return { level: finalLevel, reasons };
 }
 
 function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership, zoneStationsMap }) {
@@ -79,13 +150,22 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
       const coverageRate = inZone.length > 0 ? covered.length / inZone.length : null;
       const wasteRate = inZone.length > 0 ? untested.length / inZone.length : null;
       const costPerCovered = (costPerRun != null && covered.length > 0) ? costPerRun / covered.length : null;
+      const stationsPerPoint = (fetchPoints > 0 && inZone.length > 0) ? inZone.length / fetchPoints : null;
+      const coveredPerPoint = (fetchPoints > 0 && covered.length > 0) ? covered.length / fetchPoints : null;
 
-      // Realism
-      const realism = classifyRealism(zone, inZone.length);
+      // Combined data-aware realism classification
+      const { level: realism, reasons: realismReasons } = classifyRealism({
+        zone,
+        fetchPoints: fetchPoints || 1,
+        inZoneCount: inZone.length,
+        coveredCount: covered.length,
+        untestedCount: untested.length,
+      });
 
       return {
         zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported,
-        inZone, covered, untested, coverageRate, wasteRate, costPerCovered, realism,
+        inZone, covered, untested, coverageRate, wasteRate, costPerCovered,
+        stationsPerPoint, coveredPerPoint, realism, realismReasons,
       };
     });
   }, [activeZones, costPerRequest, zoneStationsMap, dbCoverageMap, liveTestMap]);
@@ -167,27 +247,29 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
         </div>
         {activeZones.length === 0 ? <div className="text-xs text-slate-400 italic py-2">No active zones.</div> : (
           <div className="space-y-2">
-            {sortedBreakdown.map(({ zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported, inZone, covered, untested, coverageRate, wasteRate, costPerCovered, realism }) => {
+            {sortedBreakdown.map(({ zone, zoneType, fetchPoints, requestsPerRun, costPerRun, supported, inZone, covered, untested, coverageRate, wasteRate, costPerCovered, stationsPerPoint, coveredPerPoint, realism, realismReasons }) => {
               const rs = REALISM_STYLE[realism];
               const isUnrealistic = realism === 'LOW_REALISM' || realism === 'VERY_LOW_REALISM';
+              const isVeryLow = realism === 'VERY_LOW_REALISM';
               return (
-                <div key={zone.id} className={`rounded border p-2 space-y-1.5 text-xs ${isUnrealistic ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}>
-                  {/* Zone name + type + realism */}
+                <div key={zone.id} className={`rounded border p-2 space-y-1.5 text-xs ${isVeryLow ? 'border-red-200 bg-red-50' : isUnrealistic ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+                  {/* Zone name + type row */}
                   <div className="flex items-center justify-between gap-1">
-                    <span className="font-semibold text-slate-800 truncate flex-1" title={zone.name}>{zone.name}</span>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <span className="font-semibold text-slate-800 truncate" title={zone.name}>{zone.name}</span>
+                      <span className={`shrink-0 text-xs px-1 rounded ${zoneType === 'corridor' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>{zoneType}</span>
+                    </div>
                     <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-semibold ${rs.bg} ${rs.text}`}>{rs.label}</span>
                   </div>
 
-                  {/* Realism warning */}
-                  {isUnrealistic && (
-                    <div className="text-amber-700 leading-snug bg-amber-100 rounded px-2 py-1">
-                      {realism === 'VERY_LOW_REALISM'
-                        ? '⚠ Extremely large zone. Nearby Search cannot provide reliable coverage — 1 request returns ≤20 results regardless of radius.'
-                        : '⚠ Large circle zone. Nearby Search is location-based and result-limited — actual coverage will be partial.'}
-                    </div>
-                  )}
+                  {/* Realism reason(s) — always shown, styled by level */}
+                  <div className={`rounded px-2 py-1 leading-snug space-y-0.5 ${isVeryLow ? 'bg-red-100 text-red-800' : isUnrealistic ? 'bg-amber-100 text-amber-800' : 'bg-green-50 text-green-800'}`}>
+                    {realismReasons.map((r, i) => (
+                      <div key={i}>{isUnrealistic ? '⚠ ' : '✓ '}{r}</div>
+                    ))}
+                  </div>
 
-                  {/* Cost + fetch info */}
+                  {/* Metrics grid: fetch pts / cost / coverage% / untested% */}
                   <div className="grid grid-cols-4 gap-1 text-slate-600">
                     <div className="text-center">
                       <div className="font-bold text-slate-700">{supported ? fetchPoints : '?'}</div>
@@ -207,14 +289,27 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
                     </div>
                   </div>
 
-                  {/* Station + efficiency */}
-                  <div className="flex items-center justify-between text-slate-500 border-t border-slate-100 pt-1">
-                    <span>{inZone.length} stations · <span className="text-green-700">{covered.length} covered</span> · <span className="text-amber-600">{untested.length} untested</span></span>
-                    {costPerCovered != null && (
-                      <span className="text-slate-400">
-                        {fmtUSD(costPerCovered)}/covered
-                      </span>
-                    )}
+                  {/* Density row: stations/point, covered/point, cost/covered */}
+                  <div className="grid grid-cols-3 gap-1 border-t border-slate-100 pt-1 text-slate-500">
+                    <div className="text-center">
+                      <div className={`font-semibold ${stationsPerPoint != null && stationsPerPoint > 15 ? 'text-amber-600' : 'text-slate-700'}`}>
+                        {stationsPerPoint != null ? stationsPerPoint.toFixed(1) : '—'}
+                      </div>
+                      <div className="text-slate-400">stn/pt</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-slate-700">{coveredPerPoint != null ? coveredPerPoint.toFixed(1) : '—'}</div>
+                      <div className="text-slate-400">cov/pt</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-slate-700">{costPerCovered != null ? fmtUSD(costPerCovered) : '—'}</div>
+                      <div className="text-slate-400">$/covered</div>
+                    </div>
+                  </div>
+
+                  {/* Station count summary */}
+                  <div className="text-slate-500 border-t border-slate-100 pt-1">
+                    {inZone.length} stations · <span className="text-green-700">{covered.length} covered</span> · <span className="text-amber-600">{untested.length} untested</span>
                   </div>
                 </div>
               );
@@ -247,11 +342,11 @@ function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneM
 
         {/* Realism legend */}
         <div className="rounded border p-2 space-y-1 text-xs bg-slate-50">
-          <div className="font-semibold text-slate-500 uppercase tracking-wide text-xs mb-1">Realism classification (circle zones)</div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /><span className="text-slate-600"><strong>REALISTIC</strong> — radius ≤ 10 km</span></div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /><span className="text-slate-600"><strong>LOW_REALISM</strong> — radius 10–50 km</span></div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /><span className="text-slate-600"><strong>VERY_LOW_REALISM</strong> — radius &gt; 50 km</span></div>
-          <div className="text-slate-400 italic mt-1">Corridor zones are always REALISTIC (point-based fetch).</div>
+          <div className="font-semibold text-slate-500 uppercase tracking-wide text-xs mb-1">Realism model — combined signals</div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>REALISTIC</strong> — geometry and density are appropriate for Nearby Search</span></div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>LOW_REALISM</strong> — large geometry, high station density per point, or poor observed coverage</span></div>
+          <div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-red-500 inline-block mt-0.5 shrink-0" /><span className="text-slate-600"><strong>VERY_LOW_REALISM</strong> — fetch model is structurally too weak (radius &gt;50 km or &gt;30 stations/point)</span></div>
+          <div className="text-slate-400 italic mt-1">Signals: geometry + stations/fetch point + coverage rate + untested share. Corridor zones use point-based fetch and are evaluated on density only.</div>
         </div>
       </div>
     </div>
