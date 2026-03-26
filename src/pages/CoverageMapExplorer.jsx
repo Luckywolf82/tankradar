@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, MapPin, Search, RefreshCw, Route, FlaskConical, XCircle } from 'lucide-react';
 import { isStationInZone, distanceMeters, parseCorridorPoints, corridorFetchPoints } from '@/utils/zoneGeometry';
+import ZoneTestResultPanel from '@/components/admin/ZoneTestResultPanel';
+import StationTestResultPanel from '@/components/admin/StationTestResultPanel';
 
 
 // ─── GP Cost Estimator (inlined to avoid external file dependency) ────────────
@@ -1371,56 +1373,14 @@ export default function CoverageMapExplorer() {
                       />
                     </div>
 
-                    {/* B. Live test result */}
-                    <div className="rounded-lg border p-2.5 space-y-0.5">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">B · Live test result</div>
-                      {!live ? (
-                        <div className="text-xs text-slate-400 italic py-1">Not tested yet — click "Test this station"</div>
-                      ) : (
-                        <>
-                          <Row label="GP reachable" value={live.gpReachable ? 'Yes' : 'No'} valueClass={live.gpReachable ? 'text-green-700' : 'text-red-600'} />
-                          <Row
-                            label="GP match found"
-                            value={live.gpMatchFound ? `Yes (${live.resultsCount} results)` : `No (${live.resultsCount} results)`}
-                            valueClass={live.gpMatchFound ? 'text-green-700' : 'text-slate-400'}
-                          />
-                          {live.gpMatchFound && (
-                            <>
-                              <Row label="Match distance" value={live.matchDistance != null ? `${live.matchDistance} km` : 'Unknown'} />
-                              <Row label="Match confidence" value={live.matchConfidence || 'Unknown'} />
-                              {live.matchedName && live.matchedName !== selectedStation.name && (
-                                <Row label="GP name" value={live.matchedName} valueClass="text-slate-500 italic" />
-                              )}
-                              {live.liveFuelTypes?.length > 0 && (
-                                <Row label="Live fuel types" value={live.liveFuelTypes.join(', ')} valueClass="text-blue-700" />
-                              )}
-                            </>
-                          )}
-                          {live.noDataReason && (
-                            <div className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mt-1">{live.noDataReason}</div>
-                          )}
-                        </>
-                      )}
-                    </div>
-
-                    {/* C. Persistence result */}
-                    {live && (
-                      <div className="rounded-lg border p-2.5 space-y-0.5">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">C · Persistence result (this test)</div>
-                        <Row
-                          label="New rows created"
-                          value={live.newRowsCreated > 0 ? `Yes (${live.newRowsCreated})` : 'No'}
-                          valueClass={live.newRowsCreated > 0 ? 'text-green-700 font-semibold' : 'text-slate-400'}
-                        />
-                        {live.newRowsCreated === 0 && (
-                          <div className="text-xs text-slate-500 italic">
-                            {live.gpMatchFound
-                              ? 'GP matched but no price data was persisted.'
-                              : 'No match — nothing to persist.'}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* B, C. Live + persistence result — 3-part breakdown */}
+                     {!live ? (
+                       <div className="rounded-lg border p-2.5 bg-slate-50">
+                         <div className="text-xs text-slate-400 italic py-1">Not tested yet — click "Test this station"</div>
+                       </div>
+                     ) : (
+                       <StationTestResultPanel live={live} />
+                     )}
 
                     {/* Actions */}
                     <div className="space-y-1.5 pt-1 border-t">
@@ -1709,6 +1669,9 @@ export default function CoverageMapExplorer() {
                         </div>
                       )}
 
+                      {/* ── 3-PART ZONE TEST RESULT ── */}
+                      <ZoneTestResultPanel testResult={testResult} />
+
                       {/* Zone decision (from live test result this session, or stored) */}
                       {displayStats && (() => {
                         const ds = DECISION_STYLE[displayStats.decision] || DECISION_STYLE.monitor;
@@ -1799,17 +1762,7 @@ export default function CoverageMapExplorer() {
                         </div>
                       )}
 
-                      {/* Stored stats summary (no live test this session) */}
-                      {!testResult && storedTestStats && (
-                        <div className="text-xs text-slate-500 border rounded p-2 bg-slate-50 space-y-0.5">
-                          <div className="font-semibold text-slate-600 mb-1">Last test summary</div>
-                          <div className="flex justify-between"><span>Coverage rate</span><span className="font-semibold">{fmtPct(storedTestStats.coverageRate)}</span></div>
-                          <div className="flex justify-between"><span>Waste rate</span><span className="font-semibold">{fmtPct(storedTestStats.wasteRate)}</span></div>
-                          <div className="flex justify-between"><span>Saturation</span><span className="font-semibold">{fmtPct(storedTestStats.saturationRate)}</span></div>
-                          <div className="flex justify-between"><span>Covered/pt</span><span className="font-semibold">{fmtN(storedTestStats.coveredPerPoint, 1)}</span></div>
-                          <div className="flex justify-between"><span>$/covered</span><span className="font-semibold">{storedTestStats.costPerCovered != null ? `$${storedTestStats.costPerCovered.toFixed(3)}` : '—'}</span></div>
-                        </div>
-                      )}
+
 
                       {/* Disable zone action */}
                       {displayStats?.decision === 'disable_candidate' && selectedZone.isActive && (
