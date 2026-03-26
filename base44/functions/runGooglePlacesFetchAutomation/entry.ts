@@ -196,9 +196,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'No active GPFetchZones. Nothing to fetch.', activeZones: 0, totalZones: allZones.length });
     }
 
-    // 2. Station catalog — exclude flagged stations from GP matching scope
+    // 2. Station catalog — fetch scope controlled by fetchScopeStatus.
+    // out_of_scope = explicitly excluded. keep + monitor + legacy (no field set) = included.
+    // reviewStatus is NOT used for fetch scope control.
     const allStationsRaw = await db.entities.Station.list();
-    const allStations = allStationsRaw.filter(s => s.reviewStatus !== 'flagged');
+    const allStations = allStationsRaw.filter(s => s.fetchScopeStatus !== 'out_of_scope');
 
     // 3. Dedup snapshot
     const existingGP = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-created_date', 2000);

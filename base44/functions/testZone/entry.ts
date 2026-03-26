@@ -12,7 +12,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
  * Does NOT persist prices. Does NOT touch FuelPrice or FetchLog.
  * Updates GPFetchZone.lastZoneTestAt, zoneTestCount, lastZoneTestStats.
  *
- * This is fetch cost-control only. Does NOT interact with StationReview.
+ * MATCH_RADIUS_METERS = 500 — synchronized with runGooglePlacesFetchAutomation.
+ * Fetch scope controlled by fetchScopeStatus (not reviewStatus).
  */
 
 const GEO_R = 6371000;
@@ -139,14 +140,18 @@ Deno.serve(async (req) => {
   const zone = allZones.find(z => z.id === zoneId);
   if (!zone) return Response.json({ error: 'Zone not found' }, { status: 404 });
 
-  // Load stations to classify coverage — exclude flagged (out of GP scope)
+  // Load stations — production-equivalent scope filter:
+  // Exclude out_of_scope (fetchScopeStatus). Include keep + monitor + legacy (no fetchScopeStatus set).
+  // Does NOT filter on reviewStatus — fetch scope and review are independent.
   const allStations = await db.entities.Station.filter({ status: 'active' });
-  const stationsInZone = allStations.filter(s => s.reviewStatus !== 'flagged' && isStationInZone(s, zone));
+  const stationsInZone = allStations.filter(s =>
+    s.fetchScopeStatus !== 'out_of_scope' && isStationInZone(s, zone)
+  );
 
   // Load DB coverage (GP prices only) for stations in this zone
   const stationIds = stationsInZone.map(s => s.id);
   const dbCoveredIds = new Set();
-  const dbWeakIds = new Set(); // DB rows exist but no fuelTypes
+  const dbWeakIds = new Set();
 
   if (stationIds.length > 0) {
     const gpPrices = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-fetchedAt', 2000);
@@ -168,7 +173,7 @@ Deno.serve(async (req) => {
 
   const fetchPointResults = [];
   const seenPlaceIds = new Set();
-  const allFetchedPlaces = []; // all unique GP places returned, for per-station matching
+  const allFetchedPlaces = [];
   let totalPlaces = 0;
   let totalWithPrices = 0;
   let apiErrors = 0;
@@ -197,13 +202,10 @@ Deno.serve(async (req) => {
   }
 
   // ── Per-station GP match assessment ──────────────────────────────────────────
-  // For each station in zone, find the closest GP place returned by the fetch.
-  // Match threshold: 300m (conservative — GP places within 300m of station coords are candidates).
-  // We do NOT write to DB here — this is diagnostic only.
-  const MATCH_RADIUS_METERS = 300;
+  // Match threshold: 500m — synchronized with runGooglePlacesFetchAutomation matchStation().
+  const MATCH_RADIUS_METERS = 500;
 
   const stationResults = stationsInZone.map(station => {
-    // Find closest GP place
     let closestPlace = null;
     let closestDist = Infinity;
     for (const place of allFetchedPlaces) {
@@ -221,15 +223,15 @@ Deno.serve(async (req) => {
     // Per-station scope recommendation
     let scopeRecommendation;
     if (inDbCovered) {
-      scopeRecommendation = 'keep'; // has DB prices — strong signal
+      scopeRecommendation = 'keep';
     } else if (hasPrices) {
-      scopeRecommendation = 'keep'; // live GP match with prices
+      scopeRecommendation = 'keep';
     } else if (gpReached && !hasPrices) {
-      scopeRecommendation = 'monitor'; // reached but no price data
+      scopeRecommendation = 'monitor';
     } else if (inDbWeak) {
-      scopeRecommendation = 'monitor'; // DB rows but no fuel types
+      scopeRecommendation = 'monitor';
     } else {
-      scopeRecommendation = 'remove_candidate'; // not reached, no DB, no prices
+      scopeRecommendation = 'remove_candidate';
     }
 
     return {
@@ -238,6 +240,7 @@ Deno.serve(async (req) => {
       stationChain: station.chain || null,
       latitude: station.latitude,
       longitude: station.longitude,
+      currentFetchScopeStatus: station.fetchScopeStatus || 'keep',
       gpReached,
       closestGpDistanceMeters: closestPlace ? Math.round(closestDist) : null,
       closestGpName: closestPlace?.displayName?.text || null,
@@ -264,8 +267,6 @@ Deno.serve(async (req) => {
   const saturatedCount = fetchPointResults.filter(r => r.saturated).length;
   const saturationRate = fetchPoints.length > 0 ? saturatedCount / fetchPoints.length : 0;
 
-  // Zone decision logic (data-only, multi-signal)
-  // Requires at least 2 test runs for DISABLE_CANDIDATE
   const prevTestCount = zone.zoneTestCount || 0;
   const newTestCount = prevTestCount + 1;
 
@@ -296,22 +297,19 @@ Deno.serve(async (req) => {
     }
 
     if (saturationRate > 0.7) {
-      issues.push(`High saturation: ${Math.round(saturationRate * 100)}% of fetch points hit the result cap — area may need more fetch points.`);
+      issues.push(`High saturation: ${Math.round(saturationRate * 100)}% of fetch points hit the result cap.`);
     } else if (saturationRate > 0.4) {
       issues.push(`Moderate saturation: ${Math.round(saturationRate * 100)}% of fetch points near result cap.`);
     } else if (saturationRate < 0.1 && positives.length > 0) {
       positives.push(`Low saturation: fetch points are not result-capped.`);
     }
 
-    // Decision rules
     if (issues.length === 0) {
       return { decision: 'keep', reasons: positives.length > 0 ? positives : ['All metrics look good.'] };
     }
-
     if (issues.length >= 2 && testCount >= 2) {
       return { decision: 'disable_candidate', reasons: issues };
     }
-
     return { decision: 'monitor', reasons: issues };
   }
 
@@ -320,10 +318,10 @@ Deno.serve(async (req) => {
     newTestCount
   );
 
-  // Persist test metadata to zone
   const removeCandidates = stationResults.filter(r => r.scopeRecommendation === 'remove_candidate');
   const testStats = JSON.stringify({
     testedAt: new Date().toISOString(),
+    matchRadiusMeters: MATCH_RADIUS_METERS,
     totalStations,
     coveredCount,
     weakCount,
@@ -351,6 +349,7 @@ Deno.serve(async (req) => {
   return Response.json({
     success: true,
     zone: { id: zone.id, name: zone.name, zoneType: zone.zoneType || 'circle' },
+    matchRadiusMeters: MATCH_RADIUS_METERS,
     coverage: {
       totalStations,
       coveredCount,
@@ -381,5 +380,6 @@ Deno.serve(async (req) => {
       requiresMultipleTests: decision === 'disable_candidate' ? false : newTestCount < 2,
     },
     stationResults,
+    removeCandidates: removeCandidates.map(r => ({ stationId: r.stationId, stationName: r.stationName, stationChain: r.stationChain })),
   });
 });
