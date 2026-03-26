@@ -133,17 +133,15 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
   if (!apiKey) return Response.json({ error: 'GOOGLE_PLACES_API_KEY not set' }, { status: 500 });
 
-  const db = base44.asServiceRole;
-
   // Load zone
-  const allZones = await db.entities.GPFetchZone.list();
+  const allZones = await base44.entities.GPFetchZone.list();
   const zone = allZones.find(z => z.id === zoneId);
   if (!zone) return Response.json({ error: 'Zone not found' }, { status: 404 });
 
   // Load stations — production-equivalent scope filter:
   // Exclude out_of_scope (fetchScopeStatus). Include keep + monitor + legacy (no fetchScopeStatus set).
   // Does NOT filter on reviewStatus — fetch scope and review are independent.
-  const allStations = await db.entities.Station.filter({ status: 'active' });
+  const allStations = await base44.entities.Station.filter({ status: 'active' });
   const stationsInZone = allStations.filter(s =>
     s.fetchScopeStatus !== 'out_of_scope' && isStationInZone(s, zone)
   );
@@ -154,7 +152,7 @@ Deno.serve(async (req) => {
   const dbWeakIds = new Set();
 
   if (stationIds.length > 0) {
-    const gpPrices = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-fetchedAt', 2000);
+    const gpPrices = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces' }, '-fetchedAt', 2000);
     const byStation = {};
     for (const p of gpPrices) {
       if (!p.stationId || !stationIds.includes(p.stationId)) continue;
@@ -361,7 +359,7 @@ Deno.serve(async (req) => {
     removeCandidateCount: removeCandidates.length,
   });
 
-  await db.entities.GPFetchZone.update(zoneId, {
+  await base44.entities.GPFetchZone.update(zoneId, {
     lastZoneTestAt: new Date().toISOString(),
     zoneTestCount: newTestCount,
     lastZoneTestStats: testStats,

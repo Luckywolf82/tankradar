@@ -95,36 +95,35 @@ Deno.serve(async (req) => {
     }
 
     const radiusMeters = radiusKm * 1000;
-    const db = base44.asServiceRole;
 
     // ── LIVE GP RESULT ──
     const gpResult = await fetchGPForPoint(apiKey, latitude, longitude, radiusMeters);
     if (!gpResult.success) {
-      return Response.json({
-        live: {
-          gpReachableNow: false,
-          gpMatchedNow: false,
-          resultsCount: 0,
-          liveFuelDataFoundNow: false,
-          liveFuelTypes: [],
-          liveSourceUpdatedAt: null,
-        },
-        stored: {
-          storedGpPrices: false,
-          storedFuelTypes: [],
-          lastStoredFetchedAt: null,
-          lastStoredSourceUpdatedAt: null,
-        },
-        persistence: {
-          newFuelPriceRowsCreated: false,
-          rowsCreatedCount: 0,
-          reasonIfNoRowsCreated: `GP not reachable: ${gpResult.error}`,
-        },
-      });
+    return Response.json({
+      live: {
+        gpReachableNow: false,
+        gpMatchedNow: false,
+        resultsCount: 0,
+        liveFuelDataFoundNow: false,
+        liveFuelTypes: [],
+        liveSourceUpdatedAt: null,
+      },
+      stored: {
+        storedGpPrices: false,
+        storedFuelTypes: [],
+        lastStoredFetchedAt: null,
+        lastStoredSourceUpdatedAt: null,
+      },
+      persistence: {
+        newFuelPriceRowsCreated: false,
+        rowsCreatedCount: 0,
+        reasonIfNoRowsCreated: `GP not reachable: ${gpResult.error}`,
+      },
+    });
     }
 
     const places = gpResult.places || [];
-    const allStations = await db.entities.Station.filter({ status: 'active' });
+    const allStations = await base44.entities.Station.filter({ status: 'active' });
     
     let gpMatchedNow = false;
     let liveFuelDataFoundNow = false;
@@ -148,7 +147,7 @@ Deno.serve(async (req) => {
     }
 
     // ── STORED DB RESULT ──
-    const gpPricesStored = await db.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: stationId });
+    const gpPricesStored = await base44.entities.FuelPrice.filter({ sourceName: 'GooglePlaces', stationId: stationId });
     const storedGpPrices = gpPricesStored.length > 0;
     const storedFuelTypes = [...new Set(gpPricesStored.map(p => p.fuelType).filter(Boolean))];
     const lastStoredFetchedAt = storedGpPrices ? gpPricesStored.sort((a, b) => new Date(b.fetchedAt) - new Date(a.fetchedAt))[0].fetchedAt : null;
