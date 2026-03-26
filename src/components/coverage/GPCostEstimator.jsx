@@ -37,10 +37,10 @@ function getFetchPointCount(zone) {
       const pts = corridorFetchPoints(zone);
       return pts.length;
     } catch {
-      return null; // parse error
+      return null;
     }
   }
-  return null; // unknown/unsupported zone type
+  return null;
 }
 
 export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTestMap, getZoneMembership }) {
@@ -74,7 +74,6 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
     };
   }, [zoneBreakdown, costPerRequest, runsPerDay]);
 
-  // Station coverage metrics relative to active zones
   const inActiveZoneStations = stations.filter(s => getZoneMembership(s) != null);
   const coveredInZone = inActiveZoneStations.filter(s => dbCoverageMap[s.id] != null);
   const untestedInZone = inActiveZoneStations.filter(s => !dbCoverageMap[s.id] && !liveTestMap[s.id]);
@@ -85,7 +84,6 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
   return (
     <div className="space-y-4">
 
-      {/* NOTE: cost model explanation */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-xs text-blue-800 leading-relaxed">
         <div className="font-semibold mb-1">Production fetch model</div>
         Cost is based on <strong>active GPFetchZone records</strong> and the fetch-point logic in{' '}
@@ -94,54 +92,39 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
         <div className="mt-1 text-blue-600">No scheduled automation is currently active — this is estimation only.</div>
       </div>
 
-      {/* Config inputs */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Configuration</div>
         <div className="grid grid-cols-3 gap-1.5">
           <div>
             <label className="text-xs text-slate-500 block mb-0.5">$/request</label>
-            <input
-              type="number"
-              step="0.001"
-              value={costPerRequest}
+            <input type="number" step="0.001" value={costPerRequest}
               onChange={e => setCostPerRequest(parseFloat(e.target.value) || COST_PER_REQUEST_USD)}
-              className="w-full px-2 py-1 border rounded text-xs"
-            />
+              className="w-full px-2 py-1 border rounded text-xs" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block mb-0.5">Runs/day</label>
-            <input
-              type="number"
-              min="1"
-              value={runsPerDay}
+            <input type="number" min="1" value={runsPerDay}
               onChange={e => setRunsPerDay(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full px-2 py-1 border rounded text-xs"
-            />
+              className="w-full px-2 py-1 border rounded text-xs" />
           </div>
           <div>
             <label className="text-xs text-slate-500 block mb-0.5">NOK/USD</label>
-            <input
-              type="number"
-              step="0.1"
-              value={nokRate}
+            <input type="number" step="0.1" value={nokRate}
               onChange={e => setNokRate(parseFloat(e.target.value) || DEFAULT_NOK_RATE)}
-              className="w-full px-2 py-1 border rounded text-xs"
-            />
+              className="w-full px-2 py-1 border rounded text-xs" />
           </div>
         </div>
-        <div className="text-xs text-slate-400 leading-tight">
+        <div className="text-xs text-slate-400">
           Default: <code>$0.049</code> = Nearby Search ($0.032) + fuelOptions Advanced Data ($0.017).
-          Only applies to <code>runGooglePlacesFetchAutomation</code> (Places API New).
         </div>
       </div>
 
-      {/* Zone breakdown */}
       <div>
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
           Active zones ({activeZones.length})
         </div>
         {activeZones.length === 0 ? (
-          <div className="text-xs text-slate-400 italic py-2">No active zones. Activate a zone to see cost estimate.</div>
+          <div className="text-xs text-slate-400 italic py-2">No active zones.</div>
         ) : (
           <div className="space-y-1">
             <div className="grid grid-cols-12 gap-1 text-xs text-slate-400 font-semibold pb-1 border-b">
@@ -163,7 +146,7 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
                   {supported ? fetchPoints : <span className="text-amber-600">?</span>}
                 </div>
                 <div className="col-span-2 text-right text-slate-600">
-                  {supported ? requestsPerRun : <span className="text-amber-600 text-xs">unsupported</span>}
+                  {supported ? requestsPerRun : <span className="text-amber-600 text-xs">?</span>}
                 </div>
                 <div className="col-span-2 text-right font-medium text-slate-700">
                   {supported ? fmtUSD(costPerRun) : '—'}
@@ -174,15 +157,12 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
         )}
       </div>
 
-      {/* Formula reference */}
       <div className="bg-slate-50 border rounded p-2 text-xs text-slate-500 space-y-0.5">
         <div className="font-semibold text-slate-600 mb-1">Fetch point formula (production)</div>
         <div><span className="font-mono bg-white border rounded px-1">circle</span> → 1 fetch point</div>
         <div><span className="font-mono bg-white border rounded px-1">corridor</span> → <code>ceil(length_m / 4000) + 1</code> fetch points</div>
-        <div className="text-slate-400 mt-1">stepMeters=4000 is hardcoded in runGooglePlacesFetchAutomation</div>
       </div>
 
-      {/* Totals */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Estimated totals</div>
         <Card className="p-3 space-y-2">
@@ -207,21 +187,16 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
             <span className="font-bold text-blue-700">{fmtUSD(totals.costPerMonth)} <span className="text-blue-400 font-normal">({fmtNOK(totals.costPerMonth)})</span></span>
           </div>
         </Card>
-        <div className="text-xs text-slate-400 italic">All figures are estimates. Actual cost depends on Google billing and request deduplication.</div>
+        <div className="text-xs text-slate-400 italic">Estimates only. No scheduled automation is active.</div>
       </div>
 
-      {/* Station coverage in active zones */}
       <div className="space-y-1.5">
-        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-          Station coverage (active zones)
-        </div>
-        <div className="text-xs text-slate-400 leading-tight mb-1.5">
-          These counts show station overlap with active zones. They do <strong>not</strong> drive cost — cost is zone/fetch-point based.
-        </div>
+        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Station coverage (active zones)</div>
+        <div className="text-xs text-slate-400 mb-1.5">Station counts do <strong>not</strong> drive cost — cost is zone/fetch-point based.</div>
         <div className="grid grid-cols-3 gap-1.5">
           <Card className="p-2 text-center">
             <div className="text-base font-bold text-slate-800">{inActiveZoneStations.length}</div>
-            <div className="text-xs text-slate-500">In-zone stations</div>
+            <div className="text-xs text-slate-500">In-zone</div>
           </Card>
           <Card className="p-2 text-center bg-green-50">
             <div className="text-base font-bold text-green-700">{coveredInZone.length}</div>
@@ -234,17 +209,16 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
         </div>
       </div>
 
-      {/* Legacy function warnings */}
       <div className="space-y-1.5">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Legacy / manual GP functions</div>
         <div className="space-y-1 text-xs">
           <div className="bg-red-50 border border-red-200 rounded p-2 text-red-700">
             <div className="font-semibold">⚠ fetchLiveGPPricesForArea — UNSAFE / INCOMPLETE</div>
-            <div className="text-red-600 mt-0.5">Writes FuelPrice records with <code>priceNok=null</code>. Prisparser er ikke implementert. Skal ikke brukes i produksjon.</div>
+            <div className="text-red-600 mt-0.5">Writes FuelPrice with <code>priceNok=null</code>. Parser not implemented. Do not use in production.</div>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded p-2 text-amber-700">
             <div className="font-semibold">⚑ batchTestGooglePlacesCoverage — MANUAL ANALYSIS ONLY</div>
-            <div className="text-amber-600 mt-0.5">1 API call per station (Legacy Nearby Search). Writes StationCandidate, not FuelPrice. Not a production cost driver, but expensive at scale (50 stations = 50 calls = ~$1.60).</div>
+            <div className="text-amber-600 mt-0.5">1 API call/station (Legacy API). 50 stations = ~$1.60. Writes StationCandidate, not FuelPrice.</div>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded p-2 text-slate-600">
             <div className="font-semibold">ℹ fetchGooglePlacesPrices — LEGACY</div>
@@ -252,7 +226,7 @@ export default function GPCostEstimator({ zones, stations, dbCoverageMap, liveTe
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded p-2 text-slate-600">
             <div className="font-semibold">ℹ discoverGooglePlacesCoverageAroundStations — MANUAL ANALYSIS</div>
-            <div className="text-slate-500 mt-0.5">Used by "Test this station" in this UI. Legacy API (nearbysearch v1). No FuelPrice writes.</div>
+            <div className="text-slate-500 mt-0.5">Used by "Test this station" in this UI. Legacy API. No FuelPrice writes.</div>
           </div>
         </div>
       </div>

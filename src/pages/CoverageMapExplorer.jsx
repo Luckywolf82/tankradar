@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Circle, Polyline, Polygon } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -296,13 +296,24 @@ export default function CoverageMapExplorer() {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-  const getZoneMembership = useCallback((station) => {
-    for (const zone of zones) {
-      if (!zone.isActive) continue;
-      if (isStationInZone(station, zone)) return zone;
+  // Pre-compute zone membership for all stations to avoid O(n*m*k) per render.
+  const stationZoneMap = useMemo(() => {
+    const map = {};
+    const active = zones.filter(z => z.isActive);
+    for (const station of stations) {
+      for (const zone of active) {
+        if (isStationInZone(station, zone)) {
+          map[station.id] = zone;
+          break;
+        }
+      }
     }
-    return null;
-  }, [zones]);
+    return map;
+  }, [stations, zones]);
+
+  const getZoneMembership = useCallback((station) => {
+    return stationZoneMap[station.id] || null;
+  }, [stationZoneMap]);
 
   const getGpStatus = (stationId) => {
     const db = dbCoverageMap[stationId];
