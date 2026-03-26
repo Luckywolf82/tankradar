@@ -1624,6 +1624,44 @@ export default function CoverageMapExplorer() {
                       </div>
                     )}
 
+                    {/* ── Bulk out-of-scope (no-data stations in tested zone) ── */}
+                    {selectedZone.lastFetchedAt && (() => {
+                      const noDataInZone = inZone.filter(s =>
+                        !dbCoverageMap[s.id] &&
+                        s.fetchScopeStatus !== 'out_of_scope'
+                      );
+                      if (noDataInZone.length === 0) return null;
+                      return (
+                        <div className="border-t pt-2 space-y-2">
+                          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Bulk scope cleanup</div>
+                          <div className="bg-orange-50 border border-orange-200 rounded p-2 text-xs text-orange-800 space-y-1.5">
+                            <div className="font-semibold">⚠ {noDataInZone.length} station{noDataInZone.length !== 1 ? 's' : ''} in zone with no GP data</div>
+                            <div className="text-orange-700 leading-relaxed">
+                              Zone has been fetched but these stations have no DB price rows.
+                              Set all as <code>out_of_scope</code> to exclude from future runs.
+                            </div>
+                            <Button
+                              size="sm"
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                              onClick={async () => {
+                                const names = noDataInZone.slice(0, 10).map(s => `• ${s.name}`).join('\n');
+                                const more = noDataInZone.length > 10 ? `\n… and ${noDataInZone.length - 10} more` : '';
+                                if (!window.confirm(`Set ${noDataInZone.length} station${noDataInZone.length !== 1 ? 's' : ''} as out_of_scope?\n\n${names}${more}\n\nThese are in the zone but have produced no GP price data. Reversible from Station editor.`)) return;
+                                const stationIds = noDataInZone.map(s => s.id);
+                                await base44.functions.invoke('applyFetchScopeDecision', {
+                                  mode: 'bulk_remove_candidates',
+                                  stationIds,
+                                });
+                                setStations(prev => prev.map(st => stationIds.includes(st.id) ? { ...st, fetchScopeStatus: 'out_of_scope' } : st));
+                              }}
+                            >
+                              <XCircle className="w-3.5 h-3.5 mr-1.5" /> Set all {noDataInZone.length} as out of scope
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* ── Zone Test Section ── */}
                     <div className="border-t pt-2 space-y-2">
                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Zone test</div>
