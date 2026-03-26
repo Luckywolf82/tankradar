@@ -55,50 +55,35 @@ Deno.serve(async (req) => {
 
     const now = new Date().toISOString();
 
-    // ── IDENTITY GUARD ────────────────────────────────────────────────────────
-    // Reject writes where stationId is a sourceStationId (external reference)
-    // instead of a canonical Station.id. This prevents bad-identity CSP rows.
+    // ── STATION LOOKUP (single call — used for both identity guard and metadata snapshot) ──
+    let stationMeta = {};
     try {
-      const stationCheck = await base44.asServiceRole.entities.Station.filter({ id: stationId });
-      if (!stationCheck || stationCheck.length === 0) {
-        // stationId not found as a Station.id — check if it matches a sourceStationId
+      const stationRows = await base44.asServiceRole.entities.Station.filter({ id: stationId });
+      if (!stationRows || stationRows.length === 0) {
+        // stationId not found as a Station.id — check if it is a sourceStationId
         const sourceCheck = await base44.asServiceRole.entities.Station.filter({ sourceStationId: stationId });
         if (sourceCheck && sourceCheck.length > 0) {
-          console.error(`[materializeCSP] IDENTITY GUARD BLOCKED: stationId="${stationId}" is a sourceStationId, not a Station.id. Canonical id="${sourceCheck[0].id}". FuelPrice row must be remediated first.`);
           return Response.json({
             skipped: true,
             reason: 'identity_guard_blocked',
-            detail: `stationId is a sourceStationId, not a canonical Station.id`,
             wrongStationId: stationId,
             canonicalStationId: sourceCheck[0].id,
           });
         }
-        // Truly orphan — log and skip
-        console.warn(`[materializeCSP] stationId="${stationId}" not found in Station catalog at all — skipping`);
         return Response.json({ skipped: true, reason: 'station_not_found_in_catalog', stationId });
       }
+      const s = stationRows[0];
+      stationMeta = {
+        stationName: s.name || null,
+        stationChain: s.chain || null,
+        stationStatus: s.status || 'active',
+        latitude: s.latitude ?? null,
+        longitude: s.longitude ?? null,
+      };
     } catch (_) {
-      // Non-fatal: allow through if check itself fails (avoids blocking legitimate writes)
+      // Non-fatal: allow through, stationMeta stays empty
     }
-    // ── END IDENTITY GUARD ────────────────────────────────────────────────────
-
-    // Snapshot station metadata from Station catalog.
-    let stationMeta = {};
-    try {
-      const stationRows = await base44.asServiceRole.entities.Station.filter({ id: stationId });
-      if (stationRows && stationRows.length > 0) {
-        const s = stationRows[0];
-        stationMeta = {
-          stationName: s.name || null,
-          stationChain: s.chain || null,
-          stationStatus: s.status || 'active',
-          latitude: s.latitude ?? null,
-          longitude: s.longitude ?? null,
-        };
-      }
-    } catch (_) {
-      // Non-fatal: station metadata will remain as previously stored or null
-    }
+    // ── END STATION LOOKUP ────────────────────────────────────────────────────
 
     // Build fuel-specific patch — only the block for the incoming fuelType.
     // The other fuel block is untouched (not present in patch = not overwritten by Base44 update).
