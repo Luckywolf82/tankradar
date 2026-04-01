@@ -298,7 +298,22 @@ export default function LogPrice() {
       }
 
       console.log('[LogPrice][match] FINAL → bindPath:', _usedBindPath, '| status:', matchResult?.status, '| stationId:', matchResult?.stationId);
-      
+
+      // Fetch canonical Station metadata when a stationId was resolved.
+      // Preferred over stationInfo snapshot for station_name / station_chain.
+      let canonicalStation = null;
+      if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
+        try {
+          const stationMatches = await base44.entities.Station.filter({ id: matchResult.stationId });
+          canonicalStation = stationMatches?.find(s => s.status !== 'archived_duplicate') || null;
+          if (canonicalStation) {
+            console.log('[LogPrice][match] canonical station fetched:', canonicalStation.name, '/', canonicalStation.chain);
+          }
+        } catch (err) {
+          console.warn('[LogPrice][match] canonical station lookup failed — falling back to stationInfo snapshot', err);
+        }
+      }
+
       const entries = FUEL_TYPES
         .filter(k => detectedPrices[k].enabled && detectedPrices[k].price)
         .map(k => {
@@ -354,7 +369,19 @@ export default function LogPrice() {
           if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
             entry.stationId = matchResult.stationId;
           }
-          
+
+          // Preserve user-selected station snapshot fields for audit/traceability
+          // on all match statuses, not only no_safe_station_match.
+          // For matched rows, prefer canonical Station metadata over stationInfo snapshot.
+          const resolvedStationName = (canonicalStation?.name) || stationInfo.station_name || null;
+          const resolvedStationChain = (canonicalStation?.chain) || stationInfo.station_chain || null;
+          if (resolvedStationName) {
+            entry.station_name = resolvedStationName;
+          }
+          if (resolvedStationChain) {
+            entry.station_chain = resolvedStationChain;
+          }
+
           // Add candidates if review needed
           if (matchResult?.status === 'review_needed_station_match') {
             entry.station_match_candidates = matchResult?.candidates || null;
