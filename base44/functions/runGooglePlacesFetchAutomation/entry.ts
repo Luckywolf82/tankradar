@@ -273,6 +273,10 @@ Deno.serve(async (req) => {
 
             newRecords.push({
               stationId: station.id,
+              station_name: station.name || null,
+              station_chain: station.chain || null,
+              gps_latitude: station.latitude || null,
+              gps_longitude: station.longitude || null,
               fuelType,
               priceNok,
               priceType: 'station_level',
