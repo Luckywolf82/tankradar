@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-03-21T20:45:00Z",
+  lastUpdated: "2026-04-01T14:00:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -265,6 +265,19 @@ export const AUDIT_INDEX = {
     },
 
     {
+      id: "google_write_path_metadata_audit",
+      title: "Google Write Path Metadata Audit — Missing Station Fields on GP FuelPrice Rows",
+      category: "data",
+      location: "src/components/audits/data/google-write-path-metadata-audit-2026-04-01.jsx",
+      dateCreated: "2026-04-01",
+      description: "Root-cause audit for missing station_name, station_chain, gps_latitude, gps_longitude on GP FuelPrice rows created by runGooglePlacesFetchAutomation. Confirms write-contract gap as primary cause. Classifies runtime ownership of all GP write paths. Documents archived_duplicate match risk. Includes FetchLog evidence, GPFetchZone runtime state, automation registry findings, and safe next step.",
+      relatesTo: "Entry 117 — Google Write Path Metadata Audit. Follow-up to canonical-function-audit-2026-03-21 (Entry 116).",
+      focusArea: "FuelPrice write-contract completeness, GP path runtime ownership, station_name/chain/coordinates metadata gap, archived_duplicate station match risk",
+      status: "complete",
+      canonicalFor: "GP write path metadata gap root cause — runGooglePlacesFetchAutomation contract fix reference"
+    },
+
+    {
       id: "canonical_function_audit",
       title: "Canonical Function Audit — Core Runtime Pipeline",
       category: "data",
@@ -284,11 +297,11 @@ export const AUDIT_INDEX = {
     governance: 2,
     product: 6,
     activation: 3,
-    data: 2,
+    data: 3,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 23
+    total: 24
   },
 
   governanceRules: {
