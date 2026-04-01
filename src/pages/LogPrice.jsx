@@ -354,7 +354,16 @@ export default function LogPrice() {
           if (matchResult?.status === 'matched_station_id' && matchResult?.stationId) {
             entry.stationId = matchResult.stationId;
           }
-          
+
+          // Preserve user-selected station snapshot fields for audit/traceability
+          // on all match statuses, not only no_safe_station_match
+          if (stationInfo.station_name) {
+            entry.station_name = stationInfo.station_name;
+          }
+          if (stationInfo.station_chain) {
+            entry.station_chain = stationInfo.station_chain;
+          }
+
           // Add candidates if review needed
           if (matchResult?.status === 'review_needed_station_match') {
             entry.station_match_candidates = matchResult?.candidates || null;
