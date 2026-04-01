@@ -10,7 +10,7 @@ export const AUDIT_INDEX = {
   system: "TankRadar Audit Registry",
   purpose: "Central registry of read-only architecture audits",
   status: "active",
-  lastUpdated: "2026-04-01T14:00:00Z",
+  lastUpdated: "2026-04-01T16:00:00Z",
   taxonomyVersion: "2.0 (expanded to 9 categories)",
 
   audits: [
@@ -265,6 +265,19 @@ export const AUDIT_INDEX = {
     },
 
     {
+      id: "google_write_path_metadata_audit_addendum",
+      title: "Google Write Path Metadata Audit — ADDENDUM: Timeline Proof and Contract Regression",
+      category: "data",
+      location: "src/components/audits/data/google-write-path-metadata-audit-addendum-2026-04-01.jsx",
+      dateCreated: "2026-04-01",
+      description: "Addendum to Entry 117. Corrects prior audit's incorrect historical claims via direct row inspection across 6 run windows. Proves the metadata gap started on 2026-04-01T09:03Z (not historically). Confirms the 2026-03-31T21:03Z run had full metadata. Reclassifies root cause from 'incomplete contract' to 'code regression.' Evaluates automation failure evidence. Establishes exact 12-hour boundary window for the regression deployment.",
+      relatesTo: "Entry 117-A — addendum to google-write-path-metadata-audit-2026-04-01",
+      focusArea: "Timeline proof, historical row evidence, contract regression identification, automation failure evidence, boundary window",
+      status: "complete",
+      canonicalFor: "Revised root cause: metadata gap is a CODE REGRESSION deployed between 2026-03-31T21:03Z and 2026-04-01T09:03Z"
+    },
+
+    {
       id: "google_write_path_metadata_audit",
       title: "Google Write Path Metadata Audit — Missing Station Fields on GP FuelPrice Rows",
       category: "data",
@@ -297,11 +310,11 @@ export const AUDIT_INDEX = {
     governance: 2,
     product: 6,
     activation: 3,
-    data: 3,
+    data: 4,
     performance: 0,
     security: 0,
     publishability: 1,
-    total: 24
+    total: 25
   },
 
   governanceRules: {
