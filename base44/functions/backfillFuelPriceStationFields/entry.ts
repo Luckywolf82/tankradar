@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const offset = Math.max(parseInt(url.searchParams.get('offset') || '', 10) || 0, 0);
 
     // ── 1. Load a batch of FuelPrice rows (pagination-safe) ────────────────
-    const batch = await base44.entities.FuelPrice.list('-created_date', limit, offset);
+    const batch = await base44.entities.FuelPrice.filter({}, '-created_date', limit);
     const scanned = batch.length;
 
     // ── 2. Identify candidates: stationId present, at least one field missing ─
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       }
 
       // Build the update payload — only include fields that are actually missing
-      const update: Record<string, unknown> = {};
+      const update = {};
 
       if (!price.station_name && station.name) {
         update.station_name = station.name;
