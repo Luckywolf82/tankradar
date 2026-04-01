@@ -95,8 +95,6 @@ Deno.serve(async (req) => {
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${station.latitude},${station.longitude}&language=no&key=${GOOGLE_API_KEY}`;
         const res = await fetch(url);
         const data = await res.json();
-        console.log("Google API Response for station:", station.id, JSON.stringify(data));
-
 
         if (data.status !== 'OK' || !data.results?.length) {
           results.failed.push({ id: station.id, name: station.name, reason: data.status });
