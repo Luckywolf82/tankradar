@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
 
     const toGeocode = allStations.filter(s =>
       s.latitude && s.longitude &&
-      (!s.address || !s.city || !s.postalCode)
+      (!s.address || !s.city || !s.postalCode || !s.region)
     );
 
     // Ta kun én batch per kjøring
@@ -99,7 +99,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const best = data.results[0];
+        // Finn beste result: foretrekk ett med postal_code fremfor results[0] som ofte er POI uten full adresse
+        const best = data.results.find(r =>
+          r.address_components.some(c => c.types.includes('postal_code'))
+        ) || data.results[0];
         const components = best.address_components;
         const updates = {};
 
