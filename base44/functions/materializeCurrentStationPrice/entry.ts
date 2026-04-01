@@ -1,5 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+async function withRetry(fn, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const is429 = err?.message?.includes('429') || err?.message?.includes('Rate limit');
+      if (is429 && attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, attempt * 1000));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 /**
  * MATERIALIZATION FUNCTION: CurrentStationPrices
  *
@@ -58,10 +73,10 @@ Deno.serve(async (req) => {
     // ── STATION LOOKUP (single call — used for both identity guard and metadata snapshot) ──
     let stationMeta = {};
     try {
-      const stationRows = await base44.asServiceRole.entities.Station.filter({ id: stationId });
+      const stationRows = await withRetry(() => base44.asServiceRole.entities.Station.filter({ id: stationId }));
       if (!stationRows || stationRows.length === 0) {
         // stationId not found as a Station.id — check if it is a sourceStationId
-        const sourceCheck = await base44.asServiceRole.entities.Station.filter({ sourceStationId: stationId });
+        const sourceCheck = await withRetry(() => base44.asServiceRole.entities.Station.filter({ sourceStationId: stationId }));
         if (sourceCheck && sourceCheck.length > 0) {
           return Response.json({
             skipped: true,
@@ -117,7 +132,7 @@ Deno.serve(async (req) => {
 
     // UPSERT with post-write deduplication guard.
     // Find all existing rows for this stationId (should be 0 or 1; >1 signals a race condition).
-    const existing = await base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId });
+    const existing = await withRetry(() => base44.asServiceRole.entities.CurrentStationPrices.filter({ stationId }));
 
     let action;
     let canonicalRowId;
@@ -139,7 +154,7 @@ Deno.serve(async (req) => {
         return Response.json({ skipped: true, reason: `stale_price: incoming ${incomingFetchedAt} <= existing ${existingFetchedAt}`, stationId, fuelType });
       }
 
-      await base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, patch);
+      await withRetry(() => base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, patch));
       action = 'updated';
 
       // SELF-HEAL: if a race condition created extras, merge their complementary fuel block
@@ -163,17 +178,17 @@ Deno.serve(async (req) => {
             mergePatch.gasoline_95_plausibilityStatus = extra.gasoline_95_plausibilityStatus;
             mergePatch.gasoline_95_stationMatchStatus = extra.gasoline_95_stationMatchStatus;
           }
-          await base44.asServiceRole.entities.CurrentStationPrices.delete(extra.id);
+          await withRetry(() => base44.asServiceRole.entities.CurrentStationPrices.delete(extra.id));
         }
         if (Object.keys(mergePatch).length > 0) {
-          await base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, { ...mergePatch, updatedAt: now });
+          await withRetry(() => base44.asServiceRole.entities.CurrentStationPrices.update(canonicalRowId, { ...mergePatch, updatedAt: now }));
         }
         action = `updated+healed_${extras.length}_duplicates`;
       }
 
     } else {
       // CREATE the first (and only) row for this stationId
-      const created = await base44.asServiceRole.entities.CurrentStationPrices.create({ stationId, ...patch });
+      const created = await withRetry(() => base44.asServiceRole.entities.CurrentStationPrices.create({ stationId, ...patch }));
       canonicalRowId = created.id;
       action = 'created';
     }
