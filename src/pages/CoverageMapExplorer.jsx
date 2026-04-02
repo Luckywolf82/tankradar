@@ -620,16 +620,18 @@ export default function CoverageMapExplorer() {
       setLoading(false);
 
       // Step 2: Load remaining stations in background — do not block UI
-      const [batch2, batch3, batch4] = await Promise.all([
+      const [batch2, batch3, batch4, batch5] = await Promise.all([
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 300),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 600),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 900),
+        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 1200),
       ]);
       const allValid = [
         ...validBatch1,
         ...batch2.filter(s => s.latitude && s.longitude),
         ...batch3.filter(s => s.latitude && s.longitude),
         ...batch4.filter(s => s.latitude && s.longitude),
+        ...batch5.filter(s => s.latitude && s.longitude),
       ];
       // Deduplicate by id (batch1 overlap possible)
       const seen = new Set();
