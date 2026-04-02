@@ -606,39 +606,52 @@ export default function CoverageMapExplorer() {
 
   // ─── Load ──────────────────────────────────────────────────────────────────
   // Loads DB state only. Does NOT touch liveTestMap.
-  // Strategy: load zones first, then stations visible in viewport, then remaining stations in background.
+  // Strategy: load zones first, then all stations in parallel.
+  // Priority order in UI: stations in active zones first, then the rest.
   const loadAll = useCallback(async () => {
     try {
-      // Step 1: Zones + first batch of stations (most recent = most likely relevant)
-      const [batch1, allZones] = await Promise.all([
-        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 0),
-        base44.entities.GPFetchZone.list('-created_date', 200),
-      ]);
-      const validBatch1 = batch1.filter(s => s.latitude && s.longitude);
-      setStations(validBatch1);
+      // Step 1: Zones first — needed to prioritize in-zone stations
+      const allZones = await base44.entities.GPFetchZone.list('-created_date', 200);
       setZones(allZones);
-      setLoading(false);
 
-      // Step 2: Load remaining stations in background — do not block UI
-      const [batch2, batch3, batch4, batch5] = await Promise.all([
+      // Step 2: Load all stations in parallel (up to 1500)
+      const [batch1, batch2, batch3, batch4, batch5] = await Promise.all([
+        base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 0),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 300),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 600),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 900),
         base44.entities.Station.filter({ status: 'active' }, '-updated_date', 300, 1200),
       ]);
+
       const allValid = [
-        ...validBatch1,
-        ...batch2.filter(s => s.latitude && s.longitude),
-        ...batch3.filter(s => s.latitude && s.longitude),
-        ...batch4.filter(s => s.latitude && s.longitude),
-        ...batch5.filter(s => s.latitude && s.longitude),
-      ];
-      // Deduplicate by id (batch1 overlap possible)
+        ...batch1, ...batch2, ...batch3, ...batch4, ...batch5,
+      ].filter(s => s.latitude && s.longitude);
+
+      // Deduplicate by id
       const seen = new Set();
       const deduped = allValid.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
-      setStations(deduped);
 
-      // Step 2: Load GP prices separately — non-blocking, single batch capped at 500
+      // Sort: stations in active zones first (using bounding-box pre-filter for speed),
+      // then by map viewport center proximity (Trondheim ~63.43, 10.39)
+      const activeZones = allZones.filter(z => z.isActive);
+      const isInAnyActiveZone = (s) => activeZones.some(z => {
+        const dlat = Math.abs(s.latitude - z.latitude);
+        const dlng = Math.abs(s.longitude - (z.longitude));
+        const radiusDeg = ((z.radiusMeters || 5000) + (z.bufferMeters || 0)) / 111320;
+        return dlat <= radiusDeg * 1.5 && dlng <= radiusDeg * 1.5;
+      });
+      const mapCenterLat = 63.43, mapCenterLng = 10.39;
+      const distToCenter = (s) => Math.pow(s.latitude - mapCenterLat, 2) + Math.pow(s.longitude - mapCenterLng, 2);
+
+      const inZone = deduped.filter(s => isInAnyActiveZone(s));
+      const outZone = deduped.filter(s => !isInAnyActiveZone(s));
+      outZone.sort((a, b) => distToCenter(a) - distToCenter(b));
+
+      const sorted = [...inZone, ...outZone];
+      setStations(sorted);
+      setLoading(false);
+
+      // Step 3: Load GP prices separately — non-blocking, single batch capped at 500
       try {
         const allGpPrices = await base44.entities.FuelPrice.filter(
           { sourceName: 'GooglePlaces' },
