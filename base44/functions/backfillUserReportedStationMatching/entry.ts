@@ -16,7 +16,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
  * Processes up to BATCH_SIZE records per run to stay within timeout limits.
  */
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 20;
 const MAX_DISTANCE_METERS = 300;
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
     const allUnmatched = await base44.asServiceRole.entities.FuelPrice.filter(
       { priceType: 'user_reported' },
       '-created_date',
-      500
+      100
     );
 
     // Keep only records that need matching and have GPS data.
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
 
     // Load all active stations once
     // Fetch all non-archived stations (status: 'active' or null/unset — default is active)
-    const allStationsRaw = await base44.asServiceRole.entities.Station.list('-created_date', 2000);
+    const allStationsRaw = await base44.asServiceRole.entities.Station.list('-created_date', 1000);
     const allStations = allStationsRaw.filter(s => s.status !== 'archived_duplicate');
     const validStations = allStations.filter(s => s.latitude != null && s.longitude != null);
 
